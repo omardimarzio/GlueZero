@@ -1,0 +1,28 @@
+# deps
+node_modules
+.pnpm-store
+
+# build output
+dist
+*.tsbuildinfo
+
+# test
+coverage
+.vitest
+
+# tooling
+.turbo
+.cache
+
+# editor
+.vscode
+.idea
+.DS_Store
+
+# OS
+Thumbs.db
+
+# logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
