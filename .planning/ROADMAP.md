@@ -8,7 +8,7 @@
 
 ## Phases
 
-- [ ] **Phase 1: Core essenziale** — Event bus pub/sub in-page, plugin registry con lifecycle anti-leak, struttura `BrokerEvent`, EventTap pre-instrumentato
+- [ ] **Phase 1: Core essenziale** (planned, 11 plans) — Event bus pub/sub in-page, plugin registry con lifecycle anti-leak, struttura `BrokerEvent`, EventTap pre-instrumentato
 - [ ] **Phase 2: Canonical Model & Mapper** — Vocabolario canonico + mapper bidirezionale locale ↔ canonico ↔ locale con transform pipeline e Mapping Inspector
 - [ ] **Phase 3: Routing & Server Gateway HTTP** — Routing engine dichiarativo (`local`/`http`/`cache`/`composite`) + gateway HTTP unico con retry/timeout/dedupe/auth
 - [ ] **Phase 4: Realtime inbound (SSE prioritario, WS opzionale)** — Adapter SSE + WebSocket con reconnection policy, normalizzazione canonica dei messaggi server
@@ -39,7 +39,18 @@ CORE-01, CORE-02, CORE-03, CORE-04, CORE-05, CORE-06, CORE-07, CORE-08, CORE-09,
   4. Wildcard subscribe (`weather.*`, `*.failed`, `form.customer.*`) consegna gli eventi ai subscriber generici; logging configurabile rispetta i livelli `silent | error | warn | info | debug | trace`.
   5. L'interfaccia `EventTap` è instrumentata in tutti gli step di pipeline implementati in F1 (con implementazione no-op di default); le fasi successive estendono la pipeline aggiungendo step ma riusando lo stesso contratto Tap senza retrofit (vincolo critico ARCHITECTURE.md §3 + SUMMARY.md).
 
-**Plans**: TBD
+**Plans**: 11 plans
+- [ ] 01-01-PLAN.md — Monorepo bootstrap (pnpm + 7 packages + tooling root)
+- [ ] 01-02-PLAN.md — `@sembridge/core` package config (tsup + vitest + tsconfig + deps)
+- [ ] 01-03-PLAN.md — Public types (BrokerEvent, Subscription, PluginDescriptor, BrokerError, BrokerLogger, EventTap, BrokerConfig, DeepReadonly)
+- [ ] 01-04-PLAN.md — Utility batch A: broker-error + deep-freeze + logger + event-tap
+- [ ] 01-05-PLAN.md — Utility batch B: topic-matcher + event-factory + event-validator
+- [ ] 01-06-PLAN.md — Utility batch C: topic-registry + lifecycle state machine
+- [ ] 01-07-PLAN.md — EventBus (bus.ts) — pub/sub dispatch + handler isolation + 5 step tap
+- [ ] 01-08-PLAN.md — PluginRegistry + Broker class composition + public-factory + index.ts public API
+- [ ] 01-09-PLAN.md — PipelineHarness fixture + integration tests (5 success criteria + LIFE-02 deterministico)
+- [ ] 01-10-PLAN.md — Robustness tests (storm, wildcard-perf, plugin-fault, concurrent-unregister)
+- [ ] 01-11-PLAN.md — Build verification (publint + attw + size-limit) + DOC-01 README + JSDoc
 **Needs research**: no
 **UI hint**: no
 
