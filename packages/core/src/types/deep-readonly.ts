@@ -18,7 +18,7 @@ export type DeepReadonly<T> = T extends Date | RegExp | Error
     : T extends Set<infer U>
       ? ReadonlySet<DeepReadonly<U>>
       : T extends Array<infer U>
-        ? ReadonlyArray<DeepReadonly<U>>
+        ? readonly DeepReadonly<U>[]
         : T extends object
           ? { readonly [K in keyof T]: DeepReadonly<T[K]> }
           : T
