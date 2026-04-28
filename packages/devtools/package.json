@@ -1,0 +1,14 @@
+{
+  "name": "@sembridge/devtools",
+  "version": "0.0.0",
+  "description": "Event/Mapping/Route Inspector + Metrics for SemBridge (Phase 6 — placeholder in Phase 1)",
+  "license": "MIT",
+  "type": "module",
+  "private": true,
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": ["dist", "README.md"],
+  "publishConfig": {
+    "access": "public"
+  }
+}

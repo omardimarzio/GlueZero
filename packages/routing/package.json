@@ -1,0 +1,14 @@
+{
+  "name": "@sembridge/routing",
+  "version": "0.0.0",
+  "description": "Declarative routing engine for SemBridge (Phase 3 — placeholder in Phase 1)",
+  "license": "MIT",
+  "type": "module",
+  "private": true,
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": ["dist", "README.md"],
+  "publishConfig": {
+    "access": "public"
+  }
+}

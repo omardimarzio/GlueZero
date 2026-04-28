@@ -1,0 +1,14 @@
+{
+  "name": "@sembridge/sembridge",
+  "version": "0.0.0",
+  "description": "SemBridge aggregate package (re-exports core + mapper + gateway + routing + worker + cache + devtools — placeholder in Phase 1)",
+  "license": "MIT",
+  "type": "module",
+  "private": true,
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": ["dist", "README.md"],
+  "publishConfig": {
+    "access": "public"
+  }
+}

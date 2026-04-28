@@ -1,0 +1,14 @@
+{
+  "name": "@sembridge/mapper",
+  "version": "0.0.0",
+  "description": "Canonical model + bidirectional mapper for SemBridge (Phase 2 — placeholder in Phase 1)",
+  "license": "MIT",
+  "type": "module",
+  "private": true,
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": ["dist", "README.md"],
+  "publishConfig": {
+    "access": "public"
+  }
+}

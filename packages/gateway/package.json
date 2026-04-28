@@ -1,0 +1,14 @@
+{
+  "name": "@sembridge/gateway",
+  "version": "0.0.0",
+  "description": "HTTP gateway + realtime adapters for SemBridge (Phase 3/4 — placeholder in Phase 1)",
+  "license": "MIT",
+  "type": "module",
+  "private": true,
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": ["dist", "README.md"],
+  "publishConfig": {
+    "access": "public"
+  }
+}
