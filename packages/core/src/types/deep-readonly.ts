@@ -11,6 +11,19 @@
 // - `object` (qualsiasi record) diventa `{ readonly [K]: DeepReadonly<T[K]> }`.
 // - Primitivi (`string | number | boolean | bigint | symbol | null | undefined`) restano `T`.
 
+/**
+ * Recursive `readonly` utility (D-07). Used by `BrokerEvent.payload` to enforce
+ * compile-time immutability on consumers.
+ *
+ * Behavior:
+ * - `Date | RegExp | Error` are passthrough (non-recursive).
+ * - `Map` / `Set` become `ReadonlyMap` / `ReadonlySet` with deep-readonly entries.
+ * - `Array<T>` becomes `ReadonlyArray<DeepReadonly<T>>`.
+ * - Object records become `{ readonly [K]: DeepReadonly<T[K]> }`.
+ * - Primitives stay `T`.
+ *
+ * @typeParam T - Source type.
+ */
 export type DeepReadonly<T> = T extends Date | RegExp | Error
   ? T
   : T extends Map<infer K, infer V>

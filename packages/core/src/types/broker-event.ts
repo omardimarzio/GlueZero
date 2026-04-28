@@ -9,10 +9,16 @@
 
 import type { DeepReadonly } from './deep-readonly'
 
+/** Delivery semantics: `sync` | `async` (F1 default) | `worker` | `remote` (F1 fallback to async via warn). */
 export type DeliveryMode = 'sync' | 'async' | 'worker' | 'remote'
 
+/** Event priority. `'critical'` is reserved for event-level (publisher), not subscriber-level. */
 export type Priority = 'low' | 'normal' | 'high' | 'critical'
 
+/**
+ * Originator descriptor of a {@link BrokerEvent}. Required at publish (D-23) —
+ * `event.source.missing` `BrokerError` is thrown if absent.
+ */
 export interface EventSource {
   readonly type: 'plugin' | 'component' | 'server' | 'worker' | 'system'
   readonly id: string
@@ -20,6 +26,14 @@ export interface EventSource {
   readonly version?: string
 }
 
+/**
+ * Event envelope flowing through the pipeline (PRD §11).
+ *
+ * `payload` is `DeepReadonly<TPayload>` (D-07) and frozen recursively in dev mode (D-04).
+ * `id`/`timestamp` are populated by the broker if absent (D-21, D-22).
+ *
+ * @typeParam TPayload - Payload shape; defaults to `unknown`.
+ */
 export interface BrokerEvent<TPayload = unknown> {
   readonly id: string
   readonly topic: string
@@ -40,4 +54,8 @@ export interface BrokerEvent<TPayload = unknown> {
 // Branded type per ID evento (PRD §11.3 + Pitfall #12 — type confusion prevention).
 // Solo cast esplicito `as EventId` permette di "instanziare" il tipo, audit-able via grep.
 declare const __eventIdBrand: unique symbol
+/**
+ * Branded type for unique event IDs (PRD §11.3, Pitfall #12 — type confusion prevention).
+ * Only explicit cast `as EventId` lets you "instantiate" the type, audit-able via grep.
+ */
 export type EventId = string & { readonly [__eventIdBrand]: true }

@@ -20,6 +20,10 @@ import type { BrokerError } from './error'
 import type { BrokerLogger } from './logger'
 import type { Subscription } from './subscription'
 
+/**
+ * Lifecycle state of a registered plugin: `unregistered → registered → mounting →
+ * mounted → unmounting → unmounted → destroyed` (or `→ failed`).
+ */
 export type PluginState =
   | 'unregistered'
   | 'registered'
@@ -30,6 +34,13 @@ export type PluginState =
   | 'failed'
   | 'destroyed'
 
+/**
+ * Plugin descriptor with optional lifecycle hooks (D-25).
+ *
+ * Hook execution order on `registerPlugin`: `onRegister` (sync) → `onMount` (async).
+ * Hook execution order on `unregisterPlugin` (D-26): `onUnmount` (async) → cascade
+ * unsubscribe → `onDestroy` (sync).
+ */
 export interface PluginDescriptor {
   readonly id: string
   readonly version?: string
@@ -45,6 +56,12 @@ export interface PluginDescriptor {
   onDestroy?(ctx: PluginContext): void
 }
 
+/**
+ * Context passed to plugin hooks. The `broker` is a scoped wrapper that
+ * auto-tags subscriptions with `ownerId=pluginId` (cascade cleanup D-26).
+ *
+ * `signal` fires on `unregisterPlugin(id)` (D-26 cascade cleanup, LIFE-02).
+ */
 export interface PluginContext {
   readonly id: string
   readonly logger: BrokerLogger

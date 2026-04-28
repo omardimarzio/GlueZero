@@ -12,6 +12,10 @@
 // perché il caller costruisce l'oggetto step-by-step; la factory poi ritorna un `BrokerError`
 // immutabile (readonly su tutti i campi).
 
+/**
+ * Error category enum. Includes F2-F5 categories (`mapping`, `route`,
+ * `network`, `worker`) so no breaking change is needed when those modules ship.
+ */
 export type ErrorCategory =
   | 'validation'
   | 'plugin'
@@ -23,6 +27,14 @@ export type ErrorCategory =
   | 'config'
   | 'topic'
 
+/**
+ * Structured broker error (PRD §22, REQ ERR-01).
+ *
+ * Extends native `Error` with `code`, `category`, and optional `details`,
+ * `originalError` (also set as `Error.cause` ES2022), `routeId`, `topic`,
+ * `eventId`. All fields are readonly after creation (use {@link CreateBrokerErrorParams}
+ * to build).
+ */
 export interface BrokerError extends Error {
   readonly code: string
   readonly category: ErrorCategory
@@ -33,6 +45,7 @@ export interface BrokerError extends Error {
   readonly eventId?: string
 }
 
+/** Input for the {@link createBrokerError} factory. Mutable at call-site (no `readonly`). */
 export interface CreateBrokerErrorParams {
   code: string
   category: ErrorCategory

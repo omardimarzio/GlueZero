@@ -12,6 +12,10 @@
 // `SubscribeOptions.priority` NON include `'critical'`: i subscriber non possono auto-elevarsi
 // a priority critical — è riservato a `BrokerEvent.priority` (event-level, settabile dal publisher).
 
+/**
+ * Subscription handle returned by `Broker.subscribe` (D-27). Idempotent
+ * `unsubscribe`: calling it twice is a no-op after the first.
+ */
 export interface Subscription {
   readonly id: string
   readonly topic: string
@@ -19,6 +23,14 @@ export interface Subscription {
   unsubscribe(): void
 }
 
+/**
+ * Options accepted by `Broker.subscribe`.
+ *
+ * - `signal`: AbortSignal for auto-unsubscribe on `abort()`.
+ * - `priority`: subscriber priority (no `'critical'` — that is publisher-only).
+ * - `deliveryMode`: per-subscription override (no `'worker' | 'remote'` here — handler-level).
+ * - `once`: auto-unsubscribe after first invocation (DX flag, ~15 LOC).
+ */
 export interface SubscribeOptions {
   readonly signal?: AbortSignal
   readonly priority?: 'low' | 'normal' | 'high'

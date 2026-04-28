@@ -24,6 +24,18 @@
 import type { BrokerLogger, LogLevel } from './logger'
 import type { EventTap } from './tap'
 
+/**
+ * Global broker configuration (PRD §27, REQ CORE-14).
+ *
+ * F1 implements the `runtime` and `debug` sections; F2-F6 sections
+ * (`topicSchemas`, `canonicalModel`, `aliasRegistry`, `transforms`, `routes`,
+ * `transport`, `workers`, `cache`) are accepted but ignored at runtime in F1
+ * — they are reserved for future phases via TypeScript declaration merging
+ * (no breaking change).
+ *
+ * `runtime.debug` defaults to `import.meta.env.DEV` when available (D-29) and
+ * activates deep-freeze runtime + verbose tap snapshots.
+ */
 export interface BrokerConfig {
   // F1 sections (implemented):
   runtime?: {

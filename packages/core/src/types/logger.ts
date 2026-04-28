@@ -10,8 +10,19 @@
 // fa diventare tutti i metodi no-op nell'implementazione default `ConsoleLogger`
 // (plan 04 — `console-logger.ts`). I 6 livelli sono: silent | error | warn | info | debug | trace.
 
+/**
+ * Log level: `silent` makes all methods no-op; otherwise `error < warn < info <
+ * debug < trace`. Hierarchical filtering: configured level enables itself + lower.
+ */
 export type LogLevel = 'silent' | 'error' | 'warn' | 'info' | 'debug' | 'trace'
 
+/**
+ * Logger interface used by the broker (PRD §25.4, REQ CORE-10).
+ *
+ * Surface intentionally minimal (D-14) — 5 methods accepting `message` + optional
+ * structured `meta`. Default impl: `createConsoleLogger`. Swappable via
+ * `Broker.setLogger` (D-13) for pino/winston/telemetry adapters.
+ */
 export interface BrokerLogger {
   error(message: string, meta?: Record<string, unknown>): void
   warn(message: string, meta?: Record<string, unknown>): void

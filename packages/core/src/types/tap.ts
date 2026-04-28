@@ -19,6 +19,17 @@
 //              'event.route.executed' (step 9), 'event.outcome.collected' (step 10),
 //              'event.mapped.consumer' (step 11), 'event.final.validated' (step 12).
 //   F6 adds:   'event.observed' (step 14).
+/**
+ * Pipeline step identifier (5 steps in F1).
+ *
+ * F2/F3 will add via declaration merging: `'event.source.resolved'`,
+ * `'event.mapped.canonical'`, `'event.canonical.validated'`,
+ * `'event.route.resolved'`, `'event.route.executed'`,
+ * `'event.outcome.collected'`, `'event.mapped.consumer'`,
+ * `'event.final.validated'`.
+ *
+ * F6 will add: `'event.observed'`.
+ */
 export type PipelineStep =
   | 'event.received'
   | 'event.metadata.enriched'
@@ -26,6 +37,11 @@ export type PipelineStep =
   | 'event.dedupe.checked'
   | 'event.delivered'
 
+/**
+ * Snapshot of pipeline state at a single step. Emitted by `EventBus` to the
+ * configured {@link EventTap}. `payloadBefore`/`payloadAfter` are populated only
+ * when `runtime.debug = true` + `debug.snapshotPayloadsFull = true` (D-29).
+ */
 export interface PipelineSnapshot {
   readonly eventId: string
   readonly topic: string
@@ -37,6 +53,15 @@ export interface PipelineSnapshot {
   readonly metadata?: Record<string, unknown>
 }
 
+/**
+ * Wire Tap pattern for pipeline observation (CORE-13).
+ *
+ * F1 default: no-op (zero overhead). F6 substitutes the no-op with real Event /
+ * Mapping / Route Inspector — without retrofit (architectural constraint).
+ *
+ * Errors thrown from `onPipelineStep` are swallowed (D-20) — a tap that fails
+ * never breaks the pipeline.
+ */
 export interface EventTap {
   onPipelineStep(step: PipelineStep, snapshot: PipelineSnapshot): void
 }
