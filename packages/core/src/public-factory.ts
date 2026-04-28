@@ -58,6 +58,38 @@ const BrokerConfigSchema = v.object({
   cache: v.optional(v.unknown()),
 })
 
+/**
+ * Creates a new {@link Broker} instance with the given configuration.
+ *
+ * Phase 1 implements the `runtime` and `debug` config sections; Phase 2-6
+ * sections (`topicSchemas`, `canonicalModel`, `routes`, etc.) are accepted
+ * as `unknown` and ignored at runtime in F1.
+ *
+ * No singleton (D-30): each call returns an independent instance.
+ *
+ * @param config - Optional broker configuration (default: empty object).
+ * @returns A fresh {@link Broker} instance.
+ * @throws {Error} `Invalid BrokerConfig: ...` if config validation (Valibot) fails.
+ *
+ * @example
+ * ```ts
+ * import { createBroker } from '@sembridge/core'
+ *
+ * const broker = createBroker({
+ *   runtime: { logLevel: 'info', debug: false },
+ * })
+ *
+ * const sub = broker.subscribe('weather.requested', (event) => {
+ *   console.log('received:', event.payload)
+ * })
+ *
+ * broker.publish('weather.requested', { city: 'Roma' }, {
+ *   source: { type: 'plugin', id: 'weather-form' },
+ * })
+ *
+ * sub.unsubscribe()
+ * ```
+ */
 export function createBroker(config: BrokerConfig = {}): Broker {
   const parsed = v.safeParse(BrokerConfigSchema, config)
   if (!parsed.success) {

@@ -73,6 +73,14 @@ const F1_PIPELINE_STEPS: PipelineStep[] = [
   'event.delivered',
 ]
 
+/**
+ * Core event broker. Composition of `EventBus` + `PluginRegistry` + `TopicRegistry`.
+ *
+ * Created via {@link createBroker} factory. No singleton pattern (D-30).
+ *
+ * Implements pub/sub with wildcard subscribe, plugin lifecycle anti-leak,
+ * deep-freeze in dev mode, EventTap pre-instrumented on 5 F1 pipeline steps.
+ */
 export class Broker {
   private readonly bus: EventBus
   private readonly plugins: PluginRegistry
@@ -82,6 +90,13 @@ export class Broker {
   private debugMode: boolean
   private readonly currentLogLevel: LogLevel
 
+  /**
+   * Construct a new Broker. Prefer {@link createBroker} factory for consumer code
+   * (it adds Valibot config validation).
+   *
+   * @param config - Optional broker configuration. F1 reads `runtime` and `debug`;
+   *   F2-F6 sections are accepted but ignored at runtime in F1.
+   */
   constructor(config: BrokerConfig = {}) {
     let isDev = false
     try {
@@ -108,6 +123,35 @@ export class Broker {
     }))
   }
 
+  /**
+   * Publish an event to the broker.
+   *
+   * Builds a `BrokerEvent` via factory (with `id` from nanoid, `timestamp` from
+   * `Date.now()` if not provided), validates the event shape (VAL-01), and
+   * dispatches to matching subscribers.
+   *
+   * Default `deliveryMode` is `'async'` (D-01) via `queueMicrotask` — handler
+   * invocation is deferred to next microtask, preventing re-entrancy stack
+   * overflow.
+   *
+   * @typeParam T - Payload type. Frozen recursively in dev mode (D-04).
+   * @param topic - Topic name. Must match `<entity>.<action>.<status>` (lowercase,
+   *   dot-separated). Validated against regex `/^[a-z][a-z0-9]*(\.[a-z][a-z0-9*]*)*$/`.
+   * @param payload - Event payload.
+   * @param options - Publish options (`source` required, `deliveryMode`, `priority`,
+   *   `correlationId`, `ttlMs`, `dedupeKey`, etc.).
+   * @throws {BrokerError} `topic.invalid` if topic name fails regex.
+   * @throws {BrokerError} `event.source.missing` if no source provided.
+   * @throws {BrokerError} `event.validation.failed` if BrokerEvent shape invalid.
+   *
+   * @example
+   * ```ts
+   * broker.publish('weather.requested', { city: 'Roma' }, {
+   *   source: { type: 'plugin', id: 'weather-form' },
+   *   deliveryMode: 'async',
+   * })
+   * ```
+   */
   publish<T>(
     topic: string,
     payload: T,
@@ -118,6 +162,27 @@ export class Broker {
     this.bus.publish(event)
   }
 
+  /**
+   * Subscribe to a topic or topic pattern.
+   *
+   * Patterns support wildcards: `weather.*` (single segment), `*.failed` (leading),
+   * `weather.*.failed` (multi-position, D-11).
+   *
+   * Handler errors are isolated (CORE-12) and re-published as `system.error`
+   * `BrokerEvent`. Other handlers continue to run.
+   *
+   * @param pattern - Topic or pattern to subscribe to.
+   * @param handler - Function invoked when matching event published.
+   * @param options - `signal` (AbortSignal for auto-unsubscribe), `once`,
+   *   `priority`, `deliveryMode`.
+   * @returns A {@link Subscription} handle with idempotent `.unsubscribe()`.
+   *
+   * @example
+   * ```ts
+   * const sub = broker.subscribe('weather.*', (event) => console.log(event))
+   * sub.unsubscribe()
+   * ```
+   */
   subscribe(
     pattern: string,
     handler: (event: BrokerEvent) => void | Promise<void>,
@@ -126,32 +191,88 @@ export class Broker {
     return this.bus.subscribe(pattern, handler, options)
   }
 
+  /**
+   * Register a plugin with lifecycle hooks.
+   *
+   * Lifecycle execution order (D-25):
+   * 1. transitionState: `unregistered → registered`
+   * 2. await `onRegister(ctx)`
+   * 3. transitionState: `registered → mounting`
+   * 4. await `onMount(ctx)`
+   * 5. transitionState: `mounting → mounted`
+   *
+   * @param descriptor - Plugin descriptor with optional hooks.
+   * @returns Promise resolving when `onMount` completes.
+   * @throws {BrokerError} `plugin.id.duplicate` if a plugin with the same id is already registered.
+   * @throws {BrokerError} `plugin.lifecycle.failed` if `onRegister` or `onMount` throws.
+   */
   registerPlugin(descriptor: PluginDescriptor): Promise<void> {
     return this.plugins.register(descriptor)
   }
 
+  /**
+   * Unregister a plugin with mandatory cascade cleanup (D-26, LIFE-02 — closes PRD §39 #7).
+   *
+   * Cleanup order:
+   * 1. await `onUnmount(ctx)` — errors caught + logged but cascade proceeds
+   * 2. `bus.unsubscribeByOwner(id)` — removes all subscriptions registered with
+   *    `signal: ctx.signal`
+   * 3. `abortController.abort()` — fires `AbortSignal` for in-flight async handlers
+   * 4. `onDestroy(ctx)` — sync, errors logged
+   *
+   * After unregister: {@link getDebugSnapshot} counters return to pre-registration baseline.
+   *
+   * @param id - Plugin id to unregister.
+   * @returns Promise resolving when cascade completes.
+   * @throws {BrokerError} `plugin.not-found` if no plugin with the given id.
+   */
   unregisterPlugin(id: string): Promise<void> {
     return this.plugins.unregister(id)
   }
 
+  /**
+   * Get the list of all topic names ever published or registered (CORE-03).
+   *
+   * @returns Readonly array of topic names.
+   */
   getTopicRegistry(): readonly string[] {
     return this.topics.list()
   }
 
+  /**
+   * Replace the runtime logger.
+   *
+   * @param logger - Custom {@link BrokerLogger} (e.g. pino, winston, telemetry adapter).
+   */
   setLogger(logger: BrokerLogger): void {
     this.logger = logger
   }
 
+  /**
+   * Enable debug mode: deep-freeze runtime + verbose tap snapshots (D-29).
+   */
   enableDebug(): void {
     this.debugMode = true
     this.bus.setDebugMode(true)
   }
 
+  /**
+   * Disable debug mode (production default).
+   */
   disableDebug(): void {
     this.debugMode = false
     this.bus.setDebugMode(false)
   }
 
+  /**
+   * Get a snapshot of the current broker state for debugging (D-28).
+   *
+   * In F1 returns: `topics`, `subscriberCount` per topic, `pluginIds`,
+   * `pendingAsyncDelivery`, `logLevel`, `pipelineSteps`. F6 will extend with
+   * full metrics.
+   *
+   * @returns Snapshot of broker state.
+   */
   getDebugSnapshot(): BrokerDebugSnapshot {
     const stats = this.bus.getStats()
     return {

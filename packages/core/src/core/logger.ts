@@ -30,6 +30,32 @@ const LEVEL_ORDER: Record<LogLevel, number> = {
 
 const PREFIX = '[sembridge]'
 
+/**
+ * Create a console-based {@link BrokerLogger} (PRD §25.4, REQ CORE-10).
+ *
+ * Mapping levels → methods (D-12):
+ * - `silent` → no-op
+ * - `error` → `console.error`
+ * - `warn` → `console.warn`
+ * - `info` → `console.info`
+ * - `debug` → `console.debug`
+ * - `trace` → `console.debug` (with `TRACE` prefix)
+ *
+ * Filtering: each method checks `LEVEL_ORDER[level] >= LEVEL_ORDER[targetMethod]`.
+ *
+ * Namespace prefix `[sembridge]` is always present (D-12) — enables filtering
+ * in browser devtools.
+ *
+ * @param level - Minimum log level (default `'info'`).
+ * @returns A {@link BrokerLogger} backed by `console`.
+ *
+ * @example
+ * ```ts
+ * const logger = createConsoleLogger('debug')
+ * logger.info('broker started', { id: 'main' })
+ * // [sembridge] [INFO] broker started { id: 'main' }
+ * ```
+ */
 export function createConsoleLogger(level: LogLevel = 'info'): BrokerLogger {
   const enabled = (target: LogLevel): boolean => LEVEL_ORDER[level] >= LEVEL_ORDER[target]
 
@@ -55,6 +81,12 @@ export function createConsoleLogger(level: LogLevel = 'info'): BrokerLogger {
   }
 }
 
+/**
+ * No-op {@link BrokerLogger} — all 5 methods are empty functions.
+ *
+ * Useful for tests and for consumers that want to disable logging without
+ * configuring `level: 'silent'`.
+ */
 export const silentLogger: BrokerLogger = {
   error: () => {},
   warn: () => {},
