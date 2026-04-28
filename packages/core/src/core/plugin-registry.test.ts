@@ -22,7 +22,7 @@ import { isBrokerError } from './broker-error'
 import { EventBus } from './bus'
 import { noopEventTap } from './event-tap'
 import { silentLogger } from './logger'
-import { PluginRegistry, createPluginScopedBroker } from './plugin-registry'
+import { createPluginScopedBroker, PluginRegistry } from './plugin-registry'
 
 const buildBus = (): EventBus => new EventBus(silentLogger, noopEventTap, { debug: false })
 
@@ -323,11 +323,9 @@ describe('createPluginScopedBroker', () => {
 
   it('subscribe via scoped broker with no signal still tags ownerId', () => {
     const bus = buildBus()
-    const scoped = createPluginScopedBroker(
-      { subscribe: () => null },
-      bus,
-      'p-scoped',
-    ) as { subscribe: (p: string, h: () => void) => unknown }
+    const scoped = createPluginScopedBroker({ subscribe: () => null }, bus, 'p-scoped') as {
+      subscribe: (p: string, h: () => void) => unknown
+    }
     scoped.subscribe('topic.x', () => {})
     // verify ownerId by checking unsubscribeByOwner returns 1
     expect(bus.unsubscribeByOwner('p-scoped')).toBe(1)
