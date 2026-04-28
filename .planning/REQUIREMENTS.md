@@ -303,7 +303,7 @@ Mappatura definitiva REQ-ID → fase. Ogni requisito è assegnato alla **prima f
 | SEC-03 | Phase 3 | Pending | Idempotency token |
 | SEC-04 | Phase 3 | Pending | — |
 | SEC-05 | Phase 3 | Pending | URL allowlist |
-| TEST-01 | Phase 1 (subset) | Pending | Estesa progressivamente F2-F6 |
+| TEST-01 | Phase 1 (subset) | Done subset (plan 01-09) | PipelineHarness fixture + 8 integration test in `packages/core/src/__integration__/` coprono pub/sub, unsubscribe, wildcard, dedupe (skeleton), lifecycle cleanup deterministico (LIFE-02), event-tap 5 step F1, handler isolation, deep-freeze. 46 nuovi test passing. Estesa progressivamente F2-F6. |
 | TEST-02 | Phase 2 (subset) | Pending | F3 (server), F4 (reconnect), F5 (worker), F6 (cache) |
 | TEST-03 | Phase 1 (subset) | Pending | F3 (server malconfigurato), F4 (riconnessione ripetuta), F5 (worker timeout) |
 | PKG-01 | Phase 1 (01-01 foundation, 01-02 build, 01-11 verify) | Baseline (tsup ESM-only configurato in 01-02; dist/index.js generato; full verify in 01-11) | tsup ESM-only (no CJS — dual-package hazard) |
