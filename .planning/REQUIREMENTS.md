@@ -20,10 +20,10 @@ Tutti i requisiti elencati sono table stakes (vincolanti dalla checklist PRD §4
 - [ ] **CORE-07**: `id` evento univoco; `timestamp` valorizzato dal broker se assente; `source` obbligatorio e noto al runtime *(PRD §11.3)*
 - [ ] **CORE-08**: Naming convention dot-separated minuscolo per topic; pattern `<entity>.<action>.<status>` documentato *(PRD §12.1, §12.2)*
 - [ ] **CORE-09**: Wildcard subscribe (`weather.*`, `*.failed`, `form.customer.*`) *(PRD §12.3)*
-- [ ] **CORE-10**: Logging configurabile con livelli `silent | error | warn | info | debug | trace` *(PRD §25.4)*
+- [x] **CORE-10**: Logging configurabile con livelli `silent | error | warn | info | debug | trace` *(PRD §25.4)*
 - [ ] **CORE-11**: Unsubscribe automatico quando un plugin viene unregistered (no memory leak) *(PRD §15.6, §24.2)*
 - [ ] **CORE-12**: Plugin handler isolato: eccezione in un plugin non collassa il broker *(PRD §22.2)*
-- [ ] **CORE-13**: `EventTap` interface instrumentata già in F1 (anche con implementazione no-op) per consentire Inspector in F6 senza retrofit *(decisione architetturale ARCHITECTURE.md §3.2)*
+- [x] **CORE-13**: `EventTap` interface instrumentata già in F1 (anche con implementazione no-op) per consentire Inspector in F6 senza retrofit *(decisione architetturale ARCHITECTURE.md §3.2)*
 - [ ] **CORE-14**: Configurazione globale via `createBroker(config)` con sezioni `runtime`, `topicSchemas`, `canonicalModel`, `aliasRegistry`, `transforms`, `routes`, `transport`, `workers`, `debug`, `cache` *(PRD §27)*
 
 ### Canonical Model + Mapper (Fase 2)
@@ -110,7 +110,7 @@ Tutti i requisiti elencati sono table stakes (vincolanti dalla checklist PRD §4
 - [ ] **VAL-09**: Comportamento esplicito su transform failure (skip vs block) *(PRD §39 — open issue da chiudere)*
 
 #### Errori
-- [ ] **ERR-01**: Tipo `BrokerError` con `code`, `message`, `category`, `details`, `originalError`, `routeId`, `topic`, `eventId` *(PRD §22.4)*
+- [x] **ERR-01**: Tipo `BrokerError` con `code`, `message`, `category`, `details`, `originalError`, `routeId`, `topic`, `eventId` *(PRD §22.4)*
 - [ ] **ERR-02**: Eventi standard di errore: `<topic>.failed`, `system.error`, `mapping.error`, `worker.error`, `network.error` *(PRD §22.3)*
 - [ ] **ERR-03**: Errori isolati: il runtime non collassa salvo guasto critico non recuperabile *(PRD §22.2)*
 
@@ -193,10 +193,10 @@ Mappatura definitiva REQ-ID → fase. Ogni requisito è assegnato alla **prima f
 | CORE-07 | Phase 1 | Type-defined (plan 01-03) | Type enforcement readonly — nanoid runtime per `id` in plan 04 (event-factory) |
 | CORE-08 | Phase 1 | Pending | Validazione naming al `publish` |
 | CORE-09 | Phase 1 | Pending | Trie per wildcard matching |
-| CORE-10 | Phase 1 | Type-defined (plan 01-03) | LogLevel union 6 valori — ConsoleLogger runtime in plan 04 |
+| CORE-10 | Phase 1 | Done (plan 01-04) | `createConsoleLogger(level)` + `silentLogger` in `core/logger.ts` — 6 livelli, namespace `[sembridge]`, D-12 mapping completo, 11/11 test passing |
 | CORE-11 | Phase 1 | Pending | Cascade da `unregisterPlugin` |
 | CORE-12 | Phase 1 | Pending | try/catch attorno a ogni handler + deep freeze payload |
-| CORE-13 | Phase 1 | Type-defined (plan 01-03) | EventTap interface + 5 PipelineStep F1 — NoopEventTap runtime in plan 04 |
+| CORE-13 | Phase 1 | Done (plan 01-04) | `noopEventTap` + `safeTapStep` (try/catch D-20 swallow) + `startStep` factory + `SnapshotFactory` type alias in `core/event-tap.ts` — pre-instrumentazione F1 garantita, 10/10 test passing |
 | CORE-14 | Phase 1 | Type-defined (plan 01-03) | BrokerConfig 10 sezioni (F1 strutturate + F2-F6 placeholder unknown) — `createBroker(config)` Valibot validation in plan 08 |
 
 ### Canonical Model + Mapper — Fase 2
@@ -292,7 +292,7 @@ Mappatura definitiva REQ-ID → fase. Ogni requisito è assegnato alla **prima f
 | VAL-07 | Phase 2 | Pending | — |
 | VAL-08 | Phase 2 | Pending | **Closes PRD §39 #3**: `required: true|false` per campo |
 | VAL-09 | Phase 2 | Pending | **Closes PRD §39 #4**: `onFailure: 'block' | 'skip' | 'fallback'` |
-| ERR-01 | Phase 1 | Type-defined (plan 01-03) | BrokerError extends Error con 8 campi readonly + 9 ErrorCategory + CreateBrokerErrorParams — factory `createBrokerError(...)` runtime in plan 04 |
+| ERR-01 | Phase 1 | Done (plan 01-04) | `createBrokerError(params)` factory + `isBrokerError(value)` type guard in `core/broker-error.ts` — ES2022 cause, conditional assignment per `exactOptionalPropertyTypes`, 9/9 test passing |
 | ERR-02 | Phase 2 | Pending | F2: `mapping.error`, F3: `<topic>.failed`+`network.error`, F4: `system.realtime.*`, F5: `worker.error` |
 | ERR-03 | Phase 1 | Pending | — |
 | PIPE-01 | Phase 1 (skeleton) | Pending | Estesa da F2 (step 4-6, 11-12), F3 (step 7-10), F6 (step 14 reale) |
