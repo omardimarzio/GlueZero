@@ -11,8 +11,8 @@ Tutti i requisiti elencati sono table stakes (vincolanti dalla checklist PRD §4
 
 ### Core Broker (Fase 1)
 
-- [ ] **CORE-01**: Esiste un event bus pub/sub in-page con `publish(topic, payload, options?)` e `subscribe(topic, handler, options?)` *(PRD §16.2, §42)*
-- [ ] **CORE-02**: `subscribe` restituisce un handle/subscriptionId che permette `unsubscribe(subscriptionId)` senza effetti residui *(PRD §24.2, §36.1)*
+- [x] **CORE-01**: Esiste un event bus pub/sub in-page con `publish(topic, payload, options?)` e `subscribe(topic, handler, options?)` *(PRD §16.2, §42)*
+- [x] **CORE-02**: `subscribe` restituisce un handle/subscriptionId che permette `unsubscribe(subscriptionId)` senza effetti residui *(PRD §24.2, §36.1)*
 - [x] **CORE-03**: Topic Registry pubblica/traccia tutti i topic noti via `getTopicRegistry()` *(PRD §10, §16.3)*
 - [ ] **CORE-04**: Plugin Registry: `registerPlugin(descriptor)` e `unregisterPlugin(id)` *(PRD §15, §16.2)*
 - [ ] **CORE-05**: Lifecycle hooks plugin: `onRegister`, `onMount`, `onUnmount`, `onDestroy` *(PRD §15.5)*
@@ -22,7 +22,7 @@ Tutti i requisiti elencati sono table stakes (vincolanti dalla checklist PRD §4
 - [x] **CORE-09**: Wildcard subscribe (`weather.*`, `*.failed`, `form.customer.*`) *(PRD §12.3)*
 - [x] **CORE-10**: Logging configurabile con livelli `silent | error | warn | info | debug | trace` *(PRD §25.4)*
 - [ ] **CORE-11**: Unsubscribe automatico quando un plugin viene unregistered (no memory leak) *(PRD §15.6, §24.2)*
-- [ ] **CORE-12**: Plugin handler isolato: eccezione in un plugin non collassa il broker *(PRD §22.2)*
+- [x] **CORE-12**: Plugin handler isolato: eccezione in un plugin non collassa il broker *(PRD §22.2)*
 - [x] **CORE-13**: `EventTap` interface instrumentata già in F1 (anche con implementazione no-op) per consentire Inspector in F6 senza retrofit *(decisione architetturale ARCHITECTURE.md §3.2)*
 - [ ] **CORE-14**: Configurazione globale via `createBroker(config)` con sezioni `runtime`, `topicSchemas`, `canonicalModel`, `aliasRegistry`, `transforms`, `routes`, `transport`, `workers`, `debug`, `cache` *(PRD §27)*
 
@@ -112,7 +112,7 @@ Tutti i requisiti elencati sono table stakes (vincolanti dalla checklist PRD §4
 #### Errori
 - [x] **ERR-01**: Tipo `BrokerError` con `code`, `message`, `category`, `details`, `originalError`, `routeId`, `topic`, `eventId` *(PRD §22.4)*
 - [ ] **ERR-02**: Eventi standard di errore: `<topic>.failed`, `system.error`, `mapping.error`, `worker.error`, `network.error` *(PRD §22.3)*
-- [ ] **ERR-03**: Errori isolati: il runtime non collassa salvo guasto critico non recuperabile *(PRD §22.2)*
+- [x] **ERR-03**: Errori isolati: il runtime non collassa salvo guasto critico non recuperabile *(PRD §22.2)*
 
 #### Pipeline & Lifecycle
 - [ ] **PIPE-01**: Pipeline ufficiale §28.1 implementata coerentemente in tutte le fasi (14 step documentati) *(PRD §28)*
@@ -184,8 +184,8 @@ Mappatura definitiva REQ-ID → fase. Ogni requisito è assegnato alla **prima f
 
 | Requirement | Phase | Status | Note |
 |-------------|-------|--------|------|
-| CORE-01 | Phase 1 | Pending | — |
-| CORE-02 | Phase 1 | Pending | TEST-01 deterministico |
+| CORE-01 | Phase 1 | Done (plan 01-07) | `EventBus` class in `core/bus.ts` con `publish(topic, payload, options?)` e `subscribe(pattern, handler, options?)`. 25 test passing. |
+| CORE-02 | Phase 1 | Done (plan 01-07) | `Subscription` handle ritornato da `subscribe()` con `.unsubscribe()` idempotente (D-27 verificato). `unsubscribeByOwner(pluginId)` per LIFE-02 cascade in plan 08. |
 | CORE-03 | Phase 1 | Done (plan 01-06) | `TopicRegistry` class in `core/topic-registry.ts` con `register/has/list/onRegistered`, idempotente, ordering deterministico, observer pattern, 8 test passing. `getTopicRegistry()` API pubblica esposta in plan 08. |
 | CORE-04 | Phase 1 | Pending | — |
 | CORE-05 | Phase 1 | Partial (plan 01-03 + 01-06) | PluginDescriptor con 4 hook lifecycle opzionali + PluginState 8 stati (plan 03). State machine `VALID_TRANSITIONS` + `transitionState(reg, target, logger)` in `core/lifecycle.ts` (plan 06, 29 test). Hook invocation runtime in plan 08 (plugin-registry.ts). |
@@ -195,7 +195,7 @@ Mappatura definitiva REQ-ID → fase. Ogni requisito è assegnato alla **prima f
 | CORE-09 | Phase 1 | Done (plan 01-05) | `TopicTrie<T>` segmentato D-08..D-11 in `core/topic-matcher.ts` con `insert/remove/match/collectAllPatterns`. Edge case D-11 verificato: `weather.*.failed` matcha `weather.alert.failed`. |
 | CORE-10 | Phase 1 | Done (plan 01-04) | `createConsoleLogger(level)` + `silentLogger` in `core/logger.ts` — 6 livelli, namespace `[sembridge]`, D-12 mapping completo, 11/11 test passing |
 | CORE-11 | Phase 1 | Pending | Cascade da `unregisterPlugin` |
-| CORE-12 | Phase 1 | Pending | try/catch attorno a ogni handler + deep freeze payload |
+| CORE-12 | Phase 1 | Done (plan 01-07) | Handler isolation in `EventBus.deliver()`: try/catch attorno a ogni handler invocation + handler async rejected promise via `.catch()` (D-16). Errore catturato → log via `logger.error` → publish `system.error` come BrokerEvent (NO re-throw). Deep-freeze payload opt-in via `setDebugMode(true)` per anti-tampering. |
 | CORE-13 | Phase 1 | Done (plan 01-04) | `noopEventTap` + `safeTapStep` (try/catch D-20 swallow) + `startStep` factory + `SnapshotFactory` type alias in `core/event-tap.ts` — pre-instrumentazione F1 garantita, 10/10 test passing |
 | CORE-14 | Phase 1 | Type-defined (plan 01-03) | BrokerConfig 10 sezioni (F1 strutturate + F2-F6 placeholder unknown) — `createBroker(config)` Valibot validation in plan 08 |
 
@@ -294,7 +294,7 @@ Mappatura definitiva REQ-ID → fase. Ogni requisito è assegnato alla **prima f
 | VAL-09 | Phase 2 | Pending | **Closes PRD §39 #4**: `onFailure: 'block' | 'skip' | 'fallback'` |
 | ERR-01 | Phase 1 | Done (plan 01-04) | `createBrokerError(params)` factory + `isBrokerError(value)` type guard in `core/broker-error.ts` — ES2022 cause, conditional assignment per `exactOptionalPropertyTypes`, 9/9 test passing |
 | ERR-02 | Phase 2 | Pending | F2: `mapping.error`, F3: `<topic>.failed`+`network.error`, F4: `system.realtime.*`, F5: `worker.error` |
-| ERR-03 | Phase 1 | Pending | — |
+| ERR-03 | Phase 1 | Done (plan 01-07) | Errori isolati nel dispatch loop di `EventBus.deliver()`: ogni handler ha il suo try/catch indipendente; eccezione di un handler NON propaga al loop (gli altri handler ricevono comunque l'evento). 25 test verificano l'invariant. |
 | PIPE-01 | Phase 1 (skeleton) | Pending | Estesa da F2 (step 4-6, 11-12), F3 (step 7-10), F6 (step 14 reale) |
 | LIFE-01 | Phase 1 | Pending | F4 estende a listener realtime; F5 estende a MessageChannel worker |
 | LIFE-02 | Phase 1 | Pending | **Closes PRD §39 #7**: cascade obbligatoria — F3 estende a route, F4 a realtime, F5 a worker tasks |
