@@ -13,8 +13,8 @@
     "lint": "biome check .",
     "format": "biome format --write .",
     "typecheck": "pnpm -r --filter='./packages/*' --if-present run typecheck",
-    "ci:publint": "pnpm -r --filter='./packages/*' exec publint",
-    "ci:attw": "pnpm -r --filter='./packages/*' exec attw --pack",
+    "ci:publint": "pnpm --filter @sembridge/core exec publint",
+    "ci:attw": "pnpm --filter @sembridge/core exec attw --pack --profile=esm-only",
     "ci:size": "size-limit",
     "changeset": "changeset",
     "release": "pnpm build && changeset publish"
@@ -35,5 +35,13 @@
     "@arethetypeswrong/cli": "0.18.2",
     "size-limit": "12.1.0",
     "@size-limit/preset-small-lib": "12.1.0"
-  }
+  },
+  "size-limit": [
+    {
+      "name": "@sembridge/core (gzip)",
+      "path": "packages/core/dist/index.js",
+      "limit": "8 KB",
+      "gzip": true
+    }
+  ]
 }
