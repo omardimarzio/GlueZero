@@ -8,7 +8,7 @@
 
 ## Phases
 
-- [ ] **Phase 1: Core essenziale** (in progress, 2/11 plans complete) — Event bus pub/sub in-page, plugin registry con lifecycle anti-leak, struttura `BrokerEvent`, EventTap pre-instrumentato
+- [ ] **Phase 1: Core essenziale** (in progress, 3/11 plans complete) — Event bus pub/sub in-page, plugin registry con lifecycle anti-leak, struttura `BrokerEvent`, EventTap pre-instrumentato
 - [ ] **Phase 2: Canonical Model & Mapper** — Vocabolario canonico + mapper bidirezionale locale ↔ canonico ↔ locale con transform pipeline e Mapping Inspector
 - [ ] **Phase 3: Routing & Server Gateway HTTP** — Routing engine dichiarativo (`local`/`http`/`cache`/`composite`) + gateway HTTP unico con retry/timeout/dedupe/auth
 - [ ] **Phase 4: Realtime inbound (SSE prioritario, WS opzionale)** — Adapter SSE + WebSocket con reconnection policy, normalizzazione canonica dei messaggi server
@@ -42,7 +42,7 @@ CORE-01, CORE-02, CORE-03, CORE-04, CORE-05, CORE-06, CORE-07, CORE-08, CORE-09,
 **Plans**: 11 plans
 - [x] 01-01-PLAN.md — Monorepo bootstrap (pnpm + 7 packages + tooling root) — completato 2026-04-28 (3 commits: 3a7d9fd, 3b46294, de3e16b)
 - [x] 01-02-PLAN.md — `@sembridge/core` package config (tsup + vitest + tsconfig + deps) — completato 2026-04-28 (2 commits: 6de9f41, d6004c7)
-- [ ] 01-03-PLAN.md — Public types (BrokerEvent, Subscription, PluginDescriptor, BrokerError, BrokerLogger, EventTap, BrokerConfig, DeepReadonly)
+- [x] 01-03-PLAN.md — Public types (BrokerEvent, Subscription, PluginDescriptor, BrokerError, BrokerLogger, EventTap, BrokerConfig, DeepReadonly) — completato 2026-04-28 (3 commits: ebd126a, 7d4ff8a, 7b01f82)
 - [ ] 01-04-PLAN.md — Utility batch A: broker-error + deep-freeze + logger + event-tap
 - [ ] 01-05-PLAN.md — Utility batch B: topic-matcher + event-factory + event-validator
 - [ ] 01-06-PLAN.md — Utility batch C: topic-registry + lifecycle state machine
@@ -285,4 +285,4 @@ I 11 punti che il PRD §39 vieta esplicitamente di lasciare impliciti vengono ch
 ---
 
 *Roadmap created: 2026-04-28*
-*Last updated: 2026-04-28 after Plan 01-02 completion*
+*Last updated: 2026-04-28 after Plan 01-03 completion*

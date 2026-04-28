@@ -188,16 +188,16 @@ Mappatura definitiva REQ-ID → fase. Ogni requisito è assegnato alla **prima f
 | CORE-02 | Phase 1 | Pending | TEST-01 deterministico |
 | CORE-03 | Phase 1 | Pending | — |
 | CORE-04 | Phase 1 | Pending | — |
-| CORE-05 | Phase 1 | Pending | — |
-| CORE-06 | Phase 1 | Pending | — |
-| CORE-07 | Phase 1 | Pending | nanoid per `id` |
+| CORE-05 | Phase 1 | Type-defined (plan 01-03) | PluginDescriptor con 4 hook lifecycle opzionali + PluginState 8 stati — runtime in plan 06 (lifecycle.ts) e plan 08 (plugin-registry.ts) |
+| CORE-06 | Phase 1 | Type-defined (plan 01-03) | Struttura BrokerEvent definita type-level — runtime in plan 04 (event-factory) |
+| CORE-07 | Phase 1 | Type-defined (plan 01-03) | Type enforcement readonly — nanoid runtime per `id` in plan 04 (event-factory) |
 | CORE-08 | Phase 1 | Pending | Validazione naming al `publish` |
 | CORE-09 | Phase 1 | Pending | Trie per wildcard matching |
-| CORE-10 | Phase 1 | Pending | — |
+| CORE-10 | Phase 1 | Type-defined (plan 01-03) | LogLevel union 6 valori — ConsoleLogger runtime in plan 04 |
 | CORE-11 | Phase 1 | Pending | Cascade da `unregisterPlugin` |
 | CORE-12 | Phase 1 | Pending | try/catch attorno a ogni handler + deep freeze payload |
-| CORE-13 | Phase 1 | Pending | Vincolo critico — `EventTap` no-op + step 14 disponibile per F6 |
-| CORE-14 | Phase 1 | Pending | Schema `createBroker(config)` |
+| CORE-13 | Phase 1 | Type-defined (plan 01-03) | EventTap interface + 5 PipelineStep F1 — NoopEventTap runtime in plan 04 |
+| CORE-14 | Phase 1 | Type-defined (plan 01-03) | BrokerConfig 10 sezioni (F1 strutturate + F2-F6 placeholder unknown) — `createBroker(config)` Valibot validation in plan 08 |
 
 ### Canonical Model + Mapper — Fase 2
 
@@ -288,11 +288,11 @@ Mappatura definitiva REQ-ID → fase. Ogni requisito è assegnato alla **prima f
 | VAL-03 | Phase 2 | Pending | — |
 | VAL-04 | Phase 2 | Pending | — |
 | VAL-05 | Phase 3 | Pending | — |
-| VAL-06 | Phase 1 | Pending | Scelta Valibot in F2 |
+| VAL-06 | Phase 1 | Type-defined (plan 01-03) | Schema definitions tipizzate via TS interfaces in `packages/core/src/types/` — Valibot runtime schemas in plan 04+ |
 | VAL-07 | Phase 2 | Pending | — |
 | VAL-08 | Phase 2 | Pending | **Closes PRD §39 #3**: `required: true|false` per campo |
 | VAL-09 | Phase 2 | Pending | **Closes PRD §39 #4**: `onFailure: 'block' | 'skip' | 'fallback'` |
-| ERR-01 | Phase 1 | Pending | — |
+| ERR-01 | Phase 1 | Type-defined (plan 01-03) | BrokerError extends Error con 8 campi readonly + 9 ErrorCategory + CreateBrokerErrorParams — factory `createBrokerError(...)` runtime in plan 04 |
 | ERR-02 | Phase 2 | Pending | F2: `mapping.error`, F3: `<topic>.failed`+`network.error`, F4: `system.realtime.*`, F5: `worker.error` |
 | ERR-03 | Phase 1 | Pending | — |
 | PIPE-01 | Phase 1 (skeleton) | Pending | Estesa da F2 (step 4-6, 11-12), F3 (step 7-10), F6 (step 14 reale) |
@@ -327,4 +327,4 @@ Mappatura definitiva REQ-ID → fase. Ogni requisito è assegnato alla **prima f
 
 ---
 *Requirements defined: 2026-04-28*
-*Last updated: 2026-04-28 after roadmap creation (traceability completata)*
+*Last updated: 2026-04-28 after Plan 01-03 completion (CORE-05/06/07/10/13/14, ERR-01, VAL-06 → Type-defined)*
