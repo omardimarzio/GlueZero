@@ -2,14 +2,15 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
+current_plan: 3 of 11
 status: executing
-last_updated: "2026-04-28T12:08:21.288Z"
+last_updated: "2026-04-28T12:15:03Z"
 progress:
   total_phases: 6
   completed_phases: 0
   total_plans: 11
-  completed_plans: 1
-  percent: 9
+  completed_plans: 2
+  percent: 18
 ---
 
 # Project State: SemBridge
@@ -28,13 +29,13 @@ progress:
 ## Current Position
 
 Phase: 01-core-essenziale (1) — EXECUTING
-Current Plan: 2 of 11
+Current Plan: 3 of 11
 Total Plans: 11
 
 - **Phase:** 1 — Core essenziale
-- **Plan:** 01-01 — Bootstrap monorepo + tooling root (COMPLETE)
+- **Plan:** 01-02 — `@sembridge/core` package config (COMPLETE)
 - **Status:** Executing Phase 01-core-essenziale
-- **Progress:** 1/11 plans complete in Phase 1 (`█▱▱▱▱▱▱▱▱▱▱`); 0/6 phases complete (`▱▱▱▱▱▱`)
+- **Progress:** [██░░░░░░░░] 18% (2/11 plans Phase 1)
 
 ## Phases Overview
 
@@ -45,7 +46,7 @@ Total Plans: 11
 
 | Phase | Goal (sintesi) | Status |
 |-------|----------------|--------|
-| 1 | Core essenziale (broker pub/sub, plugin registry, EventTap pre-instrumentato) | In progress (1/11 plans) |
+| 1 | Core essenziale (broker pub/sub, plugin registry, EventTap pre-instrumentato) | In progress (2/11 plans) |
 | 2 | Canonical Model & Mapper bidirezionale + Mapping Inspector | Not started |
 | 3 | Routing engine + HTTP gateway con retry/timeout/dedupe/auth | Not started |
 | 4 | Realtime inbound (SSE prioritario, WS opzionale) | Not started |
@@ -57,11 +58,11 @@ Total Plans: 11
 | Metric | Value |
 |--------|-------|
 | Phases complete | 0 / 6 |
-| Plans complete in current phase | 1 / 11 (Phase 1) |
+| Plans complete in current phase | 2 / 11 (Phase 1) |
 | Plans abandoned | 0 |
 | Plans repaired | 0 |
 | Time per phase | — |
-| Time per plan | 01-01: 4m 14s (3 tasks, 23 files) |
+| Time per plan | 01-01: 4m 14s (3 tasks, 23 files); 01-02: 3m 19s (2 tasks, 7 files) |
 
 ## Accumulated Context
 
@@ -80,6 +81,8 @@ Total Plans: 11
 | EventBus in-house (no mitt/eventemitter3/RxJS) | `BrokerEvent` con metadata strutturati, wildcard, dedupe, backpressure, priority, TTL non coperti dai pub/sub esistenti | STACK.md |
 | `EventTap` instrumentato già in F1 | Aggiungerlo retroattivamente in F6 = retrofit invasivo di tutti gli step di pipeline | ARCHITECTURE.md, SUMMARY.md, ROADMAP.md |
 | Auto-mode GSD attivo + branching strategy `none` | Default GSD per progetto greenfield single-developer | config.json |
+| Aggiunto `ignoreDeprecations: "6.0"` a `packages/core/tsconfig.json` | Workaround per tsup 8.5.1 che inietta hardcoded `baseUrl` (rollup.js linea 6837); TS 6.0.3 promuove `baseUrl` a errore TS5101. Da rimuovere quando tsup riceve fix upstream. | 01-02-SUMMARY.md |
+| Aggiunto `--passWithNoTests` agli script test/test:coverage di @sembridge/core | Vitest 4.1.5 esce 1 senza test files (non 0 come affermato in RESEARCH.md). Da rimuovere quando i plan 03+ aggiungeranno test reali. | 01-02-SUMMARY.md |
 
 ### Open Issues PRD §39 — Phase Assignment
 
@@ -103,9 +106,12 @@ Total Plans: 11
 
 - [x] Eseguire `/gsd-plan-phase 1` per generare il plan di Phase 1 (Core essenziale) — completato
 - [x] Verificare versioni esatte stack — completato in 01-01 (live install 2026-04-28)
+- [x] Eseguire Plan 02 (configurazione `@sembridge/core` con runtime deps + tooling per-package) — completato 2026-04-28
 - [ ] Decidere libreria validation finale (Valibot raccomandato, adapter pluggable per Zod/Ajv) — decisione tactical in F2 design
-- [ ] Approvare manualmente install scripts esbuild/msw via `pnpm approve-builds` se serve in Plan 02 quando `@sembridge/core` configura tsup
-- [ ] Eseguire Plan 02 (configurazione `@sembridge/core` con runtime deps + tooling per-package)
+- [ ] Approvare manualmente install scripts esbuild/msw via `pnpm approve-builds` se serve nei plan futuri (non bloccante per F1)
+- [ ] Rimuovere `ignoreDeprecations: "6.0"` da packages/core/tsconfig.json quando tsup riceve fix upstream per `baseUrl` injection
+- [ ] Rimuovere `--passWithNoTests` dagli script test/test:coverage quando i plan 03+ aggiungono test reali
+- [ ] Eseguire Plan 03 (Wave 2 — Public types: BrokerEvent, Subscription, PluginDescriptor, BrokerError, BrokerLogger, EventTap, BrokerConfig, DeepReadonly)
 
 ### Active Blockers
 
@@ -119,37 +125,49 @@ Nessuna domanda aperta. Le 11 open issues PRD §39 hanno già decisione raccoman
 
 ### Last Action
 
-Plan 01-01 (Bootstrap monorepo + tooling root) eseguito e committato (3 task, 3 commit, 23 file):
+Plan 01-02 (`@sembridge/core` package config) eseguito e committato (2 task, 2 commit, 7 file):
 
-- pnpm 10.33.2 attivato via corepack
-- 8 directory `packages/` create (core + 7 placeholder privati)
-- Tooling root installato e verificato live: TS 6.0.3, Biome 2.4.13, Changesets 2.31.0, Vitest 4.1.5, tsup 8.5.1
-- `pnpm install` 7.4s, 355 pacchetti
-- `pnpm biome check .` exit 0
-- `pnpm typecheck` exit 0 (con `--if-present`)
+- `packages/core/package.json` con runtime deps `nanoid@5.1.9` + `valibot@1.3.1` + devDeps tsup/typescript/vitest/jsdom locali, exports con types-prima-di-import, publishConfig.provenance true, size-limit 8 KB gz
+- `packages/core/tsconfig.json` extends base con `ignoreDeprecations: "6.0"` (workaround tsup baseUrl injection)
+- `packages/core/tsup.config.ts` ESM-only, dts true, target es2022, platform browser
+- `packages/core/vitest.config.ts` jsdom + globals false + coverage v8 90/85/90/90
+- `packages/core/README.md` skeleton DOC-01 con API surface attesa
+- `packages/core/src/index.ts` placeholder ESM (`export {}`)
+- `pnpm install` aggiornato lockfile con 5 nuovi pacchetti risolti
+- `pnpm --filter @sembridge/core build` produce dist/index.js (68 B) + dist/index.d.ts (13 B)
+- `pnpm --filter @sembridge/core typecheck` exit 0
+- `pnpm --filter @sembridge/core test` exit 0 ("No test files found" con `--passWithNoTests`)
 
-Deviation Rule 1 (auto-format Biome 2.4.13) e Rule 3 (`--if-present` per pnpm 10) applicate, documentate in 01-01-SUMMARY.md.
+Deviation Rule 3 applicate due volte, documentate in 01-02-SUMMARY.md:
+1. `ignoreDeprecations: "6.0"` per tsup 8.5.1 che inietta `baseUrl` automaticamente (TS5101 hard error in TS 6.0.3)
+2. `--passWithNoTests` perché Vitest 4.1.5 esce 1 (non 0) senza test files
 
 ### Next Action
 
-Eseguire Plan 02 (Wave 1):
+Eseguire Plan 03 (Wave 2 — Public types):
 
 ```
-/gsd-execute-plan 1 02
+/gsd-execute-plan 1 03
 ```
 
-Plan 02: configurazione completa di `packages/core/` con `package.json` (runtime deps), `tsconfig.json`, `tsup.config.ts`, `vitest.config.ts`, `.size-limit.json`, stub `src/index.ts`.
+Plan 03: definizione dei tipi pubblici in `src/types/`: `BrokerEvent`, `EventSource`, `Subscription`, `PluginDescriptor`, `BrokerError`, `BrokerLogger`, `EventTap`, `PipelineStep`, `PipelineSnapshot`, `BrokerConfig`, `LogLevel`, `DeliveryMode`, `Priority`, `EventId`, `DeepReadonly`, `ErrorCategory`, `PluginContext`, `PluginState`. Pipeline build/test/typecheck è verde — qualunque type definito verrà compilato da tsup e generato come `dist/index.d.ts` rollupato (PKG-04 confermato).
 
 ### Files Created/Updated in this Session
 
-Plan 01-01 execution:
+Plan 01-02 execution:
 
-- `package.json`, `pnpm-workspace.yaml`, `.npmrc`, `.gitignore`, `tsconfig.base.json` (root)
-- `biome.json`, `.changeset/config.json`, `.changeset/README.md` (tooling)
-- `pnpm-lock.yaml` (lockfile)
-- 14 file `packages/<pkg>/{package.json, README.md}` per i 7 placeholder
-- `.planning/phases/01-core-essenziale/01-01-SUMMARY.md` (creato)
+- `packages/core/package.json` (creato)
+- `packages/core/tsconfig.json` (creato)
+- `packages/core/tsup.config.ts` (creato)
+- `packages/core/vitest.config.ts` (creato)
+- `packages/core/README.md` (creato — DOC-01 skeleton)
+- `packages/core/src/index.ts` (creato — placeholder ESM)
+- `pnpm-lock.yaml` (aggiornato con runtime deps + devDeps locali)
+- `.planning/phases/01-core-essenziale/01-02-SUMMARY.md` (creato)
 - `.planning/STATE.md` (aggiornato con nuova posizione)
+- `.planning/ROADMAP.md` (aggiornato con plan 01-02 completion)
+
+Build artifacts generati (gitignored): `packages/core/dist/index.js` (68 B ESM) + `packages/core/dist/index.d.ts` (13 B) + `packages/core/dist/index.js.map` (69 B)
 
 ### Recovery Notes
 

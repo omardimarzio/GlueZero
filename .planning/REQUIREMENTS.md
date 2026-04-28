@@ -306,11 +306,11 @@ Mappatura definitiva REQ-ID → fase. Ogni requisito è assegnato alla **prima f
 | TEST-01 | Phase 1 (subset) | Pending | Estesa progressivamente F2-F6 |
 | TEST-02 | Phase 2 (subset) | Pending | F3 (server), F4 (reconnect), F5 (worker), F6 (cache) |
 | TEST-03 | Phase 1 (subset) | Pending | F3 (server malconfigurato), F4 (riconnessione ripetuta), F5 (worker timeout) |
-| PKG-01 | Phase 1 (01-01 foundation, 01-02 build) | In progress (scaffold OK in 01-01, build in 01-02) | tsup ESM + opzionale CJS/IIFE |
-| PKG-02 | Phase 1 (01-01) | In progress (tsconfig.base.json strict + TS 6.0.3 in 01-01) | TypeScript 6.0.3 (super-set di 5.5+) |
-| PKG-03 | Phase 1 (01-01) | In progress (target ES2022 in tsconfig.base.json) | target ES2022 |
-| PKG-04 | Phase 1 | Pending | dts via tsup |
-| DOC-01 | Phase 1 (skeleton) | Pending | Consolidato in F6 con TypeDoc |
+| PKG-01 | Phase 1 (01-01 foundation, 01-02 build, 01-11 verify) | Baseline (tsup ESM-only configurato in 01-02; dist/index.js generato; full verify in 01-11) | tsup ESM-only (no CJS — dual-package hazard) |
+| PKG-02 | Phase 1 (01-01, 01-02) | Baseline (tsconfig.base.json strict + TS 6.0.3 in 01-01; tsconfig package extends in 01-02; tsc --noEmit exit 0) | TypeScript 6.0.3 (super-set di 5.5+) |
+| PKG-03 | Phase 1 (01-01, 01-02) | Baseline (target ES2022 in tsconfig.base.json; tsup target es2022 + platform browser in 01-02) | target ES2022 |
+| PKG-04 | Phase 1 (01-02 baseline, 01-11 verify) | Baseline (dts: true in tsup.config.ts; dist/index.d.ts generato in 01-02; attw verify in 01-11) | dts via tsup rollup |
+| DOC-01 | Phase 1 (01-02 skeleton, 01-11 finalizzato) | Skeleton (README @sembridge/core creato in 01-02) | Consolidato in F6 con TypeDoc |
 | DOC-02 | Phase 6 | Pending | Guida integrazione plugin |
 | DOC-03 | Phase 2 | Pending | Documentazione canonical model + mapper |
 | DOC-04 | Phase 3 | Pending | Documentazione route engine + gateway |
