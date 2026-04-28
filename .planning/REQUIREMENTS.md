@@ -14,17 +14,17 @@ Tutti i requisiti elencati sono table stakes (vincolanti dalla checklist PRD §4
 - [x] **CORE-01**: Esiste un event bus pub/sub in-page con `publish(topic, payload, options?)` e `subscribe(topic, handler, options?)` *(PRD §16.2, §42)*
 - [x] **CORE-02**: `subscribe` restituisce un handle/subscriptionId che permette `unsubscribe(subscriptionId)` senza effetti residui *(PRD §24.2, §36.1)*
 - [x] **CORE-03**: Topic Registry pubblica/traccia tutti i topic noti via `getTopicRegistry()` *(PRD §10, §16.3)*
-- [ ] **CORE-04**: Plugin Registry: `registerPlugin(descriptor)` e `unregisterPlugin(id)` *(PRD §15, §16.2)*
-- [ ] **CORE-05**: Lifecycle hooks plugin: `onRegister`, `onMount`, `onUnmount`, `onDestroy` *(PRD §15.5)*
+- [x] **CORE-04**: Plugin Registry: `registerPlugin(descriptor)` e `unregisterPlugin(id)` *(PRD §15, §16.2)*
+- [x] **CORE-05**: Lifecycle hooks plugin: `onRegister`, `onMount`, `onUnmount`, `onDestroy` *(PRD §15.5)*
 - [x] **CORE-06**: Ogni evento rispetta la struttura `BrokerEvent` (id, topic, timestamp, source, payload, metadata, correlationId, causationId, traceId, schemaVersion, deliveryMode, priority, ttlMs, dedupeKey) *(PRD §11.1)*
 - [x] **CORE-07**: `id` evento univoco; `timestamp` valorizzato dal broker se assente; `source` obbligatorio e noto al runtime *(PRD §11.3)*
 - [x] **CORE-08**: Naming convention dot-separated minuscolo per topic; pattern `<entity>.<action>.<status>` documentato *(PRD §12.1, §12.2)*
 - [x] **CORE-09**: Wildcard subscribe (`weather.*`, `*.failed`, `form.customer.*`) *(PRD §12.3)*
 - [x] **CORE-10**: Logging configurabile con livelli `silent | error | warn | info | debug | trace` *(PRD §25.4)*
-- [ ] **CORE-11**: Unsubscribe automatico quando un plugin viene unregistered (no memory leak) *(PRD §15.6, §24.2)*
+- [x] **CORE-11**: Unsubscribe automatico quando un plugin viene unregistered (no memory leak) *(PRD §15.6, §24.2)*
 - [x] **CORE-12**: Plugin handler isolato: eccezione in un plugin non collassa il broker *(PRD §22.2)*
 - [x] **CORE-13**: `EventTap` interface instrumentata già in F1 (anche con implementazione no-op) per consentire Inspector in F6 senza retrofit *(decisione architetturale ARCHITECTURE.md §3.2)*
-- [ ] **CORE-14**: Configurazione globale via `createBroker(config)` con sezioni `runtime`, `topicSchemas`, `canonicalModel`, `aliasRegistry`, `transforms`, `routes`, `transport`, `workers`, `debug`, `cache` *(PRD §27)*
+- [x] **CORE-14**: Configurazione globale via `createBroker(config)` con sezioni `runtime`, `topicSchemas`, `canonicalModel`, `aliasRegistry`, `transforms`, `routes`, `transport`, `workers`, `debug`, `cache` *(PRD §27)*
 
 ### Canonical Model + Mapper (Fase 2)
 
@@ -116,8 +116,8 @@ Tutti i requisiti elencati sono table stakes (vincolanti dalla checklist PRD §4
 
 #### Pipeline & Lifecycle
 - [ ] **PIPE-01**: Pipeline ufficiale §28.1 implementata coerentemente in tutte le fasi (14 step documentati) *(PRD §28)*
-- [ ] **LIFE-01**: Subscribe ritorna handle; plugin registrati possono essere smontati senza leak; listener realtime/worker chiudibili *(PRD §24.2)*
-- [ ] **LIFE-02**: Unregister plugin rimuove subscription, handler e risorse collegate *(PRD §24.2, §39 — open issue da chiudere)*
+- [x] **LIFE-01**: Subscribe ritorna handle; plugin registrati possono essere smontati senza leak; listener realtime/worker chiudibili *(PRD §24.2)*
+- [x] **LIFE-02**: Unregister plugin rimuove subscription, handler e risorse collegate *(PRD §24.2, §39 — open issue da chiudere)*
 
 #### Sicurezza
 - [ ] **SEC-01**: Header auth centralizzati nel gateway *(PRD §26.2)*
@@ -187,17 +187,17 @@ Mappatura definitiva REQ-ID → fase. Ogni requisito è assegnato alla **prima f
 | CORE-01 | Phase 1 | Done (plan 01-07) | `EventBus` class in `core/bus.ts` con `publish(topic, payload, options?)` e `subscribe(pattern, handler, options?)`. 25 test passing. |
 | CORE-02 | Phase 1 | Done (plan 01-07) | `Subscription` handle ritornato da `subscribe()` con `.unsubscribe()` idempotente (D-27 verificato). `unsubscribeByOwner(pluginId)` per LIFE-02 cascade in plan 08. |
 | CORE-03 | Phase 1 | Done (plan 01-06) | `TopicRegistry` class in `core/topic-registry.ts` con `register/has/list/onRegistered`, idempotente, ordering deterministico, observer pattern, 8 test passing. `getTopicRegistry()` API pubblica esposta in plan 08. |
-| CORE-04 | Phase 1 | Pending | — |
-| CORE-05 | Phase 1 | Partial (plan 01-03 + 01-06) | PluginDescriptor con 4 hook lifecycle opzionali + PluginState 8 stati (plan 03). State machine `VALID_TRANSITIONS` + `transitionState(reg, target, logger)` in `core/lifecycle.ts` (plan 06, 29 test). Hook invocation runtime in plan 08 (plugin-registry.ts). |
+| CORE-04 | Phase 1 | Done (plan 01-08) | `Broker.registerPlugin(descriptor)` e `Broker.unregisterPlugin(id)` esposti via `core/broker.ts`. `PluginRegistry` interno con register (auto-mount D-25) + unregister cascade D-26. Throw `BrokerError` `plugin.id.duplicate` su id duplicato (D-17). |
+| CORE-05 | Phase 1 | Done (plan 01-08) | Hook invocation completata in `plugin-registry.ts`: `onRegister` sync → auto-mount con `onMount` async → `onUnmount` async → `onDestroy` async (D-25 transitions). 19 test in plugin-registry.test.ts coprono lifecycle ordering, hook errors propagation, cascade D-26. |
 | CORE-06 | Phase 1 | Done (plan 01-05) | `createBrokerEvent` factory in `core/event-factory.ts` produce eventi conformi a struttura `BrokerEvent` (id branded, topic, timestamp, source obbligatorio, payload, metadata, correlationId, deliveryMode default 'async', priority default 'normal'). 12 test passing. |
 | CORE-07 | Phase 1 | Done (plan 01-05) | `createBrokerEvent` setta id via `nanoid` se assente, timestamp via `Date.now()` se assente, lancia `BrokerError` `event.source.missing` se source assente E senza defaultSource. (D-21..D-23) |
 | CORE-08 | Phase 1 | Done (plan 01-05) | `validateTopic(topic)` in `core/topic-matcher.ts` con regex D-24 (`/^[a-z0-9]+(\.[a-z0-9]+)*$/`); naming dot-separated minuscolo enforced via throw `BrokerError` `topic.invalid`. 32 test (insieme a TopicTrie). |
 | CORE-09 | Phase 1 | Done (plan 01-05) | `TopicTrie<T>` segmentato D-08..D-11 in `core/topic-matcher.ts` con `insert/remove/match/collectAllPatterns`. Edge case D-11 verificato: `weather.*.failed` matcha `weather.alert.failed`. |
 | CORE-10 | Phase 1 | Done (plan 01-04) | `createConsoleLogger(level)` + `silentLogger` in `core/logger.ts` — 6 livelli, namespace `[sembridge]`, D-12 mapping completo, 11/11 test passing |
-| CORE-11 | Phase 1 | Pending | Cascade da `unregisterPlugin` |
+| CORE-11 | Phase 1 | Done (plan 01-08) | `unregisterPlugin(id)` invoca cascade D-26: `bus.unsubscribeByOwner(pluginId)` + `abortController.abort()` + `onUnmount` + `onDestroy`. `createPluginScopedBroker` wrapper auto-tagga subscriptions con `ownerId=pluginId` per garantire LIFE-02 deterministico. |
 | CORE-12 | Phase 1 | Done (plan 01-07) | Handler isolation in `EventBus.deliver()`: try/catch attorno a ogni handler invocation + handler async rejected promise via `.catch()` (D-16). Errore catturato → log via `logger.error` → publish `system.error` come BrokerEvent (NO re-throw). Deep-freeze payload opt-in via `setDebugMode(true)` per anti-tampering. |
 | CORE-13 | Phase 1 | Done (plan 01-04) | `noopEventTap` + `safeTapStep` (try/catch D-20 swallow) + `startStep` factory + `SnapshotFactory` type alias in `core/event-tap.ts` — pre-instrumentazione F1 garantita, 10/10 test passing |
-| CORE-14 | Phase 1 | Type-defined (plan 01-03) | BrokerConfig 10 sezioni (F1 strutturate + F2-F6 placeholder unknown) — `createBroker(config)` Valibot validation in plan 08 |
+| CORE-14 | Phase 1 | Done (plan 01-08) | `createBroker(config: BrokerConfig)` in `public-factory.ts` con Valibot `safeParse` validation. F1 sections (`runtime`, `debug`) validate strutturalmente; F2-F6 sections (`topicSchemas`, `canonicalModel`, `aliasRegistry`, `transforms`, `routes`, `transport`, `workers`, `cache`) accettate come placeholder `unknown` (extension non-breaking). Throw `Error` con messaggio Valibot descrittivo su validation fail (D-18). No singleton (D-30): N istanze indipendenti. |
 
 ### Canonical Model + Mapper — Fase 2
 
@@ -296,8 +296,8 @@ Mappatura definitiva REQ-ID → fase. Ogni requisito è assegnato alla **prima f
 | ERR-02 | Phase 2 | Pending | F2: `mapping.error`, F3: `<topic>.failed`+`network.error`, F4: `system.realtime.*`, F5: `worker.error` |
 | ERR-03 | Phase 1 | Done (plan 01-07) | Errori isolati nel dispatch loop di `EventBus.deliver()`: ogni handler ha il suo try/catch indipendente; eccezione di un handler NON propaga al loop (gli altri handler ricevono comunque l'evento). 25 test verificano l'invariant. |
 | PIPE-01 | Phase 1 (skeleton) | Pending | Estesa da F2 (step 4-6, 11-12), F3 (step 7-10), F6 (step 14 reale) |
-| LIFE-01 | Phase 1 | Pending | F4 estende a listener realtime; F5 estende a MessageChannel worker |
-| LIFE-02 | Phase 1 | Pending | **Closes PRD §39 #7**: cascade obbligatoria — F3 estende a route, F4 a realtime, F5 a worker tasks |
+| LIFE-01 | Phase 1 | Done (plan 01-08) | `Broker.subscribe()` ritorna `Subscription` con `.unsubscribe()` idempotente. Plugin smontabili senza leak via `unregisterPlugin(id)` cascade D-26. F4 estenderà a listener realtime; F5 a MessageChannel worker. |
+| LIFE-02 | Phase 1 | Done (plan 01-08) | **Closes PRD §39 #7**: cascade D-26 deterministico in `unregister(id)` — `bus.unsubscribeByOwner` → `abortController.abort()` → `onUnmount` → `onDestroy`. `createPluginScopedBroker` wrapper auto-tagga subscriptions per garantire enforcement F1. Test `getDebugSnapshot()` post-unregister == baseline pre-registrazione. F3 estenderà a route, F4 a realtime, F5 a worker tasks. |
 | SEC-01 | Phase 3 | Pending | — |
 | SEC-02 | Phase 3 | Pending | — |
 | SEC-03 | Phase 3 | Pending | Idempotency token |

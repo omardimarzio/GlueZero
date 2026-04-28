@@ -8,7 +8,7 @@
 
 ## Phases
 
-- [ ] **Phase 1: Core essenziale** (in progress, 7/11 plans complete) — Event bus pub/sub in-page, plugin registry con lifecycle anti-leak, struttura `BrokerEvent`, EventTap pre-instrumentato
+- [ ] **Phase 1: Core essenziale** (in progress, 8/11 plans complete) — Event bus pub/sub in-page, plugin registry con lifecycle anti-leak, struttura `BrokerEvent`, EventTap pre-instrumentato
 - [ ] **Phase 2: Canonical Model & Mapper** — Vocabolario canonico + mapper bidirezionale locale ↔ canonico ↔ locale con transform pipeline e Mapping Inspector
 - [ ] **Phase 3: Routing & Server Gateway HTTP** — Routing engine dichiarativo (`local`/`http`/`cache`/`composite`) + gateway HTTP unico con retry/timeout/dedupe/auth
 - [ ] **Phase 4: Realtime inbound (SSE prioritario, WS opzionale)** — Adapter SSE + WebSocket con reconnection policy, normalizzazione canonica dei messaggi server
@@ -47,7 +47,7 @@ CORE-01, CORE-02, CORE-03, CORE-04, CORE-05, CORE-06, CORE-07, CORE-08, CORE-09,
 - [x] 01-05-PLAN.md — Utility batch B: topic-matcher + event-factory + event-validator — completato 2026-04-28 (6 commits RED+GREEN: c97bc56+8c24e77, 239d010+6cd21e7, d77398c+cf12502; 3 source + 3 test, 55 nuovi test, eseguito in parallelo a plan 06 via gsd-executor)
 - [x] 01-06-PLAN.md — Utility batch C: topic-registry + lifecycle state machine — completato 2026-04-28 (4 commits RED+GREEN: 526336a+41866e7, c87ae5f+94db532; 2 source + 2 test, 37 nuovi test, eseguito in parallelo a plan 05 via gsd-executor)
 - [x] 01-07-PLAN.md — EventBus (bus.ts) — pub/sub dispatch + handler isolation + 5 step tap — completato 2026-04-28 (2 commits RED+GREEN: d328a96+9189a03; 1 source 291 LOC + 1 test 402 LOC, 25 nuovi test; 6 test extra Rule 2 oltre i 16 minimi del PLAN)
-- [ ] 01-08-PLAN.md — PluginRegistry + Broker class composition + public-factory + index.ts public API
+- [x] 01-08-PLAN.md — PluginRegistry + Broker class composition + public-factory + index.ts public API — completato 2026-04-28 (4 commits RED+GREEN: ada0cfb+1377ef9, 285390b+1960be9; 5 source/test + index.ts modificato, 32 nuovi test; build OK con dist/index.js 23.14 KB + dist/index.d.ts 6.44 KB; smoke import 6 entries)
 - [ ] 01-09-PLAN.md — PipelineHarness fixture + integration tests (5 success criteria + LIFE-02 deterministico)
 - [ ] 01-10-PLAN.md — Robustness tests (storm, wildcard-perf, plugin-fault, concurrent-unregister)
 - [ ] 01-11-PLAN.md — Build verification (publint + attw + size-limit) + DOC-01 README + JSDoc
@@ -246,7 +246,7 @@ I 11 punti che il PRD §39 vieta esplicitamente di lasciare impliciti vengono ch
 | 4 | Transform failure: skip o block | `onFailure: 'block' | 'skip' | 'fallback'`, default `'block'` | F2 (VAL-09) |
 | 5 | Topic senza route | Default consegna locale, opt-in `requiresRoute: true` | F3 (ROUTE-16) |
 | 6 | Più route applicabili | `'first-match'` default + `'priority-ordered'` + `'all'` | F3 (ROUTE-15) |
-| 7 | Unsubscribe automatico in `unregisterPlugin` | Cascade obbligatoria, test deterministico | F1 (LIFE-02) |
+| 7 | Unsubscribe automatico in `unregisterPlugin` | Cascade obbligatoria, test deterministico | F1 (LIFE-02) — **Closed in 01-08** |
 | 8 | Retry 4xx vs 5xx | No retry su 4xx (eccetto 408/429); retry su 5xx + network + 408/429 | F3 (ROUTE-09) |
 | 9 | Reconnection rules realtime | Exponential backoff + full jitter, cap 30s, eventi `system.realtime.*`, Last-Event-ID per SSE, ping app-level per WS | F4 (RT-07) |
 | 10 | Format metriche | JSON simil-OpenMetrics `{ counters, gauges, histograms }` | F6 (TOOL-05) |
@@ -275,7 +275,7 @@ I 11 punti che il PRD §39 vieta esplicitamente di lasciare impliciti vengono ch
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Core essenziale | 7/11 | In progress | - |
+| 1. Core essenziale | 8/11 | In progress | - |
 | 2. Canonical Model & Mapper | 0/0 | Not started | - |
 | 3. Routing & Server Gateway HTTP | 0/0 | Not started | - |
 | 4. Realtime inbound | 0/0 | Not started | - |
@@ -285,4 +285,4 @@ I 11 punti che il PRD §39 vieta esplicitamente di lasciare impliciti vengono ch
 ---
 
 *Roadmap created: 2026-04-28*
-*Last updated: 2026-04-28 after Wave 4 closure (Plan 01-07 EventBus core done; 10 Test Files / 159 Tests passing)*
+*Last updated: 2026-04-28 after Wave 5 closure (Plan 01-08 Broker + plugin-registry + public API done; 12 Test Files / 191 Tests passing; build OK)*

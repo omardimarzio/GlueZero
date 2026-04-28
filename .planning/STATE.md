@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-current_plan: 8 of 11
+current_plan: 9 of 11
 status: executing
-last_updated: "2026-04-28T22:58:25+02:00"
+last_updated: "2026-04-28T23:30:00+02:00"
 progress:
   total_phases: 6
   completed_phases: 0
   total_plans: 11
-  completed_plans: 7
-  percent: 63
+  completed_plans: 8
+  percent: 72
 ---
 
 # Project State: SemBridge
@@ -29,13 +29,13 @@ progress:
 ## Current Position
 
 Phase: 01-core-essenziale (1) — EXECUTING
-Current Plan: 8 of 11
+Current Plan: 9 of 11
 Total Plans: 11
 
 - **Phase:** 1 — Core essenziale
-- **Plan:** Wave 4 chiusa — 01-07 ✓ (`bus.ts` EventBus core)
+- **Plan:** Wave 5 chiusa — 01-08 ✓ (`Broker` class + `plugin-registry` + public API surface)
 - **Status:** Executing Phase 01-core-essenziale
-- **Progress:** [██████░░░░] 63%
+- **Progress:** [███████░░░] 72%
 
 ## Phases Overview
 
@@ -46,7 +46,7 @@ Total Plans: 11
 
 | Phase | Goal (sintesi) | Status |
 |-------|----------------|--------|
-| 1 | Core essenziale (broker pub/sub, plugin registry, EventTap pre-instrumentato) | In progress (7/11 plans) |
+| 1 | Core essenziale (broker pub/sub, plugin registry, EventTap pre-instrumentato) | In progress (8/11 plans) |
 | 2 | Canonical Model & Mapper bidirezionale + Mapping Inspector | Not started |
 | 3 | Routing engine + HTTP gateway con retry/timeout/dedupe/auth | Not started |
 | 4 | Realtime inbound (SSE prioritario, WS opzionale) | Not started |
@@ -58,11 +58,11 @@ Total Plans: 11
 | Metric | Value |
 |--------|-------|
 | Phases complete | 0 / 6 |
-| Plans complete in current phase | 7 / 11 (Phase 1) |
+| Plans complete in current phase | 8 / 11 (Phase 1) |
 | Plans abandoned | 0 |
 | Plans repaired | 0 |
 | Time per phase | — |
-| Time per plan | 01-01: 4m 14s (3 tasks, 23 files); 01-02: 3m 19s (2 tasks, 7 files); 01-03: 6m 26s (3 tasks, 10 files); 01-04: ~6m wall-clock effective (4 tasks, 8 files, 8 commits — interrupted session); 01-05: ~15m parallelo (3 tasks TDD, 6 files src/test + SUMMARY, 7 commits, 55 nuovi test); 01-06: ~7m parallelo (2 tasks TDD, 4 files src/test + SUMMARY, 5 commits, 37 nuovi test); 01-07: ~9m sequenziale (1 task macro RED+GREEN + docs, 2 files src/test + SUMMARY, 3 commits, 25 nuovi test) |
+| Time per plan | 01-01: 4m 14s (3 tasks, 23 files); 01-02: 3m 19s (2 tasks, 7 files); 01-03: 6m 26s (3 tasks, 10 files); 01-04: ~6m wall-clock effective (4 tasks, 8 files, 8 commits — interrupted session); 01-05: ~15m parallelo (3 tasks TDD, 6 files src/test + SUMMARY, 7 commits, 55 nuovi test); 01-06: ~7m parallelo (2 tasks TDD, 4 files src/test + SUMMARY, 5 commits, 37 nuovi test); 01-07: ~9m sequenziale (1 task macro RED+GREEN + docs, 2 files src/test + SUMMARY, 3 commits, 25 nuovi test); 01-08: ~14m sequenziale (2 tasks TDD: plugin-registry + public-factory, 5 files src/test + SUMMARY + index.ts, 5 commits, 32 nuovi test) |
 
 ## Accumulated Context
 
@@ -95,6 +95,10 @@ Total Plans: 11
 | Granularizzati 3 test in `lifecycle.test.ts` (integrità reg.state on throw, error.category, logger.error meta-shape) | Acceptance criteria coperti con unit indipendenti per facilitare diagnostica regressione futura. 29 test invece di ~22. (Rule 2 plan 06) | 01-06-SUMMARY.md |
 | 6 test extra aggiunti a `bus.test.ts` (BrokerError no-rewrap, validation blocca tap downstream, remote→async fallback parità con worker, unsubscribeByOwner zero match, getStats shape, setDebugMode toggle runtime) | Coverage gap nel PLAN: comportamenti critici non coperti dai 16 test minimi richiesti. 25 test totali invece di 16. (Rule 2 plan 07) | 01-07-SUMMARY.md |
 | `useOptionalChain` su `unsubscribeInternal` in `bus.ts` (`!sub \|\| !sub.active` → `!sub?.active`) | Allineamento con Wave 3 modules che hanno zero Biome warning. (Rule 1 plan 07 manuale) | 01-07-SUMMARY.md |
+| `PluginContext.broker` placeholder risolto via approccio strutturale (`interface PluginScopedBroker`) invece di TypeScript declaration merging | Evita ciclo di import broker.ts ↔ types/plugin.ts. Lo scoped broker espone solo le API necessarie agli hook plugin (subscribe/publish/unsubscribeByOwner-tagged). Declaration merging full deferred a F2/F3 quando emergerà necessità di esporre il `Broker` completo. | 01-08-SUMMARY.md |
+| `createBroker(invalidConfig)` lancia `Error` nativo (non `BrokerError`) | Errore di development-time, non runtime broker-internal. Il `BrokerError` è semanticamente "errore propagato attraverso il broker" — qui il broker non esiste ancora. Test verifica `Error` con messaggio descrittivo Valibot. | 01-08-SUMMARY.md |
+| `createPluginScopedBroker(broker, pluginCtx)` wrapper auto-tagga subscriptions con `ownerId=pluginCtx.id` | D-26 enforcement pratico in F1 (chiusura PRD §39 #7 — LIFE-02): senza wrapper, il punto 1 della cascade (`bus.unsubscribeByOwner`) sarebbe esercitato solo dai plugin che usano `signal: ctx.signal`. Il wrapper rende il behavior LIFE-02 deterministico e testabile. | 01-08-SUMMARY.md |
+| 7 test extra in plugin-registry/public-factory (Rule 2) | Coverage gap: scoped broker no-signal/non-function-properties/onDestroy-throw + list edge cases + all F1 runtime fields/registerPlugin lifecycle/LIFE-02 cascade. Test totali 32 invece dei minimi del PLAN. | 01-08-SUMMARY.md |
 
 ### Open Issues PRD §39 — Phase Assignment
 
@@ -108,7 +112,7 @@ Total Plans: 11
 | Transform failure: skip o block | F2 (VAL-09) | Pending |
 | Topic senza route | F3 (ROUTE-16) | Pending |
 | Più route applicabili stesso topic | F3 (ROUTE-15) | Pending |
-| Unsubscribe automatico in `unregisterPlugin` | F1 (LIFE-02) | Pending |
+| Unsubscribe automatico in `unregisterPlugin` | F1 (LIFE-02) | **Closed in 01-08** (cascade D-26 deterministico + createPluginScopedBroker wrapper) |
 | Retry 4xx vs 5xx | F3 (ROUTE-09) | Pending |
 | Reconnection rules realtime | F4 (RT-07) | Pending |
 | Format metriche | F6 (TOOL-05) | Pending |
@@ -128,8 +132,12 @@ Total Plans: 11
 - [x] Eseguire Plan 05 (Wave 3 — Utility batch B: topic-matcher + event-factory + event-validator) — completato 2026-04-28 (3 task TDD, 55 nuovi test)
 - [x] Eseguire Plan 06 (Wave 3 — Utility batch C: topic-registry + lifecycle) — completato 2026-04-28 (2 task TDD, 37 nuovi test)
 - [x] Eseguire Plan 07 (Wave 4 — `bus.ts` EventBus core: composizione del broker pub/sub usando le 9 utility dei plan 04/05/06 + noopEventTap pre-instrumentato) — completato 2026-04-28 (1 task macro RED+GREEN, 25 nuovi test, CORE-01/CORE-12/ERR-03 done)
+- [x] Eseguire Plan 08 (Wave 5 — `Broker` class + `createBroker(config)` factory + `plugin-registry.ts` + public API surface) — completato 2026-04-28 (2 task TDD, 32 nuovi test, CORE-04/CORE-05/CORE-11/CORE-14/LIFE-01/LIFE-02 done; PluginContext.broker risolto via approccio strutturale invece di TS declaration merging)
 - [ ] Installare `@vitest/coverage-v8` come devDependency root e ri-eseguire `pnpm --filter @sembridge/core test:coverage` per verificare target ≥ 90% sui file `core/` — bloccante per closure Phase 1
-- [ ] Eseguire Plan 08 (Wave 5 — `Broker` class + `createBroker(config)` factory + `plugin-registry.ts` + public API surface; risolve `PluginContext.broker` da `unknown` al tipo reale via TS declaration merging)
+- [ ] Eseguire Plan 09 (Wave 6 — PipelineHarness fixture + integration tests dei 5 success criteria di Phase 1)
+- [ ] Eseguire Plan 10 (Robustness tests: storm, wildcard-perf, plugin-fault, concurrent-unregister) — parallelizzabile con plan 09
+- [ ] Eseguire Plan 11 (Build verification + DOC-01 README + JSDoc; final gate Phase 1)
+- [ ] Spawn `gsd-verifier` per Phase 1 (goal-backward verification post-11)
 
 ### Active Blockers
 
@@ -143,7 +151,31 @@ Nessuna domanda aperta. Le 11 open issues PRD §39 hanno già decisione raccoman
 
 ### Last Action
 
-**Wave 4 chiusa** — plan 07 (`bus.ts` EventBus core) completato sequenzialmente via `gsd-executor` con `model: "opus"`.
+**Wave 5 chiusa** — plan 08 (`Broker` class + `plugin-registry` + public API surface) completato sequenzialmente via `gsd-executor` con `model: "opus"`.
+
+**Plan 01-08** — 2 task TDD RED→GREEN, 5 commit, 5 file src/test + 1 modifica `index.ts`:
+- `core/plugin-registry.ts` (224 LOC) — `class PluginRegistry` con `register/unregister`, transitions D-25 via `transitionState`, cascade cleanup D-26 (chiusura PRD §39 #7 — LIFE-02): `bus.unsubscribeByOwner` → `abortController.abort()` → `onUnmount` → `onDestroy`. Helper `createPluginScopedBroker(broker, pluginCtx)` che auto-tagga subscriptions con `ownerId=pluginCtx.id` (D-26 enforcement pratico F1).
+- `core/plugin-registry.test.ts` (368 LOC, 19 test) — coverage register lifecycle, duplicate id D-17, cascade cleanup deterministico (`getDebugSnapshot()` post-unregister == baseline), scoped broker.
+- `core/broker.ts` (166 LOC) — `class Broker` composition di EventBus + PluginRegistry + TopicRegistry + logger + tap. Espone `publish/subscribe/registerPlugin/unregisterPlugin/getDebugSnapshot/getTopicRegistry/enableDebug/disableDebug` (D-28, D-29).
+- `public-factory.ts` (68 LOC) — `createBroker(config: BrokerConfig)` con Valibot `safeParse`; throw `Error` su validation fail (D-18). No singleton (D-30): N istanze indipendenti.
+- `public-factory.test.ts` (176 LOC, 13 test) — verifica registerPlugin lifecycle end-to-end, LIFE-02 cascade, F1 runtime fields completi, no singleton.
+- `index.ts` (10 → 38 LOC) — public API surface con runtime exports (`createBroker`, `Broker`, `createBrokerError`, `isBrokerError`, `createConsoleLogger`, `silentLogger`) + barrel type-only.
+- Commit: `ada0cfb` (test plugin-registry RED) → `1377ef9` (feat plugin-registry GREEN) → `285390b` (test broker+factory RED) → `1960be9` (feat broker+factory+index GREEN) → `419152d` (docs SUMMARY).
+
+**Verifica finale Wave 5 chiusa:**
+- `pnpm --filter @sembridge/core test` exit 0: **`Test Files 12 passed | Tests 191 passed`**
+- `pnpm --filter @sembridge/core typecheck` exit 0
+- `pnpm biome check packages/core/src/` exit 0 (35 file, scope esteso a src/)
+- `pnpm --filter @sembridge/core build` exit 0: `dist/index.js` 23.14 KB + `dist/index.d.ts` 6.44 KB + sourcemap 80.04 KB
+- Smoke import: `Object.keys(m).sort()` → `['Broker', 'createBroker', 'createBrokerError', 'createConsoleLogger', 'isBrokerError', 'silentLogger']` (superset rispetto al minimo richiesto dal PLAN)
+
+Decisioni architetturali documentate (NON Rule 4 — strutturali e coerenti col PLAN):
+1. `PluginContext.broker` placeholder risolto via `interface PluginScopedBroker` strutturale invece di TS declaration merging — evita ciclo import broker.ts ↔ types/plugin.ts. Lo scoped broker espone solo le API necessarie agli hook plugin.
+2. `createBroker(invalidConfig)` lancia `Error` nativo, non `BrokerError` — errore di development-time, non runtime broker-internal.
+
+Open item residuo (ereditato da plan 04, non bloccante): coverage v8 measurement non eseguita (missing devDep `@vitest/coverage-v8`). Surrogate: 191/191 test passing su 12 moduli con behavior coverage esplicito.
+
+**Wave 4 (precedente)** — plan 07 EventBus core completato e già documentato.
 
 **Plan 01-07** (EventBus core) — 1 task macro TDD RED→GREEN, 3 commit, 2 file src/test (291 + 402 LOC):
 - `core/bus.ts` — classe `EventBus` con `publish/subscribe/unsubscribeByOwner/setDebugMode/getStats`. Coverage: CORE-01 (event bus pub/sub), CORE-09 (wildcard delivery via TopicTrie applicato al dispatch), CORE-12 (handler isolation con try/catch + system.error publish), ERR-03 (errori non collassano runtime).
@@ -186,26 +218,21 @@ Open item ereditato (non bloccante):
 
 ### Next Action
 
-**Wave 5 — plan 08** (`Broker` class composition + public API surface, sequenziale):
+**Wave 6 — plan 09 e 10** (potenzialmente parallelizzabili — verificare file ownership disgiunta):
 
 ```
-/gsd-execute-plan 1 08
+/gsd-execute-plan 1 09   # PipelineHarness + integration tests
+/gsd-execute-plan 1 10   # Robustness tests
 ```
 
-Plan 08 deliverables:
-- `core/broker.ts` — `Broker` class che compone `EventBus` (plan 07) con `TopicRegistry` (plan 06), `PluginRegistry` (nuovo modulo plan 08) e `BrokerLogger`/`EventTap` injected.
-- `core/plugin-registry.ts` — gestisce `registerPlugin/unregisterPlugin` cascade con `transitionState` (plan 06 lifecycle.ts) e `unsubscribeByOwner` (plan 07 bus.ts) per LIFE-02 cascade unsubscribe.
-- `createBroker(config: BrokerConfig)` factory function — Valibot validation del config (CORE-14), bootstrap di EventBus + PluginRegistry + Tap + Logger.
-- TS declaration merging per `PluginContext.broker`: risolve il provisional `unknown` di plan 03 al tipo `Broker` reale.
-- Modifica `packages/core/src/index.ts`: aggiunge runtime exports (`createBroker`, `Broker`, `createBrokerError`, `createConsoleLogger`, `silentLogger`) accanto al barrel `export type * from './types'`.
+- **Plan 09** (Wave 6): PipelineHarness fixture + integration tests dei 5 success criteria di Phase 1 (plugin A → broker → plugin B end-to-end senza mapping; subscribe.unsubscribe + LIFE-02 cascade deterministico via getDebugSnapshot; struttura BrokerEvent + naming validation runtime; wildcard subscribe; EventTap instrumentato in tutti i 5 step F1).
+- **Plan 10**: Robustness tests (storm di eventi, wildcard-perf con N subscribers, plugin malconfigurato, concurrent-unregister race).
 
-Dopo plan 08 seguono Wave 6+:
-- **Plan 09**: PipelineHarness fixture + integration tests (5 success criteria di Phase 1)
-- **Plan 10**: Robustness tests (storm, wildcard-perf, plugin-fault, concurrent-unregister)
-- **Plan 11**: Build verification (`publint` + `attw` + `size-limit`) + `DOC-01` README + JSDoc
-- **gsd-verifier**: verifica goal-backward post tutti gli 11 plan done
+Dopo Wave 6:
+- **Plan 11** (Wave 7, gate finale): Build verification (`publint` + `attw` + `size-limit`) + `DOC-01` README + JSDoc API pubblica.
+- **gsd-verifier** (post-11): verifica goal-backward dei 5 success criteria Phase 1 + coverage analysis dei 91 REQ-IDs assegnati a Phase 1.
 
-Pre-requisito raccomandato (non strettamente bloccante): installare `@vitest/coverage-v8` per misurare coverage v8 ≥ 90% sui 10 file del directory `core/` prima di chiudere Phase 1.
+Pre-requisito raccomandato (non strettamente bloccante): installare `@vitest/coverage-v8` per misurare coverage v8 ≥ 90% sui 12 file `core/` prima del gate plan 11.
 
 ### Files Created/Updated in this Session
 
@@ -246,6 +273,15 @@ Plan 01-04 + 01-05 + 01-06 execution (Wave 3 completa):
 - `bus.test.ts` (402 LOC) — 25 test (16 minimi PLAN + 6 Rule 2 + altri 3 di copertura)
 - `.planning/phases/01-core-essenziale/01-07-SUMMARY.md` (creato dall'agent gsd-executor)
 
+**Plan 08 file Wave 5** — `packages/core/src/`:
+- `core/plugin-registry.ts` (224 LOC) — class `PluginRegistry` + helper `createPluginScopedBroker`
+- `core/plugin-registry.test.ts` (368 LOC, 19 test)
+- `core/broker.ts` (166 LOC) — class `Broker` composition
+- `public-factory.ts` (68 LOC) — `createBroker(config)` con Valibot validation
+- `public-factory.test.ts` (176 LOC, 13 test)
+- `index.ts` modificato (10 → 38 LOC) con runtime exports
+- `.planning/phases/01-core-essenziale/01-08-SUMMARY.md` (creato dall'agent gsd-executor)
+
 ### Recovery Notes
 
 Il progetto è in stato di **inizializzazione completata**. Tutti gli artefatti GSD di pianificazione sono presenti:
@@ -266,4 +302,4 @@ Se la sessione viene interrotta, riprendere con `/gsd-plan-phase 1` o con review
 
 **Planned Phase:** 1 (Core essenziale) — 11 plans — 2026-04-28T11:47:46.016Z
 
-**Plans complete (Phase 1):** 01-01 ✓, 01-02 ✓, 01-03 ✓, 01-04 ✓, 01-05 ✓, 01-06 ✓, 01-07 ✓ — Wave 1 + Wave 2 + Wave 3 + Wave 4 done. Wave 5 (plan 08 — `Broker` class composition + public API + plugin-registry) sbloccata, sequenziale.
+**Plans complete (Phase 1):** 01-01 ✓, 01-02 ✓, 01-03 ✓, 01-04 ✓, 01-05 ✓, 01-06 ✓, 01-07 ✓, 01-08 ✓ — Wave 1+2+3+4+5 done. Wave 6 (plan 09 + 10) sbloccata; Wave 7 (plan 11 final gate) a seguire.
