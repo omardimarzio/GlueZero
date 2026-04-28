@@ -3,12 +3,13 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: Not started
-last_updated: "2026-04-28T10:18:34.055Z"
+last_updated: "2026-04-28T11:47:46.019Z"
 progress:
   total_phases: 6
   completed_phases: 0
-  total_plans: 0
+  total_plans: 11
   completed_plans: 0
+  percent: 0
 ---
 
 # Project State: SemBridge
@@ -151,3 +152,5 @@ Se la sessione viene interrotta, riprendere con `/gsd-plan-phase 1` o con review
 ---
 
 *State initialized: 2026-04-28 (auto-mode da prd.md, post roadmap creation)*
+
+**Planned Phase:** 1 (Core essenziale) — 11 plans — 2026-04-28T11:47:46.016Z
