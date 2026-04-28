@@ -7,12 +7,12 @@
     "node": ">=20"
   },
   "scripts": {
-    "build": "pnpm -r --filter='./packages/*' run build",
-    "test": "pnpm -r --filter='./packages/*' run test",
-    "test:watch": "pnpm -r --filter='./packages/*' run test:watch",
+    "build": "pnpm -r --filter='./packages/*' --if-present run build",
+    "test": "pnpm -r --filter='./packages/*' --if-present run test",
+    "test:watch": "pnpm -r --filter='./packages/*' --if-present run test:watch",
     "lint": "biome check .",
     "format": "biome format --write .",
-    "typecheck": "pnpm -r --filter='./packages/*' run typecheck",
+    "typecheck": "pnpm -r --filter='./packages/*' --if-present run typecheck",
     "ci:publint": "pnpm -r --filter='./packages/*' exec publint",
     "ci:attw": "pnpm -r --filter='./packages/*' exec attw --pack",
     "ci:size": "size-limit",
