@@ -28,9 +28,9 @@ describe('createBroker', () => {
   })
 
   it('throws on invalid runtime.logLevel (D-18)', () => {
-    expect(() =>
-      createBroker({ runtime: { logLevel: 'invalid' as unknown as 'info' } }),
-    ).toThrow(/Invalid BrokerConfig/)
+    expect(() => createBroker({ runtime: { logLevel: 'invalid' as unknown as 'info' } })).toThrow(
+      /Invalid BrokerConfig/,
+    )
   })
 
   it('accepts F2-F6 placeholder sections as unknown (CORE-14)', () => {
