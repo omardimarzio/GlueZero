@@ -8,7 +8,7 @@
 
 ## Phases
 
-- [ ] **Phase 1: Core essenziale** (planned, 11 plans) — Event bus pub/sub in-page, plugin registry con lifecycle anti-leak, struttura `BrokerEvent`, EventTap pre-instrumentato
+- [ ] **Phase 1: Core essenziale** (in progress, 1/11 plans complete) — Event bus pub/sub in-page, plugin registry con lifecycle anti-leak, struttura `BrokerEvent`, EventTap pre-instrumentato
 - [ ] **Phase 2: Canonical Model & Mapper** — Vocabolario canonico + mapper bidirezionale locale ↔ canonico ↔ locale con transform pipeline e Mapping Inspector
 - [ ] **Phase 3: Routing & Server Gateway HTTP** — Routing engine dichiarativo (`local`/`http`/`cache`/`composite`) + gateway HTTP unico con retry/timeout/dedupe/auth
 - [ ] **Phase 4: Realtime inbound (SSE prioritario, WS opzionale)** — Adapter SSE + WebSocket con reconnection policy, normalizzazione canonica dei messaggi server
@@ -40,7 +40,7 @@ CORE-01, CORE-02, CORE-03, CORE-04, CORE-05, CORE-06, CORE-07, CORE-08, CORE-09,
   5. L'interfaccia `EventTap` è instrumentata in tutti gli step di pipeline implementati in F1 (con implementazione no-op di default); le fasi successive estendono la pipeline aggiungendo step ma riusando lo stesso contratto Tap senza retrofit (vincolo critico ARCHITECTURE.md §3 + SUMMARY.md).
 
 **Plans**: 11 plans
-- [ ] 01-01-PLAN.md — Monorepo bootstrap (pnpm + 7 packages + tooling root)
+- [x] 01-01-PLAN.md — Monorepo bootstrap (pnpm + 7 packages + tooling root) — completato 2026-04-28 (3 commits: 3a7d9fd, 3b46294, de3e16b)
 - [ ] 01-02-PLAN.md — `@sembridge/core` package config (tsup + vitest + tsconfig + deps)
 - [ ] 01-03-PLAN.md — Public types (BrokerEvent, Subscription, PluginDescriptor, BrokerError, BrokerLogger, EventTap, BrokerConfig, DeepReadonly)
 - [ ] 01-04-PLAN.md — Utility batch A: broker-error + deep-freeze + logger + event-tap
@@ -275,7 +275,7 @@ I 11 punti che il PRD §39 vieta esplicitamente di lasciare impliciti vengono ch
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Core essenziale | 0/0 | Not started | - |
+| 1. Core essenziale | 1/11 | In progress | - |
 | 2. Canonical Model & Mapper | 0/0 | Not started | - |
 | 3. Routing & Server Gateway HTTP | 0/0 | Not started | - |
 | 4. Realtime inbound | 0/0 | Not started | - |
@@ -285,4 +285,4 @@ I 11 punti che il PRD §39 vieta esplicitamente di lasciare impliciti vengono ch
 ---
 
 *Roadmap created: 2026-04-28*
-*Last updated: 2026-04-28 after initial creation*
+*Last updated: 2026-04-28 after Plan 01-01 completion*

@@ -2,14 +2,14 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: Not started
-last_updated: "2026-04-28T11:47:46.019Z"
+status: executing
+last_updated: "2026-04-28T12:08:21.288Z"
 progress:
   total_phases: 6
   completed_phases: 0
   total_plans: 11
-  completed_plans: 0
-  percent: 0
+  completed_plans: 1
+  percent: 9
 ---
 
 # Project State: SemBridge
@@ -23,14 +23,18 @@ progress:
 - **Authoritative source:** `prd.md` (root del progetto, "l'unica base informativa condivisa con il developer", PRD §1)
 - **Core Value:** I plugin/componenti possono essere sviluppati indipendentemente, con la propria nomenclatura locale, e interoperare correttamente attraverso il vocabolario canonico del broker — senza accordo preventivo sui nomi tra autori
 - **Current Milestone:** v1
-- **Current Focus:** Initialization — roadmap creata, in attesa di `/gsd-plan-phase 1`
+- **Current Focus:** Phase 1 — Core essenziale
 
 ## Current Position
 
+Phase: 01-core-essenziale (1) — EXECUTING
+Current Plan: 2 of 11
+Total Plans: 11
+
 - **Phase:** 1 — Core essenziale
-- **Plan:** Not yet planned
-- **Status:** Not started
-- **Progress:** 0/6 phases complete (`▱▱▱▱▱▱`)
+- **Plan:** 01-01 — Bootstrap monorepo + tooling root (COMPLETE)
+- **Status:** Executing Phase 01-core-essenziale
+- **Progress:** 1/11 plans complete in Phase 1 (`█▱▱▱▱▱▱▱▱▱▱`); 0/6 phases complete (`▱▱▱▱▱▱`)
 
 ## Phases Overview
 
@@ -41,7 +45,7 @@ progress:
 
 | Phase | Goal (sintesi) | Status |
 |-------|----------------|--------|
-| 1 | Core essenziale (broker pub/sub, plugin registry, EventTap pre-instrumentato) | Not started |
+| 1 | Core essenziale (broker pub/sub, plugin registry, EventTap pre-instrumentato) | In progress (1/11 plans) |
 | 2 | Canonical Model & Mapper bidirezionale + Mapping Inspector | Not started |
 | 3 | Routing engine + HTTP gateway con retry/timeout/dedupe/auth | Not started |
 | 4 | Realtime inbound (SSE prioritario, WS opzionale) | Not started |
@@ -53,11 +57,11 @@ progress:
 | Metric | Value |
 |--------|-------|
 | Phases complete | 0 / 6 |
-| Plans complete in current phase | 0 / 0 (phase not yet planned) |
+| Plans complete in current phase | 1 / 11 (Phase 1) |
 | Plans abandoned | 0 |
 | Plans repaired | 0 |
 | Time per phase | — |
-| Time per plan | — |
+| Time per plan | 01-01: 4m 14s (3 tasks, 23 files) |
 
 ## Accumulated Context
 
@@ -97,9 +101,11 @@ progress:
 
 ### Active Todos
 
-- [ ] Eseguire `/gsd-plan-phase 1` per generare il plan di Phase 1 (Core essenziale)
-- [ ] Verificare versioni esatte stack con `npm view <pkg> version` prima dell'installazione (gap residuo da SUMMARY.md "Gaps to Address")
+- [x] Eseguire `/gsd-plan-phase 1` per generare il plan di Phase 1 (Core essenziale) — completato
+- [x] Verificare versioni esatte stack — completato in 01-01 (live install 2026-04-28)
 - [ ] Decidere libreria validation finale (Valibot raccomandato, adapter pluggable per Zod/Ajv) — decisione tactical in F2 design
+- [ ] Approvare manualmente install scripts esbuild/msw via `pnpm approve-builds` se serve in Plan 02 quando `@sembridge/core` configura tsup
+- [ ] Eseguire Plan 02 (configurazione `@sembridge/core` con runtime deps + tooling per-package)
 
 ### Active Blockers
 
@@ -113,27 +119,37 @@ Nessuna domanda aperta. Le 11 open issues PRD §39 hanno già decisione raccoman
 
 ### Last Action
 
-Roadmap creata da `gsd-roadmapper`:
+Plan 01-01 (Bootstrap monorepo + tooling root) eseguito e committato (3 task, 3 commit, 23 file):
 
-- 6 fasi mappate 1:1 sulle fasi PRD §32
-- 91/91 requisiti v1 mappati (100% coverage)
-- 11 open issues PRD §39 mappate alle fasi di chiusura
-- Vincolo `EventTap` in F1 documentato esplicitamente
-- 3 fasi flaggate `Needs research`: F3 (Routing/HTTP), F4 (Realtime), F5 (Worker)
+- pnpm 10.33.2 attivato via corepack
+- 8 directory `packages/` create (core + 7 placeholder privati)
+- Tooling root installato e verificato live: TS 6.0.3, Biome 2.4.13, Changesets 2.31.0, Vitest 4.1.5, tsup 8.5.1
+- `pnpm install` 7.4s, 355 pacchetti
+- `pnpm biome check .` exit 0
+- `pnpm typecheck` exit 0 (con `--if-present`)
+
+Deviation Rule 1 (auto-format Biome 2.4.13) e Rule 3 (`--if-present` per pnpm 10) applicate, documentate in 01-01-SUMMARY.md.
 
 ### Next Action
 
-Attendere conferma utente o eseguire:
+Eseguire Plan 02 (Wave 1):
 
 ```
-/gsd-plan-phase 1
+/gsd-execute-plan 1 02
 ```
+
+Plan 02: configurazione completa di `packages/core/` con `package.json` (runtime deps), `tsconfig.json`, `tsup.config.ts`, `vitest.config.ts`, `.size-limit.json`, stub `src/index.ts`.
 
 ### Files Created/Updated in this Session
 
-- `.planning/ROADMAP.md` (creato)
-- `.planning/STATE.md` (creato)
-- `.planning/REQUIREMENTS.md` (sezione Traceability aggiornata)
+Plan 01-01 execution:
+
+- `package.json`, `pnpm-workspace.yaml`, `.npmrc`, `.gitignore`, `tsconfig.base.json` (root)
+- `biome.json`, `.changeset/config.json`, `.changeset/README.md` (tooling)
+- `pnpm-lock.yaml` (lockfile)
+- 14 file `packages/<pkg>/{package.json, README.md}` per i 7 placeholder
+- `.planning/phases/01-core-essenziale/01-01-SUMMARY.md` (creato)
+- `.planning/STATE.md` (aggiornato con nuova posizione)
 
 ### Recovery Notes
 

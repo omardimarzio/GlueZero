@@ -306,9 +306,9 @@ Mappatura definitiva REQ-ID → fase. Ogni requisito è assegnato alla **prima f
 | TEST-01 | Phase 1 (subset) | Pending | Estesa progressivamente F2-F6 |
 | TEST-02 | Phase 2 (subset) | Pending | F3 (server), F4 (reconnect), F5 (worker), F6 (cache) |
 | TEST-03 | Phase 1 (subset) | Pending | F3 (server malconfigurato), F4 (riconnessione ripetuta), F5 (worker timeout) |
-| PKG-01 | Phase 1 | Pending | tsup ESM + opzionale CJS/IIFE |
-| PKG-02 | Phase 1 | Pending | TypeScript 5.5+ |
-| PKG-03 | Phase 1 | Pending | target ES2022 |
+| PKG-01 | Phase 1 (01-01 foundation, 01-02 build) | In progress (scaffold OK in 01-01, build in 01-02) | tsup ESM + opzionale CJS/IIFE |
+| PKG-02 | Phase 1 (01-01) | In progress (tsconfig.base.json strict + TS 6.0.3 in 01-01) | TypeScript 6.0.3 (super-set di 5.5+) |
+| PKG-03 | Phase 1 (01-01) | In progress (target ES2022 in tsconfig.base.json) | target ES2022 |
 | PKG-04 | Phase 1 | Pending | dts via tsup |
 | DOC-01 | Phase 1 (skeleton) | Pending | Consolidato in F6 con TypeDoc |
 | DOC-02 | Phase 6 | Pending | Guida integrazione plugin |
