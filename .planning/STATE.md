@@ -1,3 +1,16 @@
+---
+gsd_state_version: 1.0
+milestone: v1.0
+milestone_name: milestone
+status: Not started
+last_updated: "2026-04-28T10:18:34.055Z"
+progress:
+  total_phases: 6
+  completed_phases: 0
+  total_plans: 0
+  completed_plans: 0
+---
+
 # Project State: SemBridge
 
 **Initialized:** 2026-04-28
@@ -100,6 +113,7 @@ Nessuna domanda aperta. Le 11 open issues PRD §39 hanno già decisione raccoman
 ### Last Action
 
 Roadmap creata da `gsd-roadmapper`:
+
 - 6 fasi mappate 1:1 sulle fasi PRD §32
 - 91/91 requisiti v1 mappati (100% coverage)
 - 11 open issues PRD §39 mappate alle fasi di chiusura
@@ -109,6 +123,7 @@ Roadmap creata da `gsd-roadmapper`:
 ### Next Action
 
 Attendere conferma utente o eseguire:
+
 ```
 /gsd-plan-phase 1
 ```
@@ -122,6 +137,7 @@ Attendere conferma utente o eseguire:
 ### Recovery Notes
 
 Il progetto è in stato di **inizializzazione completata**. Tutti gli artefatti GSD di pianificazione sono presenti:
+
 - `prd.md` (fonte autoritativa)
 - `.planning/PROJECT.md`
 - `.planning/REQUIREMENTS.md`
