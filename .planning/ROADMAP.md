@@ -8,7 +8,7 @@
 
 ## Phases
 
-- [ ] **Phase 1: Core essenziale** (in progress, 4/11 plans complete) — Event bus pub/sub in-page, plugin registry con lifecycle anti-leak, struttura `BrokerEvent`, EventTap pre-instrumentato
+- [ ] **Phase 1: Core essenziale** (in progress, 6/11 plans complete) — Event bus pub/sub in-page, plugin registry con lifecycle anti-leak, struttura `BrokerEvent`, EventTap pre-instrumentato
 - [ ] **Phase 2: Canonical Model & Mapper** — Vocabolario canonico + mapper bidirezionale locale ↔ canonico ↔ locale con transform pipeline e Mapping Inspector
 - [ ] **Phase 3: Routing & Server Gateway HTTP** — Routing engine dichiarativo (`local`/`http`/`cache`/`composite`) + gateway HTTP unico con retry/timeout/dedupe/auth
 - [ ] **Phase 4: Realtime inbound (SSE prioritario, WS opzionale)** — Adapter SSE + WebSocket con reconnection policy, normalizzazione canonica dei messaggi server
@@ -44,8 +44,8 @@ CORE-01, CORE-02, CORE-03, CORE-04, CORE-05, CORE-06, CORE-07, CORE-08, CORE-09,
 - [x] 01-02-PLAN.md — `@sembridge/core` package config (tsup + vitest + tsconfig + deps) — completato 2026-04-28 (2 commits: 6de9f41, d6004c7)
 - [x] 01-03-PLAN.md — Public types (BrokerEvent, Subscription, PluginDescriptor, BrokerError, BrokerLogger, EventTap, BrokerConfig, DeepReadonly) — completato 2026-04-28 (3 commits: ebd126a, 7d4ff8a, 7b01f82)
 - [x] 01-04-PLAN.md — Utility batch A: broker-error + deep-freeze + logger + event-tap — completato 2026-04-28 (8 commits: a08cca7+e0f2a4e, 13dd13c+06212c7, 323b141+8c0bf5b, 2d3cac7+21e0939; 4 source + 4 test, 42/42 test passing)
-- [ ] 01-05-PLAN.md — Utility batch B: topic-matcher + event-factory + event-validator
-- [ ] 01-06-PLAN.md — Utility batch C: topic-registry + lifecycle state machine
+- [x] 01-05-PLAN.md — Utility batch B: topic-matcher + event-factory + event-validator — completato 2026-04-28 (6 commits RED+GREEN: c97bc56+8c24e77, 239d010+6cd21e7, d77398c+cf12502; 3 source + 3 test, 55 nuovi test, eseguito in parallelo a plan 06 via gsd-executor)
+- [x] 01-06-PLAN.md — Utility batch C: topic-registry + lifecycle state machine — completato 2026-04-28 (4 commits RED+GREEN: 526336a+41866e7, c87ae5f+94db532; 2 source + 2 test, 37 nuovi test, eseguito in parallelo a plan 05 via gsd-executor)
 - [ ] 01-07-PLAN.md — EventBus (bus.ts) — pub/sub dispatch + handler isolation + 5 step tap
 - [ ] 01-08-PLAN.md — PluginRegistry + Broker class composition + public-factory + index.ts public API
 - [ ] 01-09-PLAN.md — PipelineHarness fixture + integration tests (5 success criteria + LIFE-02 deterministico)
@@ -275,7 +275,7 @@ I 11 punti che il PRD §39 vieta esplicitamente di lasciare impliciti vengono ch
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Core essenziale | 4/11 | In progress | - |
+| 1. Core essenziale | 6/11 | In progress | - |
 | 2. Canonical Model & Mapper | 0/0 | Not started | - |
 | 3. Routing & Server Gateway HTTP | 0/0 | Not started | - |
 | 4. Realtime inbound | 0/0 | Not started | - |
@@ -285,4 +285,4 @@ I 11 punti che il PRD §39 vieta esplicitamente di lasciare impliciti vengono ch
 ---
 
 *Roadmap created: 2026-04-28*
-*Last updated: 2026-04-28 after Plan 01-04 completion*
+*Last updated: 2026-04-28 after Wave 3 closure (Plan 01-04 + 01-05 + 01-06 done; 9 Test Files / 134 Tests passing)*

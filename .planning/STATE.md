@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-current_plan: 5 of 11
+current_plan: 7 of 11
 status: executing
-last_updated: "2026-04-28T15:47:16+02:00"
+last_updated: "2026-04-28T16:33:13+02:00"
 progress:
   total_phases: 6
   completed_phases: 0
   total_plans: 11
-  completed_plans: 4
-  percent: 36
+  completed_plans: 6
+  percent: 54
 ---
 
 # Project State: SemBridge
@@ -29,13 +29,13 @@ progress:
 ## Current Position
 
 Phase: 01-core-essenziale (1) — EXECUTING
-Current Plan: 5 of 11
+Current Plan: 7 of 11
 Total Plans: 11
 
 - **Phase:** 1 — Core essenziale
-- **Plan:** 01-04 — Utility batch A (broker-error + deep-freeze + logger + event-tap) (COMPLETE)
+- **Plan:** Wave 3 chiusa — 01-04 ✓ + 01-05 ✓ + 01-06 ✓ (utility batch A/B/C)
 - **Status:** Executing Phase 01-core-essenziale
-- **Progress:** [████░░░░░░] 36%
+- **Progress:** [█████░░░░░] 54%
 
 ## Phases Overview
 
@@ -46,7 +46,7 @@ Total Plans: 11
 
 | Phase | Goal (sintesi) | Status |
 |-------|----------------|--------|
-| 1 | Core essenziale (broker pub/sub, plugin registry, EventTap pre-instrumentato) | In progress (4/11 plans) |
+| 1 | Core essenziale (broker pub/sub, plugin registry, EventTap pre-instrumentato) | In progress (6/11 plans) |
 | 2 | Canonical Model & Mapper bidirezionale + Mapping Inspector | Not started |
 | 3 | Routing engine + HTTP gateway con retry/timeout/dedupe/auth | Not started |
 | 4 | Realtime inbound (SSE prioritario, WS opzionale) | Not started |
@@ -58,11 +58,11 @@ Total Plans: 11
 | Metric | Value |
 |--------|-------|
 | Phases complete | 0 / 6 |
-| Plans complete in current phase | 4 / 11 (Phase 1) |
+| Plans complete in current phase | 6 / 11 (Phase 1) |
 | Plans abandoned | 0 |
 | Plans repaired | 0 |
 | Time per phase | — |
-| Time per plan | 01-01: 4m 14s (3 tasks, 23 files); 01-02: 3m 19s (2 tasks, 7 files); 01-03: 6m 26s (3 tasks, 10 files); 01-04: ~6m wall-clock effective (4 tasks, 8 files, 8 commits — interrupted session) |
+| Time per plan | 01-01: 4m 14s (3 tasks, 23 files); 01-02: 3m 19s (2 tasks, 7 files); 01-03: 6m 26s (3 tasks, 10 files); 01-04: ~6m wall-clock effective (4 tasks, 8 files, 8 commits — interrupted session); 01-05: ~15m parallelo (3 tasks TDD, 6 files src/test + SUMMARY, 7 commits, 55 nuovi test); 01-06: ~7m parallelo (2 tasks TDD, 4 files src/test + SUMMARY, 5 commits, 37 nuovi test) |
 
 ## Accumulated Context
 
@@ -89,6 +89,10 @@ Total Plans: 11
 | Esportato `SnapshotFactory` come tipo nominato in `event-tap.ts` | Lo snippet RESEARCH inline-tipava la signature di ritorno di `startStep()`; l'alias nominato (Rule 2) rende il pattern self-documenting per i 5 chiamanti della pipeline in plan 07 | 01-04-SUMMARY.md |
 | TDD pattern RED→GREEN preservato per Task 4 (event-tap) anche dopo session interruption | Coerenza con i 3 task precedenti del plan 04: due commit separati (`2d3cac7` test RED, `21e0939` feat GREEN) anche se i file erano già scritti come untracked al momento della ripresa. Tracciabilità del gate TDD nel git history | 01-04-SUMMARY.md |
 | Coverage v8 NON misurata in plan 04 | Missing dep `@vitest/coverage-v8`: rimandata al merge wave / plan dedicato. Surrogate confidence: 42/42 test passing su 4 moduli isolati con behavior coverage esplicito | 01-04-SUMMARY.md |
+| `validateTopic`/`validateTopicPattern` return type cambiato da `BrokerError \| void` a `void` | Le funzioni non ritornano mai un `BrokerError` (sempre throw). Il tipo `BrokerError \| void` era semanticamente errato — fix di correctness segnalato da Biome. (Rule 1 plan 05) | 01-05-SUMMARY.md |
+| `VALID_TRANSITIONS` esportato con inner array `readonly` | Plan 08 lo leggerà per Inspector; readonly previene tampering compile-time, rafforza T-06-02 (mutation della state machine). Era `const` non-export con array mutabile nel PLAN. (Rule 2 plan 06) | 01-06-SUMMARY.md |
+| Test extra `list returns a fresh array on each call` in `topic-registry.test.ts` | Copre threat T-06-01 esplicitamente: una mutation del result `list()` non corrompe il `Set<string>` interno. 8 test invece dei 7 attesi dal PLAN. (Rule 2 plan 06) | 01-06-SUMMARY.md |
+| Granularizzati 3 test in `lifecycle.test.ts` (integrità reg.state on throw, error.category, logger.error meta-shape) | Acceptance criteria coperti con unit indipendenti per facilitare diagnostica regressione futura. 29 test invece di ~22. (Rule 2 plan 06) | 01-06-SUMMARY.md |
 
 ### Open Issues PRD §39 — Phase Assignment
 
@@ -119,8 +123,10 @@ Total Plans: 11
 - [ ] Rimuovere `--passWithNoTests` dagli script test/test:coverage quando i plan 03+ aggiungono test reali
 - [x] Eseguire Plan 03 (Wave 2 — Public types: BrokerEvent, Subscription, PluginDescriptor, BrokerError, BrokerLogger, EventTap, BrokerConfig, DeepReadonly) — completato 2026-04-28
 - [x] Eseguire Plan 04 (Wave 3 — Utility batch A: broker-error + deep-freeze + logger + event-tap) — completato 2026-04-28 (4 task TDD, 42/42 test passing)
-- [ ] Eseguire Wave 3 restanti (plan 05, 06 paralleli — utility moduli batch B/C)
+- [x] Eseguire Plan 05 (Wave 3 — Utility batch B: topic-matcher + event-factory + event-validator) — completato 2026-04-28 (3 task TDD, 55 nuovi test)
+- [x] Eseguire Plan 06 (Wave 3 — Utility batch C: topic-registry + lifecycle) — completato 2026-04-28 (2 task TDD, 37 nuovi test)
 - [ ] Installare `@vitest/coverage-v8` come devDependency root e ri-eseguire `pnpm --filter @sembridge/core test:coverage` post-Wave 3 per verificare target ≥ 90% sui file `core/`
+- [ ] Eseguire Plan 07 (Wave 4 — `bus.ts` EventBus core: composizione del broker pub/sub usando le 9 utility dei plan 04/05/06 + noopEventTap pre-instrumentato)
 
 ### Active Blockers
 
@@ -134,61 +140,80 @@ Nessuna domanda aperta. Le 11 open issues PRD §39 hanno già decisione raccoman
 
 ### Last Action
 
-Plan 01-04 (Wave 3 — Utility batch A) eseguito e committato (4 task TDD RED→GREEN, 8 commit, 8 file):
+**Wave 3 chiusa** — plan 04, 05, 06 tutti completati. Plan 05 e 06 eseguiti in parallelo via spawn `gsd-executor` con `model: "opus"` (vincolo CLAUDE.md). File ownership disgiunta verificata: nessuna race su file modificati.
 
-- 4 source module creati in `packages/core/src/core/`: `broker-error.ts` (45 LOC — `createBrokerError` factory + `isBrokerError` type guard, ES2022 cause, conditional assignment per `exactOptionalPropertyTypes`), `deep-freeze.ts` (84 LOC — `deepFreeze<T>` + `DeepFreezeOptions`, WeakSet cycle protection, default skip Date/Promise/TypedArray, freeze Map/Set ricorsivi), `logger.ts` (64 LOC — `createConsoleLogger(level)` + `silentLogger`, LEVEL_ORDER 6 livelli, namespace `[sembridge]`, D-12 mapping con `trace→console.debug` + label TRACE), `event-tap.ts` (53 LOC — `noopEventTap`, `safeTapStep` con try/catch swallow D-20, `startStep` factory + `SnapshotFactory` type alias)
-- 4 test suite create co-locate (391 LOC, 42 test totali): broker-error 9 test, deep-freeze 12 test, logger 11 test, event-tap 10 test
-- TDD pattern RED→GREEN preservato per ognuno dei 4 task: 4 commit `test(01-04): aggiunge test RED ...` precedono i 4 commit `feat(01-04): implementa ...`
-- Per Task 4 (event-tap) il pattern è stato ricostruito post-recovery: file presenti come untracked al momento della ripresa, due commit separati (`2d3cac7` test, `21e0939` feat) per coerenza con i task 1-3
-- `pnpm --filter @sembridge/core test` exit 0: `Test Files 4 passed | Tests 42 passed | Duration 449 ms`
-- `pnpm --filter @sembridge/core typecheck` exit 0
-- `pnpm biome check packages/core/src/core/` exit 0 (8 file checked)
+**Plan 01-05** (Utility batch B) — 3 task TDD RED→GREEN, 7 commit, 6 file src/test (+ 1 SUMMARY):
+- `core/topic-matcher.ts` — `validateTopic` (CORE-08, regex D-24) + `validateTopicPattern` + `TopicTrie<T>` con `insert/remove/match/collectAllPatterns` (CORE-09, D-08..D-11 incluso edge case `weather.*.failed` matcha `weather.alert.failed`). 32 test.
+- `core/event-factory.ts` — `createBrokerEvent({topic, payload, source, ...})` con default id (`nanoid` se assente), timestamp (`Date.now()`), deliveryMode `'async'`, priority `'normal'`. Lancia `BrokerError` `event.source.missing` se source assente E senza defaultSource. (CORE-07, D-21..D-23). 12 test.
+- `core/event-validator.ts` — `validateEvent(event)` Valibot schema BrokerEvent shape (VAL-01, VAL-06). 11 test.
+- Commit RED+GREEN: `c97bc56`/`8c24e77` (topic-matcher), `239d010`/`6cd21e7` (event-factory), `d77398c`/`cf12502` (event-validator). Docs: `c2ec46b`.
+- Deviation Rule 1 (correctness): cambiato return type `BrokerError | void` → `void` per le `validateTopic*` (le funzioni throw, mai return BrokerError).
 
-Deviation Rule applicate:
-1. **Rule 2** — `SnapshotFactory` esportato come tipo nominato in `event-tap.ts` (RESEARCH inline-tipava la signature; alias nominato self-documenting per 5 chiamanti pipeline plan 07)
-2. **Recovery (no rule)** — TDD RED/GREEN ricostruito per Task 4 dopo session interruption: `event-tap.ts` + `event-tap.test.ts` erano untracked, committati separatamente per preservare il git history del gate TDD
+**Plan 01-06** (Utility batch C) — 2 task TDD RED→GREEN, 5 commit, 4 file src/test (+ 1 SUMMARY):
+- `core/topic-registry.ts` — `TopicRegistry` class con `register/has/list/onRegistered` (CORE-03). Idempotente, ordering deterministico, observer pattern con unsubscribe. 8 test.
+- `core/lifecycle.ts` — `VALID_TRANSITIONS` (D-25 state machine 8 stati) + `transitionState(reg, target, logger)` che valida le transizioni e lancia `BrokerError` `plugin.lifecycle.invalid-transition` su transizione invalida (CORE-05). 29 test.
+- Commit RED+GREEN: `526336a`/`41866e7` (topic-registry), `c87ae5f`/`94db532` (lifecycle). Docs: `a6ae97e`.
+- Deviation Rule 2: `VALID_TRANSITIONS` esportato readonly (T-06-02 mitigation), test extra `list returns fresh array on each call` (T-06-01), granularizzazione test integrità reg.state on throw.
 
-Open item (non bloccante):
-- Coverage v8 NON misurata: missing dep `@vitest/coverage-v8`. 42/42 test passing su 4 moduli isolati copre i behavior path. Verificare al merge wave (post plan 06).
+**Verifica finale Wave 3 chiusa:**
+- `pnpm --filter @sembridge/core test` exit 0: **`Test Files 9 passed | Tests 134 passed | Duration 746 ms`**
+- `pnpm --filter @sembridge/core typecheck` exit 0 (18 file)
+- `pnpm biome check packages/core/src/core/` exit 0 (14 file)
+- Working tree pulito (solo `prd.md` untracked, fuori scope)
+
+Open item ereditato (non bloccante):
+- Coverage v8 NON ancora misurata: missing dep `@vitest/coverage-v8`. 134/134 test passing su 9 moduli isolati copre i behavior path. Da installare prima del closure di Phase 1.
 
 ### Next Action
 
-Continuare Wave 3 con i due plan paralleli rimanenti (file ownership disgiunta da plan 04 e tra loro):
+**Wave 4 — plan 07** (sequenziale, depende dall'intera Wave 3):
 
 ```
-/gsd-execute-plan 1 05
-/gsd-execute-plan 1 06
+/gsd-execute-plan 1 07
 ```
 
-Plan 05 (Utility batch B): `packages/core/src/core/topic-matcher.ts` (Trie segmentato D-08/09/10/11), `event-factory.ts`, `event-validator.ts`.
-Plan 06 (Utility batch C): `packages/core/src/core/topic-registry.ts`, `subscriber-registry.ts`, `lifecycle.ts` (state machine D-25/26).
+Plan 07 (`bus.ts` EventBus core): composizione del broker pub/sub usando le 9 utility moduli dei plan 04/05/06:
+- Pubblicazione: `createBrokerEvent` (event-factory) → `validateEvent` (event-validator) → step pipeline `event.received/metadata.enriched/validated/dedupe.checked/delivered` con `safeTapStep(noopEventTap, ...)` (event-tap).
+- Subscribe wildcard via `TopicTrie<Subscription>` (topic-matcher).
+- Topic discovery via `TopicRegistry` (topic-registry, plan 06).
+- Validazione naming via `validateTopic` al `publish` (topic-matcher).
+- Error wrapping via `createBrokerError` (broker-error) per errori validation/topic invalid.
+- Deep-freeze payload pre-delivery via `deepFreeze` (deep-freeze) — opt-in dev mode CORE-12.
+- Logging configurabile via `BrokerLogger` (logger).
 
-Plan 05 importerà `createBrokerError` da `./broker-error` (plan 04). Plan 06 importerà `createBrokerError` + `BrokerLogger` (logger.ts).
-
-Dopo Wave 3 completa, Wave 4 (plan 07 — `bus.ts` EventBus) sarà sbloccata. Il bus consumerà tutti gli 8-9 moduli utility dei plan 04/05/06 + il `noopEventTap` per pre-instrumentare i 5 step F1.
+Dopo plan 07 (bus.ts) seguono Wave 5+: 08 (Broker class composition + public API + plugin-registry), 09 (PipelineHarness fixture + integration tests), 10 (Robustness tests), 11 (Build verification + DOC-01).
 
 ### Files Created/Updated in this Session
 
-Plan 01-04 execution:
+Plan 01-04 + 01-05 + 01-06 execution (Wave 3 completa):
 
-- `packages/core/src/core/broker-error.ts` (creato)
-- `packages/core/src/core/broker-error.test.ts` (creato)
-- `packages/core/src/core/deep-freeze.ts` (creato)
-- `packages/core/src/core/deep-freeze.test.ts` (creato)
-- `packages/core/src/core/logger.ts` (creato)
-- `packages/core/src/core/logger.test.ts` (creato)
-- `packages/core/src/core/event-tap.ts` (creato)
-- `packages/core/src/core/event-tap.test.ts` (creato)
+**Plan 04 (utility batch A)** — `packages/core/src/core/`:
+- `broker-error.ts` + `broker-error.test.ts`
+- `deep-freeze.ts` + `deep-freeze.test.ts`
+- `logger.ts` + `logger.test.ts`
+- `event-tap.ts` + `event-tap.test.ts`
+
+**Plan 05 (utility batch B)** — `packages/core/src/core/`:
+- `topic-matcher.ts` + `topic-matcher.test.ts`
+- `event-factory.ts` + `event-factory.test.ts`
+- `event-validator.ts` + `event-validator.test.ts`
+
+**Plan 06 (utility batch C)** — `packages/core/src/core/`:
+- `topic-registry.ts` + `topic-registry.test.ts`
+- `lifecycle.ts` + `lifecycle.test.ts`
+
+**Documentation:**
 - `.planning/phases/01-core-essenziale/01-04-SUMMARY.md` (creato)
-- `.planning/STATE.md` (aggiornato con nuova posizione 5/11)
-- `.planning/ROADMAP.md` (aggiornato con plan 01-04 completion)
-- `.planning/REQUIREMENTS.md` (aggiornato con ERR-01/CORE-10/CORE-13 in stato `Done — runtime delivered in 01-04`)
+- `.planning/phases/01-core-essenziale/01-05-SUMMARY.md` (creato dall'agent gsd-executor parallelo)
+- `.planning/phases/01-core-essenziale/01-06-SUMMARY.md` (creato dall'agent gsd-executor parallelo)
+- `.planning/STATE.md` (aggiornato: 4/11 → 6/11, Wave 3 chiusa)
+- `.planning/ROADMAP.md` (aggiornato: plan 04, 05, 06 done con commit hash)
+- `.planning/REQUIREMENTS.md` (aggiornato: ERR-01/CORE-03/CORE-05/CORE-07/CORE-08/CORE-09/CORE-10/CORE-13/VAL-01/VAL-06 promossi a Done)
 
-8 commit creati (4 RED + 4 GREEN):
-`a08cca7` test broker-error → `e0f2a4e` feat broker-error
-`13dd13c` test deep-freeze → `06212c7` feat deep-freeze
-`323b141` test logger → `8c0bf5b` feat logger
-`2d3cac7` test event-tap → `21e0939` feat event-tap
+**18 commit nuovi creati post-04 docs (`b0cecb7`):**
+- Plan 05: `c97bc56`/`8c24e77` (topic-matcher), `239d010`/`6cd21e7` (event-factory), `d77398c`/`cf12502` (event-validator), `c2ec46b` (docs SUMMARY)
+- Plan 06: `526336a`/`41866e7` (topic-registry), `c87ae5f`/`94db532` (lifecycle), `a6ae97e` (docs SUMMARY)
+- Wave 3 closure docs: 1 commit pendente (questo)
 
 ### Recovery Notes
 
@@ -210,4 +235,4 @@ Se la sessione viene interrotta, riprendere con `/gsd-plan-phase 1` o con review
 
 **Planned Phase:** 1 (Core essenziale) — 11 plans — 2026-04-28T11:47:46.016Z
 
-**Plans complete (Phase 1):** 01-01 ✓, 01-02 ✓, 01-03 ✓, 01-04 ✓ — Wave 1 + Wave 2 done; Wave 3 in progress (1/3 — plan 04 done, plan 05/06 paralleli next).
+**Plans complete (Phase 1):** 01-01 ✓, 01-02 ✓, 01-03 ✓, 01-04 ✓, 01-05 ✓, 01-06 ✓ — Wave 1 + Wave 2 + Wave 3 done. Wave 4 (plan 07 — `bus.ts` EventBus core) sbloccata, sequenziale.

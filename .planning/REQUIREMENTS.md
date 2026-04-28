@@ -13,13 +13,13 @@ Tutti i requisiti elencati sono table stakes (vincolanti dalla checklist PRD §4
 
 - [ ] **CORE-01**: Esiste un event bus pub/sub in-page con `publish(topic, payload, options?)` e `subscribe(topic, handler, options?)` *(PRD §16.2, §42)*
 - [ ] **CORE-02**: `subscribe` restituisce un handle/subscriptionId che permette `unsubscribe(subscriptionId)` senza effetti residui *(PRD §24.2, §36.1)*
-- [ ] **CORE-03**: Topic Registry pubblica/traccia tutti i topic noti via `getTopicRegistry()` *(PRD §10, §16.3)*
+- [x] **CORE-03**: Topic Registry pubblica/traccia tutti i topic noti via `getTopicRegistry()` *(PRD §10, §16.3)*
 - [ ] **CORE-04**: Plugin Registry: `registerPlugin(descriptor)` e `unregisterPlugin(id)` *(PRD §15, §16.2)*
 - [ ] **CORE-05**: Lifecycle hooks plugin: `onRegister`, `onMount`, `onUnmount`, `onDestroy` *(PRD §15.5)*
-- [ ] **CORE-06**: Ogni evento rispetta la struttura `BrokerEvent` (id, topic, timestamp, source, payload, metadata, correlationId, causationId, traceId, schemaVersion, deliveryMode, priority, ttlMs, dedupeKey) *(PRD §11.1)*
-- [ ] **CORE-07**: `id` evento univoco; `timestamp` valorizzato dal broker se assente; `source` obbligatorio e noto al runtime *(PRD §11.3)*
-- [ ] **CORE-08**: Naming convention dot-separated minuscolo per topic; pattern `<entity>.<action>.<status>` documentato *(PRD §12.1, §12.2)*
-- [ ] **CORE-09**: Wildcard subscribe (`weather.*`, `*.failed`, `form.customer.*`) *(PRD §12.3)*
+- [x] **CORE-06**: Ogni evento rispetta la struttura `BrokerEvent` (id, topic, timestamp, source, payload, metadata, correlationId, causationId, traceId, schemaVersion, deliveryMode, priority, ttlMs, dedupeKey) *(PRD §11.1)*
+- [x] **CORE-07**: `id` evento univoco; `timestamp` valorizzato dal broker se assente; `source` obbligatorio e noto al runtime *(PRD §11.3)*
+- [x] **CORE-08**: Naming convention dot-separated minuscolo per topic; pattern `<entity>.<action>.<status>` documentato *(PRD §12.1, §12.2)*
+- [x] **CORE-09**: Wildcard subscribe (`weather.*`, `*.failed`, `form.customer.*`) *(PRD §12.3)*
 - [x] **CORE-10**: Logging configurabile con livelli `silent | error | warn | info | debug | trace` *(PRD §25.4)*
 - [ ] **CORE-11**: Unsubscribe automatico quando un plugin viene unregistered (no memory leak) *(PRD §15.6, §24.2)*
 - [ ] **CORE-12**: Plugin handler isolato: eccezione in un plugin non collassa il broker *(PRD §22.2)*
@@ -99,12 +99,12 @@ Tutti i requisiti elencati sono table stakes (vincolanti dalla checklist PRD §4
 ### Cross-cutting (vincoli applicati su tutte le fasi)
 
 #### Validazione & Schema
-- [ ] **VAL-01**: Validazione sintattica dell'evento (struttura `BrokerEvent`) *(PRD §21.2.1)*
+- [x] **VAL-01**: Validazione sintattica dell'evento (struttura `BrokerEvent`) *(PRD §21.2.1)*
 - [ ] **VAL-02**: Validazione payload topic *(PRD §21.2.2)*
 - [ ] **VAL-03**: Validazione modello canonico *(PRD §21.2.3)*
 - [ ] **VAL-04**: Validazione post-mapping *(PRD §21.2.4)*
 - [ ] **VAL-05**: Validazione risposta server *(PRD §21.2.5)*
-- [ ] **VAL-06**: Schema definitions JSON Schema o equivalente tipizzato *(PRD §21.3)*
+- [x] **VAL-06**: Schema definitions JSON Schema o equivalente tipizzato *(PRD §21.3)*
 - [ ] **VAL-07**: Errori di validazione registrati in debug/log; payload invalidi non consegnati salvo configurazione esplicita *(PRD §21.4)*
 - [ ] **VAL-08**: Comportamento esplicito su field mancante (errore vs default) *(PRD §39 — open issue da chiudere)*
 - [ ] **VAL-09**: Comportamento esplicito su transform failure (skip vs block) *(PRD §39 — open issue da chiudere)*
@@ -186,13 +186,13 @@ Mappatura definitiva REQ-ID → fase. Ogni requisito è assegnato alla **prima f
 |-------------|-------|--------|------|
 | CORE-01 | Phase 1 | Pending | — |
 | CORE-02 | Phase 1 | Pending | TEST-01 deterministico |
-| CORE-03 | Phase 1 | Pending | — |
+| CORE-03 | Phase 1 | Done (plan 01-06) | `TopicRegistry` class in `core/topic-registry.ts` con `register/has/list/onRegistered`, idempotente, ordering deterministico, observer pattern, 8 test passing. `getTopicRegistry()` API pubblica esposta in plan 08. |
 | CORE-04 | Phase 1 | Pending | — |
-| CORE-05 | Phase 1 | Type-defined (plan 01-03) | PluginDescriptor con 4 hook lifecycle opzionali + PluginState 8 stati — runtime in plan 06 (lifecycle.ts) e plan 08 (plugin-registry.ts) |
-| CORE-06 | Phase 1 | Type-defined (plan 01-03) | Struttura BrokerEvent definita type-level — runtime in plan 04 (event-factory) |
-| CORE-07 | Phase 1 | Type-defined (plan 01-03) | Type enforcement readonly — nanoid runtime per `id` in plan 04 (event-factory) |
-| CORE-08 | Phase 1 | Pending | Validazione naming al `publish` |
-| CORE-09 | Phase 1 | Pending | Trie per wildcard matching |
+| CORE-05 | Phase 1 | Partial (plan 01-03 + 01-06) | PluginDescriptor con 4 hook lifecycle opzionali + PluginState 8 stati (plan 03). State machine `VALID_TRANSITIONS` + `transitionState(reg, target, logger)` in `core/lifecycle.ts` (plan 06, 29 test). Hook invocation runtime in plan 08 (plugin-registry.ts). |
+| CORE-06 | Phase 1 | Done (plan 01-05) | `createBrokerEvent` factory in `core/event-factory.ts` produce eventi conformi a struttura `BrokerEvent` (id branded, topic, timestamp, source obbligatorio, payload, metadata, correlationId, deliveryMode default 'async', priority default 'normal'). 12 test passing. |
+| CORE-07 | Phase 1 | Done (plan 01-05) | `createBrokerEvent` setta id via `nanoid` se assente, timestamp via `Date.now()` se assente, lancia `BrokerError` `event.source.missing` se source assente E senza defaultSource. (D-21..D-23) |
+| CORE-08 | Phase 1 | Done (plan 01-05) | `validateTopic(topic)` in `core/topic-matcher.ts` con regex D-24 (`/^[a-z0-9]+(\.[a-z0-9]+)*$/`); naming dot-separated minuscolo enforced via throw `BrokerError` `topic.invalid`. 32 test (insieme a TopicTrie). |
+| CORE-09 | Phase 1 | Done (plan 01-05) | `TopicTrie<T>` segmentato D-08..D-11 in `core/topic-matcher.ts` con `insert/remove/match/collectAllPatterns`. Edge case D-11 verificato: `weather.*.failed` matcha `weather.alert.failed`. |
 | CORE-10 | Phase 1 | Done (plan 01-04) | `createConsoleLogger(level)` + `silentLogger` in `core/logger.ts` — 6 livelli, namespace `[sembridge]`, D-12 mapping completo, 11/11 test passing |
 | CORE-11 | Phase 1 | Pending | Cascade da `unregisterPlugin` |
 | CORE-12 | Phase 1 | Pending | try/catch attorno a ogni handler + deep freeze payload |
@@ -283,12 +283,12 @@ Mappatura definitiva REQ-ID → fase. Ogni requisito è assegnato alla **prima f
 
 | Requirement | Phase (prima introduzione) | Status | Note (fasi che estendono) |
 |-------------|---------------------------|--------|----------------------------|
-| VAL-01 | Phase 1 | Pending | — |
+| VAL-01 | Phase 1 | Done (plan 01-05) | `validateEvent(event)` in `core/event-validator.ts` con Valibot schema BrokerEvent shape; lancia `BrokerError` `event.validation.failed` su payload invalido. 11 test passing. |
 | VAL-02 | Phase 2 | Pending | — |
 | VAL-03 | Phase 2 | Pending | — |
 | VAL-04 | Phase 2 | Pending | — |
 | VAL-05 | Phase 3 | Pending | — |
-| VAL-06 | Phase 1 | Type-defined (plan 01-03) | Schema definitions tipizzate via TS interfaces in `packages/core/src/types/` — Valibot runtime schemas in plan 04+ |
+| VAL-06 | Phase 1 | Done (plan 01-05) | Valibot schema runtime per BrokerEvent in `core/event-validator.ts`. TS interfaces tipizzate restano in `types/` (plan 03). |
 | VAL-07 | Phase 2 | Pending | — |
 | VAL-08 | Phase 2 | Pending | **Closes PRD §39 #3**: `required: true|false` per campo |
 | VAL-09 | Phase 2 | Pending | **Closes PRD §39 #4**: `onFailure: 'block' | 'skip' | 'fallback'` |
