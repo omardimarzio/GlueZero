@@ -23,7 +23,7 @@ Tutti i requisiti elencati sono table stakes (vincolanti dalla checklist PRD §4
 - [ ] **CORE-10**: Logging configurabile con livelli `silent | error | warn | info | debug | trace` *(PRD §25.4)*
 - [ ] **CORE-11**: Unsubscribe automatico quando un plugin viene unregistered (no memory leak) *(PRD §15.6, §24.2)*
 - [ ] **CORE-12**: Plugin handler isolato: eccezione in un plugin non collassa il broker *(PRD §22.2)*
-- [ ] **CORE-13**: `EventTap` interface instrumentata già in F1 (anche con implementazione no-op) per consentire Inspector in F6 senza retrofit *(decisione architetturale ARCHITECTURE.md §13.3)*
+- [ ] **CORE-13**: `EventTap` interface instrumentata già in F1 (anche con implementazione no-op) per consentire Inspector in F6 senza retrofit *(decisione architetturale ARCHITECTURE.md §3.2)*
 - [ ] **CORE-14**: Configurazione globale via `createBroker(config)` con sezioni `runtime`, `topicSchemas`, `canonicalModel`, `aliasRegistry`, `transforms`, `routes`, `transport`, `workers`, `debug`, `cache` *(PRD §27)*
 
 ### Canonical Model + Mapper (Fase 2)
@@ -178,30 +178,153 @@ Esclusioni esplicite. Documentate per prevenire scope creep.
 
 ## Traceability
 
-Tutti i requisiti sono mappati 1:1 alla fase corrispondente nelle 6 fasi PRD §32. Le voci cross-cutting (VAL, ERR, PIPE, LIFE, SEC, TEST, PKG, DOC) si distribuiscono su più fasi e verranno espanse dal roadmapper. Tabella di traceability (compilata in fase di roadmap):
+Mappatura definitiva REQ-ID → fase. Ogni requisito è assegnato alla **prima fase** in cui appare nel ciclo di vita; le fasi successive che lo estendono sono indicate fra parentesi nella colonna "Note". I cross-cutting (`VAL-*`, `ERR-*`, `LIFE-*`, `TEST-*`, `DOC-*`) sono distribuiti come da tabella in `ROADMAP.md` § "Cross-Cutting Strategy".
 
-| Requirement | Phase | Status |
-|-------------|-------|--------|
-| CORE-01..CORE-14 | Phase 1 | Pending |
-| MAP-01..MAP-17 | Phase 2 | Pending |
-| ROUTE-01..ROUTE-16 | Phase 3 | Pending |
-| RT-01..RT-07 | Phase 4 | Pending |
-| WK-01..WK-07 | Phase 5 | Pending |
-| CACHE-01..CACHE-03, TOOL-01..TOOL-05 | Phase 6 | Pending |
-| VAL-01..VAL-09 | Cross-fase (F1-F6) | Pending |
-| ERR-01..ERR-03 | Cross-fase (F1-F6) | Pending |
-| PIPE-01 | Cross-fase (F1-F6) | Pending |
-| LIFE-01..LIFE-02 | Cross-fase (F1, F4, F5) | Pending |
-| SEC-01..SEC-05 | Phase 3 | Pending |
-| TEST-01..TEST-03 | Cross-fase (F1-F6) | Pending |
-| PKG-01..PKG-04 | Phase 1 (setup) | Pending |
-| DOC-01..DOC-06 | Cross-fase (F1-F6, completati in F6) | Pending |
+### Core Broker — Fase 1
+
+| Requirement | Phase | Status | Note |
+|-------------|-------|--------|------|
+| CORE-01 | Phase 1 | Pending | — |
+| CORE-02 | Phase 1 | Pending | TEST-01 deterministico |
+| CORE-03 | Phase 1 | Pending | — |
+| CORE-04 | Phase 1 | Pending | — |
+| CORE-05 | Phase 1 | Pending | — |
+| CORE-06 | Phase 1 | Pending | — |
+| CORE-07 | Phase 1 | Pending | nanoid per `id` |
+| CORE-08 | Phase 1 | Pending | Validazione naming al `publish` |
+| CORE-09 | Phase 1 | Pending | Trie per wildcard matching |
+| CORE-10 | Phase 1 | Pending | — |
+| CORE-11 | Phase 1 | Pending | Cascade da `unregisterPlugin` |
+| CORE-12 | Phase 1 | Pending | try/catch attorno a ogni handler + deep freeze payload |
+| CORE-13 | Phase 1 | Pending | Vincolo critico — `EventTap` no-op + step 14 disponibile per F6 |
+| CORE-14 | Phase 1 | Pending | Schema `createBroker(config)` |
+
+### Canonical Model + Mapper — Fase 2
+
+| Requirement | Phase | Status | Note |
+|-------------|-------|--------|------|
+| MAP-01 | Phase 2 | Pending | — |
+| MAP-02 | Phase 2 | Pending | Versioning canonical schema (`requires`) |
+| MAP-03 | Phase 2 | Pending | — |
+| MAP-04 | Phase 2 | Pending | — |
+| MAP-05 | Phase 2 | Pending | — |
+| MAP-06 | Phase 2 | Pending | — |
+| MAP-07 | Phase 2 | Pending | Esempio: `parseItalianDate` |
+| MAP-08 | Phase 2 | Pending | — |
+| MAP-09 | Phase 2 | Pending | `$derive` con concat e similari |
+| MAP-10 | Phase 2 | Pending | — |
+| MAP-11 | Phase 2 | Pending | Pipeline post-mapping |
+| MAP-12 | Phase 2 | Pending | `registerTransform(name, fn)` + fallback policy |
+| MAP-13 | Phase 2 | Pending | Default V1 — canonicalizzazione interna completa |
+| MAP-14 | Phase 2 | Pending | Step 11 della pipeline §28 |
+| MAP-15 | Phase 2 | Pending | Mapping Inspector (estende EventTap) |
+| MAP-16 | Phase 2 | Pending | Warning runtime alias ambiguo |
+| MAP-17 | Phase 2 | Pending | **Closes PRD §39 #1**: mapping esplicito vince sempre |
+
+### Routing Engine + HTTP Gateway — Fase 3
+
+| Requirement | Phase | Status | Note |
+|-------------|-------|--------|------|
+| ROUTE-01 | Phase 3 | Pending | — |
+| ROUTE-02 | Phase 3 | Pending | — |
+| ROUTE-03 | Phase 3 | Pending | queryMap + bodyMap canonico→server |
+| ROUTE-04 | Phase 3 | Pending | Definizione type — implementazione cache adapter in F6 |
+| ROUTE-05 | Phase 3 | Pending | — |
+| ROUTE-06 | Phase 3 | Pending | — |
+| ROUTE-07 | Phase 3 | Pending | Hook adapter pluggable |
+| ROUTE-08 | Phase 3 | Pending | Strategy Pattern per ogni policy |
+| ROUTE-09 | Phase 3 | Pending | **Closes PRD §39 #8**: no retry su 4xx eccetto 408/429 |
+| ROUTE-10 | Phase 3 | Pending | Backpressure priority-aware |
+| ROUTE-11 | Phase 3 | Pending | `dedupeKey` esplicito |
+| ROUTE-12 | Phase 3 | Pending | — |
+| ROUTE-13 | Phase 3 | Pending | AbortSignal propagato |
+| ROUTE-14 | Phase 3 | Pending | Route Inspector (estende EventTap) |
+| ROUTE-15 | Phase 3 | Pending | **Closes PRD §39 #6**: `'first-match'` default + warning |
+| ROUTE-16 | Phase 3 | Pending | **Closes PRD §39 #5**: default consegna locale |
+
+### Realtime Inbound — Fase 4
+
+| Requirement | Phase | Status | Note |
+|-------------|-------|--------|------|
+| RT-01 | Phase 4 | Pending | SSE prioritario V1 |
+| RT-02 | Phase 4 | Pending | WebSocket opzionale ma in V1 almeno uno disponibile |
+| RT-03 | Phase 4 | Pending | — |
+| RT-04 | Phase 4 | Pending | — |
+| RT-05 | Phase 4 | Pending | Full jitter + cap 30s + heartbeat |
+| RT-06 | Phase 4 | Pending | Mapper server→canonical (riusa F2) |
+| RT-07 | Phase 4 | Pending | **Closes PRD §39 #9**: Last-Event-ID + ping app-level |
+
+### Worker Runtime — Fase 5
+
+| Requirement | Phase | Status | Note |
+|-------------|-------|--------|------|
+| WK-01 | Phase 5 | Pending | Pool bounded `min(hardwareConcurrency, 4)` |
+| WK-02 | Phase 5 | Pending | — |
+| WK-03 | Phase 5 | Pending | `correlationId` end-to-end |
+| WK-04 | Phase 5 | Pending | — |
+| WK-05 | Phase 5 | Pending | — |
+| WK-06 | Phase 5 | Pending | State machine atomico timeout vs success |
+| WK-07 | Phase 5 | Pending | **Closes PRD §39 #11**: structuredClone default + transferable opt-in |
+
+### Cache + Tooling Avanzato — Fase 6
+
+| Requirement | Phase | Status | Note |
+|-------------|-------|--------|------|
+| CACHE-01 | Phase 6 | Pending | MemoryCacheAdapter default; IDB rinviato a V1.x |
+| CACHE-02 | Phase 6 | Pending | TTL + invalidate per key/pattern |
+| CACHE-03 | Phase 6 | Pending | metadata `cache` vs `remote` |
+| TOOL-01 | Phase 6 | Pending | Event Inspector — implementazione reale di `EventTap` predisposto in F1 |
+| TOOL-02 | Phase 6 | Pending | Metrics simil-OpenMetrics |
+| TOOL-03 | Phase 6 | Pending | `enableDebug` / `disableDebug` / `getDebugSnapshot` |
+| TOOL-04 | Phase 6 | Pending | `pauseTopic` / `resumeTopic` / `flushQueue` |
+| TOOL-05 | Phase 6 | Pending | **Closes PRD §39 #10**: format JSON `{ counters, gauges, histograms }` |
+
+### Cross-cutting
+
+| Requirement | Phase (prima introduzione) | Status | Note (fasi che estendono) |
+|-------------|---------------------------|--------|----------------------------|
+| VAL-01 | Phase 1 | Pending | — |
+| VAL-02 | Phase 2 | Pending | — |
+| VAL-03 | Phase 2 | Pending | — |
+| VAL-04 | Phase 2 | Pending | — |
+| VAL-05 | Phase 3 | Pending | — |
+| VAL-06 | Phase 1 | Pending | Scelta Valibot in F2 |
+| VAL-07 | Phase 2 | Pending | — |
+| VAL-08 | Phase 2 | Pending | **Closes PRD §39 #3**: `required: true|false` per campo |
+| VAL-09 | Phase 2 | Pending | **Closes PRD §39 #4**: `onFailure: 'block' | 'skip' | 'fallback'` |
+| ERR-01 | Phase 1 | Pending | — |
+| ERR-02 | Phase 2 | Pending | F2: `mapping.error`, F3: `<topic>.failed`+`network.error`, F4: `system.realtime.*`, F5: `worker.error` |
+| ERR-03 | Phase 1 | Pending | — |
+| PIPE-01 | Phase 1 (skeleton) | Pending | Estesa da F2 (step 4-6, 11-12), F3 (step 7-10), F6 (step 14 reale) |
+| LIFE-01 | Phase 1 | Pending | F4 estende a listener realtime; F5 estende a MessageChannel worker |
+| LIFE-02 | Phase 1 | Pending | **Closes PRD §39 #7**: cascade obbligatoria — F3 estende a route, F4 a realtime, F5 a worker tasks |
+| SEC-01 | Phase 3 | Pending | — |
+| SEC-02 | Phase 3 | Pending | — |
+| SEC-03 | Phase 3 | Pending | Idempotency token |
+| SEC-04 | Phase 3 | Pending | — |
+| SEC-05 | Phase 3 | Pending | URL allowlist |
+| TEST-01 | Phase 1 (subset) | Pending | Estesa progressivamente F2-F6 |
+| TEST-02 | Phase 2 (subset) | Pending | F3 (server), F4 (reconnect), F5 (worker), F6 (cache) |
+| TEST-03 | Phase 1 (subset) | Pending | F3 (server malconfigurato), F4 (riconnessione ripetuta), F5 (worker timeout) |
+| PKG-01 | Phase 1 | Pending | tsup ESM + opzionale CJS/IIFE |
+| PKG-02 | Phase 1 | Pending | TypeScript 5.5+ |
+| PKG-03 | Phase 1 | Pending | target ES2022 |
+| PKG-04 | Phase 1 | Pending | dts via tsup |
+| DOC-01 | Phase 1 (skeleton) | Pending | Consolidato in F6 con TypeDoc |
+| DOC-02 | Phase 6 | Pending | Guida integrazione plugin |
+| DOC-03 | Phase 2 | Pending | Documentazione canonical model + mapper |
+| DOC-04 | Phase 3 | Pending | Documentazione route engine + gateway |
+| DOC-05 | Phase 6 | Pending | Esempi end-to-end (scenario meteo §29 con cache + tooling) |
+| DOC-06 | Phase 6 | Pending | Documentazione debug tooling |
 
 **Coverage:**
 - v1 requirements: 91 totali
 - Mapped to phases: 91
 - Unmapped: 0
 
+**Open Issues PRD §39 chiusura:**
+- 11/11 mappate a fasi (#1 → F2, #2 → F1+F2+F3+F6, #3 → F2, #4 → F2, #5 → F3, #6 → F3, #7 → F1, #8 → F3, #9 → F4, #10 → F6, #11 → F5)
+
 ---
 *Requirements defined: 2026-04-28*
-*Last updated: 2026-04-28 after initial definition (auto-mode da prd.md)*
+*Last updated: 2026-04-28 after roadmap creation (traceability completata)*
