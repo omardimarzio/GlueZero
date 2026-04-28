@@ -8,7 +8,7 @@
 
 ## Phases
 
-- [ ] **Phase 1: Core essenziale** (in progress, 9/11 plans complete) — Event bus pub/sub in-page, plugin registry con lifecycle anti-leak, struttura `BrokerEvent`, EventTap pre-instrumentato
+- [ ] **Phase 1: Core essenziale** (in progress, 10/11 plans complete) — Event bus pub/sub in-page, plugin registry con lifecycle anti-leak, struttura `BrokerEvent`, EventTap pre-instrumentato
 - [ ] **Phase 2: Canonical Model & Mapper** — Vocabolario canonico + mapper bidirezionale locale ↔ canonico ↔ locale con transform pipeline e Mapping Inspector
 - [ ] **Phase 3: Routing & Server Gateway HTTP** — Routing engine dichiarativo (`local`/`http`/`cache`/`composite`) + gateway HTTP unico con retry/timeout/dedupe/auth
 - [ ] **Phase 4: Realtime inbound (SSE prioritario, WS opzionale)** — Adapter SSE + WebSocket con reconnection policy, normalizzazione canonica dei messaggi server
@@ -49,7 +49,7 @@ CORE-01, CORE-02, CORE-03, CORE-04, CORE-05, CORE-06, CORE-07, CORE-08, CORE-09,
 - [x] 01-07-PLAN.md — EventBus (bus.ts) — pub/sub dispatch + handler isolation + 5 step tap — completato 2026-04-28 (2 commits RED+GREEN: d328a96+9189a03; 1 source 291 LOC + 1 test 402 LOC, 25 nuovi test; 6 test extra Rule 2 oltre i 16 minimi del PLAN)
 - [x] 01-08-PLAN.md — PluginRegistry + Broker class composition + public-factory + index.ts public API — completato 2026-04-28 (4 commits RED+GREEN: ada0cfb+1377ef9, 285390b+1960be9; 5 source/test + index.ts modificato, 32 nuovi test; build OK con dist/index.js 23.14 KB + dist/index.d.ts 6.44 KB; smoke import 6 entries)
 - [x] 01-09-PLAN.md — PipelineHarness fixture + integration tests (5 success criteria + LIFE-02 deterministico) — completato 2026-04-28 (8 commits: a3d2fb6+c62b4ce + 5 atomic chunks tematici + 4ad7ed3 docs; PipelineHarness + 8 integration test in `__integration__/`, 46 nuovi test; tutti i 5 success criteria di Phase 1 coperti)
-- [ ] 01-10-PLAN.md — Robustness tests (storm, wildcard-perf, plugin-fault, concurrent-unregister)
+- [x] 01-10-PLAN.md — Robustness tests (storm, wildcard-perf, plugin-fault, concurrent-unregister) — completato 2026-04-29 (5 commits atomic chunks: 960fb62, 950b7ea, f1adb1d, 468b3a5 + 5e4c2db docs; 4 file robustness test + SUMMARY, 11 nuovi test; performance budget rispettati con margini ampi: storm 24ms vs 10s, wildcard 11ms vs 50ms; TEST-03 done)
 - [ ] 01-11-PLAN.md — Build verification (publint + attw + size-limit) + DOC-01 README + JSDoc
 **Needs research**: no
 **UI hint**: no
@@ -275,7 +275,7 @@ I 11 punti che il PRD §39 vieta esplicitamente di lasciare impliciti vengono ch
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Core essenziale | 9/11 | In progress | - |
+| 1. Core essenziale | 10/11 | In progress | - |
 | 2. Canonical Model & Mapper | 0/0 | Not started | - |
 | 3. Routing & Server Gateway HTTP | 0/0 | Not started | - |
 | 4. Realtime inbound | 0/0 | Not started | - |
@@ -285,4 +285,4 @@ I 11 punti che il PRD §39 vieta esplicitamente di lasciare impliciti vengono ch
 ---
 
 *Roadmap created: 2026-04-28*
-*Last updated: 2026-04-28 after Wave 6 closure (Plan 01-09 PipelineHarness + 8 integration test done; 20 Test Files / 237 Tests passing; 5 success criteria Phase 1 coperti)*
+*Last updated: 2026-04-29 after Plan 01-10 robustness tests (24 Test Files / 248 Tests passing; performance budget rispettati). Resta solo plan 11 final gate.*

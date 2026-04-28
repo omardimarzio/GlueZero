@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-current_plan: 10 of 11
+current_plan: 11 of 11
 status: executing
-last_updated: "2026-04-28T23:55:00+02:00"
+last_updated: "2026-04-29T00:30:00+02:00"
 progress:
   total_phases: 6
   completed_phases: 0
   total_plans: 11
-  completed_plans: 9
-  percent: 81
+  completed_plans: 10
+  percent: 90
 ---
 
 # Project State: SemBridge
@@ -29,13 +29,13 @@ progress:
 ## Current Position
 
 Phase: 01-core-essenziale (1) — EXECUTING
-Current Plan: 10 of 11
+Current Plan: 11 of 11
 Total Plans: 11
 
 - **Phase:** 1 — Core essenziale
-- **Plan:** Wave 6 chiusa — 01-09 ✓ (PipelineHarness + 8 integration test, 5 success criteria coperti)
+- **Plan:** Wave 7 chiusa parzialmente — 01-10 ✓ (4 robustness test); plan 11 (final gate) next
 - **Status:** Executing Phase 01-core-essenziale
-- **Progress:** [████████░░] 81%
+- **Progress:** [█████████░] 90%
 
 ## Phases Overview
 
@@ -46,7 +46,7 @@ Total Plans: 11
 
 | Phase | Goal (sintesi) | Status |
 |-------|----------------|--------|
-| 1 | Core essenziale (broker pub/sub, plugin registry, EventTap pre-instrumentato) | In progress (9/11 plans) |
+| 1 | Core essenziale (broker pub/sub, plugin registry, EventTap pre-instrumentato) | In progress (10/11 plans) |
 | 2 | Canonical Model & Mapper bidirezionale + Mapping Inspector | Not started |
 | 3 | Routing engine + HTTP gateway con retry/timeout/dedupe/auth | Not started |
 | 4 | Realtime inbound (SSE prioritario, WS opzionale) | Not started |
@@ -134,6 +134,7 @@ Total Plans: 11
 - [x] Eseguire Plan 07 (Wave 4 — `bus.ts` EventBus core: composizione del broker pub/sub usando le 9 utility dei plan 04/05/06 + noopEventTap pre-instrumentato) — completato 2026-04-28 (1 task macro RED+GREEN, 25 nuovi test, CORE-01/CORE-12/ERR-03 done)
 - [x] Eseguire Plan 08 (Wave 5 — `Broker` class + `createBroker(config)` factory + `plugin-registry.ts` + public API surface) — completato 2026-04-28 (2 task TDD, 32 nuovi test, CORE-04/CORE-05/CORE-11/CORE-14/LIFE-01/LIFE-02 done; PluginContext.broker risolto via approccio strutturale invece di TS declaration merging)
 - [x] Eseguire Plan 09 (Wave 6 — PipelineHarness fixture + 8 integration test) — completato 2026-04-28 (8 commit: a3d2fb6+c62b4ce + 5 atomic chunks + docs; 46 nuovi test; 5 success criteria Phase 1 tutti coperti; TEST-01 subset done)
+- [x] Eseguire Plan 10 (Wave 7 — 4 robustness test: storm, wildcard-perf, plugin-fault, concurrent-unregister) — completato 2026-04-29 (5 commit atomic chunks + docs; 11 nuovi test; storm 24ms vs 10s budget, wildcard 11ms vs 50ms budget; TEST-03 done)
 - [ ] Installare `@vitest/coverage-v8` come devDependency root e ri-eseguire `pnpm --filter @sembridge/core test:coverage` per verificare target ≥ 90% sui file `core/` — bloccante per closure Phase 1
 - [ ] Eseguire Plan 09 (Wave 6 — PipelineHarness fixture + integration tests dei 5 success criteria di Phase 1)
 - [ ] Eseguire Plan 10 (Robustness tests: storm, wildcard-perf, plugin-fault, concurrent-unregister) — parallelizzabile con plan 09
@@ -303,4 +304,4 @@ Se la sessione viene interrotta, riprendere con `/gsd-plan-phase 1` o con review
 
 **Planned Phase:** 1 (Core essenziale) — 11 plans — 2026-04-28T11:47:46.016Z
 
-**Plans complete (Phase 1):** 01-01 ✓, 01-02 ✓, 01-03 ✓, 01-04 ✓, 01-05 ✓, 01-06 ✓, 01-07 ✓, 01-08 ✓, 01-09 ✓ — Wave 1+2+3+4+5+6 done (237/237 test, 5 success criteria coperti). Wave 7 (plan 10 robustness + plan 11 final gate) sbloccata.
+**Plans complete (Phase 1):** 01-01 ✓, 01-02 ✓, 01-03 ✓, 01-04 ✓, 01-05 ✓, 01-06 ✓, 01-07 ✓, 01-08 ✓, 01-09 ✓, 01-10 ✓ — Wave 1-7 (parziale) done. 248/248 test su 24 file, performance budget rispettati. Plan 11 (final gate: build verify + DOC-01) ultimo step prima di gsd-verifier.
