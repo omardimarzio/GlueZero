@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-current_plan: 11 of 11 (DONE)
-status: phase-complete-verified
-last_updated: "2026-04-29T02:00:00+02:00"
+current_plan: 1
+status: executing
+last_updated: "2026-04-29T10:36:07.356Z"
 progress:
   total_phases: 6
   completed_phases: 1
-  total_plans: 11
-  completed_plans: 11
-  percent: 100
+  total_plans: 23
+  completed_plans: 12
+  percent: 52
 ---
 
 # Project State: SemBridge
@@ -24,18 +24,19 @@ progress:
 - **Authoritative source:** `prd.md` (root del progetto, "l'unica base informativa condivisa con il developer", PRD §1)
 - **Core Value:** I plugin/componenti possono essere sviluppati indipendentemente, con la propria nomenclatura locale, e interoperare correttamente attraverso il vocabolario canonico del broker — senza accordo preventivo sui nomi tra autori
 - **Current Milestone:** v1
-- **Current Focus:** Phase 1 — Core essenziale
+- **Current Focus:** Phase 02 — canonical-model-mapper
 
 ## Current Position
 
-Phase: 01-core-essenziale (1) — **COMPLETE & VERIFIED ✅**
-Current Plan: 11/11 ✓
+Phase: 02 (canonical-model-mapper) — EXECUTING
+Plan: 2 of 12
+Current Plan: 1
 Total Plans: 11
 
 - **Phase:** 1 — Core essenziale
 - **Verifier verdict:** PASS (confidence HIGH) — 5/5 success criteria VERIFIED, 27/27 REQ-IDs done, 8/8 gate CI passati. Vedi `.planning/phases/01-core-essenziale/VERIFICATION.md`.
-- **Status:** Phase 1 COMPLETE. Pronto per Phase 2 (Canonical Model & Mapper — `@sembridge/mapper`).
-- **Progress:** [██████████] 100%
+- **Status:** Ready to execute
+- **Progress:** [█████░░░░░] 52%
 
 ## Phases Overview
 
@@ -63,6 +64,7 @@ Total Plans: 11
 | Plans repaired | 0 |
 | Time per phase | — |
 | Time per plan | 01-01: 4m 14s; 01-02: 3m 19s; 01-03: 6m 26s; 01-04: ~6m (interrupted); 01-05: ~15m parallelo; 01-06: ~7m parallelo; 01-07: ~9m sequenziale; 01-08: ~14m sequenziale (32 nuovi test); 01-09: ~28m sequenziale (PipelineHarness + 8 integration test, 8 commits, 46 nuovi test, 5 success criteria Phase 1 coperti) |
+| Phase 02 P02-01 | 24min | 2 tasks | 8 files |
 
 ## Accumulated Context
 
@@ -99,6 +101,10 @@ Total Plans: 11
 | `createBroker(invalidConfig)` lancia `Error` nativo (non `BrokerError`) | Errore di development-time, non runtime broker-internal. Il `BrokerError` è semanticamente "errore propagato attraverso il broker" — qui il broker non esiste ancora. Test verifica `Error` con messaggio descrittivo Valibot. | 01-08-SUMMARY.md |
 | `createPluginScopedBroker(broker, pluginCtx)` wrapper auto-tagga subscriptions con `ownerId=pluginCtx.id` | D-26 enforcement pratico in F1 (chiusura PRD §39 #7 — LIFE-02): senza wrapper, il punto 1 della cascade (`bus.unsubscribeByOwner`) sarebbe esercitato solo dai plugin che usano `signal: ctx.signal`. Il wrapper rende il behavior LIFE-02 deterministico e testabile. | 01-08-SUMMARY.md |
 | 7 test extra in plugin-registry/public-factory (Rule 2) | Coverage gap: scoped broker no-signal/non-function-properties/onDestroy-throw + list edge cases + all F1 runtime fields/registerPlugin lifecycle/LIFE-02 cascade. Test totali 32 invece dei minimi del PLAN. | 01-08-SUMMARY.md |
+| sideEffects array `["./dist/augment.js"]` per @sembridge/mapper (Rule 4 PATTERNS.md §6) | Preserva il side-effect di augment.ts (declaration merging F2 — D-49/D-56/D-57) dal tree-shaker, mantenendo tree-shaking del resto. `sideEffects: false` boolean lo eliminerebbe. | 02-01-SUMMARY.md |
+| tsup external `@sembridge/core` (peer-like) per @sembridge/mapper | Non bundla cross-package F1 dentro F2; usa workspace protocol pnpm a runtime. Riduce bundle size mapper e prevenne duplicazione versione. | 02-01-SUMMARY.md |
+| size-limit budget @sembridge/mapper 5 KB gzip (vs 8 KB core) | +2 KB headroom rispetto a core (~6.14 KB) per mapper engine + 3 registries (canonical/alias/transform) previsti da PATTERNS.md §3.1 | 02-01-SUMMARY.md |
+| @vitest/coverage-v8 4.1.5 installato come devDep root in 02-01 | Chiude open item ereditato da F1 (plan 04 lo aveva rimandato per missing dep). Abilita D-55 coverage measurement F2 finale al plan 02-12 (target ≥ 90% sui file @sembridge/mapper/) | 02-01-SUMMARY.md |
 
 ### Open Issues PRD §39 — Phase Assignment
 
@@ -140,7 +146,9 @@ Total Plans: 11
 - [x] `/gsd-discuss-phase 2 --auto` — completato 2026-04-29 (CONTEXT.md con 29 decisioni D-31..D-59 senza interazione utente)
 - [x] `/gsd-plan-phase 2` — completato 2026-04-29 (12 PLAN.md + PATTERNS.md; gsd-plan-checker PASS-WITH-CONCERNS, 2 patch applicate per C-3 + C-8 pre-execute)
 - [ ] Eseguire Phase 2 con `/gsd-execute-phase 2` (12 plan organizzati in 7 wave; Wave 3 paralleli 02-03/04/05/06)
-- [ ] Installare `@vitest/coverage-v8` come devDependency root e ri-eseguire `pnpm --filter @sembridge/core test:coverage` per verificare target ≥ 90% sui file `core/` — bloccante per closure Phase 1
+- [x] Eseguire Plan 02-01 (Bootstrap @sembridge/mapper — 4 file config + skeleton barrel + README + workspace install + size-limit root + @vitest/coverage-v8) — completato 2026-04-29 (2 task atomic, 24 min, 2 commit b200948+40d4caf, no deviations)
+- [x] Installare `@vitest/coverage-v8` come devDependency root — completato in 02-01 (versione 4.1.5 allineata a vitest; abilita D-55 coverage measurement F2 finale al plan 02-12)
+- [ ] Eseguire Plan 02-02 (Public types F2: canonical-schema, input-output-map, transform, validator-adapter, mapper-error) — Wave 1 foundation tipi
 - [ ] Eseguire Plan 09 (Wave 6 — PipelineHarness fixture + integration tests dei 5 success criteria di Phase 1)
 - [ ] Eseguire Plan 10 (Robustness tests: storm, wildcard-perf, plugin-fault, concurrent-unregister) — parallelizzabile con plan 09
 - [ ] Eseguire Plan 11 (Build verification + DOC-01 README + JSDoc; final gate Phase 1)
@@ -158,9 +166,35 @@ Nessuna domanda aperta. Le 11 open issues PRD §39 hanno già decisione raccoman
 
 ### Last Action
 
-**Wave 5 chiusa** — plan 08 (`Broker` class + `plugin-registry` + public API surface) completato sequenzialmente via `gsd-executor` con `model: "opus"`.
+**Phase 2 plan 02-01 chiuso** — Bootstrap `@sembridge/mapper` completato sequenzialmente via `gsd-executor` con `model: "opus"`.
+
+**Plan 02-01** — 2 task auto (no TDD: bootstrap config, no runtime code), 2 commit + 1 docs commit, 4 file config + 1 src skeleton + README + 2 modifiche root + lockfile aggiornato (8 file totali):
+
+- `packages/mapper/package.json` — da placeholder F1 (18 LOC) a package buildable F2 (52 LOC); replica esatta @sembridge/core con 3 diff puntuali: `sideEffects: ['./dist/augment.js']` (array, Rule 4 PATTERNS.md §6); `dependencies.@sembridge/core: workspace:*` + `valibot: 1.3.1`; `size-limit` budget 5 KB gzip
+- `packages/mapper/tsup.config.ts` — replica core con `external: [/^node:/, '@sembridge/core']` (peer-like) + banner `@sembridge/mapper`
+- `packages/mapper/tsconfig.json` — replica esatta core (`extends: '../../tsconfig.base.json'`)
+- `packages/mapper/vitest.config.ts` — replica core con `name: '@sembridge/mapper'`, jsdom env, coverage v8 thresholds 90/85/90/90
+- `packages/mapper/src/index.ts` — barrel skeleton con header `@packageDocumentation` italiano + commenti placeholder per export futuri (CanonicalRegistry/AliasRegistry/TransformPipeline/valibotAdapter/MapperEngine + types) + empty `export {}`
+- `packages/mapper/README.md` — skeleton italiano con sezioni Stato/Cosa contiene/Vincolo D-49/Documentazione/Licenza (preparazione DOC-03 finale al plan 02-12)
+- `package.json` (root) — aggiunge `@vitest/coverage-v8: 4.1.5` in `devDependencies` + entry size-limit per `@sembridge/mapper (gzip)` con limit 5 KB (chiude open item ereditato F1)
+- `pnpm-lock.yaml` — aggiornato con `@vitest/coverage-v8` + workspace link `@sembridge/core: workspace:*` → `@sembridge/mapper`
+- Commit: `b200948` (chore Task 1 — replica config) → `40d4caf` (chore Task 2 — barrel + README + install + size-limit root)
+
+**Verifica finale plan 02-01:**
+
+- `pnpm install` exit 0: `+ @vitest/coverage-v8 4.1.5`; lockfile aggiornato; workspace link attivo
+- `pnpm --filter @sembridge/mapper typecheck` exit 0
+- `pnpm --filter @sembridge/mapper test` exit 0 (passWithNoTests; nessun test ancora — atteso)
+- `pnpm --filter @sembridge/mapper build` exit 0: `dist/index.js` 68 B + `dist/index.d.ts` 13 B + sourcemap 69 B
+- `pnpm --filter @sembridge/core test` exit 0: **24 file/248 test passing** (no regression Phase 1)
+- `pnpm typecheck` workspace exit 0 (core + mapper, gli altri 6 placeholder F1 fuori scope)
+
+Nessuna deviation applicata (Rule 1/2/3/4): plan eseguito esattamente come scritto. Open item ereditato chiuso: `@vitest/coverage-v8` ora installato → abilita D-55 coverage measurement F2 finale al plan 02-12.
+
+**Wave 5 chiusa** (plan 01-08 — Phase 1 closure) — `Broker` class + `plugin-registry` + public API surface completato sequenzialmente via `gsd-executor` con `model: "opus"`.
 
 **Plan 01-08** — 2 task TDD RED→GREEN, 5 commit, 5 file src/test + 1 modifica `index.ts`:
+
 - `core/plugin-registry.ts` (224 LOC) — `class PluginRegistry` con `register/unregister`, transitions D-25 via `transitionState`, cascade cleanup D-26 (chiusura PRD §39 #7 — LIFE-02): `bus.unsubscribeByOwner` → `abortController.abort()` → `onUnmount` → `onDestroy`. Helper `createPluginScopedBroker(broker, pluginCtx)` che auto-tagga subscriptions con `ownerId=pluginCtx.id` (D-26 enforcement pratico F1).
 - `core/plugin-registry.test.ts` (368 LOC, 19 test) — coverage register lifecycle, duplicate id D-17, cascade cleanup deterministico (`getDebugSnapshot()` post-unregister == baseline), scoped broker.
 - `core/broker.ts` (166 LOC) — `class Broker` composition di EventBus + PluginRegistry + TopicRegistry + logger + tap. Espone `publish/subscribe/registerPlugin/unregisterPlugin/getDebugSnapshot/getTopicRegistry/enableDebug/disableDebug` (D-28, D-29).
@@ -170,6 +204,7 @@ Nessuna domanda aperta. Le 11 open issues PRD §39 hanno già decisione raccoman
 - Commit: `ada0cfb` (test plugin-registry RED) → `1377ef9` (feat plugin-registry GREEN) → `285390b` (test broker+factory RED) → `1960be9` (feat broker+factory+index GREEN) → `419152d` (docs SUMMARY).
 
 **Verifica finale Wave 5 chiusa:**
+
 - `pnpm --filter @sembridge/core test` exit 0: **`Test Files 12 passed | Tests 191 passed`**
 - `pnpm --filter @sembridge/core typecheck` exit 0
 - `pnpm biome check packages/core/src/` exit 0 (35 file, scope esteso a src/)
@@ -177,6 +212,7 @@ Nessuna domanda aperta. Le 11 open issues PRD §39 hanno già decisione raccoman
 - Smoke import: `Object.keys(m).sort()` → `['Broker', 'createBroker', 'createBrokerError', 'createConsoleLogger', 'isBrokerError', 'silentLogger']` (superset rispetto al minimo richiesto dal PLAN)
 
 Decisioni architetturali documentate (NON Rule 4 — strutturali e coerenti col PLAN):
+
 1. `PluginContext.broker` placeholder risolto via `interface PluginScopedBroker` strutturale invece di TS declaration merging — evita ciclo import broker.ts ↔ types/plugin.ts. Lo scoped broker espone solo le API necessarie agli hook plugin.
 2. `createBroker(invalidConfig)` lancia `Error` nativo, non `BrokerError` — errore di development-time, non runtime broker-internal.
 
@@ -185,6 +221,7 @@ Open item residuo (ereditato da plan 04, non bloccante): coverage v8 measurement
 **Wave 4 (precedente)** — plan 07 EventBus core completato e già documentato.
 
 **Plan 01-07** (EventBus core) — 1 task macro TDD RED→GREEN, 3 commit, 2 file src/test (291 + 402 LOC):
+
 - `core/bus.ts` — classe `EventBus` con `publish/subscribe/unsubscribeByOwner/setDebugMode/getStats`. Coverage: CORE-01 (event bus pub/sub), CORE-09 (wildcard delivery via TopicTrie applicato al dispatch), CORE-12 (handler isolation con try/catch + system.error publish), ERR-03 (errori non collassano runtime).
 - Pipeline §28 step F1 instrumentati: 5 chiamate `safeTapStep(tap, step, snapshot)` su `event.received`, `event.metadata.enriched`, `event.validated`, `event.dedupe.checked`, `event.delivered`. D-20 enforcement (errors swallowed).
 - Decisioni runtime applicate: D-01 (default async via `queueMicrotask`), D-02 (sync immediate), D-03 (worker/remote → fallback async + warn `mapping.delivery.fallback`), D-16 (handler isolation: catch + log + publish `system.error`, NO re-throw), D-26 (cascade unsubscribe via AbortSignal), D-27 (unsubscribe idempotente), once-true auto-unsubscribe.
@@ -193,6 +230,7 @@ Open item residuo (ereditato da plan 04, non bloccante): coverage v8 measurement
 - Deviation Rule 1: `useOptionalChain` su `!sub?.active` per parity con Wave 3 modules.
 
 **Verifica finale Wave 4 chiusa:**
+
 - `pnpm --filter @sembridge/core test` exit 0: **`Test Files 10 passed | Tests 159 passed | Duration 523 ms`**
 - `pnpm --filter @sembridge/core typecheck` exit 0
 - `pnpm biome check packages/core/src/core/` exit 0 (20 file)
@@ -202,6 +240,7 @@ Open item residuo (ereditato da plan 04, non bloccante): coverage v8 measurement
 **Wave 3 (precedente)** — plan 04, 05, 06 completati e già documentati. Plan 05 e 06 eseguiti in parallelo via spawn `gsd-executor` con `model: "opus"` (vincolo CLAUDE.md). File ownership disgiunta verificata: nessuna race su file modificati.
 
 **Plan 01-05** (Utility batch B) — 3 task TDD RED→GREEN, 7 commit, 6 file src/test (+ 1 SUMMARY):
+
 - `core/topic-matcher.ts` — `validateTopic` (CORE-08, regex D-24) + `validateTopicPattern` + `TopicTrie<T>` con `insert/remove/match/collectAllPatterns` (CORE-09, D-08..D-11 incluso edge case `weather.*.failed` matcha `weather.alert.failed`). 32 test.
 - `core/event-factory.ts` — `createBrokerEvent({topic, payload, source, ...})` con default id (`nanoid` se assente), timestamp (`Date.now()`), deliveryMode `'async'`, priority `'normal'`. Lancia `BrokerError` `event.source.missing` se source assente E senza defaultSource. (CORE-07, D-21..D-23). 12 test.
 - `core/event-validator.ts` — `validateEvent(event)` Valibot schema BrokerEvent shape (VAL-01, VAL-06). 11 test.
@@ -209,58 +248,68 @@ Open item residuo (ereditato da plan 04, non bloccante): coverage v8 measurement
 - Deviation Rule 1 (correctness): cambiato return type `BrokerError | void` → `void` per le `validateTopic*` (le funzioni throw, mai return BrokerError).
 
 **Plan 01-06** (Utility batch C) — 2 task TDD RED→GREEN, 5 commit, 4 file src/test (+ 1 SUMMARY):
+
 - `core/topic-registry.ts` — `TopicRegistry` class con `register/has/list/onRegistered` (CORE-03). Idempotente, ordering deterministico, observer pattern con unsubscribe. 8 test.
 - `core/lifecycle.ts` — `VALID_TRANSITIONS` (D-25 state machine 8 stati) + `transitionState(reg, target, logger)` che valida le transizioni e lancia `BrokerError` `plugin.lifecycle.invalid-transition` su transizione invalida (CORE-05). 29 test.
 - Commit RED+GREEN: `526336a`/`41866e7` (topic-registry), `c87ae5f`/`94db532` (lifecycle). Docs: `a6ae97e`.
 - Deviation Rule 2: `VALID_TRANSITIONS` esportato readonly (T-06-02 mitigation), test extra `list returns fresh array on each call` (T-06-01), granularizzazione test integrità reg.state on throw.
 
 **Verifica finale Wave 3 chiusa:**
+
 - `pnpm --filter @sembridge/core test` exit 0: **`Test Files 9 passed | Tests 134 passed | Duration 746 ms`**
 - `pnpm --filter @sembridge/core typecheck` exit 0 (18 file)
 - `pnpm biome check packages/core/src/core/` exit 0 (14 file)
 - Working tree pulito (solo `prd.md` untracked, fuori scope)
 
 Open item ereditato (non bloccante):
+
 - Coverage v8 NON ancora misurata: missing dep `@vitest/coverage-v8`. 134/134 test passing su 9 moduli isolati copre i behavior path. Da installare prima del closure di Phase 1.
 
 ### Next Action
 
-**Wave 6 — plan 09 e 10** (potenzialmente parallelizzabili — verificare file ownership disgiunta):
+**Phase 2 Wave 1 — plan 02-02** (Public types F2 foundation):
 
 ```
-/gsd-execute-plan 1 09   # PipelineHarness + integration tests
-/gsd-execute-plan 1 10   # Robustness tests
+/gsd-execute-plan 2 02-02   # canonical-schema + input-output-map + transform + validator-adapter + mapper-error
 ```
 
-- **Plan 09** (Wave 6): PipelineHarness fixture + integration tests dei 5 success criteria di Phase 1 (plugin A → broker → plugin B end-to-end senza mapping; subscribe.unsubscribe + LIFE-02 cascade deterministico via getDebugSnapshot; struttura BrokerEvent + naming validation runtime; wildcard subscribe; EventTap instrumentato in tutti i 5 step F1).
-- **Plan 10**: Robustness tests (storm di eventi, wildcard-perf con N subscribers, plugin malconfigurato, concurrent-unregister race).
+- **Plan 02-02** (Wave 1, foundation tipi): Tipi pubblici F2 in `packages/mapper/src/types/` — `canonical-schema.ts`, `input-output-map.ts`, `transform.ts`, `validator-adapter.ts`, `mapper-error.ts`, barrel `types/index.ts`. Pattern replica F1 plan 03 (public types frontier). Riusa `BrokerError`/`ErrorCategory`/`DeepReadonly` da `@sembridge/core`.
 
-Dopo Wave 6:
-- **Plan 11** (Wave 7, gate finale): Build verification (`publint` + `attw` + `size-limit`) + `DOC-01` README + JSDoc API pubblica.
-- **gsd-verifier** (post-11): verifica goal-backward dei 5 success criteria Phase 1 + coverage analysis dei 91 REQ-IDs assegnati a Phase 1.
+Dopo Wave 1, Wave 2-3 paralleli:
 
-Pre-requisito raccomandato (non strettamente bloccante): installare `@vitest/coverage-v8` per misurare coverage v8 ≥ 90% sui 12 file `core/` prima del gate plan 11.
+- **Plan 02-03/04/05/06** (Wave 2-3, paralleli con file ownership disgiunta): `canonical-registry.ts` || `alias-registry.ts` || `transform-pipeline.ts` || `valibot-adapter.ts`. TDD RED→GREEN.
+- **Plan 02-07** (Wave 4): `mapper-engine.ts` — il "cuore" del package, analogo dell'EventBus per il mapper.
+- **Plan 02-08** (Wave 5): `broker-mapper-wrapper.ts` (composition decorator — Rule 4 candidata; planner ha già scelto pattern in PLAN).
+- **Plan 02-09** (Wave 6): `augment.ts` (TS declaration merging) + barrel `index.ts` + Inspector wiring.
+- **Plan 02-10/11** (Wave 7): integration tests (scenario meteo + cycle detection + mapping.error event + Inspector snapshot + plugin cleanup mapper cascade).
+- **Plan 02-12** (Wave 8, final gate F2): Coverage v8 ≥ 90% + publint/attw/size-limit estesi a mapper + DOC-03 README esteso (scenario meteo end-to-end senza HTTP) + JSDoc API pubblica + gsd-verifier post.
+
+Pre-requisito chiuso da 02-01: `@vitest/coverage-v8` installato → D-55 misurazione coverage F2 finale abilitata.
 
 ### Files Created/Updated in this Session
 
 Plan 01-04 + 01-05 + 01-06 execution (Wave 3 completa):
 
 **Plan 04 (utility batch A)** — `packages/core/src/core/`:
+
 - `broker-error.ts` + `broker-error.test.ts`
 - `deep-freeze.ts` + `deep-freeze.test.ts`
 - `logger.ts` + `logger.test.ts`
 - `event-tap.ts` + `event-tap.test.ts`
 
 **Plan 05 (utility batch B)** — `packages/core/src/core/`:
+
 - `topic-matcher.ts` + `topic-matcher.test.ts`
 - `event-factory.ts` + `event-factory.test.ts`
 - `event-validator.ts` + `event-validator.test.ts`
 
 **Plan 06 (utility batch C)** — `packages/core/src/core/`:
+
 - `topic-registry.ts` + `topic-registry.test.ts`
 - `lifecycle.ts` + `lifecycle.test.ts`
 
 **Documentation:**
+
 - `.planning/phases/01-core-essenziale/01-04-SUMMARY.md` (creato)
 - `.planning/phases/01-core-essenziale/01-05-SUMMARY.md` (creato dall'agent gsd-executor parallelo)
 - `.planning/phases/01-core-essenziale/01-06-SUMMARY.md` (creato dall'agent gsd-executor parallelo)
@@ -269,6 +318,7 @@ Plan 01-04 + 01-05 + 01-06 execution (Wave 3 completa):
 - `.planning/REQUIREMENTS.md` (aggiornato: ERR-01/CORE-03/CORE-05/CORE-07/CORE-08/CORE-09/CORE-10/CORE-13/VAL-01/VAL-06 promossi a Done)
 
 **21 commit nuovi creati post-04 docs (`b0cecb7`):**
+
 - Plan 05: `c97bc56`/`8c24e77` (topic-matcher), `239d010`/`6cd21e7` (event-factory), `d77398c`/`cf12502` (event-validator), `c2ec46b` (docs SUMMARY)
 - Plan 06: `526336a`/`41866e7` (topic-registry), `c87ae5f`/`94db532` (lifecycle), `a6ae97e` (docs SUMMARY)
 - Wave 3 closure docs: `5ae5074`
@@ -276,11 +326,13 @@ Plan 01-04 + 01-05 + 01-06 execution (Wave 3 completa):
 - Wave 4 closure docs: 1 commit pendente (questo)
 
 **Plan 07 file Wave 4** — `packages/core/src/core/`:
+
 - `bus.ts` (291 LOC) — classe `EventBus` con publish/subscribe/unsubscribeByOwner/setDebugMode/getStats
 - `bus.test.ts` (402 LOC) — 25 test (16 minimi PLAN + 6 Rule 2 + altri 3 di copertura)
 - `.planning/phases/01-core-essenziale/01-07-SUMMARY.md` (creato dall'agent gsd-executor)
 
 **Plan 08 file Wave 5** — `packages/core/src/`:
+
 - `core/plugin-registry.ts` (224 LOC) — class `PluginRegistry` + helper `createPluginScopedBroker`
 - `core/plugin-registry.test.ts` (368 LOC, 19 test)
 - `core/broker.ts` (166 LOC) — class `Broker` composition
