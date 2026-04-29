@@ -241,7 +241,7 @@ I 11 punti che il PRD §39 vieta esplicitamente di lasciare impliciti vengono ch
 | # | Open Issue PRD §39 | Decisione | Fase di chiusura |
 |---|--------------------|-----------|------------------|
 | 1 | Precedenza alias automatici vs mapping esplicito | Mapping esplicito vince sempre (MAP-17) | F2 |
-| 2 | 5/12 | In Progress|  |
+| 2 | 6/12 | In Progress|  |
 | 3 | Field mancante: errore o default | Configurabile per campo (`required: true`/`false`) | F2 (VAL-08) |
 | 4 | Transform failure: skip o block | `onFailure: 'block' | 'skip' | 'fallback'`, default `'block'` | F2 (VAL-09) |
 | 5 | Topic senza route | Default consegna locale, opt-in `requiresRoute: true` | F3 (ROUTE-16) |

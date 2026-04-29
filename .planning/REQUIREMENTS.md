@@ -101,11 +101,11 @@ Tutti i requisiti elencati sono table stakes (vincolanti dalla checklist PRD §4
 #### Validazione & Schema
 - [x] **VAL-01**: Validazione sintattica dell'evento (struttura `BrokerEvent`) *(PRD §21.2.1)*
 - [ ] **VAL-02**: Validazione payload topic *(PRD §21.2.2)*
-- [ ] **VAL-03**: Validazione modello canonico *(PRD §21.2.3)*
-- [ ] **VAL-04**: Validazione post-mapping *(PRD §21.2.4)*
+- [x] **VAL-03**: Validazione modello canonico *(PRD §21.2.3)*
+- [x] **VAL-04**: Validazione post-mapping *(PRD §21.2.4)*
 - [ ] **VAL-05**: Validazione risposta server *(PRD §21.2.5)*
 - [x] **VAL-06**: Schema definitions JSON Schema o equivalente tipizzato *(PRD §21.3)*
-- [ ] **VAL-07**: Errori di validazione registrati in debug/log; payload invalidi non consegnati salvo configurazione esplicita *(PRD §21.4)*
+- [x] **VAL-07**: Errori di validazione registrati in debug/log; payload invalidi non consegnati salvo configurazione esplicita *(PRD §21.4)*
 - [ ] **VAL-08**: Comportamento esplicito su field mancante (errore vs default) *(PRD §39 — open issue da chiudere)*
 - [x] **VAL-09**: Comportamento esplicito su transform failure (skip vs block) *(PRD §39 — open issue da chiudere)*
 
@@ -285,11 +285,11 @@ Mappatura definitiva REQ-ID → fase. Ogni requisito è assegnato alla **prima f
 |-------------|---------------------------|--------|----------------------------|
 | VAL-01 | Phase 1 | Done (plan 01-05) | `validateEvent(event)` in `core/event-validator.ts` con Valibot schema BrokerEvent shape; lancia `BrokerError` `event.validation.failed` su payload invalido. 11 test passing. |
 | VAL-02 | Phase 2 | Pending | — |
-| VAL-03 | Phase 2 | Pending | — |
-| VAL-04 | Phase 2 | Pending | — |
+| VAL-03 | Phase 2 | Complete | — |
+| VAL-04 | Phase 2 | Complete | — |
 | VAL-05 | Phase 3 | Pending | — |
 | VAL-06 | Phase 1 | Done (plan 01-05) | Valibot schema runtime per BrokerEvent in `core/event-validator.ts`. TS interfaces tipizzate restano in `types/` (plan 03). |
-| VAL-07 | Phase 2 | Pending | — |
+| VAL-07 | Phase 2 | Complete | — |
 | VAL-08 | Phase 2 | Pending | **Closes PRD §39 #3**: `required: true|false` per campo |
 | VAL-09 | Phase 2 | Complete | **Closes PRD §39 #4**: `onFailure: 'block' | 'skip' | 'fallback'` |
 | ERR-01 | Phase 1 | Done (plan 01-04) | `createBrokerError(params)` factory + `isBrokerError(value)` type guard in `core/broker-error.ts` — ES2022 cause, conditional assignment per `exactOptionalPropertyTypes`, 9/9 test passing |

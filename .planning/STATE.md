@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-current_plan: 1
+current_plan: 6
 status: executing
-last_updated: "2026-04-29T17:48:14.931Z"
+last_updated: "2026-04-29T18:01:46.997Z"
 progress:
   total_phases: 6
   completed_phases: 1
   total_plans: 23
-  completed_plans: 16
-  percent: 70
+  completed_plans: 17
+  percent: 74
 ---
 
 # Project State: SemBridge
@@ -29,14 +29,14 @@ progress:
 ## Current Position
 
 Phase: 02 (canonical-model-mapper) — EXECUTING
-Plan: 6 of 12
+Plan: 7 of 12
 Current Plan: 6
 Total Plans: 12
 
 - **Phase:** 1 — Core essenziale
 - **Verifier verdict:** PASS (confidence HIGH) — 5/5 success criteria VERIFIED, 27/27 REQ-IDs done, 8/8 gate CI passati. Vedi `.planning/phases/01-core-essenziale/VERIFICATION.md`.
 - **Status:** Ready to execute
-- **Progress:** [███████░░░] 70%
+- **Progress:** [███████░░░] 74%
 
 ## Phases Overview
 
@@ -69,6 +69,7 @@ Total Plans: 12
 | Phase 02 P02-03 | 53min | 1 tasks | 2 files |
 | Phase 02 P02-04 | 9min | 1 tasks | 2 files |
 | Phase 02 P02-05 | 92min | 1 tasks | 2 files |
+| Phase 02 P02-06 | 2min | 1 tasks | 2 files |
 
 ## Accumulated Context
 
