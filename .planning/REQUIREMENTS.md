@@ -135,8 +135,8 @@ Tutti i requisiti elencati sono table stakes (vincolanti dalla checklist PRD §4
 - [ ] **PKG-01**: Distribuzione ESM (UMD/IIFE opzionale per pagine legacy) *(PRD §31.1)*
 - [ ] **PKG-02**: TypeScript come linguaggio di sviluppo, build distribuibile in JavaScript compilato *(PRD §31.2)*
 - [ ] **PKG-03**: Target browser moderni evergreen; polyfill separati dal core *(PRD §31.3)*
-- [ ] **PKG-04**: Type declarations (.d.ts) generate per API pubblica *(implicito PRD §31.2)*
-- [ ] **DOC-01**: Documentazione API pubblica *(PRD §41.3)*
+- [x] **PKG-04**: Type declarations (.d.ts) generate per API pubblica *(implicito PRD §31.2)*
+- [x] **DOC-01**: Documentazione API pubblica *(PRD §41.3)*
 - [ ] **DOC-02**: Guida integrazione plugin *(PRD §41.4)*
 - [ ] **DOC-03**: Documentazione canonical model + mapper *(PRD §41.5)*
 - [ ] **DOC-04**: Documentazione route engine + server gateway *(PRD §41.6)*
@@ -309,8 +309,8 @@ Mappatura definitiva REQ-ID → fase. Ogni requisito è assegnato alla **prima f
 | PKG-01 | Phase 1 (01-01 foundation, 01-02 build, 01-11 verify) | Baseline (tsup ESM-only configurato in 01-02; dist/index.js generato; full verify in 01-11) | tsup ESM-only (no CJS — dual-package hazard) |
 | PKG-02 | Phase 1 (01-01, 01-02) | Baseline (tsconfig.base.json strict + TS 6.0.3 in 01-01; tsconfig package extends in 01-02; tsc --noEmit exit 0) | TypeScript 6.0.3 (super-set di 5.5+) |
 | PKG-03 | Phase 1 (01-01, 01-02) | Baseline (target ES2022 in tsconfig.base.json; tsup target es2022 + platform browser in 01-02) | target ES2022 |
-| PKG-04 | Phase 1 (01-02 baseline, 01-11 verify) | Baseline (dts: true in tsup.config.ts; dist/index.d.ts generato in 01-02; attw verify in 01-11) | dts via tsup rollup |
-| DOC-01 | Phase 1 (01-02 skeleton, 01-11 finalizzato) | Skeleton (README @sembridge/core creato in 01-02) | Consolidato in F6 con TypeDoc |
+| PKG-04 | Phase 1 (01-02 baseline, 01-11 verify) | Done (plan 01-11) | `dist/index.d.ts` 19.43 KB con JSDoc preservato. `attw --profile=esm-only` 🟢 (node16, bundler). |
+| DOC-01 | Phase 1 (01-02 skeleton, 01-11 finalizzato) | Done (plan 01-11) | README espanso (271 righe) + JSDoc su 16 runtime export + 19 type pubblici. Bundle TypeDoc-ready. Consolidato in F6 con TypeDoc. |
 | DOC-02 | Phase 6 | Pending | Guida integrazione plugin |
 | DOC-03 | Phase 2 | Pending | Documentazione canonical model + mapper |
 | DOC-04 | Phase 3 | Pending | Documentazione route engine + gateway |
