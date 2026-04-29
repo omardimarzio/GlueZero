@@ -137,7 +137,9 @@ Total Plans: 11
 - [x] Eseguire Plan 10 (Wave 7 — 4 robustness test: storm, wildcard-perf, plugin-fault, concurrent-unregister) — completato 2026-04-29 (5 commit atomic chunks + docs; 11 nuovi test; storm 24ms vs 10s budget, wildcard 11ms vs 50ms budget; TEST-03 done)
 - [x] Eseguire Plan 11 (final gate Phase 1 — build verify publint+attw+size-limit + DOC-01 README + JSDoc API pubblica) — completato 2026-04-29 (5 commits: 947f37c README, 9d9873a JSDoc runtime, 31e6b70 JSDoc types, f00d914 ci gates, efc6554 docs SUMMARY; size-limit 6.14 KB / 8 KB budget = 76%; tutti i gate passati; DOC-01 + PKG-04 done)
 - [x] Spawn `gsd-verifier` per Phase 1 goal-backward verification — completato 2026-04-29 (verdetto PASS confidence HIGH; VERIFICATION.md prodotto)
-- [ ] Iniziare Phase 2 (Canonical Model & Mapper — `@sembridge/mapper`): `/gsd-discuss-phase 2` o `/gsd-plan-phase 2`
+- [x] `/gsd-discuss-phase 2 --auto` — completato 2026-04-29 (CONTEXT.md con 29 decisioni D-31..D-59 senza interazione utente)
+- [x] `/gsd-plan-phase 2` — completato 2026-04-29 (12 PLAN.md + PATTERNS.md; gsd-plan-checker PASS-WITH-CONCERNS, 2 patch applicate per C-3 + C-8 pre-execute)
+- [ ] Eseguire Phase 2 con `/gsd-execute-phase 2` (12 plan organizzati in 7 wave; Wave 3 paralleli 02-03/04/05/06)
 - [ ] Installare `@vitest/coverage-v8` come devDependency root e ri-eseguire `pnpm --filter @sembridge/core test:coverage` per verificare target ≥ 90% sui file `core/` — bloccante per closure Phase 1
 - [ ] Eseguire Plan 09 (Wave 6 — PipelineHarness fixture + integration tests dei 5 success criteria di Phase 1)
 - [ ] Eseguire Plan 10 (Robustness tests: storm, wildcard-perf, plugin-fault, concurrent-unregister) — parallelizzabile con plan 09
