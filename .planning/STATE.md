@@ -4,19 +4,19 @@ milestone: v1.0
 milestone_name: milestone
 current_plan: 1
 status: executing
-last_updated: "2026-04-29T14:56:58.294Z"
+last_updated: "2026-04-29T17:48:14.931Z"
 progress:
   total_phases: 6
   completed_phases: 1
   total_plans: 23
-  completed_plans: 15
-  percent: 65
+  completed_plans: 16
+  percent: 70
 ---
 
 # Project State: SemBridge
 
 **Initialized:** 2026-04-28
-**Last updated:** 2026-04-28
+**Last updated:** 2026-04-29
 
 ## Project Reference
 
@@ -29,14 +29,14 @@ progress:
 ## Current Position
 
 Phase: 02 (canonical-model-mapper) — EXECUTING
-Plan: 5 of 12
-Current Plan: 1
-Total Plans: 11
+Plan: 6 of 12
+Current Plan: 6
+Total Plans: 12
 
 - **Phase:** 1 — Core essenziale
 - **Verifier verdict:** PASS (confidence HIGH) — 5/5 success criteria VERIFIED, 27/27 REQ-IDs done, 8/8 gate CI passati. Vedi `.planning/phases/01-core-essenziale/VERIFICATION.md`.
 - **Status:** Ready to execute
-- **Progress:** [███████░░░] 65%
+- **Progress:** [███████░░░] 70%
 
 ## Phases Overview
 
@@ -68,6 +68,7 @@ Total Plans: 11
 | Phase 02 P02-02 | 9min | 2 tasks | 6 files |
 | Phase 02 P02-03 | 53min | 1 tasks | 2 files |
 | Phase 02 P02-04 | 9min | 1 tasks | 2 files |
+| Phase 02 P02-05 | 92min | 1 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -113,6 +114,7 @@ Total Plans: 11
 | `MappingErrorCode` literal union additive (D-58, T-02-02-05 mitigation) | Aggiungere codici è non-breaking; rimuoverli sì (policy DOC-03 al plan 02-12). Type guard `isMappingErrorCode` backed da `ReadonlySet<string>` per O(1) lookup. 5 codici F2: `mapping.cycle.detected`, `mapping.transform.failed`, `mapping.field.missing`, `mapping.canonical.validation.failed`, `mapping.consumer.validation.failed`. | 02-02-SUMMARY.md |
 | `CanonicalRegistry` pattern F1 TopicRegistry replicato + estensioni F2 | Replica diretta del pattern F1 (idempotent register, observer pattern con try/catch swallow, list() copia ordinata) + estensioni F2: `requires` resolution check al register (D-36), `unregister(id)` per cascade plugin (D-26 ext F2), `RegisterOptions.strict?: boolean` opt-in per detection accidentale duplicati (quality-of-life). Listener riceve `CanonicalSchema` completo (NON solo id) per supportare Inspector/MetricsCollector F6. | 02-03-SUMMARY.md |
 | `AliasRegistry` pattern F1 TopicRegistry esteso con due livelli di scope | Replica F1 (idempotent register, list() copia ordinata) + estensione F2 critica: `Map<pluginId, Map<localField, canonicalField>>` per scope isolation (T-02-04-02). Resolution order D-40 (livelli 2-4: scoped > global > name-match) + ambiguity flag D-41 (`true` solo per alias automatici, `false` per name-match). Conflict throw `alias.{global,scoped}.conflict` su pair conflittuale (T-02-04-03 anti-shadow). Errori sono Error nativi (NON BrokerError) — module auto-contenuto, wrapping eventuale delegato al consumer mapper-engine plan 02-07. Chiude PRD §39 open issue #1 (precedenza esplicito vs alias automatici) per costruzione: il mapper-engine valuta livello 1 (esplicito) PRIMA di chiamare `resolve`. | 02-04-SUMMARY.md |
+| `TransformPipeline` pattern F1 try/catch wrap (safeTapStep) replicato + escalation policy D-44 (block/skip/fallback) | Pattern try/catch shape identico a `safeTapStep` di event-tap.ts F1 ma con escalation policy invece di silent swallow. `apply(name, input, ctx, onFailure, defaultValue?)` decide cosa fare su throw: 'block' (default) → throw wrapped `BrokerError 'mapping.transform.failed'` con `originalError`+`cause` ES2022 (D-45); 'skip' → ritorna `undefined`; 'fallback' → applica defaultValue se fornito, altrimenti downgrade a 'skip'. `Entry { descriptor, ownerId? }` separa descrittore (immutabile post-register) da ownership (cascade D-26 ext F2). `transform.id.duplicate` throw indipendentemente da ownerId; `transform.not-found` throw indipendentemente da onFailure (caller bug guard). Non-Error throw values wrapped via `String(err)`. Chiude PRD §39 open issue #4 (VAL-09 — transform failure: skip o block). | 02-05-SUMMARY.md |
 
 ### Open Issues PRD §39 — Phase Assignment
 
@@ -123,7 +125,7 @@ Total Plans: 11
 | Precedenza alias automatici vs mapping esplicito | F2 (MAP-17) | **Closed in 02-04** (AliasRegistry + contract resolve documentato; il mapper-engine plan 02-07 valuta livello 1 esplicito PRIMA di chiamare resolve, quindi esplicito vince per costruzione) |
 | Ordine pipeline mapping/validazione | F1 (skeleton) + F2/F3/F6 (riempimento) | Pending |
 | Field mancante: errore o default | F2 (VAL-08) | Pending |
-| Transform failure: skip o block | F2 (VAL-09) | Pending |
+| Transform failure: skip o block | F2 (VAL-09) | **Closed in 02-05** (TransformPipeline.apply con onFailure 'block'/'skip'/'fallback' D-44 + cause chaining ES2022 D-45 via createBrokerError; default 'block' enforced; non-Error throw values wrapped) |
 | Topic senza route | F3 (ROUTE-16) | Pending |
 | Più route applicabili stesso topic | F3 (ROUTE-15) | Pending |
 | Unsubscribe automatico in `unregisterPlugin` | F1 (LIFE-02) | **Closed in 01-08** (cascade D-26 deterministico + createPluginScopedBroker wrapper) |
@@ -159,7 +161,7 @@ Total Plans: 11
 - [x] Eseguire Plan 02-02 (Public types F2: canonical-schema, input-output-map, transform, validator-adapter, mapping-error) — completato 2026-04-29 (2 task auto, 9 min, 2 commit 210013b+af38fb0; 6 file types/*.ts 433 LOC; chiusura D-32 placeholder F1 al type-level; no deviations)
 - [x] Eseguire Plan 02-03 (Wave 3 — `CanonicalRegistry` con TDD RED→GREEN: register/has/get/list/onRegistered/unregister + requires resolution D-36 + RegisterOptions.strict opt-in) — completato 2026-04-29 (1 task TDD RED→GREEN, 2 commit 4d9ca60+a5515c6, 11/11 test passing, MAP-01/MAP-02 done; deepFreeze runtime D-04 deferred a plan 02-07 mapper-engine come documentato in T-02-03-03)
 - [x] Eseguire Plan 02-04 (Wave 3 paralleli — `AliasRegistry` con global+plugin-scoped + resolution order D-40 + warning ambiguità D-41) — completato 2026-04-29 (1 task TDD RED→GREEN, 2 commit 018b867+e1517ee, 16/16 test alias-registry + 27/27 mapper full passing, MAP-16/MAP-17 done runtime; chiude PRD §39 open issue #1 per costruzione)
-- [ ] Eseguire Plan 02-05 (Wave 3 paralleli — `TransformPipeline` con register + apply + onFailure policy D-44/D-45)
+- [x] Eseguire Plan 02-05 (Wave 3 — `TransformPipeline` con register + apply + onFailure policy D-44/D-45) — completato 2026-04-29 (1 task TDD RED→GREEN, 2 commit 84377d7+bf57216, 14/14 test passing, MAP-12/VAL-09 done runtime; chiude PRD §39 open issue #4)
 - [ ] Eseguire Plan 02-06 (Wave 3 paralleli — `valibotAdapter` implementazione `ValidatorAdapter` interface NO-throw)
 - [ ] Eseguire Plan 02-07 (Wave 4 — `MapperEngine` cuore F2: compileMappings + applyOutputMap + applyInputMap + tap orchestration 5 nuovi step)
 - [ ] Eseguire Plan 02-08 (Wave 5 — broker-mapper-wrapper: composition decorator per agganciare MapperEngine al Broker F1 senza modificare bus.ts)
@@ -180,7 +182,43 @@ Nessuna domanda aperta. Le 11 open issues PRD §39 hanno già decisione raccoman
 
 ### Last Action
 
-**Phase 2 plan 02-04 chiuso** — `AliasRegistry` (Wave 3) completato sequenzialmente via `gsd-executor` con `model: "opus"`.
+**Phase 2 plan 02-05 chiuso** — `TransformPipeline` (Wave 3 sequential) completato sequenzialmente via `gsd-executor` con `model: "opus"`.
+
+**Plan 02-05** — 1 task TDD RED→GREEN (2 commit atomici), 2 file src/test (368 LOC totali: 183 src + 185 test):
+
+- `packages/mapper/src/transform-pipeline.ts` (183 LOC) — `class TransformPipeline` con 7 metodi pubblici: `register(name, fn, options?)`, `has(name)`, `get(name)`, `apply(name, input, ctx, onFailure, defaultValue?)`, `list()`, `unregister(name)`, `unregisterByOwner(pluginId)`. Pattern F1 try/catch wrap (safeTapStep event-tap.ts:23-34) replicato + escalation policy D-44 (block/skip/fallback). `apply()` su throw del transform applica D-44: `'block'` (default) → throw wrapped `BrokerError 'mapping.transform.failed'` con `originalError` + ES2022 `cause` chaining (D-45 via createBrokerError di F1); `'skip'` → ritorna `undefined`; `'fallback'` → applica defaultValue se fornito, altrimenti downgrade a `'skip'`. `Entry { descriptor, ownerId? }` separato per mantenere descrittore immutabile + ownership tracking. `transform.id.duplicate` throw su register collision (pattern F1 D-17 da `plugin-registry.ts:111-117`). `transform.not-found` throw indipendentemente da onFailure (caller bug guard — programmer error). Non-Error throw values wrapped: `err instanceof Error ? err.message : String(err)` (T-02-05-05 mitigation). Cross-package import `import { createBrokerError } from '@sembridge/core'` + `category: 'mapping'`. Header italiano + JSDoc + 1 type pubblico co-esportato `RegisterTransformOptions { description?, ownerId? }`.
+- `packages/mapper/src/transform-pipeline.test.ts` (185 LOC, 14 test) — coverage completo dei 14 behavior PLAN organizzati in 3 describe block: `register/has/get` (3 test: idempotent + duplicate throw + ownerId tracking + descriptor accessor), `apply (D-44 onFailure policy)` (7 test: success path + block wrapping con cause+details + skip undefined + fallback con default + fallback senza default downgrade + transform.not-found regardless onFailure + non-Error throw value wrapping), `list/unregister/unregisterByOwner` (4 test: list sorted + fresh copy + unregister idempotent + unregisterByOwner cascade + unregisterByOwner zero match).
+- Commit: `84377d7` (test RED — verified `Failed to resolve import "./transform-pipeline"`) → `bf57216` (feat GREEN — 14/14 test passing al primo run).
+
+**Verifica finale plan 02-05:**
+
+- `pnpm --filter @sembridge/mapper test transform-pipeline` exit 0: **`Test Files 1 passed (1) | Tests 14 passed (14)`** Duration 536ms
+- `pnpm --filter @sembridge/mapper test` exit 0: **`Test Files 3 passed (3) | Tests 41 passed (41)`** (14 transform-pipeline + 16 alias-registry + 11 canonical-registry)
+- `pnpm --filter @sembridge/mapper typecheck` exit 0 (isolatedDeclarations enforcement OK)
+- `pnpm --filter @sembridge/core test` exit 0: **24 file/248 test passing** (no regression Phase 1)
+- `pnpm biome check packages/mapper/src/transform-pipeline*.ts` exit 0 dopo auto-fix `organizeImports` (riordino alfabetico import: `@sembridge/core` prima di `vitest`, runtime prima di type-only)
+- 8/8 grep acceptance check PASSED (`export class TransformPipeline`, `transform.id.duplicate`, `transform.not-found`, `mapping.transform.failed`, `originalError`, `unregisterByOwner`, file source + file test esistenti)
+- Audit `any`: 0 occorrenze come tipo
+- Audit `unknown` non documentato: 0 occorrenze (`unknown` solo in `defaultValue?: unknown` di apply + `details?: Record<string, unknown>` ereditato dal contratto BrokerError F1; `input: unknown` per TransformFn signature documentata)
+- Post-commit deletion check: OK (no deletions tra HEAD~2 e HEAD)
+
+Nessuna deviazione applicata (Rule 1/2/3/4): plan eseguito esattamente come scritto. **TDD Gate Compliance:** RED gate `84377d7` → GREEN gate `bf57216` verificati in git history. **Closure PRD §39 open issue #4** (VAL-09 — transform failure: skip o block): chiusa esplicitamente da `apply(name, input, ctx, onFailure, defaultValue?)` che applica D-44 in modo deterministico per ogni field; default `'block'` enforced; cause chaining ES2022 preserved (test 5 verifica `expect(caught.cause).toBe(original)` E `expect(caught.originalError).toBe(original)`). 
+
+REQ-IDs avanzati al runtime-level:
+
+- **MAP-12** runtime (`registerTransform(name, fn)` API + `apply` con onFailure policy + cascade unregister via owner — pronto per wiring al `Broker.registerTransform` in plan 02-10)
+- **VAL-09** runtime (chiusura PRD §39 #4 — `'block' | 'skip' | 'fallback'` esplicito; default 'block' enforced; cause chaining ES2022 preserved)
+
+Open issues PRD §39 chiusura status:
+
+- **#1** Precedenza alias automatici vs mapping esplicito (MAP-17) — Closed in 02-04 ✅
+- **#4** Transform failure: skip o block (VAL-09) — **Closed in 02-05** ✅
+- **#3** Field mancante required:true|false (VAL-08) — type-level scaffold da 02-02; runtime al mapper-engine plan 02-07 ⏳
+- D-26 ext F2 (cascade unregister) — abilitato anche per TransformPipeline via `unregisterByOwner(pluginId)`. Wiring al broker wrapper in plan 02-10 ⏳
+
+---
+
+**Phase 2 plan 02-04 (precedente)** — `AliasRegistry` (Wave 3) completato sequenzialmente via `gsd-executor` con `model: "opus"`.
 
 **Plan 02-04** — 1 task TDD RED→GREEN (2 commit atomici), 2 file src/test (413 LOC totali: 240 src + 173 test):
 
@@ -203,10 +241,12 @@ Nessuna domanda aperta. Le 11 open issues PRD §39 hanno già decisione raccoman
 Nessuna deviazione applicata (Rule 1/2/3/4): plan eseguito esattamente come scritto. **TDD Gate Compliance:** RED gate `018b867` → GREEN gate `e1517ee` verificati in git history. **Closure PRD §39 open issue #1** (precedenza alias automatici vs mapping esplicito): risolta per costruzione contract — il mapper-engine plan 02-07 valuta il livello 1 (esplicito `inputMap`/`outputMap`) PRIMA di chiamare `AliasRegistry.resolve`, quindi l'esplicito vince sempre. Il registry stesso non vede l'esplicito; documentato in JSDoc del metodo `resolve`.
 
 REQ-IDs avanzati al runtime-level:
+
 - **MAP-16** runtime (warning runtime alias ambiguo via `AliasResolution.ambiguous: true` + source `'scoped'|'global'` — usato dal mapper-engine plan 02-07 per emettere `mapping.warn`)
 - **MAP-17** runtime (chiusura PRD §39 #1 — il livello esplicito è gestito dal mapper-engine PRIMA di consultare AliasRegistry; il registry stesso documenta in JSDoc che `resolve` ritorna `name-match` come default deterministico per il livello 4)
 
 Open issues PRD §39 chiusura status:
+
 - **#1** Precedenza alias automatici vs mapping esplicito (MAP-17) — **Closed in 02-04** ✅
 - D-26 ext F2 (cascade unregister da plugin) — abilitato anche per AliasRegistry via `unregisterScopedAll(pluginId)`. Wiring al broker wrapper in plan 02-10 ⏳
 

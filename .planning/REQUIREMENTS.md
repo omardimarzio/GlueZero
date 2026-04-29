@@ -39,7 +39,7 @@ Tutti i requisiti elencati sono table stakes (vincolanti dalla checklist PRD §4
 - [ ] **MAP-09**: Mapper supporta derivazione di campo (`$derive` da campi multipli con transform) *(PRD §14.2.6, §14.5)*
 - [ ] **MAP-10**: Mapper supporta mapping parziale *(PRD §14.2.7)*
 - [ ] **MAP-11**: Validazione post-mapping integrata *(PRD §14.2.8, §21.2.4)*
-- [ ] **MAP-12**: `registerTransform(name, fn)` per trasformazioni custom; pipeline con gestione errori e fallback *(PRD §14.6, §16.2)*
+- [x] **MAP-12**: `registerTransform(name, fn)` per trasformazioni custom; pipeline con gestione errori e fallback *(PRD §14.6, §16.2)*
 - [ ] **MAP-13**: Default V1 — canonicalizzazione interna completa: i dati transitano canonicalizzati internamente *(PRD §13.5)*
 - [ ] **MAP-14**: Mapping bidirezionale canonico → locale plugin in consegna ai consumer *(PRD §14.1)*
 - [ ] **MAP-15**: Mapping Inspector: payload originale, canonico, finale, trasformazioni applicate, warning di ambiguità, errori *(PRD §14.8, §25.2)*
@@ -107,7 +107,7 @@ Tutti i requisiti elencati sono table stakes (vincolanti dalla checklist PRD §4
 - [x] **VAL-06**: Schema definitions JSON Schema o equivalente tipizzato *(PRD §21.3)*
 - [ ] **VAL-07**: Errori di validazione registrati in debug/log; payload invalidi non consegnati salvo configurazione esplicita *(PRD §21.4)*
 - [ ] **VAL-08**: Comportamento esplicito su field mancante (errore vs default) *(PRD §39 — open issue da chiudere)*
-- [ ] **VAL-09**: Comportamento esplicito su transform failure (skip vs block) *(PRD §39 — open issue da chiudere)*
+- [x] **VAL-09**: Comportamento esplicito su transform failure (skip vs block) *(PRD §39 — open issue da chiudere)*
 
 #### Errori
 - [x] **ERR-01**: Tipo `BrokerError` con `code`, `message`, `category`, `details`, `originalError`, `routeId`, `topic`, `eventId` *(PRD §22.4)*
@@ -214,7 +214,7 @@ Mappatura definitiva REQ-ID → fase. Ogni requisito è assegnato alla **prima f
 | MAP-09 | Phase 2 | Pending | `$derive` con concat e similari |
 | MAP-10 | Phase 2 | Pending | — |
 | MAP-11 | Phase 2 | Pending | Pipeline post-mapping |
-| MAP-12 | Phase 2 | Pending | `registerTransform(name, fn)` + fallback policy |
+| MAP-12 | Phase 2 | Complete | `registerTransform(name, fn)` + fallback policy |
 | MAP-13 | Phase 2 | Pending | Default V1 — canonicalizzazione interna completa |
 | MAP-14 | Phase 2 | Pending | Step 11 della pipeline §28 |
 | MAP-15 | Phase 2 | Pending | Mapping Inspector (estende EventTap) |
@@ -291,7 +291,7 @@ Mappatura definitiva REQ-ID → fase. Ogni requisito è assegnato alla **prima f
 | VAL-06 | Phase 1 | Done (plan 01-05) | Valibot schema runtime per BrokerEvent in `core/event-validator.ts`. TS interfaces tipizzate restano in `types/` (plan 03). |
 | VAL-07 | Phase 2 | Pending | — |
 | VAL-08 | Phase 2 | Pending | **Closes PRD §39 #3**: `required: true|false` per campo |
-| VAL-09 | Phase 2 | Pending | **Closes PRD §39 #4**: `onFailure: 'block' | 'skip' | 'fallback'` |
+| VAL-09 | Phase 2 | Complete | **Closes PRD §39 #4**: `onFailure: 'block' | 'skip' | 'fallback'` |
 | ERR-01 | Phase 1 | Done (plan 01-04) | `createBrokerError(params)` factory + `isBrokerError(value)` type guard in `core/broker-error.ts` — ES2022 cause, conditional assignment per `exactOptionalPropertyTypes`, 9/9 test passing |
 | ERR-02 | Phase 2 | Pending | F2: `mapping.error`, F3: `<topic>.failed`+`network.error`, F4: `system.realtime.*`, F5: `worker.error` |
 | ERR-03 | Phase 1 | Done (plan 01-07) | Errori isolati nel dispatch loop di `EventBus.deliver()`: ogni handler ha il suo try/catch indipendente; eccezione di un handler NON propaga al loop (gli altri handler ricevono comunque l'evento). 25 test verificano l'invariant. |
