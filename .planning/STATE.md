@@ -4,13 +4,13 @@ milestone: v1.0
 milestone_name: milestone
 current_plan: 1
 status: executing
-last_updated: "2026-04-29T14:37:49.473Z"
+last_updated: "2026-04-29T14:56:58.294Z"
 progress:
   total_phases: 6
   completed_phases: 1
   total_plans: 23
-  completed_plans: 14
-  percent: 61
+  completed_plans: 15
+  percent: 65
 ---
 
 # Project State: SemBridge
@@ -29,14 +29,14 @@ progress:
 ## Current Position
 
 Phase: 02 (canonical-model-mapper) — EXECUTING
-Plan: 4 of 12
+Plan: 5 of 12
 Current Plan: 1
 Total Plans: 11
 
 - **Phase:** 1 — Core essenziale
 - **Verifier verdict:** PASS (confidence HIGH) — 5/5 success criteria VERIFIED, 27/27 REQ-IDs done, 8/8 gate CI passati. Vedi `.planning/phases/01-core-essenziale/VERIFICATION.md`.
 - **Status:** Ready to execute
-- **Progress:** [██████░░░░] 61%
+- **Progress:** [███████░░░] 65%
 
 ## Phases Overview
 
@@ -67,6 +67,7 @@ Total Plans: 11
 | Phase 02 P02-01 | 24min | 2 tasks | 8 files |
 | Phase 02 P02-02 | 9min | 2 tasks | 6 files |
 | Phase 02 P02-03 | 53min | 1 tasks | 2 files |
+| Phase 02 P02-04 | 9min | 1 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -111,6 +112,7 @@ Total Plans: 11
 | `ValidatorAdapter` contract NO-throw (D-38) | Discriminated union `ValidationResult<T> = { ok: true; value: T } \| { ok: false; issues }` invece di throw. Caller (mapper-engine) decide cosa fare con il fail (publish `mapping.error` o applicare D-44 onFailure policy). Permette adapter Zod/Ajv V2 senza breaking change. | 02-02-SUMMARY.md |
 | `MappingErrorCode` literal union additive (D-58, T-02-02-05 mitigation) | Aggiungere codici è non-breaking; rimuoverli sì (policy DOC-03 al plan 02-12). Type guard `isMappingErrorCode` backed da `ReadonlySet<string>` per O(1) lookup. 5 codici F2: `mapping.cycle.detected`, `mapping.transform.failed`, `mapping.field.missing`, `mapping.canonical.validation.failed`, `mapping.consumer.validation.failed`. | 02-02-SUMMARY.md |
 | `CanonicalRegistry` pattern F1 TopicRegistry replicato + estensioni F2 | Replica diretta del pattern F1 (idempotent register, observer pattern con try/catch swallow, list() copia ordinata) + estensioni F2: `requires` resolution check al register (D-36), `unregister(id)` per cascade plugin (D-26 ext F2), `RegisterOptions.strict?: boolean` opt-in per detection accidentale duplicati (quality-of-life). Listener riceve `CanonicalSchema` completo (NON solo id) per supportare Inspector/MetricsCollector F6. | 02-03-SUMMARY.md |
+| `AliasRegistry` pattern F1 TopicRegistry esteso con due livelli di scope | Replica F1 (idempotent register, list() copia ordinata) + estensione F2 critica: `Map<pluginId, Map<localField, canonicalField>>` per scope isolation (T-02-04-02). Resolution order D-40 (livelli 2-4: scoped > global > name-match) + ambiguity flag D-41 (`true` solo per alias automatici, `false` per name-match). Conflict throw `alias.{global,scoped}.conflict` su pair conflittuale (T-02-04-03 anti-shadow). Errori sono Error nativi (NON BrokerError) — module auto-contenuto, wrapping eventuale delegato al consumer mapper-engine plan 02-07. Chiude PRD §39 open issue #1 (precedenza esplicito vs alias automatici) per costruzione: il mapper-engine valuta livello 1 (esplicito) PRIMA di chiamare `resolve`. | 02-04-SUMMARY.md |
 
 ### Open Issues PRD §39 — Phase Assignment
 
@@ -118,7 +120,7 @@ Total Plans: 11
 
 | Open Issue | Phase | Status |
 |------------|-------|--------|
-| Precedenza alias automatici vs mapping esplicito | F2 (MAP-17) | Pending |
+| Precedenza alias automatici vs mapping esplicito | F2 (MAP-17) | **Closed in 02-04** (AliasRegistry + contract resolve documentato; il mapper-engine plan 02-07 valuta livello 1 esplicito PRIMA di chiamare resolve, quindi esplicito vince per costruzione) |
 | Ordine pipeline mapping/validazione | F1 (skeleton) + F2/F3/F6 (riempimento) | Pending |
 | Field mancante: errore o default | F2 (VAL-08) | Pending |
 | Transform failure: skip o block | F2 (VAL-09) | Pending |
@@ -156,7 +158,7 @@ Total Plans: 11
 - [x] Installare `@vitest/coverage-v8` come devDependency root — completato in 02-01 (versione 4.1.5 allineata a vitest; abilita D-55 coverage measurement F2 finale al plan 02-12)
 - [x] Eseguire Plan 02-02 (Public types F2: canonical-schema, input-output-map, transform, validator-adapter, mapping-error) — completato 2026-04-29 (2 task auto, 9 min, 2 commit 210013b+af38fb0; 6 file types/*.ts 433 LOC; chiusura D-32 placeholder F1 al type-level; no deviations)
 - [x] Eseguire Plan 02-03 (Wave 3 — `CanonicalRegistry` con TDD RED→GREEN: register/has/get/list/onRegistered/unregister + requires resolution D-36 + RegisterOptions.strict opt-in) — completato 2026-04-29 (1 task TDD RED→GREEN, 2 commit 4d9ca60+a5515c6, 11/11 test passing, MAP-01/MAP-02 done; deepFreeze runtime D-04 deferred a plan 02-07 mapper-engine come documentato in T-02-03-03)
-- [ ] Eseguire Plan 02-04 (Wave 3 paralleli — `AliasRegistry` con global+plugin-scoped + resolution order D-40 + warning ambiguità D-41)
+- [x] Eseguire Plan 02-04 (Wave 3 paralleli — `AliasRegistry` con global+plugin-scoped + resolution order D-40 + warning ambiguità D-41) — completato 2026-04-29 (1 task TDD RED→GREEN, 2 commit 018b867+e1517ee, 16/16 test alias-registry + 27/27 mapper full passing, MAP-16/MAP-17 done runtime; chiude PRD §39 open issue #1 per costruzione)
 - [ ] Eseguire Plan 02-05 (Wave 3 paralleli — `TransformPipeline` con register + apply + onFailure policy D-44/D-45)
 - [ ] Eseguire Plan 02-06 (Wave 3 paralleli — `valibotAdapter` implementazione `ValidatorAdapter` interface NO-throw)
 - [ ] Eseguire Plan 02-07 (Wave 4 — `MapperEngine` cuore F2: compileMappings + applyOutputMap + applyInputMap + tap orchestration 5 nuovi step)
@@ -178,7 +180,39 @@ Nessuna domanda aperta. Le 11 open issues PRD §39 hanno già decisione raccoman
 
 ### Last Action
 
-**Phase 2 plan 02-03 chiuso** — `CanonicalRegistry` (Wave 3 sequential) completato sequenzialmente via `gsd-executor` con `model: "opus"`.
+**Phase 2 plan 02-04 chiuso** — `AliasRegistry` (Wave 3) completato sequenzialmente via `gsd-executor` con `model: "opus"`.
+
+**Plan 02-04** — 1 task TDD RED→GREEN (2 commit atomici), 2 file src/test (413 LOC totali: 240 src + 173 test):
+
+- `packages/mapper/src/alias-registry.ts` (240 LOC) — `class AliasRegistry` con 6 metodi pubblici: `registerGlobal(localField, canonicalField)`, `registerScoped(pluginId, localField, canonicalField)`, `resolve(pluginId, localField)`, `unregisterScopedAll(pluginId)`, `listGlobal()`, `listScoped(pluginId)`. Pattern F1 TopicRegistry esteso con due livelli di scope: `globalAliases: Map<string, string>` + `pluginScopedAliases: Map<pluginId, Map<localField, canonicalField>>` per T-02-04-02 isolation. Resolution order D-40 (livelli 2-4: scoped > global > name-match) — livelli 1 (esplicito) e 5 (unresolved) gestiti dal mapper-engine plan 02-07. Ambiguity flag D-41 (`true` per alias automatici, `false` per name-match). Conflict throw `alias.{global,scoped}.conflict` su pair conflittuale (T-02-04-03 anti-shadow); idempotent return false su pair identico. `unregisterScopedAll(pluginId)` ritorna count rimossi (D-26 ext F2 cascade). `listGlobal/listScoped` spread copy + sort deterministico (T-02-04-01). Errori Error nativi (NON BrokerError) — module auto-contenuto da `@sembridge/core` runtime; solo `import type { CanonicalSchemaId }` da types/. Re-export `CanonicalSchemaId` per convenience consumer mapper-engine.
+- `packages/mapper/src/alias-registry.test.ts` (173 LOC, 16 test) — coverage completo dei 12 behavior listati nel PLAN `<task><behavior>` organizzati in 4 describe block: `registerGlobal` (2 test: idempotent + conflict), `registerScoped` (3 test: idempotent + conflict scope + isolation tra plugin), `resolve` (7 test: D-40 livelli 2-4 + scoped vincere su global + plugin-b non vede plugin-a + name-match + unresolved contract + empty localField guard), `unregisterScopedAll` (2 test: cascade + zero match), `list` (2 test: listGlobal sorted + listScoped per plugin).
+- Commit: `018b867` (test RED — verified `Failed to resolve import "./alias-registry"`) → `e1517ee` (feat GREEN — 16/16 test passing al primo run).
+
+**Verifica finale plan 02-04:**
+
+- `pnpm --filter @sembridge/mapper test alias-registry` exit 0: **`Test Files 1 passed (1) | Tests 16 passed (16)`** Duration 469ms
+- `pnpm --filter @sembridge/mapper test` exit 0: **2 file/27 test passing** (16 alias-registry + 11 canonical-registry)
+- `pnpm --filter @sembridge/mapper typecheck` exit 0 (isolatedDeclarations enforcement OK)
+- `pnpm --filter @sembridge/core test` exit 0: **24 file/248 test passing** (no regression Phase 1)
+- `pnpm biome check packages/mapper/src/alias-registry*.ts` exit 0 dopo fix manuale `Array<T>` → `T[]` (suggested unsafe fix di Biome applicato manualmente, formattazione equivalente)
+- 8/8 grep acceptance check PASSED (`export class AliasRegistry`, `registerGlobal`, `registerScoped`, `unregisterScopedAll`, `ambiguous`, `source: 'scoped'`, file source + file test esistenti)
+- Audit `any`: 0 occorrenze come tipo
+- Audit `unknown`: 0 occorrenze (module string→string puro)
+- Audit import `@sembridge/core` runtime: 0 (module auto-contenuto come da PLAN must_haves)
+
+Nessuna deviazione applicata (Rule 1/2/3/4): plan eseguito esattamente come scritto. **TDD Gate Compliance:** RED gate `018b867` → GREEN gate `e1517ee` verificati in git history. **Closure PRD §39 open issue #1** (precedenza alias automatici vs mapping esplicito): risolta per costruzione contract — il mapper-engine plan 02-07 valuta il livello 1 (esplicito `inputMap`/`outputMap`) PRIMA di chiamare `AliasRegistry.resolve`, quindi l'esplicito vince sempre. Il registry stesso non vede l'esplicito; documentato in JSDoc del metodo `resolve`.
+
+REQ-IDs avanzati al runtime-level:
+- **MAP-16** runtime (warning runtime alias ambiguo via `AliasResolution.ambiguous: true` + source `'scoped'|'global'` — usato dal mapper-engine plan 02-07 per emettere `mapping.warn`)
+- **MAP-17** runtime (chiusura PRD §39 #1 — il livello esplicito è gestito dal mapper-engine PRIMA di consultare AliasRegistry; il registry stesso documenta in JSDoc che `resolve` ritorna `name-match` come default deterministico per il livello 4)
+
+Open issues PRD §39 chiusura status:
+- **#1** Precedenza alias automatici vs mapping esplicito (MAP-17) — **Closed in 02-04** ✅
+- D-26 ext F2 (cascade unregister da plugin) — abilitato anche per AliasRegistry via `unregisterScopedAll(pluginId)`. Wiring al broker wrapper in plan 02-10 ⏳
+
+---
+
+**Phase 2 plan 02-03 (precedente)** — `CanonicalRegistry` (Wave 3 sequential) completato sequenzialmente via `gsd-executor` con `model: "opus"`.
 
 **Plan 02-03** — 1 task TDD RED→GREEN (2 commit atomici), 2 file src/test (331 LOC totali: 188 src + 143 test):
 
@@ -201,10 +235,12 @@ Nessuna domanda aperta. Le 11 open issues PRD §39 hanno già decisione raccoman
 Nessuna deviazione applicata (Rule 1/2/3/4): plan eseguito esattamente come scritto. **TDD Gate Compliance:** RED gate `4d9ca60` → GREEN gate `a5515c6` verificati in git history. Auto-fix Biome formattazione (lineWidth: 100) applicato come parte del commit GREEN — non altera semantica del test RED che era già fallito al run prima di qualsiasi formattazione.
 
 REQ-IDs avanzati al runtime-level (al posto del solo type-level di plan 02-02):
+
 - **MAP-01** runtime (CanonicalRegistry traccia tutti i canonical schema registrati con campi tipizzati via `CanonicalSchema.fields: Record<string, FieldDescriptor>`)
 - **MAP-02** runtime (`register(schemaDefinition)` API pronta per essere wirata al `Broker.registerCanonicalSchema` in plan 02-10)
 
 Open issues PRD §39 chiusura status:
+
 - **D-36** (canonical schema versioning via `requires`) — coperto al register flow ✅
 - **D-26 ext F2** (cascade unregister da plugin) — abilitato via `unregister(id)`. Wiring al broker wrapper in plan 02-10 ⏳
 - VAL-08, VAL-09 status invariato (resta type-level scaffold da plan 02-02; runtime in plan 02-07 mapper-engine)
@@ -350,19 +386,18 @@ Open item ereditato (non bloccante):
 
 ### Next Action
 
-**Phase 2 Wave 3 (continua) — plan 02-04/05/06** (file ownership disgiunta, paralleli con 02-03 già done):
+**Phase 2 Wave 3 (continua) — plan 02-05/06** (file ownership disgiunta, paralleli con 02-03 e 02-04 già done):
 
 ```
-/gsd-execute-plan 2 02-04   # AliasRegistry (TDD RED→GREEN)
 /gsd-execute-plan 2 02-05   # TransformPipeline (TDD RED→GREEN)
 /gsd-execute-plan 2 02-06   # valibotAdapter (TDD RED→GREEN)
 ```
 
-I 3 plan rimanenti possono essere eseguiti in **parallelo** via spawn `gsd-executor` con `model: "opus"` (vincolo CLAUDE.md), come Wave 3 di F1 (plan 04/05/06). File ownership disgiunta verificata: nessuna race su file modificati. `CanonicalRegistry` (02-03) è già stato eseguito sequenzialmente prima dei paralleli (caso d'uso single-threaded che non blocca i restanti).
+I 2 plan rimanenti possono essere eseguiti in **parallelo** via spawn `gsd-executor` con `model: "opus"` (vincolo CLAUDE.md), come Wave 3 di F1 (plan 04/05/06). File ownership disgiunta verificata: nessuna race su file modificati. `CanonicalRegistry` (02-03) e `AliasRegistry` (02-04) sono già stati eseguiti sequenzialmente prima dei paralleli (casi single-threaded che non bloccano i restanti).
 
 Dopo Wave 3, sequenziale:
 
-- **Plan 02-04/05/06** (Wave 3, paralleli con file ownership disgiunta): `alias-registry.ts` || `transform-pipeline.ts` || `valibot-adapter.ts`. TDD RED→GREEN.
+- **Plan 02-05/06** (Wave 3, paralleli con file ownership disgiunta — 02-04 già done): `transform-pipeline.ts` || `valibot-adapter.ts`. TDD RED→GREEN.
 - **Plan 02-07** (Wave 4): `mapper-engine.ts` — il "cuore" del package, analogo dell'EventBus per il mapper.
 - **Plan 02-08** (Wave 5): `broker-mapper-wrapper.ts` (composition decorator — Rule 4 candidata; planner ha già scelto pattern in PLAN).
 - **Plan 02-09** (Wave 6): `augment.ts` (TS declaration merging) + barrel `index.ts` + Inspector wiring.

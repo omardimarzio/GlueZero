@@ -43,8 +43,8 @@ Tutti i requisiti elencati sono table stakes (vincolanti dalla checklist PRD §4
 - [ ] **MAP-13**: Default V1 — canonicalizzazione interna completa: i dati transitano canonicalizzati internamente *(PRD §13.5)*
 - [ ] **MAP-14**: Mapping bidirezionale canonico → locale plugin in consegna ai consumer *(PRD §14.1)*
 - [ ] **MAP-15**: Mapping Inspector: payload originale, canonico, finale, trasformazioni applicate, warning di ambiguità, errori *(PRD §14.8, §25.2)*
-- [ ] **MAP-16**: Warning runtime quando un alias è potenzialmente ambiguo *(PRD §14.7)*
-- [ ] **MAP-17**: Il mapping esplicito dichiarato dal plugin prevale sempre sugli alias automatici *(PRD §14.7, §39 — open issue da chiudere)*
+- [x] **MAP-16**: Warning runtime quando un alias è potenzialmente ambiguo *(PRD §14.7)*
+- [x] **MAP-17**: Il mapping esplicito dichiarato dal plugin prevale sempre sugli alias automatici *(PRD §14.7, §39 — open issue da chiudere)*
 
 ### Routing Engine + Server Gateway HTTP (Fase 3)
 
@@ -218,8 +218,8 @@ Mappatura definitiva REQ-ID → fase. Ogni requisito è assegnato alla **prima f
 | MAP-13 | Phase 2 | Pending | Default V1 — canonicalizzazione interna completa |
 | MAP-14 | Phase 2 | Pending | Step 11 della pipeline §28 |
 | MAP-15 | Phase 2 | Pending | Mapping Inspector (estende EventTap) |
-| MAP-16 | Phase 2 | Pending | Warning runtime alias ambiguo |
-| MAP-17 | Phase 2 | Pending | **Closes PRD §39 #1**: mapping esplicito vince sempre |
+| MAP-16 | Phase 2 | Complete | Warning runtime alias ambiguo |
+| MAP-17 | Phase 2 | Complete | **Closes PRD §39 #1**: mapping esplicito vince sempre |
 
 ### Routing Engine + HTTP Gateway — Fase 3
 
@@ -324,6 +324,7 @@ Mappatura definitiva REQ-ID → fase. Ogni requisito è assegnato alla **prima f
 
 **Open Issues PRD §39 chiusura:**
 - 11/11 mappate a fasi (#1 → F2, #2 → F1+F2+F3+F6, #3 → F2, #4 → F2, #5 → F3, #6 → F3, #7 → F1, #8 → F3, #9 → F4, #10 → F6, #11 → F5)
+- **Closed:** #7 (LIFE-02 — Phase 1 plan 01-08); **#1 (MAP-17 — Phase 2 plan 02-04 AliasRegistry: mapping esplicito vince sempre per costruzione contract; il mapper-engine plan 02-07 valuta livello 1 PRIMA di chiamare AliasRegistry.resolve)**
 
 ---
 *Requirements defined: 2026-04-28*
