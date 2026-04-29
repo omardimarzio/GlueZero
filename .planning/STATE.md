@@ -3,11 +3,11 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 current_plan: 11 of 11 (DONE)
-status: phase-complete-pending-verifier
-last_updated: "2026-04-29T01:30:00+02:00"
+status: phase-complete-verified
+last_updated: "2026-04-29T02:00:00+02:00"
 progress:
   total_phases: 6
-  completed_phases: 0
+  completed_phases: 1
   total_plans: 11
   completed_plans: 11
   percent: 100
@@ -28,25 +28,25 @@ progress:
 
 ## Current Position
 
-Phase: 01-core-essenziale (1) — **PLANS DONE, PENDING gsd-verifier**
+Phase: 01-core-essenziale (1) — **COMPLETE & VERIFIED ✅**
 Current Plan: 11/11 ✓
 Total Plans: 11
 
 - **Phase:** 1 — Core essenziale
-- **Plan:** Tutti gli 11 plan done. Final gate (plan 11) passato: publint OK, attw OK, size-limit 6.14 KB/8 KB (76% budget), 24 Test Files / 248 Tests passing, DOC-01 + JSDoc completi.
-- **Status:** Pending `gsd-verifier` per goal-backward verification dei 5 success criteria
+- **Verifier verdict:** PASS (confidence HIGH) — 5/5 success criteria VERIFIED, 27/27 REQ-IDs done, 8/8 gate CI passati. Vedi `.planning/phases/01-core-essenziale/VERIFICATION.md`.
+- **Status:** Phase 1 COMPLETE. Pronto per Phase 2 (Canonical Model & Mapper — `@sembridge/mapper`).
 - **Progress:** [██████████] 100%
 
 ## Phases Overview
 
 - **Total phases:** 6 (allineate 1:1 con PRD §32)
-- **Phases complete:** []
+- **Phases complete:** [1 — Core essenziale]
 - **Granularity:** coarse
 - **Coverage:** 91/91 requisiti v1 mappati
 
 | Phase | Goal (sintesi) | Status |
 |-------|----------------|--------|
-| 1 | Core essenziale (broker pub/sub, plugin registry, EventTap pre-instrumentato) | **Plans done (11/11), pending gsd-verifier** |
+| 1 | Core essenziale (broker pub/sub, plugin registry, EventTap pre-instrumentato) | **✅ COMPLETE & VERIFIED (11/11 plans, PASS confidence HIGH)** |
 | 2 | Canonical Model & Mapper bidirezionale + Mapping Inspector | Not started |
 | 3 | Routing engine + HTTP gateway con retry/timeout/dedupe/auth | Not started |
 | 4 | Realtime inbound (SSE prioritario, WS opzionale) | Not started |
@@ -57,7 +57,7 @@ Total Plans: 11
 
 | Metric | Value |
 |--------|-------|
-| Phases complete | 0 / 6 |
+| Phases complete | 1 / 6 |
 | Plans complete in current phase | 9 / 11 (Phase 1) |
 | Plans abandoned | 0 |
 | Plans repaired | 0 |
@@ -136,7 +136,8 @@ Total Plans: 11
 - [x] Eseguire Plan 09 (Wave 6 — PipelineHarness fixture + 8 integration test) — completato 2026-04-28 (8 commit: a3d2fb6+c62b4ce + 5 atomic chunks + docs; 46 nuovi test; 5 success criteria Phase 1 tutti coperti; TEST-01 subset done)
 - [x] Eseguire Plan 10 (Wave 7 — 4 robustness test: storm, wildcard-perf, plugin-fault, concurrent-unregister) — completato 2026-04-29 (5 commit atomic chunks + docs; 11 nuovi test; storm 24ms vs 10s budget, wildcard 11ms vs 50ms budget; TEST-03 done)
 - [x] Eseguire Plan 11 (final gate Phase 1 — build verify publint+attw+size-limit + DOC-01 README + JSDoc API pubblica) — completato 2026-04-29 (5 commits: 947f37c README, 9d9873a JSDoc runtime, 31e6b70 JSDoc types, f00d914 ci gates, efc6554 docs SUMMARY; size-limit 6.14 KB / 8 KB budget = 76%; tutti i gate passati; DOC-01 + PKG-04 done)
-- [ ] Spawn `gsd-verifier` per Phase 1 goal-backward verification (5 success criteria + coverage REQ-IDs)
+- [x] Spawn `gsd-verifier` per Phase 1 goal-backward verification — completato 2026-04-29 (verdetto PASS confidence HIGH; VERIFICATION.md prodotto)
+- [ ] Iniziare Phase 2 (Canonical Model & Mapper — `@sembridge/mapper`): `/gsd-discuss-phase 2` o `/gsd-plan-phase 2`
 - [ ] Installare `@vitest/coverage-v8` come devDependency root e ri-eseguire `pnpm --filter @sembridge/core test:coverage` per verificare target ≥ 90% sui file `core/` — bloccante per closure Phase 1
 - [ ] Eseguire Plan 09 (Wave 6 — PipelineHarness fixture + integration tests dei 5 success criteria di Phase 1)
 - [ ] Eseguire Plan 10 (Robustness tests: storm, wildcard-perf, plugin-fault, concurrent-unregister) — parallelizzabile con plan 09

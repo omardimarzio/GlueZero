@@ -8,7 +8,7 @@
 
 ## Phases
 
-- [ ] **Phase 1: Core essenziale** (**plans done 11/11, pending gsd-verifier**) — Event bus pub/sub in-page, plugin registry con lifecycle anti-leak, struttura `BrokerEvent`, EventTap pre-instrumentato
+- [x] **Phase 1: Core essenziale** ✅ **COMPLETE** (11/11 plans, gsd-verifier PASS confidence HIGH) — Event bus pub/sub in-page, plugin registry con lifecycle anti-leak, struttura `BrokerEvent`, EventTap pre-instrumentato. Vedi `.planning/phases/01-core-essenziale/VERIFICATION.md`.
 - [ ] **Phase 2: Canonical Model & Mapper** — Vocabolario canonico + mapper bidirezionale locale ↔ canonico ↔ locale con transform pipeline e Mapping Inspector
 - [ ] **Phase 3: Routing & Server Gateway HTTP** — Routing engine dichiarativo (`local`/`http`/`cache`/`composite`) + gateway HTTP unico con retry/timeout/dedupe/auth
 - [ ] **Phase 4: Realtime inbound (SSE prioritario, WS opzionale)** — Adapter SSE + WebSocket con reconnection policy, normalizzazione canonica dei messaggi server
@@ -275,7 +275,7 @@ I 11 punti che il PRD §39 vieta esplicitamente di lasciare impliciti vengono ch
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Core essenziale | 11/11 | Pending verifier | - |
+| 1. Core essenziale | 11/11 | ✅ Complete & Verified | 2026-04-29 |
 | 2. Canonical Model & Mapper | 0/0 | Not started | - |
 | 3. Routing & Server Gateway HTTP | 0/0 | Not started | - |
 | 4. Realtime inbound | 0/0 | Not started | - |
@@ -285,4 +285,4 @@ I 11 punti che il PRD §39 vieta esplicitamente di lasciare impliciti vengono ch
 ---
 
 *Roadmap created: 2026-04-28*
-*Last updated: 2026-04-29 after Plan 01-11 final gate (DOC-01 + JSDoc + publint/attw/size-limit). **Phase 1 plans done 11/11**, pending solo `gsd-verifier`.*
+*Last updated: 2026-04-29 — **Phase 1 COMPLETE & VERIFIED** (gsd-verifier PASS confidence HIGH; 5/5 success criteria, 27/27 REQ-IDs, 8/8 gate CI). Phase 2 unblocked.*
