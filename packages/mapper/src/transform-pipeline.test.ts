@@ -6,10 +6,10 @@
 // - apply (transform.not-found + non-Error throw values)
 // - list/unregister/unregisterByOwner (cascade D-26 ext F2)
 
-import { describe, expect, it } from 'vitest'
 import { isBrokerError, silentLogger } from '@sembridge/core'
-import type { TransformContext, TransformFn } from './types/transform'
+import { describe, expect, it } from 'vitest'
 import { TransformPipeline } from './transform-pipeline'
+import type { TransformContext, TransformFn } from './types/transform'
 
 const makeCtx = (overrides: Partial<TransformContext> = {}): TransformContext => ({
   logger: silentLogger,
