@@ -12,15 +12,12 @@
 //
 // Pattern replicato da packages/core/src/core/topic-registry.test.ts.
 
-import { describe, expect, it, vi } from 'vitest'
 import { isBrokerError } from '@sembridge/core'
-import type { CanonicalSchema, CanonicalSchemaId } from './types/canonical-schema'
+import { describe, expect, it, vi } from 'vitest'
 import { CanonicalRegistry } from './canonical-registry'
+import type { CanonicalSchema, CanonicalSchemaId } from './types/canonical-schema'
 
-const makeSchema = (
-  id: string,
-  overrides: Partial<CanonicalSchema> = {},
-): CanonicalSchema => ({
+const makeSchema = (id: string, overrides: Partial<CanonicalSchema> = {}): CanonicalSchema => ({
   id: id as CanonicalSchemaId,
   fields: { foo: { type: 'string', required: true } },
   ...overrides,
