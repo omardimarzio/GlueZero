@@ -276,7 +276,7 @@ I 11 punti che il PRD §39 vieta esplicitamente di lasciare impliciti vengono ch
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Core essenziale | 11/11 | ✅ Complete & Verified | 2026-04-29 |
-| 2. Canonical Model & Mapper | 1/12 | In Progress | - |
+| 2. Canonical Model & Mapper | 3/12 | In Progress | - |
 | 3. Routing & Server Gateway HTTP | 0/0 | Not started | - |
 | 4. Realtime inbound | 0/0 | Not started | - |
 | 5. Worker Runtime | 0/0 | Not started | - |
@@ -285,4 +285,4 @@ I 11 punti che il PRD §39 vieta esplicitamente di lasciare impliciti vengono ch
 ---
 
 *Roadmap created: 2026-04-28*
-*Last updated: 2026-04-29 — **Phase 2 In Progress** (2/12 plan completi: 02-01 Bootstrap @sembridge/mapper commit b200948+40d4caf; 02-02 Public types F2 commit 210013b+af38fb0 — 6 file types/*.ts 433 LOC, chiusura D-32 placeholder F1 al type-level). **Phase 1 COMPLETE & VERIFIED** (gsd-verifier PASS confidence HIGH; 5/5 success criteria, 27/27 REQ-IDs, 8/8 gate CI).*
+*Last updated: 2026-04-29 — **Phase 2 In Progress** (3/12 plan completi: 02-01 Bootstrap @sembridge/mapper commit b200948+40d4caf; 02-02 Public types F2 commit 210013b+af38fb0 — 6 file types/*.ts 433 LOC, chiusura D-32 placeholder F1 al type-level; 02-03 CanonicalRegistry commit 4d9ca60+a5515c6 — 188 LOC src + 143 LOC test, 11/11 test passing, MAP-01/MAP-02 done, pattern F1 TopicRegistry replicato + estensioni F2 D-36 requires + D-26 ext unregister). **Phase 1 COMPLETE & VERIFIED** (gsd-verifier PASS confidence HIGH; 5/5 success criteria, 27/27 REQ-IDs, 8/8 gate CI).*

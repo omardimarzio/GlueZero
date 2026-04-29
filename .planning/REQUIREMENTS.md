@@ -28,8 +28,8 @@ Tutti i requisiti elencati sono table stakes (vincolanti dalla checklist PRD §4
 
 ### Canonical Model + Mapper (Fase 2)
 
-- [ ] **MAP-01**: Canonical Vocabulary Registry con campi canonici tipizzati e alias riconosciuti *(PRD §13.3)*
-- [ ] **MAP-02**: `registerCanonicalSchema(schemaDefinition)` per registrare schemi canonici *(PRD §16.2)*
+- [x] **MAP-01**: Canonical Vocabulary Registry con campi canonici tipizzati e alias riconosciuti *(PRD §13.3)*
+- [x] **MAP-02**: `registerCanonicalSchema(schemaDefinition)` per registrare schemi canonici *(PRD §16.2)*
 - [ ] **MAP-03**: Plugin dichiarano `inputMap` e `outputMap` per mapping locale ↔ canonico *(PRD §15.2)*
 - [ ] **MAP-04**: Mapper supporta rename semplice *(PRD §14.2.1)*
 - [ ] **MAP-05**: Mapper supporta mapping nested *(PRD §14.2.2)*
@@ -203,8 +203,8 @@ Mappatura definitiva REQ-ID → fase. Ogni requisito è assegnato alla **prima f
 
 | Requirement | Phase | Status | Note |
 |-------------|-------|--------|------|
-| MAP-01 | Phase 2 | Pending | — |
-| MAP-02 | Phase 2 | Pending | Versioning canonical schema (`requires`) |
+| MAP-01 | Phase 2 | Complete | — |
+| MAP-02 | Phase 2 | Complete | Versioning canonical schema (`requires`) |
 | MAP-03 | Phase 2 | Pending | — |
 | MAP-04 | Phase 2 | Pending | — |
 | MAP-05 | Phase 2 | Pending | — |
