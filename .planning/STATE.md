@@ -4,13 +4,13 @@ milestone: v1.0
 milestone_name: milestone
 current_plan: 1
 status: executing
-last_updated: "2026-04-29T10:36:07.356Z"
+last_updated: "2026-04-29T10:56:18.718Z"
 progress:
   total_phases: 6
   completed_phases: 1
   total_plans: 23
-  completed_plans: 12
-  percent: 52
+  completed_plans: 13
+  percent: 57
 ---
 
 # Project State: SemBridge
@@ -29,14 +29,14 @@ progress:
 ## Current Position
 
 Phase: 02 (canonical-model-mapper) — EXECUTING
-Plan: 2 of 12
+Plan: 3 of 12
 Current Plan: 1
 Total Plans: 11
 
 - **Phase:** 1 — Core essenziale
 - **Verifier verdict:** PASS (confidence HIGH) — 5/5 success criteria VERIFIED, 27/27 REQ-IDs done, 8/8 gate CI passati. Vedi `.planning/phases/01-core-essenziale/VERIFICATION.md`.
 - **Status:** Ready to execute
-- **Progress:** [█████░░░░░] 52%
+- **Progress:** [██████░░░░] 57%
 
 ## Phases Overview
 
@@ -65,6 +65,7 @@ Total Plans: 11
 | Time per phase | — |
 | Time per plan | 01-01: 4m 14s; 01-02: 3m 19s; 01-03: 6m 26s; 01-04: ~6m (interrupted); 01-05: ~15m parallelo; 01-06: ~7m parallelo; 01-07: ~9m sequenziale; 01-08: ~14m sequenziale (32 nuovi test); 01-09: ~28m sequenziale (PipelineHarness + 8 integration test, 8 commits, 46 nuovi test, 5 success criteria Phase 1 coperti) |
 | Phase 02 P02-01 | 24min | 2 tasks | 8 files |
+| Phase 02 P02-02 | 9min | 2 tasks | 6 files |
 
 ## Accumulated Context
 
@@ -105,6 +106,9 @@ Total Plans: 11
 | tsup external `@sembridge/core` (peer-like) per @sembridge/mapper | Non bundla cross-package F1 dentro F2; usa workspace protocol pnpm a runtime. Riduce bundle size mapper e prevenne duplicazione versione. | 02-01-SUMMARY.md |
 | size-limit budget @sembridge/mapper 5 KB gzip (vs 8 KB core) | +2 KB headroom rispetto a core (~6.14 KB) per mapper engine + 3 registries (canonical/alias/transform) previsti da PATTERNS.md §3.1 | 02-01-SUMMARY.md |
 | @vitest/coverage-v8 4.1.5 installato come devDep root in 02-01 | Chiude open item ereditato da F1 (plan 04 lo aveva rimandato per missing dep). Abilita D-55 coverage measurement F2 finale al plan 02-12 (target ≥ 90% sui file @sembridge/mapper/) | 02-01-SUMMARY.md |
+| Branded types F2 `CanonicalSchemaId`/`TransformName` con `unique symbol` distinto | Pitfall #12 mitigation a compile-time per type confusion (T-02-02-01). Replica pattern `EventId` di `@sembridge/core/types/broker-event.ts:54-61`. Cast esplicito `as CanonicalSchemaId`/`as TransformName` audit-able via grep. | 02-02-SUMMARY.md |
+| `ValidatorAdapter` contract NO-throw (D-38) | Discriminated union `ValidationResult<T> = { ok: true; value: T } \| { ok: false; issues }` invece di throw. Caller (mapper-engine) decide cosa fare con il fail (publish `mapping.error` o applicare D-44 onFailure policy). Permette adapter Zod/Ajv V2 senza breaking change. | 02-02-SUMMARY.md |
+| `MappingErrorCode` literal union additive (D-58, T-02-02-05 mitigation) | Aggiungere codici è non-breaking; rimuoverli sì (policy DOC-03 al plan 02-12). Type guard `isMappingErrorCode` backed da `ReadonlySet<string>` per O(1) lookup. 5 codici F2: `mapping.cycle.detected`, `mapping.transform.failed`, `mapping.field.missing`, `mapping.canonical.validation.failed`, `mapping.consumer.validation.failed`. | 02-02-SUMMARY.md |
 
 ### Open Issues PRD §39 — Phase Assignment
 
@@ -148,11 +152,17 @@ Total Plans: 11
 - [ ] Eseguire Phase 2 con `/gsd-execute-phase 2` (12 plan organizzati in 7 wave; Wave 3 paralleli 02-03/04/05/06)
 - [x] Eseguire Plan 02-01 (Bootstrap @sembridge/mapper — 4 file config + skeleton barrel + README + workspace install + size-limit root + @vitest/coverage-v8) — completato 2026-04-29 (2 task atomic, 24 min, 2 commit b200948+40d4caf, no deviations)
 - [x] Installare `@vitest/coverage-v8` come devDependency root — completato in 02-01 (versione 4.1.5 allineata a vitest; abilita D-55 coverage measurement F2 finale al plan 02-12)
-- [ ] Eseguire Plan 02-02 (Public types F2: canonical-schema, input-output-map, transform, validator-adapter, mapper-error) — Wave 1 foundation tipi
-- [ ] Eseguire Plan 09 (Wave 6 — PipelineHarness fixture + integration tests dei 5 success criteria di Phase 1)
-- [ ] Eseguire Plan 10 (Robustness tests: storm, wildcard-perf, plugin-fault, concurrent-unregister) — parallelizzabile con plan 09
-- [ ] Eseguire Plan 11 (Build verification + DOC-01 README + JSDoc; final gate Phase 1)
-- [ ] Spawn `gsd-verifier` per Phase 1 (goal-backward verification post-11)
+- [x] Eseguire Plan 02-02 (Public types F2: canonical-schema, input-output-map, transform, validator-adapter, mapping-error) — completato 2026-04-29 (2 task auto, 9 min, 2 commit 210013b+af38fb0; 6 file types/*.ts 433 LOC; chiusura D-32 placeholder F1 al type-level; no deviations)
+- [ ] Eseguire Plan 02-03 (Wave 3 — `CanonicalRegistry` con TDD RED→GREEN: register/has/list/onRegistered + cycle detection D-35 al register + deepFreeze runtime D-04)
+- [ ] Eseguire Plan 02-04 (Wave 3 paralleli — `AliasRegistry` con global+plugin-scoped + resolution order D-40 + warning ambiguità D-41)
+- [ ] Eseguire Plan 02-05 (Wave 3 paralleli — `TransformPipeline` con register + apply + onFailure policy D-44/D-45)
+- [ ] Eseguire Plan 02-06 (Wave 3 paralleli — `valibotAdapter` implementazione `ValidatorAdapter` interface NO-throw)
+- [ ] Eseguire Plan 02-07 (Wave 4 — `MapperEngine` cuore F2: compileMappings + applyOutputMap + applyInputMap + tap orchestration 5 nuovi step)
+- [ ] Eseguire Plan 02-08 (Wave 5 — broker-mapper-wrapper: composition decorator per agganciare MapperEngine al Broker F1 senza modificare bus.ts)
+- [ ] Eseguire Plan 02-09 (Wave 6 — augment.ts TS declaration merging + barrel mapper finale + Inspector wiring)
+- [ ] Eseguire Plan 02-10 (Wave 7 — integration test scenario meteo PRD §29 senza HTTP)
+- [ ] Eseguire Plan 02-11 (Wave 7 — cycle detection integration test + mapping.error event + plugin-cleanup mapper cascade)
+- [ ] Eseguire Plan 02-12 (Wave 8 final gate F2 — coverage v8 ≥ 90% + publint/attw/size-limit estesi + DOC-03 README scenario meteo + JSDoc + gsd-verifier)
 
 ### Active Blockers
 
@@ -166,7 +176,43 @@ Nessuna domanda aperta. Le 11 open issues PRD §39 hanno già decisione raccoman
 
 ### Last Action
 
-**Phase 2 plan 02-01 chiuso** — Bootstrap `@sembridge/mapper` completato sequenzialmente via `gsd-executor` con `model: "opus"`.
+**Phase 2 plan 02-02 chiuso** — Public types F2 (`packages/mapper/src/types/`) completato sequenzialmente via `gsd-executor` con `model: "opus"`.
+
+**Plan 02-02** — 2 task auto (no TDD: tipi-only senza runtime testabile; il TDD pattern RED→GREEN inizia in 02-03 sul `CanonicalRegistry`), 2 commit, 6 file types/*.ts (433 LOC totali):
+
+- `packages/mapper/src/types/canonical-schema.ts` (96 LOC) — `CanonicalSchema`, `CanonicalSchemaId` branded (`unique symbol`), `FieldDescriptor` (D-42 required + D-43 default + D-44 onFailure), `FieldFailureMode = 'block' | 'skip' | 'fallback'`, `FieldType`. Tutti field readonly (T-02-02-03 compile-time mitigation).
+- `packages/mapper/src/types/input-output-map.ts` (80 LOC) — `MappingRule { source?, transform?, default?, derive? }` per i 4 casi PRD §14.2 (rename/transform/default/derive); `InputMap`/`OutputMap = Readonly<Record<string, MappingRule>>`; `DeriveDescriptor` (PRD §14.5).
+- `packages/mapper/src/types/transform.ts` (66 LOC) — `TransformFn = (input: unknown, ctx: TransformContext) => unknown`, `TransformContext { logger, pluginId, fieldName, canonicalSchemaId? }` readonly, `TransformDescriptor`, `TransformName` branded (Pitfall #12 — distinto da `CanonicalSchemaId`). Import `import type { BrokerLogger } from '@sembridge/core'` (verbatimModuleSyntax).
+- `packages/mapper/src/types/validator-adapter.ts` (70 LOC) — `ValidatorAdapter` interface NO-throw (D-37/D-38) + `ValidationResult<T>` discriminated union `{ ok: true; value: T } | { ok: false; issues }` + `ValidationIssue` minimal cross-adapter ergonomic.
+- `packages/mapper/src/types/mapping-error.ts` (60 LOC) — `MappingErrorCode` literal union 5 codici F2 (D-58 ERR-02 extension): `mapping.cycle.detected`, `mapping.transform.failed`, `mapping.field.missing`, `mapping.canonical.validation.failed`, `mapping.consumer.validation.failed`. `isMappingErrorCode` runtime type guard backed da `ReadonlySet<string>` O(1).
+- `packages/mapper/src/types/index.ts` (61 LOC barrel) — 4 blocchi `export type { ... }` + 1 `export type` per mapping-error + 1 `export { isMappingErrorCode }` runtime; JSDoc 1-liner su ogni export (pattern `@sembridge/core/types/index.ts:1-41`).
+- Commit: `210013b` (feat Task 1 — canonical-schema + input-output-map + transform) → `af38fb0` (feat Task 2 — validator-adapter + mapping-error + barrel).
+
+**Verifica finale plan 02-02:**
+
+- `pnpm --filter @sembridge/mapper typecheck` exit 0 con `isolatedDeclarations: true` enforcement (post Task 1 e post Task 2)
+- `pnpm --filter @sembridge/mapper test` exit 0 (passWithNoTests; nessun test runtime — atteso, TDD inizia in 02-03)
+- `pnpm --filter @sembridge/mapper build` exit 0: `dist/index.js` 68 B + `dist/index.d.ts` 13 B (barrel principale ancora skeleton — coerente con plan 02-09 wiring deferred)
+- `pnpm --filter @sembridge/core test` exit 0: **24 file/248 test passing** (no regression Phase 1)
+- 10/10 grep acceptance check Task 1 PASSED; 10/10 Task 2 PASSED
+- Audit `any`: 0 occorrenze come tipo (solo string literal `'any'` in `FieldType`, documentato)
+- Audit `unknown` non documentato: 0 occorrenze (4 occorrenze tutte intenzionali e documentate in JSDoc + header file)
+
+Nessuna deviation applicata (Rule 1/2/3/4): plan eseguito esattamente come scritto. **Chiusura D-32 placeholder F1 al type-level** — `BrokerConfig.canonicalModel/aliasRegistry/transforms` e `PluginDescriptor.inputMap/outputMap` ora hanno tipi specifici disponibili in `@sembridge/mapper/types`. Runtime wiring (TS declaration merging) deferred al plan 02-09 (`augment.ts`).
+
+REQ-IDs avanzati al type-level (verranno completati a runtime nei plan successivi):
+- **MAP-01** type-level (`CanonicalSchema` interface)
+- **MAP-02** type-level (`registerCanonicalSchema(schemaDefinition)` shape definita)
+- **MAP-03** type-level (`InputMap`/`OutputMap` shape — wired al `PluginDescriptor` in plan 02-09)
+- **MAP-12** type-level (`TransformFn`/`TransformDescriptor` signature)
+- **VAL-03** type-level (`ValidatorAdapter` per step 6 — runtime in 02-06/02-07)
+- **VAL-04** type-level (`ValidatorAdapter` per step 12 — runtime in 02-06/02-07)
+
+Open issues PRD §39 type-level scaffold per chiusura nei plan successivi:
+- VAL-08 (`FieldDescriptor.required` definito; runtime in plan 02-07 mapper-engine)
+- VAL-09 (`FieldFailureMode` + `FieldDescriptor.onFailure` definiti; runtime in plan 02-07 + plan 02-12 robustness)
+
+**Phase 2 plan 02-01 (precedente)** — Bootstrap `@sembridge/mapper` completato sequenzialmente via `gsd-executor` con `model: "opus"`.
 
 **Plan 02-01** — 2 task auto (no TDD: bootstrap config, no runtime code), 2 commit + 1 docs commit, 4 file config + 1 src skeleton + README + 2 modifiche root + lockfile aggiornato (8 file totali):
 
@@ -267,15 +313,18 @@ Open item ereditato (non bloccante):
 
 ### Next Action
 
-**Phase 2 Wave 1 — plan 02-02** (Public types F2 foundation):
+**Phase 2 Wave 3 — plan 02-03/04/05/06 paralleli** (file ownership disgiunta):
 
 ```
-/gsd-execute-plan 2 02-02   # canonical-schema + input-output-map + transform + validator-adapter + mapper-error
+/gsd-execute-plan 2 02-03   # CanonicalRegistry (TDD RED→GREEN)
+/gsd-execute-plan 2 02-04   # AliasRegistry (TDD RED→GREEN)  
+/gsd-execute-plan 2 02-05   # TransformPipeline (TDD RED→GREEN)
+/gsd-execute-plan 2 02-06   # valibotAdapter (TDD RED→GREEN)
 ```
 
-- **Plan 02-02** (Wave 1, foundation tipi): Tipi pubblici F2 in `packages/mapper/src/types/` — `canonical-schema.ts`, `input-output-map.ts`, `transform.ts`, `validator-adapter.ts`, `mapper-error.ts`, barrel `types/index.ts`. Pattern replica F1 plan 03 (public types frontier). Riusa `BrokerError`/`ErrorCategory`/`DeepReadonly` da `@sembridge/core`.
+I 4 plan possono essere eseguiti in **parallelo** via spawn `gsd-executor` con `model: "opus"` (vincolo CLAUDE.md), come Wave 3 di F1 (plan 04/05/06). File ownership disgiunta verificata: nessuna race su file modificati. Tipi pubblici F2 disponibili da `@sembridge/mapper/types` (chiusi in 02-02).
 
-Dopo Wave 1, Wave 2-3 paralleli:
+Dopo Wave 3, sequenziale:
 
 - **Plan 02-03/04/05/06** (Wave 2-3, paralleli con file ownership disgiunta): `canonical-registry.ts` || `alias-registry.ts` || `transform-pipeline.ts` || `valibot-adapter.ts`. TDD RED→GREEN.
 - **Plan 02-07** (Wave 4): `mapper-engine.ts` — il "cuore" del package, analogo dell'EventBus per il mapper.

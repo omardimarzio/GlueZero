@@ -285,4 +285,4 @@ I 11 punti che il PRD §39 vieta esplicitamente di lasciare impliciti vengono ch
 ---
 
 *Roadmap created: 2026-04-28*
-*Last updated: 2026-04-29 — **Phase 2 In Progress** (1/12 plan completi: 02-01 Bootstrap @sembridge/mapper, commit b200948+40d4caf). **Phase 1 COMPLETE & VERIFIED** (gsd-verifier PASS confidence HIGH; 5/5 success criteria, 27/27 REQ-IDs, 8/8 gate CI).*
+*Last updated: 2026-04-29 — **Phase 2 In Progress** (2/12 plan completi: 02-01 Bootstrap @sembridge/mapper commit b200948+40d4caf; 02-02 Public types F2 commit 210013b+af38fb0 — 6 file types/*.ts 433 LOC, chiusura D-32 placeholder F1 al type-level). **Phase 1 COMPLETE & VERIFIED** (gsd-verifier PASS confidence HIGH; 5/5 success criteria, 27/27 REQ-IDs, 8/8 gate CI).*
