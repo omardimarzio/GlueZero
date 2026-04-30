@@ -445,8 +445,24 @@ export class MapperEngine {
   }
 
   /**
-   * Visita DFS di un singolo field; throw se un suo discendente derive richiama
-   * un campo già presente nel cammino DFS attivo (`path`).
+   * Visita DFS di un singolo field; throw se un suo discendente derive O source
+   * richiama un campo già presente nel cammino DFS attivo (`path`).
+   *
+   * CR-03 fix: la DFS segue sia `rule.derive.sources` (esistente) sia `rule.source`
+   * quando questo referenzia un altro field DEL MAP (alias intra-mapping). Questo
+   * copre cicli misti `A.derive=[B]; B.source=A` che precedentemente non venivano
+   * rilevati (falso negativo critico).
+   *
+   * Identity self-reference exclusion: `rule.source === field` (es.
+   * `location: { source: 'location' }`) è identity rename, NON un ciclo. Skip
+   * perché non avanza il path della DFS oltre il field corrente.
+   *
+   * Edge cases:
+   * - `rule.source` con dot-path (es. 'a.b.c') NON viene seguito (è un nested local
+   *   path, non un riferimento intra-mapping).
+   * - `rule.source` che punta a un nome NON presente nel map → no follow (è un
+   *   localField del payload, non un alias intra-mapping).
+   * - `rule.source === field` (identity) → no follow.
    */
   private detectCyclesFrom(
     pluginId: string,
@@ -465,10 +481,25 @@ export class MapperEngine {
       })
     }
     const rule = (map as Record<string, MappingRule>)[field]
-    if (!rule?.derive) return
+    if (!rule) return
     const newPath = [...path, field]
-    for (const src of rule.derive.sources) {
-      this.detectCyclesFrom(pluginId, map, src, newPath)
+    if (rule.derive) {
+      for (const src of rule.derive.sources) {
+        // Skip self-reference identity (es. derive: { sources: [field] }).
+        if (src === field) continue
+        this.detectCyclesFrom(pluginId, map, src, newPath)
+      }
+    }
+    // CR-03 fix: segui anche rule.source se è un altro field del map (alias intra-mapping).
+    if (
+      rule.source !== undefined &&
+      !rule.source.includes('.') &&
+      rule.source !== field // skip identity rename (es. { location: { source: 'location' } })
+    ) {
+      const mapRecord = map as Record<string, MappingRule>
+      if (Object.hasOwn(mapRecord, rule.source)) {
+        this.detectCyclesFrom(pluginId, map, rule.source, newPath)
+      }
     }
   }
 

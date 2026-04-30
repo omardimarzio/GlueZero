@@ -603,6 +603,54 @@ describe('MapperEngine — chunk C: cycle / validation / cascade', () => {
     expect(c1).toEqual(c2)
   })
 
+  it('Test 22b: CR-03 fix — cycle detection covers mixed derive+source (a.derive=[b]; b.source=a)', () => {
+    const { engine, canonical, transform } = makeEngine()
+    canonical.register({
+      id: 'cycMix' as CanonicalSchemaId,
+      fields: { a: { type: 'string' }, b: { type: 'string' } },
+    })
+    transform.register('tx', (x) => x)
+    const desc: MapperPluginDescriptor = {
+      id: 'p-cyc-mix',
+      canonicalSchemaId: 'cycMix' as CanonicalSchemaId,
+      outputMap: {
+        // a deriva da b; b è un alias semplice di a → cycle a→b→a misto.
+        a: { derive: { sources: ['b'], transform: 'tx' } },
+        b: { source: 'a' },
+      },
+    }
+    let caught: unknown
+    try {
+      engine.compileMappings(desc)
+    } catch (e) {
+      caught = e
+    }
+    expect(isBrokerError(caught)).toBe(true)
+    expect((caught as { code: string }).code).toBe('mapping.cycle.detected')
+    const details = (caught as { details: Record<string, unknown> }).details
+    expect(details.pluginId).toBe('p-cyc-mix')
+    expect(details.cycle).toEqual(expect.arrayContaining(['a', 'b']))
+  })
+
+  it('Test 22c: CR-03 fix — source pointing to non-map field is NOT a cycle', () => {
+    const { engine, canonical, transform } = makeEngine()
+    canonical.register({
+      id: 'noCyc' as CanonicalSchemaId,
+      fields: { a: { type: 'string' }, b: { type: 'string' } },
+    })
+    transform.register('tx', (x) => x)
+    // a.source punta a un campo locale che NON è un altro field del map → no cycle.
+    const desc: MapperPluginDescriptor = {
+      id: 'p-no-cyc',
+      canonicalSchemaId: 'noCyc' as CanonicalSchemaId,
+      outputMap: {
+        a: { source: 'localField' },
+        b: { source: 'otherLocal' },
+      },
+    }
+    expect(() => engine.compileMappings(desc)).not.toThrow()
+  })
+
   it('Test 23: D-35 no cycle on flat derive (sources do not derive themselves)', () => {
     const { engine, canonical, transform } = makeEngine()
     const userSchema: CanonicalSchema = {
