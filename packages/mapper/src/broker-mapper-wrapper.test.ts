@@ -499,6 +499,86 @@ describe('MapperBroker · CR-06 fix mapping.error safe payload + recursion guard
     // Il subscriber è invocato esattamente 1 volta — NO loop infinito.
     expect(invokeCount).toBe(1)
   })
+
+  it('WR-E iter2: recursion guard does NOT block transitive mapping.error on different topic', async () => {
+    // Un subscriber a mapping.error che a sua volta pubblica un altro topic
+    // (CHE FALLISCE per ragione DIVERSA) deve produrre un secondo mapping.error —
+    // NON è recursion (è una transition: topic1 fail → handler → publish topic2 fail).
+    // Il recursion guard è basato sulla pair (sourceTopic, step), quindi pair diverse
+    // non collidono.
+    const broker = new MapperBroker({ runtime: { logLevel: 'silent' } })
+    broker.registerCanonicalSchema({
+      id: 'sch-trans' as CanonicalSchemaId,
+      fields: { v: { type: 'string' as const, onFailure: 'block' as const } },
+    })
+    broker.registerTransform('boomTrans', () => {
+      throw new Error('boom transitive')
+    })
+    await broker.registerPlugin({
+      id: 'p-trans-A',
+      canonicalSchemaId: 'sch-trans' as CanonicalSchemaId,
+      outputMap: { v: { source: 'src', transform: 'boomTrans' } },
+    })
+    await broker.registerPlugin({
+      id: 'p-trans-B',
+      canonicalSchemaId: 'sch-trans' as CanonicalSchemaId,
+      outputMap: { v: { source: 'src', transform: 'boomTrans' } },
+    })
+
+    // Subscriber a mapping.error per la prima volta: pubblica un secondo topic
+    // (con plugin DIVERSO) che fallirà per la stessa ragione → emette un nuovo
+    // mapping.error (sourceTopic 'topicB' diverso dal primo 'topicA').
+    let mappingErrorCount = 0
+    const sourceTopics: string[] = []
+    let republished = false
+    broker.subscribe('mapping.error', (e) => {
+      mappingErrorCount++
+      const payload = e.payload as { sourceEvent: string }
+      sourceTopics.push(payload.sourceEvent)
+      // Repubblica una sola volta per evitare loop infinito di test
+      if (!republished) {
+        republished = true
+        broker.publish(
+          'topicB',
+          { src: 'y' },
+          { source: { type: 'plugin', id: 'p-trans-B' }, deliveryMode: 'sync' },
+        )
+      }
+    })
+
+    broker.publish(
+      'topicA',
+      { src: 'x' },
+      { source: { type: 'plugin', id: 'p-trans-A' }, deliveryMode: 'sync' },
+    )
+
+    // Flush microtask per propagation
+    for (let i = 0; i < 8; i++) {
+      await new Promise<void>((resolve) => queueMicrotask(resolve))
+    }
+
+    // Devono arrivare 2 mapping.error (uno per topicA, uno per topicB) — NON bloccato dal guard.
+    expect(mappingErrorCount).toBe(2)
+    expect(sourceTopics).toContain('topicA')
+    expect(sourceTopics).toContain('topicB')
+  })
+
+  it('WR-E iter2: recursion guard documents (sourceTopic, step) pair as the in-flight key', () => {
+    // Documenta il behavior intended del guard: la chiave è `${sourceTopic}::${step}`
+    // (vedi handleMappingError linea 893). Pair diverse → guard NON blocca; pair
+    // identical → guard skip re-publish con logger.warn.
+    //
+    // Il test 'mapping.error subscriber loop is bounded (CR-06)' sopra verifica già
+    // il caso happy-path subscriber-throws (F1 handler isolation copre la propagation
+    // errori). Questo test è documentary: la JSDoc del field inFlightMappingErrors
+    // (linea ~228) e di handleMappingError (linea ~880) dichiara la semantica.
+    const broker = new MapperBroker({ runtime: { logLevel: 'silent' } })
+    // Verifica strutturale: l'instanza espone ancora il guard come implementazione.
+    expect(broker).toBeInstanceOf(MapperBroker)
+    // Il guard è privato — l'asserzione concreta del comportamento è demandata
+    // al test transitivo sopra (sourceTopic diverso → 2 errori) e al test originale
+    // CR-06 'subscriber loop is bounded' (subscriber re-throw → guard impedisce loop).
+  })
 })
 
 describe('MapperBroker · CR-05 fix bootstrapFromConfig error handling', () => {

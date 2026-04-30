@@ -950,6 +950,15 @@ export class MapperBroker {
    * 2. Recursion guard: tracking via `inFlightMappingErrors` Set delle coppie
    *    `(sourceTopic, step)` attive. Se una stessa pair è già in-flight (es. il subscriber
    *    mapping.error genera a sua volta un mapping.error), il publish viene skipped.
+   *
+   * WR-E iter2 — Semantica del guard (documentary):
+   * Il recursion guard è basato sulla pair `(sourceTopic, step)`. Un subscriber che
+   * pubblica un secondo evento con `sourceTopic` DIVERSO che produce a sua volta un
+   * mapping.error NON è bloccato dal guard — è una **transition** (topic1 fail →
+   * handler → publish topic2 fail), NON recursion. F1 handler isolation copre la
+   * propagazione degli errori; il guard è specifico per identical re-entry su pair
+   * `(sourceTopic, step)` già in-flight. Test: 'WR-E iter2: recursion guard does NOT
+   * block transitive mapping.error on different topic'.
    */
   private handleMappingError(err: BrokerError, sourceTopic: string, step: string): void {
     this.inspector.recordError(err)
