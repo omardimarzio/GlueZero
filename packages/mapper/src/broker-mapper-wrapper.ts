@@ -422,20 +422,36 @@ export class MapperBroker {
   async unregisterPlugin(id: string): Promise<void> {
     await this.inner.unregisterPlugin(id)
     // Cascade D-26 ext F2 (LIFE-02 ext) — try/catch swallow per ogni step (T-02-10-03).
+    // WR-06 fix: gli errori sono propagati ANCHE all'Inspector ring buffer (oltre al
+    // logger.error) per visibilità debug consumer-side via getDebugSnapshot().mappings.
+    const recordCascadeError = (step: string, err: unknown): void => {
+      this.logger.error(`MapperBroker: ${step} cascade failed`, { pluginId: id, error: err })
+      const wrapped =
+        isBrokerError(err)
+          ? err
+          : createBrokerError({
+              code: 'plugin.cascade.failed',
+              category: 'plugin',
+              message: `Plugin "${id}" cascade step "${step}" failed`,
+              ...(err instanceof Error && { originalError: err }),
+              details: { pluginId: id, step },
+            })
+      this.inspector.recordError(wrapped)
+    }
     try {
       this.aliasRegistry.unregisterScopedAll(id)
     } catch (err) {
-      this.logger.error('MapperBroker: alias cascade failed', { pluginId: id, error: err })
+      recordCascadeError('alias', err)
     }
     try {
       this.transformPipeline.unregisterByOwner(id)
     } catch (err) {
-      this.logger.error('MapperBroker: transforms cascade failed', { pluginId: id, error: err })
+      recordCascadeError('transforms', err)
     }
     try {
       this.mapper.unregisterPluginMappings(id)
     } catch (err) {
-      this.logger.error('MapperBroker: mapper cascade failed', { pluginId: id, error: err })
+      recordCascadeError('mapper', err)
     }
     const own = this.ownership.get(id)
     if (own) {
@@ -443,11 +459,7 @@ export class MapperBroker {
         try {
           this.canonicalRegistry.unregister(schemaId as CanonicalSchemaId)
         } catch (err) {
-          this.logger.error('MapperBroker: canonical schema cascade failed', {
-            pluginId: id,
-            schemaId,
-            error: err,
-          })
+          recordCascadeError(`canonical-schema:${schemaId}`, err)
         }
       }
       this.ownership.delete(id)
