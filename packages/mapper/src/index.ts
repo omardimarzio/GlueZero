@@ -33,15 +33,30 @@
 // Runtime exports — il "cuore" funzionale del package.
 export { AliasRegistry } from './alias-registry'
 export { __augmentLoaded } from './augment'
+export { MapperBroker } from './broker-mapper-wrapper'
 export { CanonicalRegistry } from './canonical-registry'
 export { MappingInspector, wrapTap } from './inspector'
 export { MapperEngine } from './mapper-engine'
+// Public factory + broker wrapper (Broker integration, plan 02-10)
+export { createMapperBroker } from './public-factory'
 export { TransformPipeline } from './transform-pipeline'
 export { isMappingErrorCode } from './types/mapping-error'
 export { valibotAdapter } from './valibot-adapter'
 
 // Type exports — surface tipi pubblici F2.
 
+export type {
+  /** Snapshot esteso del MapperBroker con sezione mappings (D-48). */
+  MapperBrokerDebugSnapshot,
+  /** Subscribe options esteso con `ownerId` per applyInputMap consumer-side (D-51). */
+  MapperSubscribeOptions,
+  /** Options per registerAlias (`scope: 'global' | pluginId`). */
+  RegisterAliasOptions,
+  /** Options per registerCanonicalSchema (`ownerId` opzionale per cascade D-26 ext F2). */
+  RegisterCanonicalSchemaOptions,
+  /** Options per registerTransform (`description`, `ownerId` opzionali). */
+  RegisterTransformWrapperOptions,
+} from './broker-mapper-wrapper'
 export type {
   /** Options MappingInspector (registries DI + errorBufferSize). */
   MappingInspectorOptions,
