@@ -68,6 +68,18 @@ const BrokerConfigSchema = v.looseObject({
  * package downstream (D-56) e accettate come pass-through al runtime F1
  * (`v.looseObject`).
  *
+ * **WR-07 fix — IMPORTANTE per consumer F2+**: le sezioni F2-F6 sono accettate
+ * dallo schema `v.looseObject` MA **non hanno effetto runtime se si usa
+ * `createBroker` di `@sembridge/core` direttamente**. Per attivare il wiring
+ * (canonical schema register, alias bootstrap, transform pipeline, ecc.) il
+ * consumer F2 deve usare `createMapperBroker(config)` di `@sembridge/mapper`,
+ * che valida strutturalmente le sezioni F2 e le bootstrappa nei registry.
+ *
+ * In F1-only consumer la presenza di `canonicalModel`, `aliasRegistry`,
+ * `transforms` è pass-through silente — il consumer NON riceve nessun warning
+ * (no dependency su `@sembridge/mapper` da core, vincolo D-49). Per attivare
+ * la validation strutturale di queste sezioni → switch a `createMapperBroker`.
+ *
  * No singleton (D-30): each call returns an independent instance.
  *
  * @param config - Optional broker configuration (default: empty object).
