@@ -219,6 +219,10 @@ Il payload pubblicato come `<topic>.loaded` è SEMPRE canonico; F2 step 11 lo tr
   - **Default**: `circuitBreaker: false` (DISABILITATO) per V1; opt-in via `gateway.circuitBreaker: { threshold, cooldownMs }`
   - Sliding window stats (success rate over time window) → V1.x
 
+### N. Revision iter 1 (revisions checker BLOCKER 4 closure)
+
+- **D-100:** **RouterBroker isola l'accesso al CanonicalRegistry private di F2** (revision iter 1, BLOCKER 4 fix). `MapperBroker.canonicalRegistry` è `private readonly` (vedi packages/mapper/src/broker-mapper-wrapper.ts:206) e `CanonicalRegistry` non espone `getForTopic` né una mapping table topic→schemaId. Per chiudere ROUTE-16 (D-67) senza modifiche runtime a F2 (vincolo D-83), il `RouterBroker` (Plan 03-12) bind il registry **una volta sola** in constructor via cast tipato isolato + verifica strutturale presence; se F2 non risponde → throw `BrokerError 'router.canonical-registry.unavailable'` al boot (NO silent fallback). Per il legame topic→schemaId, F3 usa convenzione PRD §11 `<entity>.<action>.<status>` (primo segmento = entity = schemaId). In aggiunta, `RoutingConfig.requiresRouteTopics?: ReadonlyArray<string>` opt-in esplicito permette al consumer di dichiarare topic `requiresRoute: true` SENZA passare dal canonical-registry — utile quando il consumer NON usa la convenzione standard. F2 può eventualmente esporre un `getCanonicalRegistry()` public helper in F6 senza breaking change al RouterBroker (il bind via cast diventerà un delegate).
+
 ### Claude's Discretion
 
 Aree dove le scelte specifiche di implementazione sono lasciate alla discrezione dell'agent planner/researcher:

@@ -111,7 +111,21 @@ ROUTE-01, ROUTE-02, ROUTE-03, ROUTE-04, ROUTE-05, ROUTE-06, ROUTE-07, ROUTE-08, 
   4. Concurrency policy `'latest-only'` su una route HTTP UI-driven: due `weather.requested` consecutivi con location differente → l'AbortController della prima fetch viene chiamato, solo la response della seconda viene pubblicata come `weather.loaded`; `dedupeKey` esplicito su una route collassa due request identiche in una sola fetch.
   5. Server Gateway centralizza header auth (Bearer token via hook adapter, refresh token via hook configurabile); URL allowlist rifiuta endpoint non consentiti; backpressure (`queue bounded`, `drop`, `throttle`, `debounce`, `latest-only`, `merge/coalesce`) configurabile per route — eventi `priority: 'critical'` (es. `system.error`) non vengono mai droppati.
 
-**Plans**: TBD
+**Plans**: 14 plans
+- [x] 03-01-PLAN.md — Bootstrap @sembridge/routing + @sembridge/gateway (subpath exports + sideEffects)
+- [ ] 03-02-PLAN.md — Public types F3 (RouteDefinition discriminated union, GatewayConfig, 7 Strategy interfaces, GatewayErrorCode)
+- [ ] 03-03-PLAN.md — augment.ts routing (PluginDescriptor.routes + BrokerConfig.routes/gateway + CanonicalSchema.requiresRoute) + barrel + sideEffects
+- [ ] 03-04-PLAN.md — augment.ts gateway (BrokerConfig.gateway) + http subpath barrel
+- [ ] 03-05-PLAN.md — RouteResolver dispatch table pre-compilato + 3 strategies (first-match/priority-ordered/all-broadcast) + cascade unregisterByOwner (D-86)
+- [ ] 03-06-PLAN.md — RouteExecutor dispatch by type + 3 route handlers (local/cache stub F6/composite workflow) + AbortController tracking
+- [ ] 03-07-PLAN.md — OutcomeCollector step 10 (publish loaded/failed shape D-80, network.error secondario D-81, recursion guard D-82)
+- [ ] 03-08-PLAN.md — HttpGateway core + policy chain + url-allowlist (Pitfall 7) + retry-after-parser + combine-signals + http-handler integrazione mapper+gateway+VAL-05
+- [ ] 03-09-PLAN.md — Strategy primitives Wave 4-A: retry (D-69 chiusura ROUTE-09 4xx/5xx/408/429), timeout, idempotency (D-70 SEC-03 Pitfall 3 fix)
+- [ ] 03-10-PLAN.md — Strategy primitives Wave 4-B: dedupe (D-74 KeyBased Promise singleton), backpressure (D-75 6 policy + critical bypass Pitfall 4)
+- [ ] 03-11-PLAN.md — Strategy primitives Wave 4-C: auth (D-72 single-flight refresh Pattern 5 Pitfall 5), circuit-breaker (D-99 opt-in DISABLED default)
+- [ ] 03-12-PLAN.md — RouterBroker composition wrapper + RouterEngine glue + createRouterBroker factory + LIFE-02 ext F3 cascade (D-86)
+- [ ] 03-13-PLAN.md — createRouterHarness + 6 integration test (scenario meteo HTTP D-89, retry, dedupe, latest-only, allowlist, cascade cleanup)
+- [ ] 03-14-PLAN.md — Final gate F3: coverage v8 ≥ 90% + publint/attw/size-limit (routing 6 KB / gateway/http 8 KB) + DOC-04 README + JSDoc API + ROADMAP/STATE update
 **Needs research**: yes
 **UI hint**: no
 
@@ -282,7 +296,7 @@ I 11 punti che il PRD §39 vieta esplicitamente di lasciare impliciti vengono ch
 |-------|----------------|--------|-----------|
 | 1. Core essenziale | 11/11 | ✅ Complete & Verified | 2026-04-29 |
 | 2. Canonical Model & Mapper | 11/12 | In Progress | - |
-| 3. Routing & Server Gateway HTTP | 0/0 | Not started | - |
+| 3. Routing & Server Gateway HTTP | 1/14 | Plans created (planner 03-01 done) | - |
 | 4. Realtime inbound | 0/0 | Not started | - |
 | 5. Worker Runtime | 0/0 | Not started | - |
 | 6. Cache & Tooling avanzato | 0/0 | Not started | - |
@@ -290,4 +304,4 @@ I 11 punti che il PRD §39 vieta esplicitamente di lasciare impliciti vengono ch
 ---
 
 *Roadmap created: 2026-04-28*
-*Last updated: 2026-04-30 — **Phase 2 In Progress** (11/12 plan completi: 02-01..02-11 — incluso 02-10 broker wrapper a53c260 + 02-11 integration tests eb923fe+585f266; 14 mapper test files / 136 test passing + core 248 invariati D-49 confermato; MAP-02/MAP-03/MAP-13/MAP-14/MAP-15/ERR-02/LIFE-02/PIPE-01/TEST-01/TEST-02 done; tutti i 5 success criteria F2 ROADMAP coperti via 5 integration test files 1:1; aperti per plan 02-12 final gate F2 con coverage v8 + DOC-03). **Phase 1 COMPLETE & VERIFIED** (gsd-verifier PASS confidence HIGH; 5/5 success criteria, 27/27 REQ-IDs, 8/8 gate CI).*
+*Last updated: 2026-05-01 — **Phase 3 Plans created** (14/14 plans con file ownership disgiunta in 9 wave (revision iter 1 fix: wave numbering recalculated topologically dal depends_on graph — WARNING 5 closure); 03-01 già implementato; 03-02..03-14 ready per gsd-execute-phase 3 con yolo+parallelization). **Phase 2 In Progress** (11/12 plan completi: 02-01..02-11 — incluso 02-10 broker wrapper a53c260 + 02-11 integration tests eb923fe+585f266; 14 mapper test files / 136 test passing + core 248 invariati D-49 confermato; MAP-02/MAP-03/MAP-13/MAP-14/MAP-15/ERR-02/LIFE-02/PIPE-01/TEST-01/TEST-02 done; tutti i 5 success criteria F2 ROADMAP coperti via 5 integration test files 1:1; aperti per plan 02-12 final gate F2 con coverage v8 + DOC-03). **Phase 1 COMPLETE & VERIFIED** (gsd-verifier PASS confidence HIGH; 5/5 success criteria, 27/27 REQ-IDs, 8/8 gate CI).*
