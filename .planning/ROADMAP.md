@@ -78,7 +78,12 @@ MAP-01, MAP-02, MAP-03, MAP-04, MAP-05, MAP-06, MAP-07, MAP-08, MAP-09, MAP-10, 
   4. Open issue PRD §39 chiusi in F2 sono verificabili da test: MAP-17 (mapping esplicito vince sempre sugli alias automatici → test con plugin che dichiara `inputMap` esplicito conflittuale con un alias globale, vince il mapping); VAL-08 (field mancante: configurabile per campo nel canonical schema — `required: true` errore vs `required: false` default); VAL-09 (transform failure: `onFailure: 'block' | 'skip' | 'fallback'` con default `'block'`).
   5. Cycle detection nel mapping: un descrittore plugin che genera mapping circolare (`A → B → A`) viene rifiutato al `registerPlugin` con errore esplicito "circular mapping detected" — non a runtime ma al register.
 
-**Plans**: TBD
+**Plans**: 12/12 complete (02-01 scaffold + 02-02 types + 02-03 canonical-registry + 02-04 alias-registry + 02-05 transform-pipeline + 02-06 valibot-adapter + 02-07 mapper-engine + 02-08 inspector + 02-09 augment+barrel + 02-10 broker-wrapper + 02-11 integration-tests + 02-12 final-gate F2)
+**Status**: ✅ COMPLETE — ready for verification (gsd-verifier Phase 2)
+**Closure date**: 2026-04-30
+**Test coverage**: 16 mapper test files / 149 test passing (vs 248 core invariati — D-49 strict)
+**CI gates**: publint ✅, attw ESM-only ✅, size-limit (mapper 9.68 KB / 12 KB budget) ✅, biome ✅, typecheck ✅
+**Open issues PRD §39 chiusi**: #1 (MAP-17), #3 (VAL-08), #4 (VAL-09)
 **Needs research**: no
 **UI hint**: no
 

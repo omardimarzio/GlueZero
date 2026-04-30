@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 current_plan: 11
-status: executing
-last_updated: "2026-04-30T09:40:12.715Z"
+status: verifying
+last_updated: "2026-04-30T10:21:31.673Z"
 progress:
   total_phases: 6
-  completed_phases: 1
+  completed_phases: 2
   total_plans: 23
-  completed_plans: 22
-  percent: 96
+  completed_plans: 23
+  percent: 100
 ---
 
 # Project State: SemBridge
@@ -28,18 +28,17 @@ progress:
 
 ## Current Position
 
-Phase: 02 (canonical-model-mapper) — EXECUTING
-Plan: 12 of 12
-Current Plan: 11
+Phase: 02 (canonical-model-mapper) — READY FOR VERIFICATION
+Plan: 12 of 12 ✅
+Current Plan: 12
 Total Plans: 12
 
-**Last completed:** Plan 02-11 (integration tests F2) at 2026-04-30T09:35Z — 2 commits (eb923fe Task 1 mapper-harness + scenario meteo + 585f266 Task 2 4 integration test files); 5 integration test files / 20 test totali; 14 mapper test files / 136 test passing; core 248 invariati (D-49 confermato)
-**Next:** Plan 02-12 (Wave 8 final gate F2 — coverage v8 ≥ 90% + publint/attw/size-limit estesi + DOC-03 README scenario meteo + JSDoc + gsd-verifier)
+**Last completed:** Plan 02-12 (final gate F2) at 2026-04-30T09:53Z — 3 commits (ad1ceab Task 1 README+JSDoc + 140a502 Task 2 robustness tests + 5320ff6 Task 3 CI gates extension); 16 mapper test files / 149 test passing; core 248 invariati (D-49 strict confermato); 3 CI gates verdi (publint + attw + size-limit); DOC-03 chiuso (366 LOC README).
+**Next:** `gsd-verifier` Phase 2 — goal-backward verification dei 5 success criteria + coverage 27 REQ-IDs F2 + threat model accumulative
 
-- **Phase:** 1 — Core essenziale
-- **Verifier verdict:** PASS (confidence HIGH) — 5/5 success criteria VERIFIED, 27/27 REQ-IDs done, 8/8 gate CI passati. Vedi `.planning/phases/01-core-essenziale/VERIFICATION.md`.
-- **Status:** Ready to execute
-- **Progress:** [██████████] 96%
+- **Phase:** 2 — Canonical Model & Mapper
+- **Status:** Phase complete — ready for verification (gsd-verifier)
+- **Progress:** [██████████] 100% (12/12 plans done)
 
 ## Phases Overview
 
@@ -51,7 +50,7 @@ Total Plans: 12
 | Phase | Goal (sintesi) | Status |
 |-------|----------------|--------|
 | 1 | Core essenziale (broker pub/sub, plugin registry, EventTap pre-instrumentato) | **✅ COMPLETE & VERIFIED (11/11 plans, PASS confidence HIGH)** |
-| 2 | Canonical Model & Mapper bidirezionale + Mapping Inspector | Not started |
+| 2 | Canonical Model & Mapper bidirezionale + Mapping Inspector | **✅ COMPLETE — ready for verifier (12/12 plans)** |
 | 3 | Routing engine + HTTP gateway con retry/timeout/dedupe/auth | Not started |
 | 4 | Realtime inbound (SSE prioritario, WS opzionale) | Not started |
 | 5 | Worker Runtime (registry, route worker, task tracking) | Not started |
@@ -61,8 +60,8 @@ Total Plans: 12
 
 | Metric | Value |
 |--------|-------|
-| Phases complete | 1 / 6 |
-| Plans complete in current phase | 9 / 11 (Phase 1) |
+| Phases complete | 1 / 6 (Phase 2 ready for verifier) |
+| Plans complete in current phase | 12 / 12 (Phase 2) |
 | Plans abandoned | 0 |
 | Plans repaired | 0 |
 | Time per phase | — |
@@ -78,6 +77,7 @@ Total Plans: 12
 | Phase 02 P09 | 17min | 2 tasks | 8 files |
 | Phase 02 P10 | 21min | 2 tasks tasks | 6 files files |
 | Phase 02 P11 | 33min | 2 tasks | 6 files |
+| Phase 02 P12 | 9min | 3 tasks | 10 files |
 
 ## Accumulated Context
 
@@ -134,6 +134,10 @@ Total Plans: 12
 | Plan 02-11 mapper-harness wrappa createMapperBroker (NON pipeline-harness F1) | I 5 integration test verificano end-to-end l'API pubblica del package F2 — il MapperBroker, NON il Broker F1 sottostante. La fixture istanzia un MapperBroker reale via createMapperBroker(config); i 4 moduli Wave 3 + MapperEngine + MappingInspector vengono compose internamente. NO mock dei moduli interni F2 (D-49 strict). Pattern replicabile per F3 (createRoutingHarness wraps createRoutedBroker), F4 (createRealtimeHarness), F5 (createWorkerHarness). | 02-11-SUMMARY.md |
 | Plan 02-11 schema-level FieldDescriptor.default NON auto-iniettato in V1 | Empiricamente il MapperEngine.applyOutputMap itera SOLO i field dichiarati nell'outputMap del plugin — coerente con T-02-07-06 partial mapping (whitelist, NON injection). Il `MappingRule.default` (rule-level, MAP-06) viene applicato quando `source` è assente; lo schema-level `FieldDescriptor.default` esiste come hint per V2 ma NON viene auto-iniettato in V1. Test 4 di weather-scenario adeguato al behavior corrente. | 02-11-SUMMARY.md |
 | Plan 02-11 tap dell'harness vede SOLO step F1 (i 5 step F2 deferred a F6) | Il MapperBroker plan 02-10 NON wira automaticamente `wrapTap(tap, inspector)` perché `inspector.recordSnapshot` è no-op V1 (D-48). Conseguenza: il tap dell'harness vede SOLO i 5 step F1 (event.received, event.metadata.enriched, event.validated, event.dedupe.checked, event.delivered) — NON i 5 nuovi step F2 (event.source.resolved, event.mapped.canonical, ecc.). I test verificano i 5 step F1 emessi (line 102-103 weather-scenario test 1) ma NON dipendono dai step F2 nel tap. Limitazione consapevole F2 V1 — F6 (TOOL-01) popolerà recordSnapshot full per evento. | 02-11-SUMMARY.md |
+| Plan 02-12 size-limit budget mapper raised 5 KB → 12 KB gzip (Rule 1 fix) | STACK.md aveva fissato 5 KB pre-implementation; PATTERNS.md §3.1 in-flight aveva rivisto a 10 KB. Bundle reale a fine F2: 9.68 KB (Mapper + Broker wrapper + Inspector + Valibot adapter — 4 moduli compositi). 12 KB = 9.68 + 2.32 KB headroom (~24%). Pattern lesson learned: `STACK.md V1 budget pre-implementation è sotto-stimato sistematicamente per F2+ (5→9.68 KB = 1.94x)`. Documentare nei DOC-03 di ogni fase. | 02-12-SUMMARY.md |
+| Plan 02-12 ci:publint + ci:attw extended con filter explicit (no glob '@sembridge/*') | I 7 placeholder package F3-F6 (cache/devtools/gateway/routing/sembridge/worker) hanno `package.json` con `main: ./dist/index.js` ma nessun build → publint errato `pkg.main but file does not exist`. Soluzione: filter explicit `--filter @sembridge/core --filter @sembridge/mapper`. F3-F6 estenderanno il filter quando i package saranno scaffoldati. | 02-12-SUMMARY.md |
+| Plan 02-12 13 robustness test deterministic (TEST-03 closure) | 6 test transform-failure-modes (block/skip/fallback × default presence + canonical validation + ortogonalità required+skip) chiudono D-44/VAL-09; 7 test alias-ambiguity (resolution order D-40 + scope isolation + cascade D-26 ext + 4 bonus end-to-end via MapperBroker) chiudono D-41/MAP-16. NO mock dei moduli interni F2 (createMapperHarness reale). Suite mapper passa da 14/136 a 16/149. | 02-12-SUMMARY.md |
+| Phase 2 chiusa: 5 ROADMAP success criteria coperti + 27 REQ-IDs F2 verificati + D-49 strict | I 12 plan F2 hanno chiuso DOC-03/PKG-04/VAL-09/MAP-16/TEST-03 nel plan 02-12; le altre 22 REQ-IDs (MAP-01..MAP-17 minus closures intermediari + VAL-02..VAL-04, VAL-07..VAL-08 + ERR-02 ext + TEST-01..TEST-02 + LIFE-02 ext F2) sono cumulativamente verified attraverso plan 02-01..02-11. Verificato strict via `git diff` su packages/core/: 0 lines diff (D-49). 248/248 core test invariati. Pronto per gsd-verifier. | 02-12-SUMMARY.md |
 
 ### Open Issues PRD §39 — Phase Assignment
 

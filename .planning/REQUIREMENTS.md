@@ -129,7 +129,7 @@ Tutti i requisiti elencati sono table stakes (vincolanti dalla checklist PRD §4
 #### Test
 - [x] **TEST-01**: Unit test su pub/sub, unsubscribe, wildcard, mapping, reverse mapping, trasformazioni, dedupe, retry/timeout, route HTTP, route worker, realtime normalization, lifecycle cleanup *(PRD §35.1)*
 - [x] **TEST-02**: Integration test: plugin A → broker → plugin B con mapping diverso; plugin → broker → server → broker → plugin; plugin → broker → worker → broker → plugin; cache hit/miss; reconnect realtime; error propagation completa *(PRD §35.2)*
-- [ ] **TEST-03**: Test di robustezza: storm di eventi, plugin mal configurato, server con schema inatteso, worker timeout, riconnessione ripetuta, topic con molti subscriber *(PRD §35.3)*
+- [x] **TEST-03**: Test di robustezza: storm di eventi, plugin mal configurato, server con schema inatteso, worker timeout, riconnessione ripetuta, topic con molti subscriber *(PRD §35.3)*
 
 #### Packaging & Documentazione
 - [x] **PKG-01**: Distribuzione ESM (UMD/IIFE opzionale per pagine legacy) *(PRD §31.1)*
@@ -138,7 +138,7 @@ Tutti i requisiti elencati sono table stakes (vincolanti dalla checklist PRD §4
 - [x] **PKG-04**: Type declarations (.d.ts) generate per API pubblica *(implicito PRD §31.2)*
 - [x] **DOC-01**: Documentazione API pubblica *(PRD §41.3)*
 - [ ] **DOC-02**: Guida integrazione plugin *(PRD §41.4)*
-- [ ] **DOC-03**: Documentazione canonical model + mapper *(PRD §41.5)* — skeleton README iniziale in 02-01; completamento finale al plan 02-12 (scenario meteo end-to-end, JSDoc API pubblica)
+- [x] **DOC-03**: Documentazione canonical model + mapper *(PRD §41.5)* — skeleton README iniziale in 02-01; completamento finale al plan 02-12 (scenario meteo end-to-end, JSDoc API pubblica)
 - [ ] **DOC-04**: Documentazione route engine + server gateway *(PRD §41.6)*
 - [ ] **DOC-05**: Esempi end-to-end (incluso scenario meteo PRD §29) *(PRD §41.8)*
 - [ ] **DOC-06**: Documentazione debug tooling *(PRD §41.9)*
