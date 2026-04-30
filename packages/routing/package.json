@@ -1,17 +1,56 @@
 {
   "name": "@sembridge/routing",
   "version": "0.0.0",
-  "description": "Declarative routing engine for SemBridge (Phase 3 — placeholder in Phase 1)",
+  "description": "Declarative routing engine for SemBridge (Phase 3)",
   "license": "MIT",
+  "author": "",
   "type": "module",
-  "private": true,
   "main": "./dist/index.js",
+  "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./package.json": "./package.json"
+  },
   "files": [
     "dist",
-    "README.md"
+    "README.md",
+    "LICENSE"
   ],
+  "sideEffects": [
+    "./dist/augment.js",
+    "./src/augment.ts",
+    "**/augment.js",
+    "**/augment.ts"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
   "publishConfig": {
-    "access": "public"
+    "access": "public",
+    "provenance": true
+  },
+  "scripts": {
+    "build": "tsup",
+    "test": "vitest run --passWithNoTests",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage --passWithNoTests",
+    "typecheck": "tsc --noEmit",
+    "clean": "rm -rf dist"
+  },
+  "dependencies": {
+    "@sembridge/core": "workspace:*",
+    "@sembridge/mapper": "workspace:*",
+    "nanoid": "5.1.9",
+    "valibot": "1.3.1"
+  },
+  "devDependencies": {
+    "tsup": "8.5.1",
+    "typescript": "6.0.3",
+    "vitest": "4.1.5",
+    "jsdom": "29.1.0"
   }
 }
