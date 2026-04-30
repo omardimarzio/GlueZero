@@ -12,8 +12,8 @@
 // - optional field assente è valid (ok: true)
 // - NEVER throws — payload null/undefined/array/wrong type sempre ritorna ok: false
 
-import { describe, expect, it } from 'vitest'
 import * as v from 'valibot'
+import { describe, expect, it } from 'vitest'
 import { valibotAdapter } from './valibot-adapter'
 
 describe('valibotAdapter', () => {
@@ -57,9 +57,7 @@ describe('valibotAdapter', () => {
     expect(result.ok).toBe(false)
     if (!result.ok) {
       // At least one issue should mention 'age' in its path or be present overall.
-      const hasAgePath = result.issues.some((iss) =>
-        iss.path?.some((p) => String(p) === 'age'),
-      )
+      const hasAgePath = result.issues.some((iss) => iss.path?.some((p) => String(p) === 'age'))
       expect(hasAgePath || result.issues.length > 0).toBe(true)
     }
   })

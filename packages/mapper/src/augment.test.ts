@@ -68,9 +68,9 @@ describe('augment.ts (TS declaration merging)', () => {
 
     expect(cfg.canonicalModel?.schemas).toHaveLength(1)
     expect(cfg.canonicalModel?.schemas?.[0]?.id).toBe('a')
-    expect(cfg.aliasRegistry?.global?.['city']).toBe('location')
-    expect(cfg.aliasRegistry?.scoped?.['plugin-a']?.['foo']).toBe('bar')
-    expect(cfg.transforms?.['myTransform']).toBe(fn)
+    expect(cfg.aliasRegistry?.global?.city).toBe('location')
+    expect(cfg.aliasRegistry?.scoped?.['plugin-a']?.foo).toBe('bar')
+    expect(cfg.transforms?.myTransform).toBe(fn)
   })
 
   it('PluginDescriptor without F2 fields still valid (backward-compat F1)', () => {
@@ -112,6 +112,6 @@ describe('augment.ts (TS declaration merging)', () => {
         ],
       },
     }
-    expect(cfg.canonicalModel?.schemas?.[0]?.fields['location']?.required).toBe(true)
+    expect(cfg.canonicalModel?.schemas?.[0]?.fields.location?.required).toBe(true)
   })
 })

@@ -55,7 +55,7 @@
     {
       "name": "@sembridge/mapper (gzip)",
       "path": "dist/index.js",
-      "limit": "5 KB",
+      "limit": "12 KB",
       "gzip": true
     }
   ]

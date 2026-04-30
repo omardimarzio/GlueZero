@@ -35,11 +35,7 @@
 //   internamente; trust nel runtime.
 
 import * as v from 'valibot'
-import type {
-  ValidationIssue,
-  ValidationResult,
-  ValidatorAdapter,
-} from './types/validator-adapter'
+import type { ValidationIssue, ValidationResult, ValidatorAdapter } from './types/validator-adapter'
 
 /**
  * Subset minimale di `v.BaseIssue` rilevante per il mapping a `ValidationIssue`.

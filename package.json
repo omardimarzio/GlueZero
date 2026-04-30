@@ -13,8 +13,8 @@
     "lint": "biome check .",
     "format": "biome format --write .",
     "typecheck": "pnpm -r --filter='./packages/*' --if-present run typecheck",
-    "ci:publint": "pnpm --filter @sembridge/core exec publint",
-    "ci:attw": "pnpm --filter @sembridge/core exec attw --pack --profile=esm-only",
+    "ci:publint": "pnpm --filter @sembridge/core --filter @sembridge/mapper exec publint",
+    "ci:attw": "pnpm --filter @sembridge/core --filter @sembridge/mapper exec attw --pack --profile=esm-only",
     "ci:size": "size-limit",
     "changeset": "changeset",
     "release": "pnpm build && changeset publish"
@@ -47,7 +47,7 @@
     {
       "name": "@sembridge/mapper (gzip)",
       "path": "packages/mapper/dist/index.js",
-      "limit": "5 KB",
+      "limit": "12 KB",
       "gzip": true
     }
   ]

@@ -10,52 +10,48 @@
 // per esporre l'API pubblica finale del package `@sembridge/mapper`.
 
 export type {
-  /** Branded id canonical schema (Pitfall #12 — type confusion prevention). */
-  CanonicalSchemaId,
   /** Canonical schema definition con `id`, `requires?`, `fields` (PRD §13, REQ MAP-01/MAP-02). */
   CanonicalSchema,
-  /** Comportamento del transform su throw — D-44 (chiusura PRD §39 #4). */
-  FieldFailureMode,
+  /** Branded id canonical schema (Pitfall #12 — type confusion prevention). */
+  CanonicalSchemaId,
   /** Descrittore di un campo canonico (`type`, `required`, `default`, `onFailure`). */
   FieldDescriptor,
+  /** Comportamento del transform su throw — D-44 (chiusura PRD §39 #4). */
+  FieldFailureMode,
   /** Field type primitivo del canonical schema. */
   FieldType,
 } from './canonical-schema'
 
 export type {
-  /** Mappa locale → canonico per plugin publisher (PRD §15.2). */
-  OutputMap,
+  /** Descrittore derive: combina più source via transform (PRD §14.5, REQ MAP-09). */
+  DeriveDescriptor,
   /** Mappa canonico → locale per plugin consumer (PRD §15.2). */
   InputMap,
   /** Regola di mapping per un singolo campo canonico (rename/transform/default/derive). */
   MappingRule,
-  /** Descrittore derive: combina più source via transform (PRD §14.5, REQ MAP-09). */
-  DeriveDescriptor,
+  /** Mappa locale → canonico per plugin publisher (PRD §15.2). */
+  OutputMap,
 } from './input-output-map'
-
-export type {
-  /** Branded nome transform (Pitfall #12). */
-  TransformName,
-  /** Signature di un transform registrato (input/ctx → output). */
-  TransformFn,
-  /** Descrittore di un transform registrato via `registerTransform(name, fn)` (D-31). */
-  TransformDescriptor,
-  /** Contesto readonly passato al transform a runtime. */
-  TransformContext,
-} from './transform'
-
-export type {
-  /** Adapter pluggable per validazione (Valibot default; Zod/Ajv V2). */
-  ValidatorAdapter,
-  /** Issue di validazione (subset di Valibot.Issue). */
-  ValidationIssue,
-  /** Risultato discriminato di una validazione: `{ ok: true; value } | { ok: false; issues }`. */
-  ValidationResult,
-} from './validator-adapter'
-
 export type {
   /** Literal union dei 5 codici errore mapper F2 (D-58, REQ ERR-02 extension). */
   MappingErrorCode,
 } from './mapping-error'
-
 export { isMappingErrorCode } from './mapping-error'
+export type {
+  /** Contesto readonly passato al transform a runtime. */
+  TransformContext,
+  /** Descrittore di un transform registrato via `registerTransform(name, fn)` (D-31). */
+  TransformDescriptor,
+  /** Signature di un transform registrato (input/ctx → output). */
+  TransformFn,
+  /** Branded nome transform (Pitfall #12). */
+  TransformName,
+} from './transform'
+export type {
+  /** Issue di validazione (subset di Valibot.Issue). */
+  ValidationIssue,
+  /** Risultato discriminato di una validazione: `{ ok: true; value } | { ok: false; issues }`. */
+  ValidationResult,
+  /** Adapter pluggable per validazione (Valibot default; Zod/Ajv V2). */
+  ValidatorAdapter,
+} from './validator-adapter'
