@@ -208,7 +208,7 @@ Configurabile per campo nello schema canonico (`FieldDescriptor.required: boolea
 
 | Configurazione | Field presente | Field assente |
 |---------------|---------------|---------------|
-| `required: true` | usa il valore | throw `BrokerError 'validation.field.missing'` → publish `mapping.error` (D-58) → no delivery |
+| `required: true` | usa il valore | throw `BrokerError 'mapping.field.missing'` → publish `mapping.error` (D-58) → no delivery |
 | `required: false` + `default: T` | usa il valore | applica `default` |
 | `required: false` (no default) | usa il valore | field assente nella canonical payload (NO `undefined` esplicito per `exactOptionalPropertyTypes`) |
 
