@@ -42,7 +42,7 @@ Tutti i requisiti elencati sono table stakes (vincolanti dalla checklist PRD §4
 - [x] **MAP-12**: `registerTransform(name, fn)` per trasformazioni custom; pipeline con gestione errori e fallback *(PRD §14.6, §16.2)*
 - [x] **MAP-13**: Default V1 — canonicalizzazione interna completa: i dati transitano canonicalizzati internamente *(PRD §13.5)*
 - [x] **MAP-14**: Mapping bidirezionale canonico → locale plugin in consegna ai consumer *(PRD §14.1)*
-- [ ] **MAP-15**: Mapping Inspector: payload originale, canonico, finale, trasformazioni applicate, warning di ambiguità, errori *(PRD §14.8, §25.2)*
+- [x] **MAP-15**: Mapping Inspector: payload originale, canonico, finale, trasformazioni applicate, warning di ambiguità, errori *(PRD §14.8, §25.2)*
 - [x] **MAP-16**: Warning runtime quando un alias è potenzialmente ambiguo *(PRD §14.7)*
 - [x] **MAP-17**: Il mapping esplicito dichiarato dal plugin prevale sempre sugli alias automatici *(PRD §14.7, §39 — open issue da chiudere)*
 
@@ -217,7 +217,7 @@ Mappatura definitiva REQ-ID → fase. Ogni requisito è assegnato alla **prima f
 | MAP-12 | Phase 2 | Complete | `registerTransform(name, fn)` + fallback policy |
 | MAP-13 | Phase 2 | Complete | Default V1 — canonicalizzazione interna completa |
 | MAP-14 | Phase 2 | Complete | Step 11 della pipeline §28 |
-| MAP-15 | Phase 2 | Pending | Mapping Inspector (estende EventTap) |
+| MAP-15 | Phase 2 | Complete | Mapping Inspector (estende EventTap) |
 | MAP-16 | Phase 2 | Complete | Warning runtime alias ambiguo |
 | MAP-17 | Phase 2 | Complete | **Closes PRD §39 #1**: mapping esplicito vince sempre |
 
