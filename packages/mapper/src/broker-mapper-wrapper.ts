@@ -418,8 +418,23 @@ export class MapperBroker {
    */
   async registerPlugin(descriptor: PluginDescriptor): Promise<void> {
     // D-35: cycle detection register-time (BEFORE any state mutation).
+    // CR-02-RESIDUAL iter2: invoca compileMappings se il descriptor dichiara
+    // canonicalSchemaId, outputMap o inputMap (segnale d'intent che il plugin
+    // partecipa al canonical model). Pre-iter2 il guard era solo
+    // `outputMap !== undefined || inputMap !== undefined`, escludendo plugin che
+    // dichiarano canonicalSchemaId + alias scoped (caso classico chiusura MAP-17
+    // PRD §39 #1) — questi plugin non venivano compilati e applyAliasResolution
+    // non girava mai durante publish.
+    //
+    // Plugin "non-mapper" senza canonicalSchemaId/outputMap/inputMap → NO compile,
+    // payload passthrough invariato (T-02-07-06 partial mapping policy preservata
+    // per back-compat F1 surface; vedi Test 13 broker-mapper-wrapper.test.ts).
     const mp = descriptor as MapperPluginDescriptor
-    if (mp.outputMap !== undefined || mp.inputMap !== undefined) {
+    if (
+      mp.canonicalSchemaId !== undefined ||
+      mp.outputMap !== undefined ||
+      mp.inputMap !== undefined
+    ) {
       this.mapper.compileMappings(mp)
     }
     // Wrappa hook lifecycle per propagare ctx.broker mapper-aware (D-51).

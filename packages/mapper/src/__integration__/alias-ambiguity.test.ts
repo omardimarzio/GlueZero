@@ -176,6 +176,81 @@ describe('alias resolution ambiguity — D-41/MAP-16/D-40 chiusura PRD §39 #1',
     expect(resolved.ambiguous).toBe(false)
   })
 
+  it('CR-02-RESIDUAL iter2: scoped alias applied at runtime via MapperBroker.publish (no outputMap)', async () => {
+    // Pre-iter2: MapperBroker.publish invocava applyOutputMap SOLO se mapper.hasCompiled,
+    // e MapperBroker.registerPlugin invocava compileMappings SOLO se descriptor aveva
+    // outputMap o inputMap. Conseguenza: un plugin con SOLO alias scoped registrati
+    // (caso classico chiusura MAP-17 PRD §39 #1) NON riceveva canonicalizzazione via
+    // alias durante publish — alias scoped diventava "dead weight".
+    //
+    // Iter2: registerPlugin invoca compileMappings SEMPRE (anche senza maps), così
+    // hasCompiled ritorna true e applyOutputMap gira applyAliasResolution per ogni
+    // localField del payload.
+    const harness = createMapperHarness({
+      schemas: [
+        {
+          id: 'weather' as CanonicalSchemaId,
+          fields: { location: { type: 'string', required: false } },
+        },
+      ],
+    })
+
+    await harness.broker.registerPlugin({
+      id: 'p-alias-only',
+      canonicalSchemaId: 'weather' as CanonicalSchemaId,
+      // NO outputMap — solo alias scoped sotto.
+    })
+    harness.broker.registerAlias('city', 'location', { scope: 'p-alias-only' })
+
+    const received: Record<string, unknown>[] = []
+    harness.broker.subscribe('weather.requested', (e) => {
+      received.push(e.payload as Record<string, unknown>)
+    })
+
+    harness.broker.publish(
+      'weather.requested',
+      { city: 'Roma' },
+      { source: { type: 'plugin', id: 'p-alias-only' }, deliveryMode: 'sync' },
+    )
+
+    expect(received).toHaveLength(1)
+    // L'alias scoped 'city → location' deve essere applicato a runtime via il broker.
+    expect(received[0]).toEqual({ location: 'Roma' })
+  })
+
+  it('CR-02-RESIDUAL iter2: global alias applied at runtime via MapperBroker.publish (no outputMap)', async () => {
+    // Equivalente al test sopra ma con alias globale (D-40 livello 3) invece di scoped.
+    const harness = createMapperHarness({
+      schemas: [
+        {
+          id: 'weather' as CanonicalSchemaId,
+          fields: { location: { type: 'string', required: false } },
+        },
+      ],
+      aliases: { city: 'location' },
+    })
+
+    await harness.broker.registerPlugin({
+      id: 'p-alias-global-only',
+      canonicalSchemaId: 'weather' as CanonicalSchemaId,
+      // NO outputMap — solo alias globale risolve.
+    })
+
+    const received: Record<string, unknown>[] = []
+    harness.broker.subscribe('weather.requested', (e) => {
+      received.push(e.payload as Record<string, unknown>)
+    })
+
+    harness.broker.publish(
+      'weather.requested',
+      { city: 'Milano' },
+      { source: { type: 'plugin', id: 'p-alias-global-only' }, deliveryMode: 'sync' },
+    )
+
+    expect(received).toHaveLength(1)
+    expect(received[0]).toEqual({ location: 'Milano' })
+  })
+
   it('cascade scoped alias removal (D-26 ext F2 LIFE-02 ext)', () => {
     const registry = new AliasRegistry()
     registry.registerScoped('plugin-a', 'city', 'place_A')
