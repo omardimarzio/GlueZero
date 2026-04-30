@@ -20,7 +20,12 @@
     "README.md",
     "LICENSE"
   ],
-  "sideEffects": ["./dist/augment.js"],
+  "sideEffects": [
+    "./dist/augment.js",
+    "./src/augment.ts",
+    "**/augment.js",
+    "**/augment.ts"
+  ],
   "engines": {
     "node": ">=20"
   },
