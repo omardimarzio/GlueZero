@@ -105,4 +105,21 @@ describe('valibotAdapter', () => {
     expect(() => valibotAdapter.validate(schema, 42)).not.toThrow()
     expect(() => valibotAdapter.validate(schema, [])).not.toThrow()
   })
+
+  it('WR-08 fix: rejects non-Valibot schema (type guard) → ok: false', () => {
+    // Empty object — NON è uno schema Valibot. Senza type guard, v.safeParse
+    // potrebbe ritornare ok:true silently (schema malformato passato per errore).
+    const r1 = valibotAdapter.validate({}, 'anything')
+    expect(r1.ok).toBe(false)
+    if (!r1.ok) {
+      expect(r1.issues[0]?.message).toContain('not a Valibot BaseSchema')
+    }
+    // Plain object pretending to be a schema — NON ha `~run` function.
+    const r2 = valibotAdapter.validate({ type: 'string' }, 'x')
+    expect(r2.ok).toBe(false)
+    // null / primitives → ok: false.
+    expect(valibotAdapter.validate(null, 'x').ok).toBe(false)
+    expect(valibotAdapter.validate('not a schema', 'x').ok).toBe(false)
+    expect(valibotAdapter.validate(42, 'x').ok).toBe(false)
+  })
 })

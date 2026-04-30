@@ -96,23 +96,50 @@ function mapIssue(issue: ValibotIssue): ValidationIssue {
  * }
  * ```
  */
+/**
+ * WR-08 fix: type guard runtime per verificare che `schema` sia un BaseSchema Valibot.
+ *
+ * Valibot 1.x espone `~run` come function su tutti i BaseSchema (riferimento:
+ * docs Valibot 1.x — `BaseSchema` interface). Controlliamo la presenza di questa
+ * proprietà + `kind === 'schema'` come segnale che lo schema è valido per
+ * `v.safeParse`. Un cast non-checked può silently passare un object `{}` all'
+ * adapter e ritornare ok:true se Valibot non triggera throw — fail-fast invece.
+ */
+function isValibotSchema(
+  s: unknown,
+): s is v.BaseSchema<unknown, unknown, v.BaseIssue<unknown>> {
+  if (typeof s !== 'object' || s === null) return false
+  const obj = s as { kind?: unknown; '~run'?: unknown }
+  return obj.kind === 'schema' && typeof obj['~run'] === 'function'
+}
+
 export const valibotAdapter: ValidatorAdapter = {
   validate<T = unknown>(schema: unknown, payload: unknown): ValidationResult<T> {
-    // Wrap in try/catch per resilienza a schema malformato/non-Valibot passato per
-    // errore (T-02-06-01). Coerente con contract NO-throw documentato in JSDoc del
+    // WR-08 fix: type guard preventivo — schema non-Valibot ritorna ok:false
+    // immediato invece di rischiare un silent ok:true (es. schema = {} non triggera
+    // throw in Valibot 1.x).
+    if (!isValibotSchema(schema)) {
+      return {
+        ok: false,
+        issues: [
+          {
+            message: 'invalid schema: not a Valibot BaseSchema (missing `_run` function).',
+          },
+        ],
+      }
+    }
+    // Wrap in try/catch per resilienza a schema malformato passato per errore
+    // (T-02-06-01). Coerente con contract NO-throw documentato in JSDoc del
     // ValidatorAdapter interface.
     try {
-      const result = v.safeParse(
-        schema as v.BaseSchema<unknown, unknown, v.BaseIssue<unknown>>,
-        payload,
-      )
+      const result = v.safeParse(schema, payload)
       if (result.success) {
         return { ok: true, value: result.output as T }
       }
       const issues = result.issues.map((i) => mapIssue(i as ValibotIssue))
       return { ok: false, issues }
     } catch (err) {
-      // Schema non-Valibot o malformato: ritorniamo ok: false con singola issue.
+      // Schema malformato in altro modo: ritorniamo ok: false con singola issue.
       return {
         ok: false,
         issues: [
