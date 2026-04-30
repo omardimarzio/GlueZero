@@ -102,6 +102,14 @@ function describeRuntimeType(value: unknown): string {
 }
 
 /**
+ * WR-03 fix: keys riservate JS che NON devono apparire né come canonicalField (in
+ * outputMap/inputMap key) né come `rule.source` semplice né come segmento di
+ * dot-path. Applicare uno di questi nomi al `result[key]` causerebbe prototype
+ * pollution; leggerlo con `source[key]` esporrebbe getter/Object.prototype.
+ */
+const RESERVED_KEYS: ReadonlySet<string> = new Set(['__proto__', 'constructor', 'prototype'])
+
+/**
  * Plugin descriptor F2 internal — extends F1 PluginDescriptor con i campi mapper.
  *
  * Il plan 02-09 farà declaration merging di `PluginDescriptor` di `@sembridge/core`
@@ -408,13 +416,34 @@ export class MapperEngine {
     }
   }
 
-  /** Compila un singolo `InputMap`/`OutputMap` in lista di `CompiledFieldMapping`. */
+  /** Compila un singolo `InputMap`/`OutputMap` in lista di `CompiledFieldMapping`.
+   *
+   * WR-03 fix: rifiuta keys riservate (`__proto__`, `constructor`, `prototype`)
+   * sia come `canonicalField` (chiave del map) sia come `rule.source` semplice
+   * (per coerenza, `derive.sources` segmenti checkati nel readPath).
+   */
   private compileRules(
     map: InputMap | OutputMap,
     schema: CanonicalSchema | undefined,
   ): CompiledFieldMapping[] {
     const result: CompiledFieldMapping[] = []
     for (const [canonicalField, rule] of Object.entries(map)) {
+      if (RESERVED_KEYS.has(canonicalField)) {
+        throw createBrokerError({
+          code: 'mapping.field.invalid',
+          category: 'mapping',
+          message: `Reserved canonical field name "${canonicalField}" is not allowed (prototype-pollution guard).`,
+          details: { canonicalField },
+        })
+      }
+      if (rule.source !== undefined && !rule.source.includes('.') && RESERVED_KEYS.has(rule.source)) {
+        throw createBrokerError({
+          code: 'mapping.field.invalid',
+          category: 'mapping',
+          message: `Reserved local field name "${rule.source}" is not allowed as MappingRule.source.`,
+          details: { canonicalField, source: rule.source },
+        })
+      }
       result.push({
         canonicalField,
         rule,
@@ -682,12 +711,17 @@ export class MapperEngine {
    *
    * Esempio: `readPath({ address: { city: 'Roma' } }, 'address.city')` → `'Roma'`.
    * Su path non risolvibile (chiave assente o tipo non-object intermedio) → `undefined`.
+   *
+   * WR-03 fix: segmenti riservati (`__proto__`, `constructor`, `prototype`) ritornano
+   * `undefined` invece di seguire il prototype chain (prototype-pollution guard).
    */
   private readPath(source: Record<string, unknown>, path: string): unknown {
     if (!path.includes('.')) {
+      if (RESERVED_KEYS.has(path)) return undefined
       return source[path]
     }
     const parts = path.split('.')
+    if (parts.some((p) => RESERVED_KEYS.has(p))) return undefined
     let current: unknown = source
     for (const part of parts) {
       if (current === null || current === undefined || typeof current !== 'object') {

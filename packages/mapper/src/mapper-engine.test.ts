@@ -762,6 +762,49 @@ describe('MapperEngine — chunk C: cycle / validation / cascade', () => {
     )
   })
 
+  it("Test 25f: WR-03 fix — compileMappings rejects __proto__/constructor/prototype as canonicalField", () => {
+    const { engine, canonical } = makeEngine()
+    canonical.register({
+      id: 'sch25f' as CanonicalSchemaId,
+      fields: { ok: { type: 'string', required: false } },
+    })
+    for (const key of ['__proto__', 'constructor', 'prototype']) {
+      const desc: MapperPluginDescriptor = {
+        id: `p-pollute-${key}`,
+        canonicalSchemaId: 'sch25f' as CanonicalSchemaId,
+        outputMap: { [key]: { source: 'src' } },
+      }
+      let caught: unknown
+      try {
+        engine.compileMappings(desc)
+      } catch (e) {
+        caught = e
+      }
+      expect(isBrokerError(caught)).toBe(true)
+      expect((caught as { code: string }).code).toBe('mapping.field.invalid')
+    }
+  })
+
+  it("Test 25g: WR-03 fix — readPath returns undefined for reserved keys (prototype pollution guard)", () => {
+    const { engine, canonical } = makeEngine()
+    canonical.register({
+      id: 'sch25g' as CanonicalSchemaId,
+      fields: { v: { type: 'string', required: false } },
+    })
+    const desc: MapperPluginDescriptor = {
+      id: 'p-readpath-guard',
+      canonicalSchemaId: 'sch25g' as CanonicalSchemaId,
+      // dot-path con segmento riservato → readPath ritorna undefined → field omitted (required:false).
+      outputMap: { v: { source: 'a.__proto__.polluted' } },
+    }
+    engine.compileMappings(desc)
+    // Anche se il payload contiene apparentemente una key __proto__, il readPath dovrebbe
+    // ritornare undefined per il segmento riservato.
+    const result = engine.applyOutputMap(desc.id, { a: {} })
+    expect(result).toEqual({})
+    expect('v' in result).toBe(false)
+  })
+
   it('Test 26: stats — returns compiledPluginCount, canonicalSchemas, registeredAliases', () => {
     const { engine, canonical, alias } = makeEngine()
     canonical.register(weatherSchema)
