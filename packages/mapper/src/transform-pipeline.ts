@@ -168,16 +168,20 @@ export class TransformPipeline {
    * Cascade D-26 ext F2: rimuove tutti i transform con `ownerId === pluginId`.
    * I transform senza ownerId (globali) vengono mantenuti — vedi T-02-05-03 disposition.
    *
+   * WR-05 fix: collect-then-delete pattern — evita mutation del Map durante
+   * l'iterazione (formalmente safe per JS Map iteration semantics ma anti-pattern
+   * stylistic e segnalato da alcuni lint rules).
+   *
    * @returns numero di transform rimossi
    */
   unregisterByOwner(pluginId: string): number {
-    let count = 0
+    const toDelete: string[] = []
     for (const [name, entry] of this.transforms) {
-      if (entry.ownerId === pluginId) {
-        this.transforms.delete(name)
-        count++
-      }
+      if (entry.ownerId === pluginId) toDelete.push(name)
     }
-    return count
+    for (const name of toDelete) {
+      this.transforms.delete(name)
+    }
+    return toDelete.length
   }
 }
