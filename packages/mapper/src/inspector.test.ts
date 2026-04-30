@@ -169,7 +169,7 @@ describe('MappingInspector', () => {
     expect(inspector.lastErrors()).toHaveLength(0)
   })
 
-  it('default errorBufferSize is 10', () => {
+  it('WR-09 fix: default errorBufferSize is 50', () => {
     const canonical = new CanonicalRegistry()
     const alias = new AliasRegistry()
     const transform = new TransformPipeline()
@@ -178,7 +178,8 @@ describe('MappingInspector', () => {
       aliasRegistry: alias,
       transformPipeline: transform,
     })
-    for (let i = 0; i < 15; i++) {
+    // 60 record → buffer size 50 → 10 droppati FIFO.
+    for (let i = 0; i < 60; i++) {
       inspector.recordError(
         createBrokerError({
           code: 'mapping.field.missing',
@@ -187,9 +188,34 @@ describe('MappingInspector', () => {
         }),
       )
     }
-    expect(inspector.lastErrors()).toHaveLength(10)
-    expect(inspector.lastErrors()[0]?.message).toBe('m5')
-    expect(inspector.lastErrors()[9]?.message).toBe('m14')
+    expect(inspector.lastErrors()).toHaveLength(50)
+    expect(inspector.lastErrors()[0]?.message).toBe('m10')
+    expect(inspector.lastErrors()[49]?.message).toBe('m59')
+  })
+
+  it('WR-09 fix: getSnapshot.droppedErrorsCount tracks FIFO drops', () => {
+    const canonical = new CanonicalRegistry()
+    const alias = new AliasRegistry()
+    const transform = new TransformPipeline()
+    const inspector = new MappingInspector({
+      canonicalRegistry: canonical,
+      aliasRegistry: alias,
+      transformPipeline: transform,
+      errorBufferSize: 3,
+    })
+    // 5 record → buffer 3 → 2 droppati.
+    for (let i = 0; i < 5; i++) {
+      inspector.recordError(
+        createBrokerError({
+          code: 'mapping.field.missing',
+          category: 'mapping',
+          message: `m${i}`,
+        }),
+      )
+    }
+    expect(inspector.getSnapshot().droppedErrorsCount).toBe(2)
+    inspector.clearErrors()
+    expect(inspector.getSnapshot().droppedErrorsCount).toBe(0)
   })
 })
 

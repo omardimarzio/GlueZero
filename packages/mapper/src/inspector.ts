@@ -62,12 +62,17 @@ export interface MappingInspectorOptions {
  * Il broker wrapper (plan 02-10) include questo snapshot in `getDebugSnapshot().mappings`
  * per popolare l'API debug pubblica del Broker. Inspector reale full-snapshot per evento
  * è deferred a F6 (TOOL-01).
+ *
+ * WR-09 fix: aggiunto `droppedErrorsCount` per counter visibility quando il ring
+ * buffer è saturo (FIFO drop) — utile per debug burst error.
  */
 export interface MappingInspectorSnapshot {
   readonly canonicalSchemas: number
   readonly registeredAliases: number
   readonly registeredTransforms: number
   readonly lastMappingErrors: BrokerError[]
+  /** Numero di errori droppati (FIFO) per overflow del ring buffer (WR-09). */
+  readonly droppedErrorsCount: number
 }
 
 /**
@@ -101,12 +106,16 @@ export class MappingInspector {
   private readonly transformPipeline: TransformPipeline
   private readonly errorBuffer: BrokerError[] = []
   private readonly errorBufferSize: number
+  /** Counter degli errori droppati per overflow ring buffer (WR-09 fix). */
+  private droppedCount = 0
 
   constructor(options: MappingInspectorOptions) {
     this.canonicalRegistry = options.canonicalRegistry
     this.aliasRegistry = options.aliasRegistry
     this.transformPipeline = options.transformPipeline
-    this.errorBufferSize = options.errorBufferSize ?? 10
+    // WR-09 fix: default aumentato da 10 → 50 per ridurre il rischio di perdere
+    // errori importanti su burst (es. transform fail in rapid succession).
+    this.errorBufferSize = options.errorBufferSize ?? 50
   }
 
   /**
@@ -146,6 +155,8 @@ export class MappingInspector {
     this.errorBuffer.push(error)
     if (this.errorBuffer.length > this.errorBufferSize) {
       this.errorBuffer.shift() // FIFO drop oldest
+      // WR-09 fix: track dropped errors per visibility burst error.
+      this.droppedCount++
     }
   }
 
@@ -166,9 +177,12 @@ export class MappingInspector {
    *
    * Utile per test e per reset esplicito post-debug session. NON invocato
    * automaticamente — il caller (broker wrapper / consumer debug) decide policy.
+   *
+   * WR-09 fix: reset del counter `droppedCount` insieme al buffer.
    */
   clearErrors(): void {
     this.errorBuffer.length = 0
+    this.droppedCount = 0
   }
 
   /**
@@ -185,6 +199,7 @@ export class MappingInspector {
       registeredAliases: this.aliasRegistry.listGlobal().length,
       registeredTransforms: this.transformPipeline.list().length,
       lastMappingErrors: this.lastErrors(),
+      droppedErrorsCount: this.droppedCount,
     }
   }
 }

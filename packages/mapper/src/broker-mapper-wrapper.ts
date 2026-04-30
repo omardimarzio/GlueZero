@@ -139,6 +139,8 @@ export interface MapperBrokerDebugSnapshot {
     readonly registeredAliases: number
     readonly registeredTransforms: number
     readonly lastMappingErrors: BrokerError[]
+    /** WR-09 fix: counter errori droppati per overflow ring buffer. */
+    readonly droppedErrorsCount: number
   }
 }
 
@@ -506,6 +508,7 @@ export class MapperBroker {
         registeredAliases: insp.registeredAliases,
         registeredTransforms: insp.registeredTransforms,
         lastMappingErrors: insp.lastMappingErrors,
+        droppedErrorsCount: insp.droppedErrorsCount,
       },
     }
   }
