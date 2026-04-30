@@ -1,8 +1,8 @@
 // Test RED per MapperBroker — composition wrapper di Broker (F1) con MapperEngine + Inspector (F2).
 // Coverage del PLAN 02-10 Task 1: 12 acceptance criteria.
 
-import { isBrokerError } from '@sembridge/core'
 import type { BrokerEvent, PluginContext, Subscription } from '@sembridge/core'
+import { isBrokerError } from '@sembridge/core'
 import { describe, expect, it, vi } from 'vitest'
 import { MapperBroker } from './broker-mapper-wrapper'
 import type { CanonicalSchemaId } from './types/canonical-schema'

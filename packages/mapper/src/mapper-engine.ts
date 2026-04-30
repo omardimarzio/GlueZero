@@ -243,6 +243,40 @@ export class MapperEngine {
   }
 
   /**
+   * Verifica se un plugin ha mapping compilati (output o input).
+   *
+   * Usato dal broker wrapper (plan 02-10) per decidere se applicare `applyOutputMap`
+   * al publish: se il plugin source NON ha compileMappings registrato, il payload
+   * passa invariato al bus (passthrough — coerente con T-02-07-06 partial mapping).
+   */
+  hasCompiled(pluginId: string): boolean {
+    return this.compiled.has(pluginId)
+  }
+
+  /**
+   * Verifica se un plugin ha un `inputMap` compilato (con almeno una rule).
+   *
+   * Usato dal broker wrapper (plan 02-10) per decidere se wrappare l'handler del
+   * subscribe con `applyInputMap` (passo 11). Plugin senza inputMap → handler diretto
+   * sul payload canonico.
+   */
+  hasInputMap(pluginId: string): boolean {
+    const compiled = this.compiled.get(pluginId)
+    return compiled !== undefined && compiled.inputCompiled.length > 0
+  }
+
+  /**
+   * Ritorna il `canonicalSchemaId` dichiarato dal plugin nel descriptor (se presente).
+   *
+   * Usato dal broker wrapper (plan 02-10) per il step 6 (canonical validation): dopo
+   * `applyOutputMap`, il wrapper invoca `validateCanonical(schemaId, canonicalPayload)`
+   * per verificare structural compliance.
+   */
+  getCanonicalSchemaIdFor(pluginId: string): CanonicalSchemaId | undefined {
+    return this.compiled.get(pluginId)?.canonicalSchemaId
+  }
+
+  /**
    * Valida un payload canonico contro il canonical schema registrato (passi 6 e 12).
    *
    * F2 V1: structural check via field descriptor presence (basic validation).
