@@ -23,6 +23,7 @@
 
 import { describe, expect, it } from 'vitest'
 import { AliasRegistry } from '../alias-registry'
+import { MapperBroker } from '../broker-mapper-wrapper'
 import { createMapperHarness } from '../test-utils/mapper-harness'
 import type { CanonicalSchemaId } from '../types/canonical-schema'
 
@@ -273,5 +274,118 @@ describe('alias resolution ambiguity — D-41/MAP-16/D-40 chiusura PRD §39 #1',
 
     // Global aliases intatti
     expect(registry.resolve('plugin-a', 'country').canonical).toBe('nation')
+  })
+
+  describe('BL-01 iter3 — regression "canonical-only" plugin (no maps, no aliases) preserves payload', () => {
+    // Pre-iter2: plugin con SOLO `canonicalSchemaId` (no outputMap, no inputMap, no
+    // alias scoped, no global aliases) → registerPlugin NON invocava compileMappings →
+    // hasCompiled = false → MapperBroker.publish saltava il branch mapping → payload
+    // passthrough invariato.
+    //
+    // Iter2 fix CR-02-RESIDUAL ha esteso il guard di compileMappings a
+    // `canonicalSchemaId !== undefined || outputMap || inputMap`, abilitando la
+    // canonicalizzazione via alias per plugin con SOLO canonicalSchemaId + alias scoped.
+    // Side effect: per plugin con SOLO canonicalSchemaId (no maps, no aliases),
+    // applyOutputMap iterava outputCompiled vuoto + applyAliasResolution non risolveva
+    // nulla → ritornava {} → payload droppato silently → conumer riceveva {}.
+    //
+    // Iter3 fix BL-01: aggiunge percorso "canonical-only" nel broker. Se il plugin ha
+    // canonicalSchemaId ma zero rules compilate AND zero alias rilevanti, il broker
+    // skippa applyOutputMap (passthrough) ma applica comunque step 6 (canonical
+    // validation) e step 12 (final validation) sul payload originale.
+
+    it('BL-01 scenario A: plugin with ONLY canonicalSchemaId (no maps, no aliases) preserves original payload (passthrough)', async () => {
+      const broker = new MapperBroker({ runtime: { logLevel: 'silent' } })
+      broker.registerCanonicalSchema({
+        id: 'opt' as CanonicalSchemaId,
+        // Tutti optional: il payload originale {foo:'bar'} non avrà chiavi canoniche,
+        // ma la validation passa (no required field missing).
+        fields: { other: { type: 'string', required: false } },
+      })
+      await broker.registerPlugin({
+        id: 'minimal',
+        canonicalSchemaId: 'opt' as CanonicalSchemaId,
+      })
+
+      const received: unknown[] = []
+      broker.subscribe('demo.evt', (e) => {
+        received.push(e.payload)
+      })
+
+      broker.publish(
+        'demo.evt',
+        { foo: 'bar' },
+        {
+          source: { type: 'plugin', id: 'minimal' },
+          deliveryMode: 'sync',
+        },
+      )
+
+      expect(received).toHaveLength(1)
+      // Pre-iter3: received[0] sarebbe {} (foo droppato). Iter3 fix: passthrough.
+      expect(received[0]).toEqual({ foo: 'bar' })
+    })
+
+    it('BL-01 scenario B: plugin with ONLY scoped alias (no canonicalSchemaId, no maps) — back-compat NO compile', async () => {
+      // Plugin senza canonicalSchemaId, senza maps, ma con alias scoped registrato:
+      // post-iter2 NON viene compilato (guard è canonicalSchemaId || outputMap || inputMap).
+      // L'alias scoped resta "dead weight" ma il payload originale passa intatto.
+      // Questo test documenta il behavior attuale per evitare regression.
+      const broker = new MapperBroker({ runtime: { logLevel: 'silent' } })
+      await broker.registerPlugin({ id: 'plain-alias', version: '1.0.0' })
+      broker.registerAlias('city', 'location', { scope: 'plain-alias' })
+
+      const received: unknown[] = []
+      broker.subscribe('demo.evt', (e) => {
+        received.push(e.payload)
+      })
+
+      broker.publish(
+        'demo.evt',
+        { city: 'Roma' },
+        {
+          source: { type: 'plugin', id: 'plain-alias' },
+          deliveryMode: 'sync',
+        },
+      )
+
+      expect(received).toHaveLength(1)
+      // Senza canonicalSchemaId, NO compile → passthrough invariato.
+      expect(received[0]).toEqual({ city: 'Roma' })
+    })
+
+    it('BL-01 scenario C: plugin with canonicalSchemaId + scoped alias (no maps) → alias resolution applied (iter2 behavior preserved)', async () => {
+      // Verifica che il fix BL-01 NON regredisce il comportamento iter2: plugin con
+      // canonicalSchemaId + scoped alias DEVE applicare la canonicalizzazione via alias
+      // (NON saltare al passthrough — quello è SOLO il caso senza alias rilevanti).
+      const broker = new MapperBroker({ runtime: { logLevel: 'silent' } })
+      broker.registerCanonicalSchema({
+        id: 'weather' as CanonicalSchemaId,
+        fields: { location: { type: 'string', required: true } },
+      })
+      await broker.registerPlugin({
+        id: 'p-canonical-and-alias',
+        canonicalSchemaId: 'weather' as CanonicalSchemaId,
+      })
+      broker.registerAlias('city', 'location', { scope: 'p-canonical-and-alias' })
+
+      const received: unknown[] = []
+      broker.subscribe('weather.requested', (e) => {
+        received.push(e.payload)
+      })
+
+      broker.publish(
+        'weather.requested',
+        { city: 'Milano' },
+        {
+          source: { type: 'plugin', id: 'p-canonical-and-alias' },
+          deliveryMode: 'sync',
+        },
+      )
+
+      expect(received).toHaveLength(1)
+      // L'alias scoped 'city → location' deve essere applicato (NO passthrough qui).
+      expect(received[0]).toEqual({ location: 'Milano' })
+    })
   })
 })

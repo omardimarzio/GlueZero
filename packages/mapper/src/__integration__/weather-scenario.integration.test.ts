@@ -121,6 +121,32 @@ describe('Scenario meteo PRD §29 — end-to-end senza HTTP (D-53, success crite
     expect(finalSnap?.eventId).not.toMatch(/^f2:/)
     // Coerenza: i due step subscribe-side condividono lo stesso BrokerEvent.id.
     expect(consumerSnap?.eventId).toBe(finalSnap?.eventId)
+
+    // WR-01 iter3 verification: anche gli step publish-side (4/5/6) propagano un
+    // eventId reale (NON placeholder), pre-allocato dal MapperBroker via nanoid e
+    // riusato da inner.publish via options.id. I 5 step F2 di un singolo evento
+    // condividono lo STESSO eventId — Inspector V2/F6 può correlare snapshot
+    // cross-step deterministically.
+    // NB: lo step `event.source.resolved` ha doppia semantica V1 (publisher + consumer
+    // side, vedi WR-04 iter3). Filtriamo lo snapshot publisher-side via
+    // `metadata.pluginId === 'plugin-form'` (publisher source plugin id).
+    const sourceResolvedSnaps = harness.byStep('event.source.resolved' as never)
+    const publisherSourceResolved = sourceResolvedSnaps.find(
+      (s) =>
+        (s.metadata as { pluginId?: string } | undefined)?.pluginId === 'plugin-form',
+    )
+    const mappedCanonicalSnap = harness.byStep('event.mapped.canonical' as never)[0]
+    const canonicalValidatedSnap = harness.byStep('event.canonical.validated' as never)[0]
+    expect(publisherSourceResolved?.eventId).toBeDefined()
+    expect(publisherSourceResolved?.eventId).not.toMatch(/^f2:/)
+    expect(mappedCanonicalSnap?.eventId).toBeDefined()
+    expect(mappedCanonicalSnap?.eventId).not.toMatch(/^f2:/)
+    expect(canonicalValidatedSnap?.eventId).toBeDefined()
+    expect(canonicalValidatedSnap?.eventId).not.toMatch(/^f2:/)
+    // I 5 step F2 dell'evento condividono lo STESSO eventId (publisher → subscriber).
+    expect(publisherSourceResolved?.eventId).toBe(consumerSnap?.eventId)
+    expect(mappedCanonicalSnap?.eventId).toBe(consumerSnap?.eventId)
+    expect(canonicalValidatedSnap?.eventId).toBe(consumerSnap?.eventId)
   })
 
   it('multiple consumers with different inputMap receive different shapes (TEST-02)', async () => {

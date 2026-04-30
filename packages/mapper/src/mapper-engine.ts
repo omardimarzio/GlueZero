@@ -324,6 +324,31 @@ export class MapperEngine {
   }
 
   /**
+   * BL-01 iter3: identifica i plugin "canonical-only" — registrati con SOLO
+   * `canonicalSchemaId` (no `outputMap`, no `inputMap`) e zero rules compilate.
+   *
+   * Iter2 (CR-02-RESIDUAL) ha esteso il guard di `compileMappings` a
+   * `canonicalSchemaId !== undefined || outputMap || inputMap` per abilitare la
+   * canonicalizzazione via alias scoped/global. Side effect: per plugin con SOLO
+   * `canonicalSchemaId` (no maps, no aliases applicabili), `applyOutputMap` ritorna
+   * `{}` e droppa il payload originale.
+   *
+   * Il broker wrapper (plan 02-10) usa questo metodo + check sugli alias registry
+   * per decidere se applicare un percorso "canonical-only passthrough" (skip
+   * applyOutputMap, validate canonical sul payload originale, inner.publish con
+   * payload originale invariato — back-compat F1 partial mapping policy T-02-07-06).
+   *
+   * @returns `true` se il plugin ha `canonicalSchemaId` ma zero rule output/input
+   *          compilate; `false` altrimenti (incluso "non compilato").
+   */
+  isCanonicalOnly(pluginId: string): boolean {
+    const compiled = this.compiled.get(pluginId)
+    if (!compiled) return false
+    if (compiled.canonicalSchemaId === undefined) return false
+    return compiled.outputCompiled.length === 0 && compiled.inputCompiled.length === 0
+  }
+
+  /**
    * Ritorna il `canonicalSchemaId` dichiarato dal plugin nel descriptor (se presente).
    *
    * Usato dal broker wrapper (plan 02-10) per il step 6 (canonical validation): dopo

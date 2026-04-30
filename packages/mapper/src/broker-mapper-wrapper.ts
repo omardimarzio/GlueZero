@@ -52,6 +52,7 @@ import type {
   Subscription,
 } from '@sembridge/core'
 import { Broker, createBrokerError, isBrokerError, silentLogger } from '@sembridge/core'
+import { nanoid } from 'nanoid'
 import { AliasRegistry } from './alias-registry'
 import { CanonicalRegistry } from './canonical-registry'
 import { MappingInspector, wrapTap } from './inspector'
@@ -223,6 +224,13 @@ export class MapperBroker {
    * Iter2: `event.source.resolved` (passo 4 pipeline §28) emesso ANCHE consumer-side
    * (in `wrapConsumerHandler`) per simmetria — F6 può differenziare publisher vs
    * consumer via `metadata.pluginId`.
+   *
+   * WR-04 iter3 — Doppia semantica V1: il PRD §28 definisce step 4 come
+   * publisher-only; in V1 il MapperBroker emette il medesimo step anche
+   * consumer-side per semplicità (1 publisher + N consumers per delivery con N
+   * matched subscribers). F6/V2 dovrà discriminare via `metadata.pluginId` o
+   * introdurre uno step distinto `event.consumer.resolved`. Vedi JSDoc su
+   * `wrapConsumerHandler` per il rationale completo.
    */
   private readonly tap: EventTap
   private readonly ownership = new Map<string, OwnershipEntry>()
@@ -282,10 +290,16 @@ export class MapperBroker {
    * WR-C iter2: `extras.eventId` (se fornito dal caller) sovrascrive il placeholder
    * `f2:${topic}:${step}`. Subscribe-side il `BrokerEvent.id` reale (nanoid generato
    * da `inner.publish`) è disponibile in `wrapConsumerHandler` e viene propagato
-   * agli step 11/12. Publish-side (step 4/5/6) il placeholder resta in uso perché
-   * l'evento non è ancora stato generato dal `inner.publish` — F6 dovrà comunque
-   * normalizzare la correlation publisher↔subscriber via `correlationId` o
-   * topic+timestamp.
+   * agli step 11/12.
+   *
+   * WR-01 iter3: anche publish-side (step 4/5/6) ora propaga un `eventId` reale —
+   * il MapperBroker pre-alloca un id via `nanoid` a inizio `publish()` e lo
+   * passa a `inner.publish` via `options.id` (createBrokerEvent F1 riusa
+   * `params.id ?? nanoid()`, vedi event-factory.ts:63). I 5 step F2 di un singolo
+   * evento condividono quindi lo STESSO `eventId` — Inspector V2/F6 può correlare
+   * snapshot cross-step deterministically (NO heuristic topic+timestamp). Il
+   * placeholder `f2:${topic}:${step}` resta come fallback DIFENSIVO se un caller
+   * F2-internal invocasse `makeF2Snapshot` senza fornire `extras.eventId`.
    */
   private makeF2Snapshot(
     step: PipelineStep,
@@ -338,23 +352,60 @@ export class MapperBroker {
     const sourcePluginId = options.source?.id
     let canonicalPayload: unknown = payload
 
+    // WR-01 iter3: pre-genera l'eventId (nanoid — coerente con createBrokerEvent F1) e
+    // riusa la stessa string sia nei tap F2 publish-side (step 4/5/6) sia in
+    // inner.publish via `options.id`. In questo modo i 5 step F2 (publish + subscribe)
+    // condividono lo stesso `eventId` e l'Inspector V2/F6 può correlare gli snapshot
+    // cross-step senza heuristic (topic + timestamp). Se il chiamante ha già fornito
+    // un id custom (raro ma supportato da PublishParams.id), lo rispettiamo.
+    const preAllocatedEventId =
+      (options as { id?: string }).id ?? nanoid()
+
     if (sourcePluginId !== undefined && this.mapper.hasCompiled(sourcePluginId)) {
       try {
+        // BL-01 iter3: percorso "canonical-only" — plugin con SOLO `canonicalSchemaId`
+        // (no maps esplicite, no alias scoped registrati per questo plugin, no global
+        // aliases nel registry). Iter2 (CR-02-RESIDUAL) compila SEMPRE per abilitare
+        // l'alias resolution durante publish; per il caso "puramente documentale"
+        // (zero rules + zero alias rilevanti) `applyOutputMap` ritornerebbe `{}` e
+        // droppa il payload originale. Iter3 fix: skip applyOutputMap e applica
+        // step 6 (canonical-validate) + step 12 (final-validate, gestito subscribe-side)
+        // sul payload originale invariato — back-compat F1 partial mapping policy
+        // T-02-07-06 preservata.
+        const noScopedAliases = this.aliasRegistry.listScoped(sourcePluginId).length === 0
+        const noGlobalAliases = this.aliasRegistry.listGlobal().length === 0
+        const isCanonicalOnly =
+          this.mapper.isCanonicalOnly(sourcePluginId) && noScopedAliases && noGlobalAliases
+
         // CR-01-RESIDUAL iter2: emette il 5° step F2 (event.source.resolved, passo 4
         // pipeline §28 — identificazione plugin sender + lookup outputMap). Va emesso
         // PRIMA di applyOutputMap così il tap vede l'identificazione del source come
         // step distinto dal mapping. F6 sostituirà recordSnapshot no-op SENZA retrofit
         // (vincolo architetturale CLAUDE.md).
+        // WR-01 iter3: propaga il `preAllocatedEventId` reale anche publish-side.
         this.emitF2Tap('event.source.resolved' as PipelineStep, topic, {
+          eventId: preAllocatedEventId,
           metadata: { pluginId: sourcePluginId },
         })
-        // Step 5: applyOutputMap (locale → canonical)
-        canonicalPayload = this.mapper.applyOutputMap(sourcePluginId, payload)
-        // CR-01 fix: invoca tap dopo step 5 (event.mapped.canonical, D-50).
-        this.emitF2Tap('event.mapped.canonical' as PipelineStep, topic, {
-          metadata: { pluginId: sourcePluginId },
-        })
-        // Step 6: canonical validation (structural pass V1 — D-39 + REQ MAP-11)
+
+        if (!isCanonicalOnly) {
+          // Step 5: applyOutputMap (locale → canonical) — solo se NON canonical-only.
+          canonicalPayload = this.mapper.applyOutputMap(sourcePluginId, payload)
+          // CR-01 fix: invoca tap dopo step 5 (event.mapped.canonical, D-50).
+          // WR-01 iter3: eventId reale propagato.
+          this.emitF2Tap('event.mapped.canonical' as PipelineStep, topic, {
+            eventId: preAllocatedEventId,
+            metadata: { pluginId: sourcePluginId },
+          })
+        }
+
+        // Step 6: canonical validation (structural pass V1 — D-39 + REQ MAP-11).
+        // BL-01 iter3: per canonical-only, il payload validato è quello ORIGINALE
+        // (non c'è applyOutputMap che lo trasformi). Se lo schema ha required field
+        // e il payload originale non li contiene → validation fail → mapping.error.
+        // Questo è coerente con la semantica "canonicalSchemaId dichiarato significa
+        // intent di validare" — il developer che vuole passthrough senza validation
+        // omette `canonicalSchemaId` dal descriptor.
         const compiledSchemaId = this.mapper.getCanonicalSchemaIdFor(sourcePluginId)
         if (compiledSchemaId !== undefined) {
           const validation = this.mapper.validateCanonical(compiledSchemaId, canonicalPayload)
@@ -369,7 +420,9 @@ export class MapperBroker {
             return // D-59: NO delivery
           }
           // CR-01 fix: invoca tap dopo step 6 (event.canonical.validated, D-50).
+          // WR-01 iter3: eventId reale propagato.
           this.emitF2Tap('event.canonical.validated' as PipelineStep, topic, {
+            eventId: preAllocatedEventId,
             metadata: { pluginId: sourcePluginId, canonicalSchemaId: compiledSchemaId },
           })
         }
@@ -382,7 +435,12 @@ export class MapperBroker {
       }
     }
 
-    this.inner.publish(topic, canonicalPayload, options)
+    // WR-01 iter3: pass `id: preAllocatedEventId` a inner.publish così che
+    // createBrokerEvent F1 RIUSI lo stesso id (vedi event-factory.ts:63
+    // `id: params.id ?? nanoid()`). Subscribe-side `wrapConsumerHandler` legge
+    // `event.id` da `BrokerEvent` e propaga agli step 11/12 → stesso eventId
+    // sui 5 step F2 dell'evento.
+    this.inner.publish(topic, canonicalPayload, { ...options, id: preAllocatedEventId })
   }
 
   /**
@@ -893,6 +951,19 @@ export class MapperBroker {
    *
    * Su mapping error consumer-side: pubblica `mapping.error` (D-58) e SKIP la delivery
    * a questo consumer (D-26 — gli altri matched subscribers ricevono comunque).
+   *
+   * WR-04 iter3 — Doppia semantica `event.source.resolved` (V1 documentary):
+   * Il PRD §28 step 4 (`event.source.resolved`) è definito come **publisher-only**
+   * (identificazione del plugin sender prima dell'applyOutputMap). Il fix
+   * CR-01-RESIDUAL iter2 emette lo STESSO step ANCHE consumer-side per simmetria
+   * (identificazione del plugin consumer prima dell'applyInputMap). Questa è una
+   * scelta V1 di semplicità implementativa: F6/V2 dovrà discriminare publisher vs
+   * consumer via `metadata.pluginId` (`pluginId` del publisher è in `options.source.id`,
+   * `pluginId` del consumer è in `subscribeOptions.ownerId`) — eventualmente con un
+   * marker `metadata.role: 'publisher' | 'consumer'` o uno step F2-only distinto
+   * (es. `event.consumer.resolved`) introdotto al refactor F6 della pipeline §28.
+   * Test `weather-scenario.integration.test.ts` documenta la cardinality emessa
+   * (1 publisher + N consumers per ogni delivery con N matched subscribers).
    */
   private wrapConsumerHandler(
     pluginId: string,
@@ -900,11 +971,10 @@ export class MapperBroker {
   ): (event: BrokerEvent) => void | Promise<void> {
     return (event: BrokerEvent): void | Promise<void> => {
       try {
-        // CR-01-RESIDUAL iter2: emette `event.source.resolved` anche consumer-side
-        // (identificazione del plugin consumer prima dell'applyInputMap). Simmetria
-        // vs publish-side: il tap registra il momento in cui il pipeline determina
-        // quale plugin sta ricevendo l'evento. F6 può differenziare publisher vs
-        // consumer via `metadata.pluginId` (qui è il consumer).
+        // CR-01-RESIDUAL iter2 + WR-04 iter3: emette `event.source.resolved` anche
+        // consumer-side. Vedi JSDoc del metodo per la nota V1 sulla doppia semantica
+        // di questo step (publisher vs consumer side) — F6/V2 discriminerà via
+        // `metadata.pluginId` (qui è il consumer).
         this.emitF2Tap('event.source.resolved' as PipelineStep, event.topic, {
           eventId: event.id,
           metadata: { pluginId },
