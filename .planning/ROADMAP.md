@@ -276,7 +276,7 @@ I 11 punti che il PRD §39 vieta esplicitamente di lasciare impliciti vengono ch
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Core essenziale | 11/11 | ✅ Complete & Verified | 2026-04-29 |
-| 2. Canonical Model & Mapper | 4/12 | In Progress | - |
+| 2. Canonical Model & Mapper | 9/12 | In Progress | - |
 | 3. Routing & Server Gateway HTTP | 0/0 | Not started | - |
 | 4. Realtime inbound | 0/0 | Not started | - |
 | 5. Worker Runtime | 0/0 | Not started | - |
@@ -285,4 +285,4 @@ I 11 punti che il PRD §39 vieta esplicitamente di lasciare impliciti vengono ch
 ---
 
 *Roadmap created: 2026-04-28*
-*Last updated: 2026-04-29 — **Phase 2 In Progress** (5/12 plan completi: 02-01 Bootstrap @sembridge/mapper commit b200948+40d4caf; 02-02 Public types F2 commit 210013b+af38fb0 — 6 file types/*.ts 433 LOC, chiusura D-32 placeholder F1 al type-level; 02-03 CanonicalRegistry commit 4d9ca60+a5515c6 — 188 LOC src + 143 LOC test, 11/11 test passing, MAP-01/MAP-02 done; 02-04 AliasRegistry commit 018b867+e1517ee — 240 LOC src + 173 LOC test, 16/16 test passing, MAP-16/MAP-17 done runtime, chiude PRD §39 open issue #1 per costruzione contract; **02-05 TransformPipeline commit 84377d7+bf57216 — 183 LOC src + 185 LOC test, 14/14 test passing, MAP-12/VAL-09 done runtime, chiude PRD §39 open issue #4 (transform failure block/skip/fallback D-44 + cause chaining ES2022 D-45)**). **Phase 1 COMPLETE & VERIFIED** (gsd-verifier PASS confidence HIGH; 5/5 success criteria, 27/27 REQ-IDs, 8/8 gate CI).*
+*Last updated: 2026-04-30 — **Phase 2 In Progress** (9/12 plan completi: 02-01..02-08 più 02-09 augment+barrel commit bb0eac5+3a2840b+2b3c521+ef00b46 — 109 LOC augment.ts + 104 LOC test + 128 LOC barrel + Rule 1 fix per rimuovere placeholder unknown da BrokerConfig core, 6/6 augment test + 93/93 mapper full + 248/248 core no regression, MAP-03/MAP-13/MAP-14 done + PIPE-01 partial via F2PipelineStep additive). **Phase 1 COMPLETE & VERIFIED** (gsd-verifier PASS confidence HIGH; 5/5 success criteria, 27/27 REQ-IDs, 8/8 gate CI).*

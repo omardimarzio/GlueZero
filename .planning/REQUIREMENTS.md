@@ -30,7 +30,7 @@ Tutti i requisiti elencati sono table stakes (vincolanti dalla checklist PRD §4
 
 - [x] **MAP-01**: Canonical Vocabulary Registry con campi canonici tipizzati e alias riconosciuti *(PRD §13.3)*
 - [x] **MAP-02**: `registerCanonicalSchema(schemaDefinition)` per registrare schemi canonici *(PRD §16.2)*
-- [ ] **MAP-03**: Plugin dichiarano `inputMap` e `outputMap` per mapping locale ↔ canonico *(PRD §15.2)*
+- [x] **MAP-03**: Plugin dichiarano `inputMap` e `outputMap` per mapping locale ↔ canonico *(PRD §15.2)*
 - [x] **MAP-04**: Mapper supporta rename semplice *(PRD §14.2.1)*
 - [x] **MAP-05**: Mapper supporta mapping nested *(PRD §14.2.2)*
 - [x] **MAP-06**: Mapper supporta default values *(PRD §14.2.3)*
@@ -115,7 +115,7 @@ Tutti i requisiti elencati sono table stakes (vincolanti dalla checklist PRD §4
 - [x] **ERR-03**: Errori isolati: il runtime non collassa salvo guasto critico non recuperabile *(PRD §22.2)*
 
 #### Pipeline & Lifecycle
-- [ ] **PIPE-01**: Pipeline ufficiale §28.1 implementata coerentemente in tutte le fasi (14 step documentati) *(PRD §28)*
+- [x] **PIPE-01**: Pipeline ufficiale §28.1 implementata coerentemente in tutte le fasi (14 step documentati) *(PRD §28)*
 - [x] **LIFE-01**: Subscribe ritorna handle; plugin registrati possono essere smontati senza leak; listener realtime/worker chiudibili *(PRD §24.2)*
 - [x] **LIFE-02**: Unregister plugin rimuove subscription, handler e risorse collegate *(PRD §24.2, §39 — open issue da chiudere)*
 
@@ -205,7 +205,7 @@ Mappatura definitiva REQ-ID → fase. Ogni requisito è assegnato alla **prima f
 |-------------|-------|--------|------|
 | MAP-01 | Phase 2 | Complete | — |
 | MAP-02 | Phase 2 | Complete | Versioning canonical schema (`requires`) |
-| MAP-03 | Phase 2 | Pending | — |
+| MAP-03 | Phase 2 | Complete | — |
 | MAP-04 | Phase 2 | Complete | — |
 | MAP-05 | Phase 2 | Complete | — |
 | MAP-06 | Phase 2 | Complete | — |
@@ -295,7 +295,7 @@ Mappatura definitiva REQ-ID → fase. Ogni requisito è assegnato alla **prima f
 | ERR-01 | Phase 1 | Done (plan 01-04) | `createBrokerError(params)` factory + `isBrokerError(value)` type guard in `core/broker-error.ts` — ES2022 cause, conditional assignment per `exactOptionalPropertyTypes`, 9/9 test passing |
 | ERR-02 | Phase 2 | Complete | F2: `mapping.error`, F3: `<topic>.failed`+`network.error`, F4: `system.realtime.*`, F5: `worker.error` |
 | ERR-03 | Phase 1 | Done (plan 01-07) | Errori isolati nel dispatch loop di `EventBus.deliver()`: ogni handler ha il suo try/catch indipendente; eccezione di un handler NON propaga al loop (gli altri handler ricevono comunque l'evento). 25 test verificano l'invariant. |
-| PIPE-01 | Phase 1 (skeleton) | Pending | Estesa da F2 (step 4-6, 11-12), F3 (step 7-10), F6 (step 14 reale) |
+| PIPE-01 | Phase 1 (skeleton) | Complete | Estesa da F2 (step 4-6, 11-12), F3 (step 7-10), F6 (step 14 reale) |
 | LIFE-01 | Phase 1 | Done (plan 01-08) | `Broker.subscribe()` ritorna `Subscription` con `.unsubscribe()` idempotente. Plugin smontabili senza leak via `unregisterPlugin(id)` cascade D-26. F4 estenderà a listener realtime; F5 a MessageChannel worker. |
 | LIFE-02 | Phase 1 | Done (plan 01-08) | **Closes PRD §39 #7**: cascade D-26 deterministico in `unregister(id)` — `bus.unsubscribeByOwner` → `abortController.abort()` → `onUnmount` → `onDestroy`. `createPluginScopedBroker` wrapper auto-tagga subscriptions per garantire enforcement F1. Test `getDebugSnapshot()` post-unregister == baseline pre-registrazione. F3 estenderà a route, F4 a realtime, F5 a worker tasks. |
 | SEC-01 | Phase 3 | Pending | — |

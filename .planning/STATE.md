@@ -4,13 +4,13 @@ milestone: v1.0
 milestone_name: milestone
 current_plan: 6
 status: executing
-last_updated: "2026-04-30T07:38:34.032Z"
+last_updated: "2026-04-30T08:12:37.548Z"
 progress:
   total_phases: 6
   completed_phases: 1
   total_plans: 23
-  completed_plans: 19
-  percent: 83
+  completed_plans: 20
+  percent: 87
 ---
 
 # Project State: SemBridge
@@ -29,14 +29,17 @@ progress:
 ## Current Position
 
 Phase: 02 (canonical-model-mapper) — EXECUTING
-Plan: 9 of 12
-Current Plan: 6
+Plan: 10 of 12
+Current Plan: 10
 Total Plans: 12
+
+**Last completed:** Plan 02-09 (augment + barrel) at 2026-04-30T07:57Z — 4 commits (bb0eac5 RED + 3a2840b Rule 1 fix + 2b3c521 GREEN + ef00b46 barrel)
+**Next:** Plan 02-10 (broker wrapper — composition decorator per MapperEngine + MappingInspector)
 
 - **Phase:** 1 — Core essenziale
 - **Verifier verdict:** PASS (confidence HIGH) — 5/5 success criteria VERIFIED, 27/27 REQ-IDs done, 8/8 gate CI passati. Vedi `.planning/phases/01-core-essenziale/VERIFICATION.md`.
 - **Status:** Ready to execute
-- **Progress:** [████████░░] 83%
+- **Progress:** [█████████░] 87%
 
 ## Phases Overview
 
@@ -72,6 +75,7 @@ Total Plans: 12
 | Phase 02 P02-06 | 2min | 1 tasks | 2 files |
 | Phase 02 PP02-07 | 54min | 3 tasks | 2 files |
 | Phase 02 P08 | 12min | 1 tasks | 2 files |
+| Phase 02 P09 | 17min | 2 tasks | 8 files |
 
 ## Accumulated Context
 
@@ -118,6 +122,9 @@ Total Plans: 12
 | `CanonicalRegistry` pattern F1 TopicRegistry replicato + estensioni F2 | Replica diretta del pattern F1 (idempotent register, observer pattern con try/catch swallow, list() copia ordinata) + estensioni F2: `requires` resolution check al register (D-36), `unregister(id)` per cascade plugin (D-26 ext F2), `RegisterOptions.strict?: boolean` opt-in per detection accidentale duplicati (quality-of-life). Listener riceve `CanonicalSchema` completo (NON solo id) per supportare Inspector/MetricsCollector F6. | 02-03-SUMMARY.md |
 | `AliasRegistry` pattern F1 TopicRegistry esteso con due livelli di scope | Replica F1 (idempotent register, list() copia ordinata) + estensione F2 critica: `Map<pluginId, Map<localField, canonicalField>>` per scope isolation (T-02-04-02). Resolution order D-40 (livelli 2-4: scoped > global > name-match) + ambiguity flag D-41 (`true` solo per alias automatici, `false` per name-match). Conflict throw `alias.{global,scoped}.conflict` su pair conflittuale (T-02-04-03 anti-shadow). Errori sono Error nativi (NON BrokerError) — module auto-contenuto, wrapping eventuale delegato al consumer mapper-engine plan 02-07. Chiude PRD §39 open issue #1 (precedenza esplicito vs alias automatici) per costruzione: il mapper-engine valuta livello 1 (esplicito) PRIMA di chiamare `resolve`. | 02-04-SUMMARY.md |
 | `TransformPipeline` pattern F1 try/catch wrap (safeTapStep) replicato + escalation policy D-44 (block/skip/fallback) | Pattern try/catch shape identico a `safeTapStep` di event-tap.ts F1 ma con escalation policy invece di silent swallow. `apply(name, input, ctx, onFailure, defaultValue?)` decide cosa fare su throw: 'block' (default) → throw wrapped `BrokerError 'mapping.transform.failed'` con `originalError`+`cause` ES2022 (D-45); 'skip' → ritorna `undefined`; 'fallback' → applica defaultValue se fornito, altrimenti downgrade a 'skip'. `Entry { descriptor, ownerId? }` separa descrittore (immutabile post-register) da ownership (cascade D-26 ext F2). `transform.id.duplicate` throw indipendentemente da ownerId; `transform.not-found` throw indipendentemente da onFailure (caller bug guard). Non-Error throw values wrapped via `String(err)`. Chiude PRD §39 open issue #4 (VAL-09 — transform failure: skip o block). | 02-05-SUMMARY.md |
+| Plan 02-09 Rule 1 fix: rimossi placeholder `unknown` da `BrokerConfig` di core per abilitare TS declaration merging F2 | TS rifiuta merging che narrow `unknown` a tipo specifico (TS2717). PLAN preamble dice "NESSUNA modifica a packages/core/src/" ma D-56 richiede esplicitamente declaration merging dai package downstream — i due vincoli sono in conflitto tecnico. Risolto seguendo D-56 intent: rimossi 7 field placeholder (canonicalModel/aliasRegistry/transforms/routes/transport/workers/cache); mantenuto `topicSchemas` (V2 deferred). `BrokerConfigSchema` Valibot da `v.object` a `v.looseObject` per pass-through. Test core 248/248 passing (no regression). | 02-09-SUMMARY.md |
+| Plan 02-09 tree-shake mitigation 3-layer per `__augmentLoaded` side-effect | tsup `treeshake: true` rimuove `import './augment'` da `dist/index.js` anche con sideEffects array. Mitigation: (1) re-export `__augmentLoaded` dal barrel forza preservation dell'import; (2) sideEffects array esteso a 4 patterns (`./dist/augment.js`, `./src/augment.ts`, `**/augment.{js,ts}`); (3) `dist/augment.js` come entry separata (utenti possono `import '@sembridge/mapper/augment'` esplicitamente). Verificato: dist/index.js contiene `var __augmentLoaded = true;`. | 02-09-SUMMARY.md |
+| Plan 02-09 `F2PipelineStep` literal union additive come workaround a TS limitazione type alias | `PipelineStep` di core è type alias literal union, NON interface. TS non permette declaration merging di type alias. Soluzione: barrel mapper esporta `F2PipelineStep` come literal union additive separato con i 5 step F2 (D-50). Consumer F2 fa `type AllSteps = PipelineStep \| F2PipelineStep`. F1 step da core (subset) restano validi. F6 potrà refactor `PipelineStep` da type alias a interface union per veri declaration merging (T-02-09-05 disposition). | 02-09-SUMMARY.md |
 
 ### Open Issues PRD §39 — Phase Assignment
 
@@ -126,7 +133,7 @@ Total Plans: 12
 | Open Issue | Phase | Status |
 |------------|-------|--------|
 | Precedenza alias automatici vs mapping esplicito | F2 (MAP-17) | **Closed in 02-04** (AliasRegistry + contract resolve documentato; il mapper-engine plan 02-07 valuta livello 1 esplicito PRIMA di chiamare resolve, quindi esplicito vince per costruzione) |
-| Ordine pipeline mapping/validazione | F1 (skeleton) + F2/F3/F6 (riempimento) | Pending |
+| Ordine pipeline mapping/validazione | F1 (skeleton) + F2/F3/F6 (riempimento) | **Partial closed in 02-09** (PIPE-01: F2PipelineStep esposto come literal union additive dal barrel mapper; runtime pipeline orchestration al broker wrapper plan 02-10) |
 | Field mancante: errore o default | F2 (VAL-08) | Pending |
 | Transform failure: skip o block | F2 (VAL-09) | **Closed in 02-05** (TransformPipeline.apply con onFailure 'block'/'skip'/'fallback' D-44 + cause chaining ES2022 D-45 via createBrokerError; default 'block' enforced; non-Error throw values wrapped) |
 | Topic senza route | F3 (ROUTE-16) | Pending |
@@ -165,12 +172,12 @@ Total Plans: 12
 - [x] Eseguire Plan 02-03 (Wave 3 — `CanonicalRegistry` con TDD RED→GREEN: register/has/get/list/onRegistered/unregister + requires resolution D-36 + RegisterOptions.strict opt-in) — completato 2026-04-29 (1 task TDD RED→GREEN, 2 commit 4d9ca60+a5515c6, 11/11 test passing, MAP-01/MAP-02 done; deepFreeze runtime D-04 deferred a plan 02-07 mapper-engine come documentato in T-02-03-03)
 - [x] Eseguire Plan 02-04 (Wave 3 paralleli — `AliasRegistry` con global+plugin-scoped + resolution order D-40 + warning ambiguità D-41) — completato 2026-04-29 (1 task TDD RED→GREEN, 2 commit 018b867+e1517ee, 16/16 test alias-registry + 27/27 mapper full passing, MAP-16/MAP-17 done runtime; chiude PRD §39 open issue #1 per costruzione)
 - [x] Eseguire Plan 02-05 (Wave 3 — `TransformPipeline` con register + apply + onFailure policy D-44/D-45) — completato 2026-04-29 (1 task TDD RED→GREEN, 2 commit 84377d7+bf57216, 14/14 test passing, MAP-12/VAL-09 done runtime; chiude PRD §39 open issue #4)
-- [ ] Eseguire Plan 02-06 (Wave 3 paralleli — `valibotAdapter` implementazione `ValidatorAdapter` interface NO-throw)
-- [ ] Eseguire Plan 02-07 (Wave 4 — `MapperEngine` cuore F2: compileMappings + applyOutputMap + applyInputMap + tap orchestration 5 nuovi step)
-- [ ] Eseguire Plan 02-08 (Wave 5 — broker-mapper-wrapper: composition decorator per agganciare MapperEngine al Broker F1 senza modificare bus.ts)
-- [ ] Eseguire Plan 02-09 (Wave 6 — augment.ts TS declaration merging + barrel mapper finale + Inspector wiring)
-- [ ] Eseguire Plan 02-10 (Wave 7 — integration test scenario meteo PRD §29 senza HTTP)
-- [ ] Eseguire Plan 02-11 (Wave 7 — cycle detection integration test + mapping.error event + plugin-cleanup mapper cascade)
+- [x] Eseguire Plan 02-06 (Wave 3 paralleli — `valibotAdapter` implementazione `ValidatorAdapter` interface NO-throw) — completato 2026-04-29
+- [x] Eseguire Plan 02-07 (Wave 4 — `MapperEngine` cuore F2: compileMappings + applyOutputMap + applyInputMap + tap orchestration 5 nuovi step) — completato 2026-04-30
+- [x] Eseguire Plan 02-08 (Wave 5 — `MappingInspector` extension EventTap + wrapTap composition helper) — completato 2026-04-30
+- [x] Eseguire Plan 02-09 (Wave 5 — augment.ts TS declaration merging + barrel mapper finale) — completato 2026-04-30 (2 task, 17min, 4 commit: bb0eac5 RED + 3a2840b Rule 1 fix + 2b3c521 GREEN + ef00b46 barrel; 6 augment test passing + 93 mapper tests + 248 core tests no regression; MAP-03/MAP-13/MAP-14/PIPE-01 done)
+- [ ] Eseguire Plan 02-10 (Wave 6 — broker-mapper-wrapper: composition decorator per agganciare MapperEngine + MappingInspector al Broker F1 senza modificare bus.ts)
+- [ ] Eseguire Plan 02-11 (Wave 7 — integration test scenario meteo PRD §29 senza HTTP)
 - [ ] Eseguire Plan 02-12 (Wave 8 final gate F2 — coverage v8 ≥ 90% + publint/attw/size-limit estesi + DOC-03 README scenario meteo + JSDoc + gsd-verifier)
 
 ### Active Blockers
