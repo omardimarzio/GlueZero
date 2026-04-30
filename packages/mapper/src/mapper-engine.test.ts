@@ -762,6 +762,40 @@ describe('MapperEngine — chunk C: cycle / validation / cascade', () => {
     )
   })
 
+  it("Test 25h: WR-D iter2 — validateCanonical with required:true + null value → type mismatch (NOT missing)", () => {
+    // Document behavior: il campo required con valore `null` esplicito è semanticamente
+    // diverso da "missing". `present = name in obj` ritorna true → la branch
+    // `required && !present` è skipped → procede con type check → null !== string →
+    // issue type mismatch (expected: 'string', received: 'null').
+    //
+    // Per "required-and-not-null" SQL-like, il consumer deve usare un transform
+    // pre-step (vedi README "Field policy" WR-D iter2 note) o type: 'any'.
+    const { engine, canonical } = makeEngine()
+    canonical.register({
+      id: 'sch25h' as CanonicalSchemaId,
+      fields: { location: { type: 'string', required: true } },
+    })
+    const result = engine.validateCanonical('sch25h' as CanonicalSchemaId, { location: null })
+    expect(result.ok).toBe(false)
+    if (!result.ok) {
+      expect(result.issues).toHaveLength(1)
+      const issue = result.issues[0]!
+      expect(issue.path).toEqual(['location'])
+      expect(issue.expected).toBe('string')
+      expect(issue.received).toBe('null')
+      // Verifica che NON è "missing" — il behavior è esplicitamente type mismatch.
+      expect(issue.message).toMatch(/expected string, received null/)
+      expect(issue.message).not.toMatch(/missing/)
+    }
+
+    // Contrast: key veramente assente → issue 'missing'.
+    const resultMissing = engine.validateCanonical('sch25h' as CanonicalSchemaId, {})
+    expect(resultMissing.ok).toBe(false)
+    if (!resultMissing.ok) {
+      expect(resultMissing.issues[0]?.message).toMatch(/missing/)
+    }
+  })
+
   it("Test 25f: WR-03 fix — compileMappings rejects __proto__/constructor/prototype as canonicalField", () => {
     const { engine, canonical } = makeEngine()
     canonical.register({

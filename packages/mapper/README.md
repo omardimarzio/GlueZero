@@ -214,6 +214,8 @@ Configurabile per campo nello schema canonico (`FieldDescriptor.required: boolea
 
 I `default` sono valori statici (no funzioni). Per default dinamici (timestamp, UUID, ecc.) usa `derive` con un transform registrato (D-43).
 
+> **WR-D iter2 — Semantica `null` su required field:** un field con `required: true` e valore `null` esplicito nel payload genera un type mismatch (`mapping.canonical.validation.failed` con `expected: 'string'`, `received: 'null'`), **NON** `mapping.field.missing`. "Missing" qui significa "key non presente nel payload object" (`!(name in obj)`). Per un comportamento "required-and-not-null" SQL-like, usa un transform pre-step che valida `null` esplicitamente, oppure dichiara il field con `type: 'any'` se il consumer accetta `null` come valore valido.
+
 ## Transform failure policy (VAL-09 — chiusura PRD §39 #4)
 
 Configurabile per campo (`FieldDescriptor.onFailure: 'block' | 'skip' | 'fallback'`, default `'block'`):

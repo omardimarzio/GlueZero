@@ -349,6 +349,16 @@ export class MapperEngine {
    * NB: `field.default` NON è applicato dalla validation (il default è gestito da
    * `applyMapping` D-42); validation valuta lo state finale del canonical.
    *
+   * WR-D iter2 — Semantica `null` vs `missing`:
+   * Un field `required: true` con valore `null` esplicito (`{ field: null }`) viene
+   * trattato come **type mismatch**, NON come "missing". Il check `name in obj`
+   * ritorna true (la key esiste), quindi la branch `required && !present` è skipped;
+   * poi `matchesFieldType(null, 'string')` ritorna false → issue
+   * `expected: 'string', received: 'null'`. "Missing" significa stricly "key non
+   * presente nel payload object". Per "required-and-not-null" SQL-like, il consumer
+   * deve usare un transform pre-step che valida `null` esplicitamente, oppure
+   * dichiarare il field con `type: 'any'`. Documentato nel README §Field policy.
+   *
    * V1.x potrà costruire dinamicamente uno schema Valibot da `FieldDescriptor.type` via
    * `this.validator.validate(...)` per typed validation più ricca (es. format string).
    *
