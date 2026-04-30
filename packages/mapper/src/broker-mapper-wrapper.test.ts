@@ -526,6 +526,42 @@ describe('MapperBroker · CR-05 fix bootstrapFromConfig error handling', () => {
     }).not.toThrow()
   })
 
+  it('WR-B iter2: throws bootstrap.canonical.duplicate on duplicate schema id (NOT cycle)', () => {
+    // Pre-iter2: due schema con stesso id passavano silently nel topological sort
+    // (idToSchema.set sovrascrive); poi result.length !== schemas.length → throw
+    // 'bootstrap.canonical.requires.cycle' fuorviante.
+    // Iter2 fix: detection esplicita di duplicate id → BrokerError dedicato.
+    let threw = false
+    try {
+      new MapperBroker({
+        runtime: { logLevel: 'silent' },
+        canonicalModel: {
+          schemas: [
+            {
+              id: 'a' as CanonicalSchemaId,
+              fields: { x: { type: 'string' as const } },
+            },
+            {
+              id: 'a' as CanonicalSchemaId, // duplicate id
+              fields: { y: { type: 'string' as const } },
+            },
+          ],
+        },
+      })
+    } catch (err) {
+      threw = true
+      expect(isBrokerError(err)).toBe(true)
+      if (isBrokerError(err)) {
+        expect(err.code).toBe('bootstrap.canonical.duplicate')
+        expect(err.category).toBe('config')
+        // Il messaggio NON deve menzionare 'cycle' (semantically wrong)
+        expect(err.message).not.toMatch(/cycle/i)
+        expect(err.details).toMatchObject({ schemaId: 'a' })
+      }
+    }
+    expect(threw).toBe(true)
+  })
+
   it('wraps bootstrap errors via logger and re-throws BrokerError (consumer notified)', () => {
     // Schema con cyclical requires (forecast→user; user→forecast) → impossibile da risolvere.
     // CR-05 fix: il bootstrap throw un BrokerError con context, NON crash silente.

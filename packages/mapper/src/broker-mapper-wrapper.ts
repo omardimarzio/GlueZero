@@ -710,7 +710,21 @@ export class MapperBroker {
     schemas: readonly CanonicalSchema[],
   ): readonly CanonicalSchema[] {
     const idToSchema = new Map<string, CanonicalSchema>()
-    for (const s of schemas) idToSchema.set(s.id, s)
+    // WR-B iter2: detection esplicita di duplicate schema id PRIMA del topo sort.
+    // Senza questa guard, due schema con stesso id farebbero `idToSchema.set`
+    // overwrite, poi `result.length !== schemas.length` causerebbe un throw
+    // 'bootstrap.canonical.requires.cycle' fuorviante (non c'è ciclo, c'è duplicato).
+    for (const s of schemas) {
+      if (idToSchema.has(s.id)) {
+        throw createBrokerError({
+          code: 'bootstrap.canonical.duplicate',
+          category: 'config',
+          message: `Duplicate canonical schema id "${s.id}" in canonicalModel.schemas`,
+          details: { section: 'canonicalModel', schemaId: s.id },
+        })
+      }
+      idToSchema.set(s.id, s)
+    }
 
     // In-degree: numero di requires PRESENTI nel config (gli external sono ignorati
     // — il register li gestirà come canonical.requires.unresolved).
