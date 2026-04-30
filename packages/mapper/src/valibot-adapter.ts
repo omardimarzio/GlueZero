@@ -105,9 +105,7 @@ function mapIssue(issue: ValibotIssue): ValidationIssue {
  * `v.safeParse`. Un cast non-checked può silently passare un object `{}` all'
  * adapter e ritornare ok:true se Valibot non triggera throw — fail-fast invece.
  */
-function isValibotSchema(
-  s: unknown,
-): s is v.BaseSchema<unknown, unknown, v.BaseIssue<unknown>> {
+function isValibotSchema(s: unknown): s is v.BaseSchema<unknown, unknown, v.BaseIssue<unknown>> {
   if (typeof s !== 'object' || s === null) return false
   const obj = s as { kind?: unknown; '~run'?: unknown }
   return obj.kind === 'schema' && typeof obj['~run'] === 'function'

@@ -358,8 +358,7 @@ export class MapperBroker {
     // condividono lo stesso `eventId` e l'Inspector V2/F6 può correlare gli snapshot
     // cross-step senza heuristic (topic + timestamp). Se il chiamante ha già fornito
     // un id custom (raro ma supportato da PublishParams.id), lo rispettiamo.
-    const preAllocatedEventId =
-      (options as { id?: string }).id ?? nanoid()
+    const preAllocatedEventId = (options as { id?: string }).id ?? nanoid()
 
     if (sourcePluginId !== undefined && this.mapper.hasCompiled(sourcePluginId)) {
       try {
@@ -522,16 +521,15 @@ export class MapperBroker {
     // logger.error) per visibilità debug consumer-side via getDebugSnapshot().mappings.
     const recordCascadeError = (step: string, err: unknown): void => {
       this.logger.error(`MapperBroker: ${step} cascade failed`, { pluginId: id, error: err })
-      const wrapped =
-        isBrokerError(err)
-          ? err
-          : createBrokerError({
-              code: 'plugin.cascade.failed',
-              category: 'plugin',
-              message: `Plugin "${id}" cascade step "${step}" failed`,
-              ...(err instanceof Error && { originalError: err }),
-              details: { pluginId: id, step },
-            })
+      const wrapped = isBrokerError(err)
+        ? err
+        : createBrokerError({
+            code: 'plugin.cascade.failed',
+            category: 'plugin',
+            message: `Plugin "${id}" cascade step "${step}" failed`,
+            ...(err instanceof Error && { originalError: err }),
+            details: { pluginId: id, step },
+          })
       this.inspector.recordError(wrapped)
     }
     try {
@@ -801,9 +799,7 @@ export class MapperBroker {
    *
    * @throws `BrokerError 'bootstrap.canonical.requires.cycle'` se il grafo ha cicli.
    */
-  private topologicalSortSchemas(
-    schemas: readonly CanonicalSchema[],
-  ): readonly CanonicalSchema[] {
+  private topologicalSortSchemas(schemas: readonly CanonicalSchema[]): readonly CanonicalSchema[] {
     const idToSchema = new Map<string, CanonicalSchema>()
     // WR-B iter2: detection esplicita di duplicate schema id PRIMA del topo sort.
     // Senza questa guard, due schema con stesso id farebbero `idToSchema.set`

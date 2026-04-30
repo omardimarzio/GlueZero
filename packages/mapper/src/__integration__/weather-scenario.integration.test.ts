@@ -132,8 +132,7 @@ describe('Scenario meteo PRD §29 — end-to-end senza HTTP (D-53, success crite
     // `metadata.pluginId === 'plugin-form'` (publisher source plugin id).
     const sourceResolvedSnaps = harness.byStep('event.source.resolved' as never)
     const publisherSourceResolved = sourceResolvedSnaps.find(
-      (s) =>
-        (s.metadata as { pluginId?: string } | undefined)?.pluginId === 'plugin-form',
+      (s) => (s.metadata as { pluginId?: string } | undefined)?.pluginId === 'plugin-form',
     )
     const mappedCanonicalSnap = harness.byStep('event.mapped.canonical' as never)[0]
     const canonicalValidatedSnap = harness.byStep('event.canonical.validated' as never)[0]

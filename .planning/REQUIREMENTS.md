@@ -38,7 +38,7 @@ Tutti i requisiti elencati sono table stakes (vincolanti dalla checklist PRD §4
 - [x] **MAP-08**: Mapper supporta normalizzazione unità di misura *(PRD §14.2.5)*
 - [x] **MAP-09**: Mapper supporta derivazione di campo (`$derive` da campi multipli con transform) *(PRD §14.2.6, §14.5)*
 - [x] **MAP-10**: Mapper supporta mapping parziale *(PRD §14.2.7)*
-- [ ] **MAP-11**: Validazione post-mapping integrata *(PRD §14.2.8, §21.2.4)*
+- [x] **MAP-11**: Validazione post-mapping integrata *(PRD §14.2.8, §21.2.4)*
 - [x] **MAP-12**: `registerTransform(name, fn)` per trasformazioni custom; pipeline con gestione errori e fallback *(PRD §14.6, §16.2)*
 - [x] **MAP-13**: Default V1 — canonicalizzazione interna completa: i dati transitano canonicalizzati internamente *(PRD §13.5)*
 - [x] **MAP-14**: Mapping bidirezionale canonico → locale plugin in consegna ai consumer *(PRD §14.1)*
@@ -213,7 +213,7 @@ Mappatura definitiva REQ-ID → fase. Ogni requisito è assegnato alla **prima f
 | MAP-08 | Phase 2 | Complete | — |
 | MAP-09 | Phase 2 | Complete | `$derive` con concat e similari |
 | MAP-10 | Phase 2 | Complete | — |
-| MAP-11 | Phase 2 | Pending | Pipeline post-mapping |
+| MAP-11 | Phase 2 | Complete | Pipeline post-mapping (validateCanonical ai passi 6+12) |
 | MAP-12 | Phase 2 | Complete | `registerTransform(name, fn)` + fallback policy |
 | MAP-13 | Phase 2 | Complete | Default V1 — canonicalizzazione interna completa |
 | MAP-14 | Phase 2 | Complete | Step 11 della pipeline §28 |

@@ -50,7 +50,7 @@
 
 import type { BrokerLogger, PluginDescriptor } from '@sembridge/core'
 import { createBrokerError } from '@sembridge/core'
-import type { AliasRegistry } from './alias-registry'
+import type { AliasRegistry, AliasResolution } from './alias-registry'
 import type { CanonicalRegistry } from './canonical-registry'
 import type { TransformPipeline } from './transform-pipeline'
 import type {
@@ -471,7 +471,11 @@ export class MapperEngine {
           details: { canonicalField },
         })
       }
-      if (rule.source !== undefined && !rule.source.includes('.') && RESERVED_KEYS.has(rule.source)) {
+      if (
+        rule.source !== undefined &&
+        !rule.source.includes('.') &&
+        RESERVED_KEYS.has(rule.source)
+      ) {
         throw createBrokerError({
           code: 'mapping.field.invalid',
           category: 'mapping',
@@ -715,7 +719,7 @@ export class MapperEngine {
       // D-40 livello 1: se il localField è già consumato da mapping esplicito, skip.
       if (explicitLocals.has(localField)) continue
       // D-40 livelli 2-3: consulta alias registry.
-      let resolution
+      let resolution: AliasResolution
       try {
         resolution = this.aliasRegistry.resolve(pluginId, localField)
       } catch {

@@ -762,7 +762,7 @@ describe('MapperEngine — chunk C: cycle / validation / cascade', () => {
     )
   })
 
-  it("Test 25h: WR-D iter2 — validateCanonical with required:true + null value → type mismatch (NOT missing)", () => {
+  it('Test 25h: WR-D iter2 — validateCanonical with required:true + null value → type mismatch (NOT missing)', () => {
     // Document behavior: il campo required con valore `null` esplicito è semanticamente
     // diverso da "missing". `present = name in obj` ritorna true → la branch
     // `required && !present` è skipped → procede con type check → null !== string →
@@ -796,7 +796,7 @@ describe('MapperEngine — chunk C: cycle / validation / cascade', () => {
     }
   })
 
-  it("Test 25f: WR-03 fix — compileMappings rejects __proto__/constructor/prototype as canonicalField", () => {
+  it('Test 25f: WR-03 fix — compileMappings rejects __proto__/constructor/prototype as canonicalField', () => {
     const { engine, canonical } = makeEngine()
     canonical.register({
       id: 'sch25f' as CanonicalSchemaId,
@@ -819,7 +819,7 @@ describe('MapperEngine — chunk C: cycle / validation / cascade', () => {
     }
   })
 
-  it("Test 25g: WR-03 fix — readPath returns undefined for reserved keys (prototype pollution guard)", () => {
+  it('Test 25g: WR-03 fix — readPath returns undefined for reserved keys (prototype pollution guard)', () => {
     const { engine, canonical } = makeEngine()
     canonical.register({
       id: 'sch25g' as CanonicalSchemaId,
