@@ -101,12 +101,26 @@ describe('Scenario meteo PRD §29 — end-to-end senza HTTP (D-53, success crite
     // Verifica che il tap ha visto la pipeline F1 (event.received → ... → event.delivered)
     expect(harness.byStep('event.received').length).toBeGreaterThan(0)
     expect(harness.byStep('event.delivered').length).toBeGreaterThan(0)
-    // CR-01 fix verification: il tap ha visto anche i 4 step F2 (D-50, vincolo
+    // CR-01 fix verification: il tap ha visto i 5 step F2 (D-50, vincolo
     // architetturale CLAUDE.md "EventTap interface deve essere instrumentata già in F1").
+    // CR-01-RESIDUAL iter2: aggiunto verify per event.source.resolved (5° step F2).
+    expect(harness.byStep('event.source.resolved' as never).length).toBeGreaterThan(0)
     expect(harness.byStep('event.mapped.canonical' as never).length).toBeGreaterThan(0)
     expect(harness.byStep('event.canonical.validated' as never).length).toBeGreaterThan(0)
     expect(harness.byStep('event.mapped.consumer' as never).length).toBeGreaterThan(0)
     expect(harness.byStep('event.final.validated' as never).length).toBeGreaterThan(0)
+
+    // WR-C iter2 verification: gli step subscribe-side (11/12) usano il BrokerEvent.id
+    // reale come `eventId` (NON il placeholder `f2:topic:step`). Il `BrokerEvent.id` di
+    // F1 è generato da nanoid — controlliamo che NON sia il placeholder string.
+    const consumerSnap = harness.byStep('event.mapped.consumer' as never)[0]
+    const finalSnap = harness.byStep('event.final.validated' as never)[0]
+    expect(consumerSnap?.eventId).toBeDefined()
+    expect(consumerSnap?.eventId).not.toMatch(/^f2:/)
+    expect(finalSnap?.eventId).toBeDefined()
+    expect(finalSnap?.eventId).not.toMatch(/^f2:/)
+    // Coerenza: i due step subscribe-side condividono lo stesso BrokerEvent.id.
+    expect(consumerSnap?.eventId).toBe(finalSnap?.eventId)
   })
 
   it('multiple consumers with different inputMap receive different shapes (TEST-02)', async () => {

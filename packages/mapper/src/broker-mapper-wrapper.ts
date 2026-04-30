@@ -210,14 +210,19 @@ export class MapperBroker {
   private readonly inspector: MappingInspector
   private readonly logger: BrokerLogger
   /**
-   * Tap composto (D-50, CR-01) — invocato sui 4 step F2 della pipeline §28
-   * (`event.mapped.canonical`, `event.canonical.validated`, `event.mapped.consumer`,
-   * `event.final.validated`). Composizione `wrapTap(userTap, inspector)` applicata in
-   * constructor: prima viene chiamato il tap utente, poi `inspector.recordSnapshot`.
+   * Tap composto (D-50, CR-01, CR-01-RESIDUAL iter2) — invocato sui 5 step F2 della
+   * pipeline §28 (`event.source.resolved`, `event.mapped.canonical`,
+   * `event.canonical.validated`, `event.mapped.consumer`, `event.final.validated`).
+   * Composizione `wrapTap(userTap, inspector)` applicata in constructor: prima viene
+   * chiamato il tap utente, poi `inspector.recordSnapshot`.
    *
    * Vincolo architetturale (CLAUDE.md "EventTap interface deve essere instrumentata"):
    * gli step F2 sono **strumentati già in F2** anche con inspector no-op — F6
    * sostituirà il no-op `recordSnapshot` con full per-event snapshot SENZA retrofit.
+   *
+   * Iter2: `event.source.resolved` (passo 4 pipeline §28) emesso ANCHE consumer-side
+   * (in `wrapConsumerHandler`) per simmetria — F6 può differenziare publisher vs
+   * consumer via `metadata.pluginId`.
    */
   private readonly tap: EventTap
   private readonly ownership = new Map<string, OwnershipEntry>()
@@ -268,12 +273,19 @@ export class MapperBroker {
 
   /**
    * Costruisce un `PipelineSnapshot` minimo per gli step F2 della pipeline §28
-   * (CR-01 fix). Compatibile con il pattern F1 `safeTapStep + startStep` di
-   * `@sembridge/core/core/event-tap.ts`.
+   * (CR-01 fix, WR-C iter2). Compatibile con il pattern F1 `safeTapStep + startStep`
+   * di `@sembridge/core/core/event-tap.ts`.
    *
    * Note D-48: `payloadBefore`/`payloadAfter` sono full per-event snapshot
-   * deferred a F6. F2 V1 emette snapshot leggero (eventId placeholder topic-based,
-   * step, timestamp, durationMs=0).
+   * deferred a F6. F2 V1 emette snapshot leggero.
+   *
+   * WR-C iter2: `extras.eventId` (se fornito dal caller) sovrascrive il placeholder
+   * `f2:${topic}:${step}`. Subscribe-side il `BrokerEvent.id` reale (nanoid generato
+   * da `inner.publish`) è disponibile in `wrapConsumerHandler` e viene propagato
+   * agli step 11/12. Publish-side (step 4/5/6) il placeholder resta in uso perché
+   * l'evento non è ancora stato generato dal `inner.publish` — F6 dovrà comunque
+   * normalizzare la correlation publisher↔subscriber via `correlationId` o
+   * topic+timestamp.
    */
   private makeF2Snapshot(
     step: PipelineStep,
@@ -281,6 +293,7 @@ export class MapperBroker {
     extras: Partial<PipelineSnapshot> = {},
   ): PipelineSnapshot {
     return {
+      // Default placeholder; overridden by `extras.eventId` se fornito (WR-C iter2).
       eventId: `f2:${topic}:${step}`,
       topic,
       step,
@@ -327,6 +340,14 @@ export class MapperBroker {
 
     if (sourcePluginId !== undefined && this.mapper.hasCompiled(sourcePluginId)) {
       try {
+        // CR-01-RESIDUAL iter2: emette il 5° step F2 (event.source.resolved, passo 4
+        // pipeline §28 — identificazione plugin sender + lookup outputMap). Va emesso
+        // PRIMA di applyOutputMap così il tap vede l'identificazione del source come
+        // step distinto dal mapping. F6 sostituirà recordSnapshot no-op SENZA retrofit
+        // (vincolo architetturale CLAUDE.md).
+        this.emitF2Tap('event.source.resolved' as PipelineStep, topic, {
+          metadata: { pluginId: sourcePluginId },
+        })
         // Step 5: applyOutputMap (locale → canonical)
         canonicalPayload = this.mapper.applyOutputMap(sourcePluginId, payload)
         // CR-01 fix: invoca tap dopo step 5 (event.mapped.canonical, D-50).
@@ -578,10 +599,11 @@ export class MapperBroker {
    * Ritorna l'istanza `MappingInspector` per consumo da test/debug consumer-side.
    *
    * L'Inspector è composto col tap utente in constructor via `wrapTap(userTap, inspector)`
-   * (CR-01 fix) — i 4 step F2 della pipeline §28 (`event.mapped.canonical`,
-   * `event.canonical.validated`, `event.mapped.consumer`, `event.final.validated`) invocano
-   * questo tap composto, garantendo che sia il tap utente sia l'Inspector vedano gli stessi
-   * step. F6 sostituirà `recordSnapshot` no-op con full per-event snapshot SENZA retrofit
+   * (CR-01 fix, CR-01-RESIDUAL iter2) — i 5 step F2 della pipeline §28
+   * (`event.source.resolved`, `event.mapped.canonical`, `event.canonical.validated`,
+   * `event.mapped.consumer`, `event.final.validated`) invocano questo tap composto,
+   * garantendo che sia il tap utente sia l'Inspector vedano gli stessi step. F6
+   * sostituirà `recordSnapshot` no-op con full per-event snapshot SENZA retrofit
    * (vincolo architetturale CLAUDE.md).
    */
   getMappingInspector(): MappingInspector {
@@ -863,19 +885,32 @@ export class MapperBroker {
   ): (event: BrokerEvent) => void | Promise<void> {
     return (event: BrokerEvent): void | Promise<void> => {
       try {
+        // CR-01-RESIDUAL iter2: emette `event.source.resolved` anche consumer-side
+        // (identificazione del plugin consumer prima dell'applyInputMap). Simmetria
+        // vs publish-side: il tap registra il momento in cui il pipeline determina
+        // quale plugin sta ricevendo l'evento. F6 può differenziare publisher vs
+        // consumer via `metadata.pluginId` (qui è il consumer).
+        this.emitF2Tap('event.source.resolved' as PipelineStep, event.topic, {
+          eventId: event.id,
+          metadata: { pluginId },
+        })
         // Passo 11: applyInputMap consumer-side
         const mappedPayload = this.mapper.applyInputMap(pluginId, event.payload)
         const mappedEvent: BrokerEvent = { ...event, payload: mappedPayload as never }
         // CR-01 fix: invoca tap dopo step 11 (event.mapped.consumer, D-50).
+        // WR-C iter2: `eventId` top-level usa il `BrokerEvent.id` reale (nanoid)
+        // generato da `inner.publish` — sostituisce il placeholder `f2:topic:step`.
         this.emitF2Tap('event.mapped.consumer' as PipelineStep, event.topic, {
-          metadata: { pluginId, eventId: event.id },
+          eventId: event.id,
+          metadata: { pluginId },
         })
         // Passo 12: final validation (structural pass V1 — D-39).
         // F2 V1 emette il tap senza ri-validare: il payload canonico è già stato
         // validato al passo 6 publisher-side. F6 estenderà con consumer-shape
         // validation se Inspector consumer-shaped schema sarà disponibile.
         this.emitF2Tap('event.final.validated' as PipelineStep, event.topic, {
-          metadata: { pluginId, eventId: event.id },
+          eventId: event.id,
+          metadata: { pluginId },
         })
         return handler(mappedEvent)
       } catch (err) {
