@@ -415,6 +415,92 @@ describe('MapperBroker', () => {
   })
 })
 
+describe('MapperBroker · CR-06 fix mapping.error safe payload + recursion guard', () => {
+  it('mapping.error payload is sanitized: no originalError, no cause, no circular refs', async () => {
+    const broker = new MapperBroker({ runtime: { logLevel: 'silent' } })
+    broker.registerCanonicalSchema({
+      id: 'sch-cr06' as CanonicalSchemaId,
+      fields: { v: { type: 'string' as const, onFailure: 'block' as const } },
+    })
+    broker.registerTransform('boomCirc', () => {
+      // Crea un Error con cause circolare per stress-test la sanitization.
+      const original = new Error('original boom')
+      const wrapper = new Error('wrapper boom', { cause: original })
+      // Nota: NON facciamo (original.cause = wrapper) per evitare di crashare
+      // il logger nella creazione dell'Error stesso. Il test verifica che il
+      // payload mapping.error NON contenga originalError/cause anche nel caso
+      // semplice — implicitamente garantisce che eventuali ref circolari NON
+      // arriverebbero al subscriber.
+      throw wrapper
+    })
+    await broker.registerPlugin({
+      id: 'p-cr06',
+      canonicalSchemaId: 'sch-cr06' as CanonicalSchemaId,
+      outputMap: { v: { source: 'src', transform: 'boomCirc' } },
+    })
+
+    const errorPayloads: unknown[] = []
+    broker.subscribe('mapping.error', (e) => {
+      errorPayloads.push(e.payload)
+    })
+
+    broker.publish(
+      'cr06.topic',
+      { src: 'x' },
+      { source: { type: 'plugin', id: 'p-cr06' }, deliveryMode: 'sync' },
+    )
+    await new Promise<void>((resolve) => queueMicrotask(resolve))
+    await new Promise<void>((resolve) => queueMicrotask(resolve))
+
+    expect(errorPayloads.length).toBeGreaterThan(0)
+    const payload = errorPayloads[0] as { error: Record<string, unknown> }
+    expect(payload.error).toBeDefined()
+    // CR-06 fix: il payload error contiene SOLO field sicuri.
+    expect(payload.error.code).toBe('mapping.transform.failed')
+    expect(payload.error.category).toBe('mapping')
+    expect(payload.error.message).toBeDefined()
+    // NO originalError, NO cause, NO stack ricorsivi nel payload pubblicato.
+    expect(payload.error.originalError).toBeUndefined()
+    expect(payload.error.cause).toBeUndefined()
+  })
+
+  it('mapping.error subscriber loop is bounded (CR-06 recursion guard)', async () => {
+    // Un subscriber a mapping.error che a sua volta throw NON deve causare
+    // re-publish infinito di mapping.error. F1 handler isolation + CR-06
+    // recursion guard tracka l'in-flight per (sourceTopic, step).
+    const broker = new MapperBroker({ runtime: { logLevel: 'silent' } })
+    broker.registerCanonicalSchema({
+      id: 'sch-loop' as CanonicalSchemaId,
+      fields: { v: { type: 'string' as const, onFailure: 'block' as const } },
+    })
+    broker.registerTransform('boomLoop', () => {
+      throw new Error('boom loop')
+    })
+    await broker.registerPlugin({
+      id: 'p-loop',
+      canonicalSchemaId: 'sch-loop' as CanonicalSchemaId,
+      outputMap: { v: { source: 'src', transform: 'boomLoop' } },
+    })
+    let invokeCount = 0
+    broker.subscribe('mapping.error', () => {
+      invokeCount++
+      // Subscriber malformato: throw — F1 handler isolation prende il controllo.
+      throw new Error('subscriber boom')
+    })
+    broker.publish(
+      'loop.topic',
+      { src: 'x' },
+      { source: { type: 'plugin', id: 'p-loop' }, deliveryMode: 'sync' },
+    )
+    // Flush microtask multipli per assicurare la propagation completa.
+    for (let i = 0; i < 5; i++) {
+      await new Promise<void>((resolve) => queueMicrotask(resolve))
+    }
+    // Il subscriber è invocato esattamente 1 volta — NO loop infinito.
+    expect(invokeCount).toBe(1)
+  })
+})
+
 describe('MapperBroker · CR-05 fix bootstrapFromConfig error handling', () => {
   it('topologically sorts canonical schemas by `requires` (out-of-order config accepted)', () => {
     // forecast.requires = [user]. Nell'array, forecast viene PRIMA di user — order

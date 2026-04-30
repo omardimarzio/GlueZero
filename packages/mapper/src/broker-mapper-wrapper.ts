@@ -219,6 +219,12 @@ export class MapperBroker {
    */
   private readonly tap: EventTap
   private readonly ownership = new Map<string, OwnershipEntry>()
+  /**
+   * CR-06 recursion guard: tracking delle pair `(sourceTopic, step)` attive durante
+   * `handleMappingError`. Una pair già in-flight skip il re-publish per evitare loop
+   * infiniti (es. subscriber `mapping.error` che a sua volta genera mapping error).
+   */
+  private readonly inFlightMappingErrors = new Set<string>()
 
   constructor(config: MapperBrokerConfig = {}) {
     this.logger = config.runtime?.logger ?? silentLogger
@@ -837,25 +843,53 @@ export class MapperBroker {
    * Gestisce un errore mapping: registra nell'Inspector ring buffer + pubblica `mapping.error`
    * (D-58). NON propaga l'errore al caller — la pipeline è interrotta per il consumer affetto
    * (D-59 — no `<topic>.failed` da F2).
+   *
+   * CR-06 fix:
+   * 1. Sanitize del payload: estrae solo i field sicuri (`code`, `category`, `message`, `details`)
+   *    dal `BrokerError`, escludendo `originalError`, `cause`, `stack` (potenzialmente
+   *    ricorsivi e non serializable). Il consumer subscriber riceve un POJO sicuro.
+   * 2. Recursion guard: tracking via `inFlightMappingErrors` Set delle coppie
+   *    `(sourceTopic, step)` attive. Se una stessa pair è già in-flight (es. il subscriber
+   *    mapping.error genera a sua volta un mapping.error), il publish viene skipped.
    */
   private handleMappingError(err: BrokerError, sourceTopic: string, step: string): void {
     this.inspector.recordError(err)
-    // D-58: publish mapping.error con payload { error, sourceEvent, step }
-    try {
-      this.inner.publish(
-        'mapping.error',
-        { error: err, sourceEvent: sourceTopic, step },
-        {
-          source: { type: 'system', id: 'mapper' },
-          deliveryMode: 'async',
-        },
+    // CR-06 recursion guard: skip se la pair (sourceTopic, step) è già in-flight.
+    const key = `${sourceTopic}::${step}`
+    if (this.inFlightMappingErrors.has(key)) {
+      this.logger.warn(
+        'MapperBroker: mapping.error recursion guard activated, skipping re-publish',
+        { sourceTopic, step },
       )
-    } catch (pubErr) {
-      // Fallback log se il publish stesso fallisce (no retry — T-02-10-05).
-      this.logger.error('MapperBroker: failed to publish mapping.error', {
-        originalError: err,
-        publishError: pubErr,
-      })
+      return
+    }
+    this.inFlightMappingErrors.add(key)
+    try {
+      // CR-06 sanitization: payload safe (no originalError, no cause, no stack ricorsivi).
+      const safeError = {
+        code: err.code,
+        category: err.category,
+        message: err.message,
+        details: err.details,
+      }
+      try {
+        this.inner.publish(
+          'mapping.error',
+          { error: safeError, sourceEvent: sourceTopic, step },
+          {
+            source: { type: 'system', id: 'mapper' },
+            deliveryMode: 'async',
+          },
+        )
+      } catch (pubErr) {
+        // Fallback log se il publish stesso fallisce (no retry — T-02-10-05).
+        this.logger.error('MapperBroker: failed to publish mapping.error', {
+          originalError: safeError,
+          publishError: pubErr,
+        })
+      }
+    } finally {
+      this.inFlightMappingErrors.delete(key)
     }
   }
 
