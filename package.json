@@ -49,6 +49,18 @@
       "path": "packages/mapper/dist/index.js",
       "limit": "12 KB",
       "gzip": true
+    },
+    {
+      "name": "@sembridge/routing (gzip)",
+      "path": "packages/routing/dist/index.js",
+      "limit": "6 KB",
+      "gzip": true
+    },
+    {
+      "name": "@sembridge/gateway/http (gzip)",
+      "path": "packages/gateway/dist/http/index.js",
+      "limit": "8 KB",
+      "gzip": true
     }
   ]
 }
