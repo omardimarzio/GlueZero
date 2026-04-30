@@ -772,18 +772,26 @@ export class MapperBroker {
    * Il `ctx.broker` originale è il `PluginScopedBroker` di F1 (Proxy che auto-tagga
    * `ownerId=pluginId` su ogni subscribe). Il MapperBroker lo wrappa ulteriormente per
    * applicare l'inputMap consumer-side (D-51).
+   *
+   * WR-01 fix: il Proxy precedente faceva `value.bind(target)` su ogni metodo accessed,
+   * comportamento corretto ma fragile (intercetta TUTTI i getter, non differenzia tra
+   * funzioni e getter properties). Sostituito con un Proxy più narrow che intercetta
+   * SOLO `subscribe` e delega tutto il resto via `Reflect.get` + `bind` esplicito.
+   * In questo modo l'intercept esplicita la firma assunta della scoped broker e
+   * future modifiche di F3+ alle altre method signatures verranno rilevate dal type
+   * checker invece che silently fallire.
    */
   private wrapPluginContext(ctx: PluginContext, pluginId: string): PluginContext {
-    const innerBroker = ctx.broker as ScopedBrokerLike
-    const wrappedBroker = new Proxy(innerBroker, {
+    const inner = ctx.broker as ScopedBrokerLike
+    const wrappedBroker = new Proxy(inner, {
       get: (target, prop, receiver): unknown => {
+        // Intercetta SOLO il method `subscribe` per applyInputMap consumer-side (D-51).
         if (prop === 'subscribe') {
           return (
             pattern: string,
             handler: (event: BrokerEvent) => void | Promise<void>,
             options: SubscribeOptions = {},
           ): Subscription => {
-            // Se il consumer plugin ha un inputMap compilato, wrappa l'handler
             if (this.mapper.hasInputMap(pluginId)) {
               const wrappedHandler = this.wrapConsumerHandler(pluginId, handler)
               return target.subscribe(pattern, wrappedHandler, options)
@@ -791,6 +799,10 @@ export class MapperBroker {
             return target.subscribe(pattern, handler, options)
           }
         }
+        // Per tutto il resto, forwarda con bind esplicito SOLO se il valore è una
+        // funzione (preserva `this` binding al target originale). Getter properties
+        // restituiscono il valore così com'è (NB: questo significa che future scoped
+        // broker properties non funzione sono lette al tempo di accesso, NON freezate).
         const value = Reflect.get(target, prop, receiver)
         if (typeof value === 'function') {
           return (value as (...args: unknown[]) => unknown).bind(target)
