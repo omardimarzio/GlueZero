@@ -20,7 +20,45 @@
  * `RegisterTransformOptions`, `MapperEngineStats`) NON sono ri-esportati: restano accessibili
  * solo via path relativo per consumer del monorepo (pattern F1 `index.ts:18-22`).
  *
+ * Per la documentazione utente completa (scenario meteo PRD §29, MAP-17 resolution order,
+ * VAL-08/VAL-09 policy, Mapping Inspector, cycle detection, validation adapter), vedi
+ * `packages/mapper/README.md`.
+ *
  * @packageDocumentation
+ *
+ * @example Quickstart (scenario meteo PRD §29)
+ * ```ts
+ * import { createMapperBroker, type CanonicalSchemaId } from '@sembridge/mapper'
+ *
+ * const broker = createMapperBroker({
+ *   runtime: { logLevel: 'info' },
+ *   canonicalModel: {
+ *     schemas: [
+ *       { id: 'weather' as CanonicalSchemaId, fields: { location: { type: 'string', required: true } } },
+ *     ],
+ *   },
+ *   transforms: {
+ *     parseItalianDate: (s) => {
+ *       const [d, m, y] = String(s).split('/')
+ *       return `${y}-${m}-${d}`
+ *     },
+ *   },
+ * })
+ *
+ * await broker.registerPlugin({
+ *   id: 'weather-form',
+ *   canonicalSchemaId: 'weather' as CanonicalSchemaId,
+ *   outputMap: {
+ *     location: { source: 'città' },
+ *     forecast_date: { source: 'data', transform: 'parseItalianDate' },
+ *   },
+ * })
+ *
+ * broker.publish('weather.requested', { città: 'Roma', data: '30/04/2026' }, {
+ *   source: { type: 'plugin', id: 'weather-form' },
+ * })
+ * // → consumer riceve il payload canonico { location: 'Roma', forecast_date: '2026-04-30' }
+ * ```
  */
 
 // Side-effect import — abilita TS declaration merging per PluginDescriptor + BrokerConfig.
