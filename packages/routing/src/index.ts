@@ -33,11 +33,12 @@
  * @packageDocumentation
  */
 
-// Plan 03-02 riempirà i type exports (RouteDefinition, RoutePolicies, RouteOutcome,
+// Plan 03-02 popola i type exports (RouteDefinition, RoutePolicies, RouteOutcome,
 //             RoutingConfig).
 // Plan 03-03 aggiungerà il side-effect import './augment' per il declaration merging
 //             di PluginDescriptor.routes? e BrokerConfig.routing?.
 // Plan 03-12 aggiungerà il runtime export RouterBroker + createRouterBroker (factory
 //             pubblico + Valibot validation).
 
-export {}
+// Type re-export aggregato dal barrel `./types` (plan 03-02).
+export type * from './types'

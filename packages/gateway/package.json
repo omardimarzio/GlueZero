@@ -48,6 +48,7 @@
   "dependencies": {
     "@sembridge/core": "workspace:*",
     "@sembridge/mapper": "workspace:*",
+    "@sembridge/routing": "workspace:*",
     "nanoid": "5.1.9",
     "valibot": "1.3.1"
   },
