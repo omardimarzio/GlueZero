@@ -276,7 +276,7 @@ I 11 punti che il PRD §39 vieta esplicitamente di lasciare impliciti vengono ch
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Core essenziale | 11/11 | ✅ Complete & Verified | 2026-04-29 |
-| 2. Canonical Model & Mapper | 9/12 | In Progress | - |
+| 2. Canonical Model & Mapper | 11/12 | In Progress | - |
 | 3. Routing & Server Gateway HTTP | 0/0 | Not started | - |
 | 4. Realtime inbound | 0/0 | Not started | - |
 | 5. Worker Runtime | 0/0 | Not started | - |
@@ -285,4 +285,4 @@ I 11 punti che il PRD §39 vieta esplicitamente di lasciare impliciti vengono ch
 ---
 
 *Roadmap created: 2026-04-28*
-*Last updated: 2026-04-30 — **Phase 2 In Progress** (9/12 plan completi: 02-01..02-08 più 02-09 augment+barrel commit bb0eac5+3a2840b+2b3c521+ef00b46 — 109 LOC augment.ts + 104 LOC test + 128 LOC barrel + Rule 1 fix per rimuovere placeholder unknown da BrokerConfig core, 6/6 augment test + 93/93 mapper full + 248/248 core no regression, MAP-03/MAP-13/MAP-14 done + PIPE-01 partial via F2PipelineStep additive). **Phase 1 COMPLETE & VERIFIED** (gsd-verifier PASS confidence HIGH; 5/5 success criteria, 27/27 REQ-IDs, 8/8 gate CI).*
+*Last updated: 2026-04-30 — **Phase 2 In Progress** (11/12 plan completi: 02-01..02-11 — incluso 02-10 broker wrapper a53c260 + 02-11 integration tests eb923fe+585f266; 14 mapper test files / 136 test passing + core 248 invariati D-49 confermato; MAP-02/MAP-03/MAP-13/MAP-14/MAP-15/ERR-02/LIFE-02/PIPE-01/TEST-01/TEST-02 done; tutti i 5 success criteria F2 ROADMAP coperti via 5 integration test files 1:1; aperti per plan 02-12 final gate F2 con coverage v8 + DOC-03). **Phase 1 COMPLETE & VERIFIED** (gsd-verifier PASS confidence HIGH; 5/5 success criteria, 27/27 REQ-IDs, 8/8 gate CI).*

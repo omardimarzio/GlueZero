@@ -127,8 +127,8 @@ Tutti i requisiti elencati sono table stakes (vincolanti dalla checklist PRD §4
 - [ ] **SEC-05**: Controllo sugli endpoint consentiti (URL allowlist) *(PRD §26.2)*
 
 #### Test
-- [ ] **TEST-01**: Unit test su pub/sub, unsubscribe, wildcard, mapping, reverse mapping, trasformazioni, dedupe, retry/timeout, route HTTP, route worker, realtime normalization, lifecycle cleanup *(PRD §35.1)*
-- [ ] **TEST-02**: Integration test: plugin A → broker → plugin B con mapping diverso; plugin → broker → server → broker → plugin; plugin → broker → worker → broker → plugin; cache hit/miss; reconnect realtime; error propagation completa *(PRD §35.2)*
+- [x] **TEST-01**: Unit test su pub/sub, unsubscribe, wildcard, mapping, reverse mapping, trasformazioni, dedupe, retry/timeout, route HTTP, route worker, realtime normalization, lifecycle cleanup *(PRD §35.1)*
+- [x] **TEST-02**: Integration test: plugin A → broker → plugin B con mapping diverso; plugin → broker → server → broker → plugin; plugin → broker → worker → broker → plugin; cache hit/miss; reconnect realtime; error propagation completa *(PRD §35.2)*
 - [ ] **TEST-03**: Test di robustezza: storm di eventi, plugin mal configurato, server con schema inatteso, worker timeout, riconnessione ripetuta, topic con molti subscriber *(PRD §35.3)*
 
 #### Packaging & Documentazione
@@ -304,7 +304,7 @@ Mappatura definitiva REQ-ID → fase. Ogni requisito è assegnato alla **prima f
 | SEC-04 | Phase 3 | Pending | — |
 | SEC-05 | Phase 3 | Pending | URL allowlist |
 | TEST-01 | Phase 1 (subset) | Done subset (plan 01-09) | PipelineHarness fixture + 8 integration test in `packages/core/src/__integration__/` coprono pub/sub, unsubscribe, wildcard, dedupe (skeleton), lifecycle cleanup deterministico (LIFE-02), event-tap 5 step F1, handler isolation, deep-freeze. 46 nuovi test passing. Estesa progressivamente F2-F6. |
-| TEST-02 | Phase 2 (subset) | Pending | F3 (server), F4 (reconnect), F5 (worker), F6 (cache) |
+| TEST-02 | Phase 2 (subset) | Complete | F3 (server), F4 (reconnect), F5 (worker), F6 (cache) |
 | TEST-03 | Phase 1 (subset) | Done subset (plan 01-10) | 4 robustness test in `__integration__/`: storm.test (10000 publish FIFO + pendingAsyncDelivery=0), wildcard-perf.test (10000 sub matched < 50ms), plugin-fault.test (onMount throw → state failed, broker continua), concurrent-unregister.test (AbortSignal vs unregister race). Performance budget rispettati con ampi margini (storm 24ms / wildcard 11ms misurati). F3 estenderà a server malconfigurato, F4 a riconnessione ripetuta, F5 a worker timeout. |
 | PKG-01 | Phase 1 (01-01 foundation, 01-02 build, 01-11 verify) | Baseline (tsup ESM-only configurato in 01-02; dist/index.js generato; full verify in 01-11) | tsup ESM-only (no CJS — dual-package hazard) |
 | PKG-02 | Phase 1 (01-01, 01-02) | Baseline (tsconfig.base.json strict + TS 6.0.3 in 01-01; tsconfig package extends in 01-02; tsc --noEmit exit 0) | TypeScript 6.0.3 (super-set di 5.5+) |

@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-current_plan: 10
+current_plan: 11
 status: executing
-last_updated: "2026-04-30T08:52:57.924Z"
+last_updated: "2026-04-30T09:40:12.715Z"
 progress:
   total_phases: 6
   completed_phases: 1
   total_plans: 23
-  completed_plans: 21
-  percent: 91
+  completed_plans: 22
+  percent: 96
 ---
 
 # Project State: SemBridge
@@ -29,17 +29,17 @@ progress:
 ## Current Position
 
 Phase: 02 (canonical-model-mapper) — EXECUTING
-Plan: 11 of 12
+Plan: 12 of 12
 Current Plan: 11
 Total Plans: 12
 
-**Last completed:** Plan 02-10 (broker wrapper) at 2026-04-30T08:45Z — 4 commits (b51e507 RED MapperBroker + edfd0e0 GREEN MapperBroker + 3a840d0 RED createMapperBroker + a53c260 GREEN createMapperBroker)
-**Next:** Plan 02-11 (integration test scenario meteo PRD §29 senza HTTP — D-53)
+**Last completed:** Plan 02-11 (integration tests F2) at 2026-04-30T09:35Z — 2 commits (eb923fe Task 1 mapper-harness + scenario meteo + 585f266 Task 2 4 integration test files); 5 integration test files / 20 test totali; 14 mapper test files / 136 test passing; core 248 invariati (D-49 confermato)
+**Next:** Plan 02-12 (Wave 8 final gate F2 — coverage v8 ≥ 90% + publint/attw/size-limit estesi + DOC-03 README scenario meteo + JSDoc + gsd-verifier)
 
 - **Phase:** 1 — Core essenziale
 - **Verifier verdict:** PASS (confidence HIGH) — 5/5 success criteria VERIFIED, 27/27 REQ-IDs done, 8/8 gate CI passati. Vedi `.planning/phases/01-core-essenziale/VERIFICATION.md`.
 - **Status:** Ready to execute
-- **Progress:** [█████████░] 91%
+- **Progress:** [██████████] 96%
 
 ## Phases Overview
 
@@ -77,6 +77,7 @@ Total Plans: 12
 | Phase 02 P08 | 12min | 1 tasks | 2 files |
 | Phase 02 P09 | 17min | 2 tasks | 8 files |
 | Phase 02 P10 | 21min | 2 tasks tasks | 6 files files |
+| Phase 02 P11 | 33min | 2 tasks | 6 files |
 
 ## Accumulated Context
 
@@ -130,6 +131,9 @@ Total Plans: 12
 | Plan 02-10 wrapDescriptorHooks per propagare `ctx.broker` mapper-aware ai plugin (D-51 runtime) | Sfida tecnica: `ctx.broker` di F1 è un Proxy `createPluginScopedBroker` che chiama direttamente `bus.subscribe()`, bypassando il MapperBroker. Soluzione: il MapperBroker.registerPlugin wrappa gli hook lifecycle (onRegister/onMount/onUnmount/onDestroy) PRIMA di delegare a `inner.registerPlugin` — gli hook ricevono un `ctx` con `broker` sostituito da un Proxy mapper-aware che intercetta `subscribe` e applica `applyInputMap(pluginId, ...)` al payload canonico. Soddisfa Test 8 (scenario meteo PRD §29) senza modifiche a F1. | 02-10-SUMMARY.md |
 | Plan 02-10 createMapperBroker(config) pure function (D-30 no singleton) con Valibot validation D-56 | Pattern affine a `createBroker` F1 D-19. `MapperBrokerConfigSchema = v.looseObject({ runtime, debug, topicSchemas, canonicalModel, aliasRegistry, transforms })`: F1/F3-F6 sezioni pass-through; F2 sezioni validate strutturalmente (canonicalModel.schemas array di CanonicalSchema, aliasRegistry.global/scoped record string→string, transforms record string→fn). Throw `Error 'Invalid MapperBrokerConfig: ...'` su Valibot fail. Test 6 verifica `b1 !== b2` (no singleton). | 02-10-SUMMARY.md |
 | Plan 02-10 3 helper introspection aggiunti al MapperEngine (hasCompiled/hasInputMap/getCanonicalSchemaIdFor) | Necessari al broker wrapper per decidere quando applicare outputMap/inputMap/canonical-validation: alternative scartate (a) accesso diretto al `private compiled` Map (viola encapsulation TS error); (b) try/catch su `applyOutputMap` per detect 'no mapping' (catastrophic — semantica errore vs passthrough confusa). I 3 helper sono additive — il contract pubblico esistente di MapperEngine (compileMappings/applyOutputMap/applyInputMap/unregisterPluginMappings/validateCanonical/stats) resta identico. I 26 test plan 02-07 invariati. | 02-10-SUMMARY.md |
+| Plan 02-11 mapper-harness wrappa createMapperBroker (NON pipeline-harness F1) | I 5 integration test verificano end-to-end l'API pubblica del package F2 — il MapperBroker, NON il Broker F1 sottostante. La fixture istanzia un MapperBroker reale via createMapperBroker(config); i 4 moduli Wave 3 + MapperEngine + MappingInspector vengono compose internamente. NO mock dei moduli interni F2 (D-49 strict). Pattern replicabile per F3 (createRoutingHarness wraps createRoutedBroker), F4 (createRealtimeHarness), F5 (createWorkerHarness). | 02-11-SUMMARY.md |
+| Plan 02-11 schema-level FieldDescriptor.default NON auto-iniettato in V1 | Empiricamente il MapperEngine.applyOutputMap itera SOLO i field dichiarati nell'outputMap del plugin — coerente con T-02-07-06 partial mapping (whitelist, NON injection). Il `MappingRule.default` (rule-level, MAP-06) viene applicato quando `source` è assente; lo schema-level `FieldDescriptor.default` esiste come hint per V2 ma NON viene auto-iniettato in V1. Test 4 di weather-scenario adeguato al behavior corrente. | 02-11-SUMMARY.md |
+| Plan 02-11 tap dell'harness vede SOLO step F1 (i 5 step F2 deferred a F6) | Il MapperBroker plan 02-10 NON wira automaticamente `wrapTap(tap, inspector)` perché `inspector.recordSnapshot` è no-op V1 (D-48). Conseguenza: il tap dell'harness vede SOLO i 5 step F1 (event.received, event.metadata.enriched, event.validated, event.dedupe.checked, event.delivered) — NON i 5 nuovi step F2 (event.source.resolved, event.mapped.canonical, ecc.). I test verificano i 5 step F1 emessi (line 102-103 weather-scenario test 1) ma NON dipendono dai step F2 nel tap. Limitazione consapevole F2 V1 — F6 (TOOL-01) popolerà recordSnapshot full per evento. | 02-11-SUMMARY.md |
 
 ### Open Issues PRD §39 — Phase Assignment
 
@@ -182,7 +186,7 @@ Total Plans: 12
 - [x] Eseguire Plan 02-08 (Wave 5 — `MappingInspector` extension EventTap + wrapTap composition helper) — completato 2026-04-30
 - [x] Eseguire Plan 02-09 (Wave 5 — augment.ts TS declaration merging + barrel mapper finale) — completato 2026-04-30 (2 task, 17min, 4 commit: bb0eac5 RED + 3a2840b Rule 1 fix + 2b3c521 GREEN + ef00b46 barrel; 6 augment test passing + 93 mapper tests + 248 core tests no regression; MAP-03/MAP-13/MAP-14/PIPE-01 done)
 - [x] Eseguire Plan 02-10 (Wave 6 — broker-mapper-wrapper: composition decorator per agganciare MapperEngine + MappingInspector al Broker F1 senza modificare bus.ts) — completato 2026-04-30 (2 task TDD, 21min, 4 commit: b51e507 RED + edfd0e0 GREEN MapperBroker + 3a840d0 RED + a53c260 GREEN createMapperBroker; 15 test wrapper + 8 test factory passing; D-49 strict 0 modifiche a packages/core/; MAP-02/MAP-03/MAP-13/MAP-14/MAP-15/ERR-02/LIFE-02/PIPE-01 done; D-31/D-49/D-50/D-51/D-58/D-59/D-26 ext F2/D-48/D-30/D-56 closed runtime)
-- [ ] Eseguire Plan 02-11 (Wave 7 — integration test scenario meteo PRD §29 senza HTTP)
+- [x] Eseguire Plan 02-11 (Wave 7 — integration test scenario meteo PRD §29 senza HTTP) — completato 2026-04-30 (2 task, 33 min, 2 commit: eb923fe + 585f266; 5 integration test files / 20 test; mapper 14/136 vs baseline 9/116; core 248 invariati; TEST-01/TEST-02/MAP-13/MAP-14/MAP-15/LIFE-02 done; tutti i 5 success criteria F2 ROADMAP coperti 1:1)
 - [ ] Eseguire Plan 02-12 (Wave 8 final gate F2 — coverage v8 ≥ 90% + publint/attw/size-limit estesi + DOC-03 README scenario meteo + JSDoc + gsd-verifier)
 
 ### Active Blockers
