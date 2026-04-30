@@ -58,10 +58,48 @@ import type {
   CanonicalSchemaId,
   FieldDescriptor,
   FieldFailureMode,
+  FieldType,
 } from './types/canonical-schema'
 import type { InputMap, MappingRule, OutputMap } from './types/input-output-map'
 import type { TransformContext } from './types/transform'
-import type { ValidationResult, ValidatorAdapter } from './types/validator-adapter'
+import type { ValidationIssue, ValidationResult, ValidatorAdapter } from './types/validator-adapter'
+
+/**
+ * CR-04 fix helper: determina se `value` corrisponde al `FieldType` dichiarato.
+ *
+ * Mapping FieldType → JS runtime type:
+ * - 'string' → typeof === 'string'
+ * - 'number' → typeof === 'number' (Number.NaN incluso — Valibot lo accetta come number)
+ * - 'boolean' → typeof === 'boolean'
+ * - 'object' → object plain (NON null, NON array)
+ * - 'array' → Array.isArray
+ * - 'any' → sempre `true` (gestito dal caller validateCanonical)
+ */
+function matchesFieldType(value: unknown, type: FieldType): boolean {
+  switch (type) {
+    case 'string':
+      return typeof value === 'string'
+    case 'number':
+      return typeof value === 'number'
+    case 'boolean':
+      return typeof value === 'boolean'
+    case 'object':
+      return typeof value === 'object' && value !== null && !Array.isArray(value)
+    case 'array':
+      return Array.isArray(value)
+    case 'any':
+      return true
+    default:
+      return false
+  }
+}
+
+/** CR-04 fix helper: descrive il tipo runtime di `value` per ValidationIssue.received. */
+function describeRuntimeType(value: unknown): string {
+  if (value === null) return 'null'
+  if (Array.isArray(value)) return 'array'
+  return typeof value
+}
 
 /**
  * Plugin descriptor F2 internal — extends F1 PluginDescriptor con i campi mapper.
@@ -291,12 +329,20 @@ export class MapperEngine {
   /**
    * Valida un payload canonico contro il canonical schema registrato (passi 6 e 12).
    *
-   * F2 V1: structural check via field descriptor presence (basic validation).
-   * Schema non registrato → `{ ok: false, issues: [{ message }] }`.
+   * CR-04 fix: structural enforcement dei `FieldDescriptor` registrati.
+   * - Schema non registrato → `{ ok: false, issues: [{ message }] }`.
+   * - Payload non-object (string/number/null) → `{ ok: false, issues: [...] }`.
+   * - Per ogni `FieldDescriptor` registrato:
+   *   - `required: true` + field assente → issue con `path: [name]`, `message: required field missing`.
+   *   - field presente + `type` mismatch (escludendo `'any'`) → issue con `path: [name]`,
+   *     `expected: type`, `received: typeof val`.
+   * - Field extra non dichiarati nello schema → accept silenziosamente (forward-compatible).
    *
-   * V1.x potrà costruire dinamicamente uno schema Valibot da `FieldDescriptor.type`
-   * per typed validation; per F2 l'integrazione full-schema avviene quando il broker
-   * wrapper (plan 02-10) passa uno schema Valibot esplicito tramite descriptor extension.
+   * NB: `field.default` NON è applicato dalla validation (il default è gestito da
+   * `applyMapping` D-42); validation valuta lo state finale del canonical.
+   *
+   * V1.x potrà costruire dinamicamente uno schema Valibot da `FieldDescriptor.type` via
+   * `this.validator.validate(...)` per typed validation più ricca (es. format string).
    *
    * @returns `ValidationResult` discriminato (NO throw — D-38).
    */
@@ -308,10 +354,39 @@ export class MapperEngine {
         issues: [{ message: `Canonical schema "${canonicalSchemaId}" not registered` }],
       }
     }
-    // F2 V1: structural pass — il consumer del broker wrapper (plan 02-10) può
-    // sostituire questo con `validator.validate(valibotSchema, payload)` quando
-    // dispone dello schema Valibot full per il canonical.
-    return { ok: true, value: payload }
+    if (payload === null || typeof payload !== 'object' || Array.isArray(payload)) {
+      return {
+        ok: false,
+        issues: [
+          {
+            message: `Canonical payload must be a plain object (received ${payload === null ? 'null' : Array.isArray(payload) ? 'array' : typeof payload})`,
+          },
+        ],
+      }
+    }
+    const obj = payload as Record<string, unknown>
+    const issues: ValidationIssue[] = []
+    for (const [name, fd] of Object.entries(schema.fields)) {
+      const present = name in obj
+      if (fd.required === true && !present) {
+        issues.push({ path: [name], message: `required canonical field "${name}" is missing` })
+        continue
+      }
+      if (!present) continue
+      const val = obj[name]
+      // type 'any' accept tutto. Field undefined valutato come "missing".
+      if (fd.type === 'any') continue
+      if (val === undefined) continue
+      if (!matchesFieldType(val, fd.type)) {
+        issues.push({
+          path: [name],
+          message: `canonical field "${name}" expected ${fd.type}, received ${describeRuntimeType(val)}`,
+          expected: fd.type,
+          received: describeRuntimeType(val),
+        })
+      }
+    }
+    return issues.length === 0 ? { ok: true, value: payload } : { ok: false, issues }
   }
 
   /**

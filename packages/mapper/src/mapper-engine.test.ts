@@ -647,6 +647,73 @@ describe('MapperEngine — chunk C: cycle / validation / cascade', () => {
     }
   })
 
+  it('Test 25b: CR-04 fix — validateCanonical enforces required:true field missing → ok:false', () => {
+    const { engine, canonical } = makeEngine()
+    canonical.register({
+      id: 'sch25b' as CanonicalSchemaId,
+      fields: {
+        location: { type: 'string', required: true },
+        urgency: { type: 'string', required: false },
+      },
+    })
+    // location required mancante → ok: false
+    const r1 = engine.validateCanonical('sch25b' as CanonicalSchemaId, { urgency: 'normal' })
+    expect(r1.ok).toBe(false)
+    if (!r1.ok) {
+      expect(r1.issues.length).toBeGreaterThan(0)
+      expect(r1.issues[0]?.path).toContain('location')
+    }
+    // location presente → ok: true
+    const r2 = engine.validateCanonical('sch25b' as CanonicalSchemaId, { location: 'Roma' })
+    expect(r2.ok).toBe(true)
+  })
+
+  it('Test 25c: CR-04 fix — validateCanonical enforces FieldDescriptor.type mismatch → ok:false', () => {
+    const { engine, canonical } = makeEngine()
+    canonical.register({
+      id: 'sch25c' as CanonicalSchemaId,
+      fields: {
+        location: { type: 'string', required: false },
+        temperature: { type: 'number', required: false },
+      },
+    })
+    // type mismatch: location attesa string, ricevuta number
+    const r1 = engine.validateCanonical('sch25c' as CanonicalSchemaId, { location: 42 })
+    expect(r1.ok).toBe(false)
+    // type 'any' / mancante → ok
+    const r2 = engine.validateCanonical('sch25c' as CanonicalSchemaId, {
+      location: 'Roma',
+      temperature: 22,
+    })
+    expect(r2.ok).toBe(true)
+  })
+
+  it('Test 25d: CR-04 fix — validateCanonical accepts non-object payload → ok:false', () => {
+    const { engine, canonical } = makeEngine()
+    canonical.register({
+      id: 'sch25d' as CanonicalSchemaId,
+      fields: { location: { type: 'string', required: false } },
+    })
+    const r1 = engine.validateCanonical('sch25d' as CanonicalSchemaId, 'not-an-object')
+    expect(r1.ok).toBe(false)
+    const r2 = engine.validateCanonical('sch25d' as CanonicalSchemaId, null)
+    expect(r2.ok).toBe(false)
+  })
+
+  it("Test 25e: CR-04 fix — validateCanonical with type 'any' accepts any value", () => {
+    const { engine, canonical } = makeEngine()
+    canonical.register({
+      id: 'sch25e' as CanonicalSchemaId,
+      fields: { meta: { type: 'any', required: false } },
+    })
+    expect(engine.validateCanonical('sch25e' as CanonicalSchemaId, { meta: 42 }).ok).toBe(true)
+    expect(engine.validateCanonical('sch25e' as CanonicalSchemaId, { meta: 'str' }).ok).toBe(true)
+    expect(engine.validateCanonical('sch25e' as CanonicalSchemaId, { meta: null }).ok).toBe(true)
+    expect(engine.validateCanonical('sch25e' as CanonicalSchemaId, { meta: { x: 1 } }).ok).toBe(
+      true,
+    )
+  })
+
   it('Test 26: stats — returns compiledPluginCount, canonicalSchemas, registeredAliases', () => {
     const { engine, canonical, alias } = makeEngine()
     canonical.register(weatherSchema)
