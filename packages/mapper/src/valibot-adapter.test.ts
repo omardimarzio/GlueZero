@@ -113,6 +113,9 @@ describe('valibotAdapter', () => {
     expect(r1.ok).toBe(false)
     if (!r1.ok) {
       expect(r1.issues[0]?.message).toContain('not a Valibot BaseSchema')
+      // WR-A iter2: error message cita la proprietà reale `~run` (Valibot 1.x), non `_run`.
+      expect(r1.issues[0]?.message).toContain('~run')
+      expect(r1.issues[0]?.message).not.toContain('_run')
     }
     // Plain object pretending to be a schema — NON ha `~run` function.
     const r2 = valibotAdapter.validate({ type: 'string' }, 'x')

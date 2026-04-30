@@ -123,7 +123,8 @@ export const valibotAdapter: ValidatorAdapter = {
         ok: false,
         issues: [
           {
-            message: 'invalid schema: not a Valibot BaseSchema (missing `_run` function).',
+            message:
+              'invalid schema: not a Valibot BaseSchema (missing `~run` function or kind !== "schema").',
           },
         ],
       }
