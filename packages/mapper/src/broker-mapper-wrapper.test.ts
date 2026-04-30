@@ -415,6 +415,67 @@ describe('MapperBroker', () => {
   })
 })
 
+describe('MapperBroker · CR-05 fix bootstrapFromConfig error handling', () => {
+  it('topologically sorts canonical schemas by `requires` (out-of-order config accepted)', () => {
+    // forecast.requires = [user]. Nell'array, forecast viene PRIMA di user — order
+    // dependency check forza l'errore canonical.requires.unresolved senza topo sort.
+    // Con topo sort (CR-05 fix), il bootstrap completa con successo.
+    expect(() => {
+      new MapperBroker({
+        runtime: { logLevel: 'silent' },
+        canonicalModel: {
+          schemas: [
+            {
+              id: 'forecast' as CanonicalSchemaId,
+              requires: ['user'],
+              fields: { date: { type: 'string' as const } },
+            },
+            {
+              id: 'user' as CanonicalSchemaId,
+              fields: { name: { type: 'string' as const } },
+            },
+          ],
+        },
+      })
+    }).not.toThrow()
+  })
+
+  it('wraps bootstrap errors via logger and re-throws BrokerError (consumer notified)', () => {
+    // Schema con cyclical requires (forecast→user; user→forecast) → impossibile da risolvere.
+    // CR-05 fix: il bootstrap throw un BrokerError con context, NON crash silente.
+    let threw = false
+    try {
+      new MapperBroker({
+        runtime: { logLevel: 'silent' },
+        canonicalModel: {
+          schemas: [
+            {
+              id: 'a' as CanonicalSchemaId,
+              requires: ['b'],
+              fields: { x: { type: 'string' as const } },
+            },
+            {
+              id: 'b' as CanonicalSchemaId,
+              requires: ['a'],
+              fields: { y: { type: 'string' as const } },
+            },
+          ],
+        },
+      })
+    } catch (err) {
+      threw = true
+      expect(isBrokerError(err)).toBe(true)
+      if (isBrokerError(err)) {
+        // Lasciamo libertà sul codice esatto (può essere bootstrap.canonical.cycle o
+        // canonical.requires.unresolved); ciò che conta è che è un BrokerError di category
+        // 'mapping' o 'config'.
+        expect(['mapping', 'config']).toContain(err.category)
+      }
+    }
+    expect(threw).toBe(true)
+  })
+})
+
 describe('MapperBroker · F1 surface delegation', () => {
   it('getTopicRegistry, setLogger, enableDebug/disableDebug delegated to inner Broker', () => {
     const broker = new MapperBroker({ runtime: { logLevel: 'silent' } })

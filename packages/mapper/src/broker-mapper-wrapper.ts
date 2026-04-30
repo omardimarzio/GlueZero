@@ -561,31 +561,166 @@ export class MapperBroker {
 
   // === Private helpers ===
 
-  /** Bootstrap del registry/pipeline da `BrokerConfig` augmented (D-56). */
+  /**
+   * Bootstrap del registry/pipeline da `BrokerConfig` augmented (D-56).
+   *
+   * CR-05 fix: ogni step è ora wrapped con try/catch + logger.error; gli errori
+   * vengono ri-lanciati come `BrokerError` con context (sezione, id, ecc.) per
+   * permettere al consumer di gestirli. Inoltre `canonicalModel.schemas` viene
+   * topologicamente ordinato per `requires` PRIMA del register (no dependency
+   * sull'ordine dell'array config; cicli canonical.requires throw esplicito).
+   *
+   * @throws `BrokerError` con `category: 'config'` o `'mapping'` su qualunque
+   *         step del bootstrap (canonical / alias / transforms).
+   */
   private bootstrapFromConfig(config: MapperBrokerConfig): void {
     if (!config) return
     if (config.canonicalModel?.schemas) {
-      for (const schema of config.canonicalModel.schemas) {
-        this.canonicalRegistry.register(schema)
+      const sorted = this.topologicalSortSchemas(config.canonicalModel.schemas)
+      for (const schema of sorted) {
+        try {
+          this.canonicalRegistry.register(schema)
+        } catch (err) {
+          this.logger.error('MapperBroker bootstrap: canonical register failed', {
+            schemaId: schema.id,
+            error: err,
+          })
+          if (isBrokerError(err)) throw err
+          throw createBrokerError({
+            code: 'bootstrap.canonical.failed',
+            category: 'config',
+            message: `Bootstrap failed registering canonical schema "${schema.id}"`,
+            ...(err instanceof Error && { originalError: err }),
+            details: { section: 'canonicalModel', schemaId: schema.id },
+          })
+        }
       }
     }
     if (config.aliasRegistry?.global) {
       for (const [local, canonical] of Object.entries(config.aliasRegistry.global)) {
-        this.aliasRegistry.registerGlobal(local, canonical)
+        try {
+          this.aliasRegistry.registerGlobal(local, canonical)
+        } catch (err) {
+          this.logger.error('MapperBroker bootstrap: global alias register failed', {
+            local,
+            canonical,
+            error: err,
+          })
+          throw createBrokerError({
+            code: 'bootstrap.alias.global.failed',
+            category: 'config',
+            message: `Bootstrap failed registering global alias "${local}" → "${canonical}"`,
+            ...(err instanceof Error && { originalError: err }),
+            details: { section: 'aliasRegistry.global', local, canonical },
+          })
+        }
       }
     }
     if (config.aliasRegistry?.scoped) {
       for (const [pluginId, scopeMap] of Object.entries(config.aliasRegistry.scoped)) {
         for (const [local, canonical] of Object.entries(scopeMap)) {
-          this.aliasRegistry.registerScoped(pluginId, local, canonical)
+          try {
+            this.aliasRegistry.registerScoped(pluginId, local, canonical)
+          } catch (err) {
+            this.logger.error('MapperBroker bootstrap: scoped alias register failed', {
+              pluginId,
+              local,
+              canonical,
+              error: err,
+            })
+            throw createBrokerError({
+              code: 'bootstrap.alias.scoped.failed',
+              category: 'config',
+              message: `Bootstrap failed registering scoped alias for plugin "${pluginId}": "${local}" → "${canonical}"`,
+              ...(err instanceof Error && { originalError: err }),
+              details: { section: 'aliasRegistry.scoped', pluginId, local, canonical },
+            })
+          }
         }
       }
     }
     if (config.transforms) {
       for (const [name, fn] of Object.entries(config.transforms)) {
-        this.transformPipeline.register(name, fn)
+        try {
+          this.transformPipeline.register(name, fn)
+        } catch (err) {
+          this.logger.error('MapperBroker bootstrap: transform register failed', {
+            name,
+            error: err,
+          })
+          if (isBrokerError(err)) throw err
+          throw createBrokerError({
+            code: 'bootstrap.transform.failed',
+            category: 'config',
+            message: `Bootstrap failed registering transform "${name}"`,
+            ...(err instanceof Error && { originalError: err }),
+            details: { section: 'transforms', name },
+          })
+        }
       }
     }
+  }
+
+  /**
+   * CR-05 fix: ordina topologicamente gli schema canonici per `requires` in modo
+   * che ogni schema venga registrato dopo i suoi requires.
+   *
+   * Algoritmo Kahn's BFS su grafo direzionato schema→requires:
+   * 1. Calcola in-degree (numero di requires non ancora registrati per ogni schema).
+   * 2. Inizia dai nodi senza requires (in-degree 0).
+   * 3. Per ogni nodo processato, decrementa in-degree dei suoi dipendenti.
+   * 4. Se rimangono nodi non processati → ciclo nel grafo requires → throw.
+   *
+   * `requires` che puntano a schema NON presenti nel config sono lasciati al
+   * register (CanonicalRegistry.register throw `canonical.requires.unresolved`
+   * — propagato come `bootstrap.canonical.failed` dal caller).
+   *
+   * @throws `BrokerError 'bootstrap.canonical.requires.cycle'` se il grafo ha cicli.
+   */
+  private topologicalSortSchemas(
+    schemas: readonly CanonicalSchema[],
+  ): readonly CanonicalSchema[] {
+    const idToSchema = new Map<string, CanonicalSchema>()
+    for (const s of schemas) idToSchema.set(s.id, s)
+
+    // In-degree: numero di requires PRESENTI nel config (gli external sono ignorati
+    // — il register li gestirà come canonical.requires.unresolved).
+    const inDegree = new Map<string, number>()
+    const dependents = new Map<string, string[]>() // requires.id → [dipendenti.id]
+    for (const s of schemas) {
+      const internalReqs = (s.requires ?? []).filter((r) => idToSchema.has(r))
+      inDegree.set(s.id, internalReqs.length)
+      for (const r of internalReqs) {
+        if (!dependents.has(r)) dependents.set(r, [])
+        dependents.get(r)?.push(s.id)
+      }
+    }
+    const queue: string[] = []
+    for (const [id, deg] of inDegree) {
+      if (deg === 0) queue.push(id)
+    }
+    const result: CanonicalSchema[] = []
+    while (queue.length > 0) {
+      const id = queue.shift()
+      if (id === undefined) break
+      const schema = idToSchema.get(id)
+      if (schema) result.push(schema)
+      for (const dep of dependents.get(id) ?? []) {
+        const deg = (inDegree.get(dep) ?? 0) - 1
+        inDegree.set(dep, deg)
+        if (deg === 0) queue.push(dep)
+      }
+    }
+    if (result.length !== schemas.length) {
+      const remaining = schemas.filter((s) => !result.find((r) => r.id === s.id)).map((s) => s.id)
+      throw createBrokerError({
+        code: 'bootstrap.canonical.requires.cycle',
+        category: 'config',
+        message: `Bootstrap canonical schemas have a cycle in 'requires': ${remaining.join(', ')}`,
+        details: { section: 'canonicalModel', cyclicSchemaIds: remaining },
+      })
+    }
+    return result
   }
 
   /**
