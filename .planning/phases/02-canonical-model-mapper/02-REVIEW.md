@@ -1,459 +1,356 @@
 ---
 phase: 02-canonical-model-mapper
-reviewed: 2026-04-29T00:00:00Z
+reviewed: 2026-04-29T16:30:00Z
 depth: standard
-files_reviewed: 42
+review_type: post_iter2_re_review
+iteration: 3
+files_reviewed: 21
 files_reviewed_list:
-  - package.json
-  - packages/core/src/public-factory.test.ts
-  - packages/core/src/public-factory.ts
-  - packages/core/src/types/config.ts
+  - packages/mapper/src/broker-mapper-wrapper.ts
+  - packages/mapper/src/broker-mapper-wrapper.test.ts
+  - packages/mapper/src/mapper-engine.ts
+  - packages/mapper/src/mapper-engine.test.ts
+  - packages/mapper/src/inspector.ts
+  - packages/mapper/src/inspector.test.ts
+  - packages/mapper/src/valibot-adapter.ts
+  - packages/mapper/src/valibot-adapter.test.ts
+  - packages/mapper/src/transform-pipeline.ts
+  - packages/mapper/src/alias-registry.ts
+  - packages/mapper/src/canonical-registry.ts
+  - packages/mapper/src/public-factory.ts
+  - packages/mapper/src/index.ts
   - packages/mapper/README.md
-  - packages/mapper/package.json
+  - packages/mapper/src/__integration__/weather-scenario.integration.test.ts
   - packages/mapper/src/__integration__/alias-ambiguity.test.ts
   - packages/mapper/src/__integration__/cycle-detection.integration.test.ts
   - packages/mapper/src/__integration__/inspector-snapshot.integration.test.ts
   - packages/mapper/src/__integration__/mapping-error-event.integration.test.ts
   - packages/mapper/src/__integration__/plugin-cleanup-mapper.integration.test.ts
   - packages/mapper/src/__integration__/transform-failure-modes.test.ts
-  - packages/mapper/src/__integration__/weather-scenario.integration.test.ts
-  - packages/mapper/src/alias-registry.test.ts
-  - packages/mapper/src/alias-registry.ts
-  - packages/mapper/src/augment.test.ts
-  - packages/mapper/src/augment.ts
-  - packages/mapper/src/broker-mapper-wrapper.test.ts
-  - packages/mapper/src/broker-mapper-wrapper.ts
-  - packages/mapper/src/canonical-registry.test.ts
-  - packages/mapper/src/canonical-registry.ts
-  - packages/mapper/src/index.ts
-  - packages/mapper/src/inspector.test.ts
-  - packages/mapper/src/inspector.ts
-  - packages/mapper/src/mapper-engine.test.ts
-  - packages/mapper/src/mapper-engine.ts
-  - packages/mapper/src/public-factory.test.ts
-  - packages/mapper/src/public-factory.ts
-  - packages/mapper/src/test-utils/mapper-harness.ts
-  - packages/mapper/src/transform-pipeline.test.ts
-  - packages/mapper/src/transform-pipeline.ts
-  - packages/mapper/src/types/canonical-schema.ts
-  - packages/mapper/src/types/index.ts
-  - packages/mapper/src/types/input-output-map.ts
-  - packages/mapper/src/types/mapping-error.ts
-  - packages/mapper/src/types/transform.ts
-  - packages/mapper/src/types/validator-adapter.ts
-  - packages/mapper/src/valibot-adapter.test.ts
-  - packages/mapper/src/valibot-adapter.ts
-  - packages/mapper/tsconfig.json
-  - packages/mapper/tsup.config.ts
-  - packages/mapper/vitest.config.ts
 findings:
-  blocker: 6
-  warning: 9
-  info: 5
-  total: 20
+  blocker: 1
+  warning: 4
+  total: 5
 status: issues_found
 ---
 
-# Phase 2: Code Review Report
+# Phase 2 — Code Review Report (Iteration 3, post-iter2 fix)
 
-**Reviewed:** 2026-04-29
-**Depth:** standard
-**Files Reviewed:** 42
+**Reviewed:** 2026-04-29T16:30:00Z
+**Depth:** standard (focus mirato sui 7 finding iter2: CR-01-RESIDUAL, CR-02-RESIDUAL, WR-A, WR-B, WR-C, WR-D, WR-E)
+**Files reviewed:** 21
+**Test baseline verified:** mapper 172/172 PASS · core 248/248 PASS · `tsc --noEmit` clean su entrambi i package
 **Status:** issues_found
 
 ## Summary
 
-Phase 2 introduce il package `@sembridge/mapper` con CanonicalRegistry, AliasRegistry, TransformPipeline, MapperEngine, MappingInspector, e il composition wrapper `MapperBroker`. La superficie pubblica è ben tipizzata (branded types, `exactOptionalPropertyTypes`-friendly) e la suite di test è ampia (unit + integration). Tuttavia, l'analisi adversariale ha individuato diverse **falle correttive** importanti che minano i success criteria dichiarati nel README e nei plan:
+Verifica adversarial dei 7 finding chiusi in iter2 (`02-REVIEW-FIX.md` iter 2 → `all_fixed`).
 
-- **Pipeline §28 estesa F2 NON è instrumentata**: i 5 nuovi step (`event.source.resolved`, `event.mapped.canonical`, `event.canonical.validated`, `event.mapped.consumer`, `event.final.validated`) NON vengono mai invocati sul tap durante `publish`/`subscribe` del `MapperBroker`. Il README afferma il contrario (sezione "Pipeline §28 estesa F2"), e il test integrazione non lo verifica.
-- **AliasRegistry NON è wired al MapperEngine**: la resolution order D-40 livelli 2-3 (alias scoped/global) non viene mai applicata a runtime nel MapperEngine; il livello 4 (name-match) di fatto funziona solo perché il `localField === canonicalField` capita per coincidenza. MAP-17 (chiusura PRD §39 #1) non è quindi pienamente coperto.
-- **`mapping.error` può raggiungere consumer non desiderati**: il publish di `mapping.error` con `deliveryMode: 'async'` può collassare loop tra il proprio handler error e altri subscriber, e non è isolato per topic. Inoltre la pipeline non skippa la delivery del `mapping.error` stesso se contiene un transform error con riferimento ciclico.
-- **Validazione canonical vuota**: `MapperEngine.validateCanonical` ritorna sempre `ok: true` se lo schema è registrato (structural pass V1), ignorando completamente i `FieldDescriptor` registrati. Il payload può violare `required: true` o `type` senza che venga rilevato in fase 6.
-- **Cycle detection ha un falso negativo critico**: il DFS in `detectCyclesFrom` non visita un field che è source di derive ma non è declared come top-level chiave del map — un ciclo `A.derive=[B]; B.source=A` (mix derive+source) NON viene rilevato.
-- **Bootstrap config non valida transform/alias errors**: bootstrap di `transforms` e `aliasRegistry.scoped` usa `register*` che possono throw — il `MapperBroker` constructor può crashare con una `BrokerError`/`Error` che il consumer non si aspetta dalla factory.
+**Trace per ogni finding iter2:**
 
-Il numero di test è alto, ma diversi test sono "documentary" (sezione 6 di transform-failure-modes) o validano solo il compile-time. Vedi sotto la classificazione per severità.
+| Iter2 finding | Stato verificato | Note |
+|---------------|------------------|------|
+| CR-01-RESIDUAL (`event.source.resolved` step) | **CONFIRMED FIXED** | `broker-mapper-wrapper.ts:348` (publish-side) e `:908` (consumer-side) emettono il step. Test `weather-scenario.integration.test.ts:107` verifica. 5/5 step F2 ora strumentati. |
+| CR-02-RESIDUAL (alias-only path nel broker) | **CONFIRMED FIXED** ma introduce edge case (vedi BL-01) | Guard a `broker-mapper-wrapper.ts:432-437` ora compila se `canonicalSchemaId \|\| outputMap \|\| inputMap`. Test `alias-ambiguity.test.ts:179-251` verifica scoped+global. |
+| WR-A (Valibot `~run` error message) | **CONFIRMED FIXED** | `valibot-adapter.ts:128` usa `~run`. Test `valibot-adapter.test.ts:117-118` verifica `contiene '~run'` E `non contiene '_run'`. |
+| WR-B (duplicate schema id detection) | **CONFIRMED FIXED** | `broker-mapper-wrapper.ts:754-764` early-throw `bootstrap.canonical.duplicate`. Test `broker-mapper-wrapper.test.ts:609-643` verifica code, category, message non `cycle`, details.schemaId. |
+| WR-C (eventId reale propagato) | **PARZIALMENTE FIXED** (vedi WR-01) | Subscribe-side propaga `event.id` reale. Publish-side resta placeholder `f2:topic:step` (documentato come limitation F6 da JSDoc). |
+| WR-D (null+required handling) | **DOCUMENTATION FIXED** ma incoerente con README precedente (vedi WR-02) | mapper-engine.ts:351-360 JSDoc + Test 25h verificano. README WR-D iter2 paragraph corretto, MA tabella precedente al §Field policy contiene ancora un error code obsoleto. |
+| WR-E (recursion guard test transitivo) | **CONFIRMED FIXED** | 2 nuovi test in `broker-mapper-wrapper.test.ts:503-581` (transitivo + documentary). JSDoc su `handleMappingError:954-961` + `inFlightMappingErrors:230-234` chiarisce semantica. |
 
-## Critical Issues
+**Findings emersi (NON in scope iter2 — emersi dalla re-review come effetti collaterali o gap pre-esistenti):**
+- **1 BLOCKER**: regression introdotta da CR-02-RESIDUAL fix per plugin con SOLO `canonicalSchemaId` (no maps, no aliases) → payload silently dropped.
+- **2 WARNING residui**: WR-C publish-side asimmetria; README field-policy table error-code stale.
+- **1 WARNING gap pre-esistente**: AliasRegistry/CanonicalRegistry no prototype-pollution guard (gap iter1 WR-03 incomplete).
+- **1 WARNING design**: `event.source.resolved` consumer-side è semantica F6-friendly ma non strict-PRD §28.
 
-### CR-01: Pipeline §28 step F2 non sono invocati al runtime — la sezione "Pipeline §28 estesa F2" del README e D-50 sono violati [BLOCKER]
+## Blocker Issues
 
-**File:** `packages/mapper/src/broker-mapper-wrapper.ts:236-292` (publish + subscribe)
-**File:** `packages/mapper/src/inspector.ts:128-130` (recordSnapshot is no-op)
-**Issue:** Il `MapperBroker.publish` esegue `applyOutputMap` (passo 5) e `validateCanonical` (passo 6) ma NON invoca mai `tap.onPipelineStep('event.mapped.canonical', ...)` né `tap.onPipelineStep('event.canonical.validated', ...)`. Stessa cosa per `subscribe` ai passi 11/12. Il `MappingInspector.recordSnapshot` è dichiaratamente no-op in V1 (commento riga 128), ma il problema è più profondo: il tap utente passato in `config.runtime.tap` NON viene MAI invocato per gli step F2. Il README dichiara che "I 5 nuovi step pipeline §28 invocano il tap esistente" e il `weather-scenario.integration.test.ts:102-103` controlla solo gli step F1 — gli step F2 non sono testati. Risultato: ARCHITECTURE §3.2 ("EventTap pre-instrumentato in F1, esteso in F2-F5") è violato; F6 dovrà retrofit invece di limitarsi a sostituire il no-op come dichiarato in CLAUDE.md "Vincolo architetturale critico".
+### BL-01: Regression — plugin con SOLO `canonicalSchemaId` (senza maps né aliases) ora droppa il payload [BLOCKER]
 
-**Fix:** Invocare `this.tap.onPipelineStep(...)` (con tap composto via `wrapTap` come previsto da `getMappingInspector`) ai 4 punti chiave del wrapper:
+**File:** `packages/mapper/src/broker-mapper-wrapper.ts:432-439`
+**Riferimento iter2:** CR-02-RESIDUAL (`02-REVIEW-FIX.md` iter2 §CR-02-RESIDUAL)
+
+**Issue:**
+Il fix CR-02-RESIDUAL ha esteso il guard di `compileMappings` da `outputMap !== undefined || inputMap !== undefined` a `canonicalSchemaId !== undefined || outputMap !== undefined || inputMap !== undefined`. Questo ha l'effetto desiderato (alias scoped/global ora applicati a runtime), MA introduce un side-effect inverso per i plugin che hanno SOLO `canonicalSchemaId` (no `outputMap`, no `inputMap`, no alias scoped, no alias globali per i field del payload):
+
+Trace runtime:
+1. `registerPlugin({ id: 'p', canonicalSchemaId: 'X' })` → `compileMappings` registra `{ outputCompiled: [], inputCompiled: [], canonicalSchemaId: 'X' }`.
+2. `mapper.hasCompiled('p')` → ora ritorna `true` (era `false` pre-iter2).
+3. `publish('topic', { foo: 'bar' }, { source: { type: 'plugin', id: 'p' } })` → entra nel branch `if (...hasCompiled)` (linea 341).
+4. `applyOutputMap('p', { foo: 'bar' })` → `applyMapping` itera `outputCompiled = []` (zero rules) → `result = {}`. Poi `applyAliasResolution` itera `Object.keys(payload)` = `['foo']`, ma `'foo'` non risolve a nessun alias → nessun field aggiunto. **Ritorna `{}`**.
+5. `canonicalPayload` ora è `{}` (era `{ foo: 'bar' }` pre-iter2 — pass-through).
+6. Se lo schema `X` ha qualunque field `required: true` → `validateCanonical` fallisce → `mapping.error` + `return` (no delivery). Se ha solo field optional → `inner.publish('topic', {}, options)` → consumer riceve payload VUOTO.
+
+**Pre-iter2** (guard più stringente): plugin con SOLO `canonicalSchemaId` non era compilato → `hasCompiled = false` → branch saltato → `inner.publish(topic, payload, options)` con payload originale invariato.
+
+**Conseguenza concreta:**
+- Pattern lecito: dichiarare `canonicalSchemaId` per "intent documentale" senza voler ancora attivare il mapping/aliases (es. plugin in fase di sviluppo che pubblica payload "raw" temporaneamente).
+- Test 13 `Bonus passthrough for plugin without outputMap` (broker-mapper-wrapper.test.ts:370) NON copre questo caso (registra plugin SENZA `canonicalSchemaId`).
+- Non c'è alcun test che esercita "plugin con solo canonicalSchemaId, payload con field non-aliasati".
+
+**Fix suggerito (scegli uno):**
+
+Opzione A — Restringere il guard:
 ```ts
-// In publish, dopo applyOutputMap:
-this.tap?.onPipelineStep('event.mapped.canonical' as PipelineStep, makeSnapshot(...))
-// Dopo validateCanonical:
-this.tap?.onPipelineStep('event.canonical.validated' as PipelineStep, ...)
-
-// In wrapConsumerHandler, dopo applyInputMap:
-this.tap?.onPipelineStep('event.mapped.consumer' as PipelineStep, ...)
-// Dopo final validation:
-this.tap?.onPipelineStep('event.final.validated' as PipelineStep, ...)
+// broker-mapper-wrapper.ts:432-437
+if (mp.outputMap !== undefined || mp.inputMap !== undefined) {
+  this.mapper.compileMappings(mp)
+} else if (mp.canonicalSchemaId !== undefined) {
+  // Solo canonicalSchemaId: compile only se ci sono alias scoped o globali risolvibili
+  // — altrimenti pass-through come pre-iter2 per back-compat.
+  if (this.aliasRegistry.listScoped(mp.id).length > 0 || this.aliasRegistry.listGlobal().length > 0) {
+    this.mapper.compileMappings(mp)
+  }
+}
 ```
-Salvare il tap nel constructor: `this.tap = wrapTap(config.runtime?.tap ?? noopEventTap, this.inspector)`. Aggiornare anche il `Broker` interno con il tap composto se possibile, oppure invocarlo esplicitamente nel wrapper.
 
----
-
-### CR-02: AliasRegistry non è mai consultato dal MapperEngine — MAP-17 non chiuso a runtime [BLOCKER]
-
-**File:** `packages/mapper/src/mapper-engine.ts:443-490` (resolveValue), `packages/mapper/src/mapper-engine.ts:325-338` (compileRules)
-**Issue:** Il `MapperEngine` accetta un `aliasRegistry` come dipendenza (`MapperEngineOptions`), lo memorizza in `this.aliasRegistry`, ma lo USA SOLO in `stats()` per contare gli alias registrati. La `resolveValue` non invoca mai `aliasRegistry.resolve(pluginId, localField)`. Conseguenza: alias globali e scoped registrati via `broker.registerAlias(...)` o `aliasRegistry.global` nel config NON applicano alcuna trasformazione locale → canonical. Il README afferma "Quando il mapper deve risolvere `localField → canonicalField`, applica l'ordine di precedenza" — ma il mapper non risolve mai gli alias. MAP-17 (chiusura PRD §39 #1) viene chiusa solo per il livello 1 (mapping esplicito) e il livello 4 (name-match per coincidenza, perché il `MappingRule.source` è hardcoded). I livelli 2-3 sono funzionalmente morti in F2.
-
-Il test `mapper-engine.test.ts:197 (Test 9)` afferma che "explicit mapping wins over auto-alias" — ma il test stesso non fa fallire un'alternativa: l'alias è registrato ma il mapper non lo consulta, quindi il test "passa" senza dimostrare nulla.
-
-**Fix:** Estendere `compileRules` (o creare un nuovo fase di compilation) per consultare `aliasRegistry.resolve(pluginId, localField)` quando un campo locale del payload non è coperto da un mapping esplicito. In alternativa, documentare nel README che gli alias sono "registry only" in V1 e non hanno effetto runtime, e cambiare il README per non promettere l'ordine di risoluzione 2-3. Un test di regressione concreto:
+Opzione B — Cambiare semantica `applyMapping` per fallback al passthrough:
 ```ts
-it('global alias is applied when no explicit mapping exists', async () => {
-  const harness = createMapperHarness({
-    schemas: [{ id: 'sch' as CanonicalSchemaId, fields: { location: { type: 'string' } } }],
-    aliases: { city: 'location' },  // city → location global alias
+// mapper-engine.ts:applyOutputMap (linea 265)
+applyOutputMap(pluginId, payload) {
+  const compiled = this.compiled.get(pluginId)
+  if (!compiled) return this.shallowCopy(payload)
+  const result = this.applyMapping(pluginId, payload, compiled.outputCompiled)
+  this.applyAliasResolution(pluginId, payload, compiled, result)
+  // BL-01 fix: se zero rule esplicite E nessun alias ha aggiunto field, ritorna shallow copy (passthrough back-compat)
+  if (compiled.outputCompiled.length === 0 && Object.keys(result).length === 0) {
+    return this.shallowCopy(payload)
+  }
+  return result
+}
+```
+
+Opzione C — Documentare la breaking change come intentional (richiede aggiornamento PRD §13.5 + README + test esplicito che documenta il dropping behavior come voluto).
+
+**Test che dovrebbe esistere (RED):**
+```ts
+it('BL-01: plugin with only canonicalSchemaId (no maps, no aliases) preserves payload (regression)', async () => {
+  const broker = new MapperBroker({ runtime: { logLevel: 'silent' } })
+  broker.registerCanonicalSchema({
+    id: 'opt' as CanonicalSchemaId,
+    fields: { other: { type: 'string', required: false } },
   })
-  await harness.broker.registerPlugin({
-    id: 'p',
-    canonicalSchemaId: 'sch' as CanonicalSchemaId,
-    // NO outputMap esplicito su 'location' — l'alias dovrebbe applicarsi
+  await broker.registerPlugin({ id: 'minimal', canonicalSchemaId: 'opt' as CanonicalSchemaId })
+  const received: unknown[] = []
+  broker.subscribe('demo.evt', (e) => received.push(e.payload))
+  broker.publish('demo.evt', { foo: 'bar' }, {
+    source: { type: 'plugin', id: 'minimal' },
+    deliveryMode: 'sync',
   })
-  // ...publish con payload { city: 'Roma' } → consumer riceve { location: 'Roma' }
+  // Pre-iter2: { foo: 'bar' } passthrough. Post-iter2: {} (foo droppato).
+  // L'expectation back-compat richiede passthrough.
+  expect(received[0]).toEqual({ foo: 'bar' })
 })
-// Questo test attualmente FAIL (riceve {} o passthrough invariato).
 ```
 
 ---
 
-### CR-03: Cycle detection ha falso negativo per cicli misti derive↔source [BLOCKER]
+## Warning Issues
 
-**File:** `packages/mapper/src/mapper-engine.ts:352-386` (detectCycles + detectCyclesFrom)
-**Issue:** Il DFS in `detectCyclesFrom` segue solo i `rule.derive.sources`, ignorando `rule.source`. Considera questo descriptor:
+### WR-01: WR-C iter2 — pubblicazione asimmetrica del placeholder `eventId` su `event.source.resolved` publish-side [WARNING]
+
+**File:** `packages/mapper/src/broker-mapper-wrapper.ts:348-356`
+**Riferimento iter2:** WR-C (correlazione `BrokerEvent.id` reale ai snapshot)
+
+**Issue:**
+Il fix WR-C iter2 propaga `event.id` reale agli step subscribe-side (11 e 12). Publish-side (step 4 / 5 / 6) il placeholder `f2:${topic}:${step}` resta in uso — la JSDoc giustifica con "l'evento non è ancora stato generato dal `inner.publish`".
+
+Tuttavia, `inner.publish` chiama `createBrokerEvent` SINCRONO che genera `event.id` con nanoid (`packages/core/src/core/broker.ts:160`). Il MapperBroker potrebbe **pre-allocare l'event.id** a inizio `publish()` (con la stessa funzione) e propagarlo come `eventId` a tutti gli step F2 publisher-side, garantendo correlation completa publisher → subscriber. La doc dichiara "F6 dovrà comunque normalizzare la correlation publisher↔subscriber" — ma questa è la responsabilità di F2 V1: gli step publish-side hanno `eventId` placeholder distinto da quello consumer-side **per lo stesso evento**, rendendo impossibile filtrare gli snapshot di un singolo evento via `eventId` su Inspector V2.
+
+**Impatto:**
+- Inspector V1 (no-op) — nessun impatto runtime.
+- Inspector V2/F6 — i snapshot publish-side avranno `eventId = 'f2:topic:step'` mentre subscribe-side avranno l'id reale → correlation cross-step richiede heuristic (topic + timestamp) invece di lookup deterministic per eventId.
+- Test `weather-scenario.integration.test.ts:116-123` verifica solo che subscribe-side ha id reale; non verifica correlation publisher↔subscriber.
+
+**Fix suggerito:**
 ```ts
-outputMap: {
-  a: { derive: { sources: ['b'], transform: 'tx' } },
-  b: { source: 'a' },  // 'b' legge 'a' tramite source semplice (NON derive)
-}
-```
-Per il mapper-engine, `b` è una rule senza `derive` — `detectCyclesFrom` ritorna `if (!rule?.derive) return` senza esplorare il `source`. Risultato: il ciclo `a → b → a` NON viene rilevato. A runtime, `applyOutputMap` legge `source[a]` (undefined) → `b` undefined → `a.derive.sources=[b]` riceve `[undefined]` → il transform `tx` ottiene un argomento undefined. Comportamento silenzioso, payload corrotto, no error. Inoltre, anche se i source NON sono normalmente trattati come edge per dependency analysis, il fatto che il README e D-35 promettano "cycle detection register-time" significa che il consumer si aspetta protezione completa. **Mitigation parziale**: questo non è un infinite loop runtime perché `applyMapping` itera linearmente sui `compiledFieldMapping`, ma è un bug di correttezza.
+// broker-mapper-wrapper.ts:publish (linea 337)
+publish<T>(topic: string, payload: T, options: MapperPublishOptions = {}): void {
+  const sourcePluginId = options.source?.id
+  let canonicalPayload: unknown = payload
+  // WR-01 fix: pre-genera l'eventId per correlation cross-step F2.
+  // Pattern: leggi nanoid o genera UUID — coerente con createBrokerEvent F1 (che riusera lo stesso id).
+  const eventId = options.eventId ?? generateNanoid()  // shared con inner.publish
 
-Inoltre: il cycle detection esegue DFS partendo da OGNI top-level field (riga 355), il che ha complessità O(N * D) dove D è la profondità del grafo. Per descriptor con derive deeply nested e molti field, è quadratico. Non blocking ma worth nota.
-
-**Fix:** Estendere `detectCyclesFrom` per seguire anche `rule.source` (se è il nome di un altro field nel map), oppure documentare esplicitamente che `source` non partecipa al graph e che cycle detection è limitata ai derive. Implementazione:
-```ts
-private detectCyclesFrom(pluginId, map, field, path): void {
-  if (path.includes(field)) { /* throw existing */ }
-  const rule = (map as Record<string, MappingRule>)[field]
-  if (!rule) return
-  const newPath = [...path, field]
-  // Segui derive sources (esistente)
-  if (rule.derive) {
-    for (const src of rule.derive.sources) this.detectCyclesFrom(pluginId, map, src, newPath)
-  }
-  // Segui source se referenzia un altro field del map (ADD)
-  if (rule.source && map[rule.source as keyof typeof map]) {
-    this.detectCyclesFrom(pluginId, map, rule.source, newPath)
-  }
-}
-```
-
----
-
-### CR-04: validateCanonical è un no-op che ignora i FieldDescriptor — passo 6 della pipeline non valida nulla [BLOCKER]
-
-**File:** `packages/mapper/src/mapper-engine.ts:291-303`
-**Issue:** `validateCanonical(schemaId, payload)` controlla solo che lo schema sia registrato; se lo è, ritorna `{ ok: true, value: payload }` senza guardare i `FieldDescriptor.type`/`required`. Il commento dichiara "F2 V1: structural pass" ma il README afferma "post-mapping validation" come parte dei "7 casi PRD §14.2" che il mapper deve supportare (success criterion #3). Conseguenza: payload canonico con tipi sbagliati (`location: 42` per `type: 'string'`) o field `required: true` mancanti (DOPO il mapping — situazione diversa da `mapping.field.missing` che si verifica nel `applyMapping`) passano la validazione. Il test integrazione `transform-failure-modes.test.ts:296-304` riconosce esplicitamente che V1 è permissive ed evita di assertare il behavior — ma questo significa che il success criterion #3 non è coperto.
-
-In aggiunta: il `valibotAdapter` è iniettato come dipendenza (`MapperEngineOptions.validator`) ma NON viene mai chiamato in `validateCanonical`. È un dead field iniettato per future use ma documentato come "F2 V1 V1.x potrà costruire dinamicamente uno schema Valibot" — questa è una feature non implementata, non un V1.x deferral come dichiarato.
-
-**Fix:** Implementare la validation costruendo dinamicamente uno schema Valibot dai `FieldDescriptor`, oppure documentare apertamente nel README che il passo 6 non valida e demote il success criterion #3. Esempio implementazione minima:
-```ts
-validateCanonical(canonicalSchemaId, payload): ValidationResult {
-  const schema = this.canonicalRegistry.get(canonicalSchemaId)
-  if (!schema) return { ok: false, issues: [...] }
-  const issues: ValidationIssue[] = []
-  if (typeof payload !== 'object' || payload === null) {
-    return { ok: false, issues: [{ message: 'canonical payload must be object' }] }
-  }
-  const obj = payload as Record<string, unknown>
-  for (const [name, fd] of Object.entries(schema.fields)) {
-    const present = name in obj
-    if (fd.required && !present) {
-      issues.push({ path: [name], message: `required field missing` })
-      continue
-    }
-    if (present) {
-      const val = obj[name]
-      const typeOk = fd.type === 'any' || matchesType(val, fd.type)
-      if (!typeOk) issues.push({ path: [name], message: `expected ${fd.type}, got ${typeof val}` })
+  if (sourcePluginId !== undefined && this.mapper.hasCompiled(sourcePluginId)) {
+    try {
+      this.emitF2Tap('event.source.resolved' as PipelineStep, topic, {
+        eventId,  // NEW
+        metadata: { pluginId: sourcePluginId },
+      })
+      // ... resto identico
     }
   }
-  return issues.length === 0 ? { ok: true, value: payload } : { ok: false, issues }
+  this.inner.publish(topic, canonicalPayload, { ...options, eventId })  // pass eventId pre-allocato
 }
 ```
+
+In alternativa, accept current limitation come V1 ma con ADR/JSDoc esplicito + test che documenta il gap.
 
 ---
 
-### CR-05: bootstrapFromConfig può throw nel constructor — comportamento non documentato [BLOCKER]
+### WR-02: README §Field policy table riporta error code obsoleto `validation.field.missing` [WARNING]
 
-**File:** `packages/mapper/src/broker-mapper-wrapper.ts:483-507` (bootstrapFromConfig)
-**File:** `packages/mapper/src/public-factory.ts:123-132` (createMapperBroker)
-**Issue:** `bootstrapFromConfig` invoca `transformPipeline.register(name, fn)` (può throw `transform.id.duplicate`), `aliasRegistry.registerGlobal(local, canonical)` (può throw `alias.global.conflict`), `aliasRegistry.registerScoped(...)` (può throw `alias.scoped.conflict`), e `canonicalRegistry.register(schema)` (può throw `canonical.requires.unresolved`). Se la `Map`-iteration su `config.transforms` o `config.aliasRegistry.scoped` produce duplicati (improbabile con object literal, ma config provenienti da JSON merging possono averli), o se `aliasRegistry.global` ha conflict tra plugin che riusano lo stesso alias, la **`createMapperBroker` factory** lancia un `BrokerError` di category `mapping` o un `Error` nativo. La JSDoc dichiara solo `throw {Error} 'Invalid MapperBrokerConfig'` (validation Valibot). Il consumer che cattura "Invalid MapperBrokerConfig" non gestisce le altre eccezioni, e il broker resta in uno stato parzialmente inizializzato (constructor ha completato `inner = new Broker(config)` ma non il bootstrap).
+**File:** `packages/mapper/README.md:211`
 
-Inoltre: l'ordine bootstrap (canonicalModel → aliasRegistry → transforms) è fisso, mentre se uno schema canonico ha `requires` su un altro schema dello stesso config che viene processato dopo, lo schema dependency fallisce. Esempio:
-```ts
-canonicalModel: { schemas: [
-  { id: 'forecast', requires: ['user'], fields: {...} }, // throws - 'user' not registered yet
-  { id: 'user', fields: {...} },
-]}
+**Issue:**
+La tabella "Field policy (VAL-08)" riga 211 dice:
+> `required: true` | usa il valore | throw `BrokerError 'validation.field.missing'` → publish `mapping.error` (D-58) → no delivery
+
+Ma:
+- `mapper-engine.ts:575` throws `code: 'mapping.field.missing'` (NON `validation.field.missing`).
+- README riga 217 (NEW WR-D iter2 paragraph) cita correttamente `mapping.field.missing`.
+
+Il fix WR-D iter2 ha aggiunto il paragrafo nuovo che usa il code corretto, ma NON ha allineato la tabella precedente. Il developer che legge la tabella scrive un subscriber per `validation.field.missing` e NON intercetta nulla — debug confuso.
+
+**Fix suggerito:**
+```markdown
+| `required: true` | usa il valore | throw `BrokerError 'mapping.field.missing'` → publish `mapping.error` (D-58) → no delivery |
 ```
-L'ordine nell'array determina la registrability — il consumer deve fare topological sort manualmente.
 
-**Fix:** O wrappare il bootstrap in try/catch riportando errori aggregati al consumer (raccomandato), o documentare esplicitamente la lista di possibili throw. Ordinare topologicamente gli schema per `requires` automaticamente, o fail-fast con messaggio chiaro. Patch:
-```ts
-private bootstrapFromConfig(config: MapperBrokerConfig): void {
-  if (!config) return
-  // 1. Topological sort of canonical schemas by 'requires'
-  if (config.canonicalModel?.schemas) {
-    const sorted = topologicalSort(config.canonicalModel.schemas)
-    for (const schema of sorted) {
-      try { this.canonicalRegistry.register(schema) }
-      catch (err) { this.logger.error('bootstrap: canonical register failed', { schemaId: schema.id, error: err }); throw err }
-    }
-  }
-  // ... idem per altri sezioni con error wrapping
-}
-```
+Anche `MappingErrorCode` literal union (`packages/mapper/src/types/mapping-error.ts`) è la source of truth — il README deve riflettere quella enum.
 
 ---
 
-### CR-06: handleMappingError pubblica `mapping.error` con `deliveryMode: 'async'` — può loop se mapping.error subscriber a sua volta fallisce [BLOCKER]
+### WR-03: AliasRegistry e CanonicalRegistry non hanno prototype-pollution guard sui field name [WARNING]
 
-**File:** `packages/mapper/src/broker-mapper-wrapper.ts:615-634` (handleMappingError)
-**Issue:** `handleMappingError` chiama `this.inner.publish('mapping.error', payload, { source: { type: 'system', id: 'mapper' }, deliveryMode: 'async' })`. Il problema: il publish va attraverso `this.inner` (NON `this.publish` del MapperBroker), quindi il payload `mapping.error` salta tutto il mapping wrapper. Tuttavia: se un consumer subscribe a `mapping.error` e a sua volta lancia, il `Broker.bus` di F1 potrebbe re-publishare un `system.error` (CORE-12 handler isolation). Se quel `system.error` viene a sua volta gestito da un mapper-aware subscriber che fallisce... non c'è guard contro questo loop. Il commento "T-02-10-05: F1 handler isolation previene cascade infinita" presume che F1 sia robusto, ma non è verificato in questo package.
+**File:** `packages/mapper/src/alias-registry.ts:104-114, 134-149` · `packages/mapper/src/canonical-registry.ts:90-126`
+**Riferimento storico:** WR-03 (iter1) chiuso solo per `compileRules` + `readPath` di mapper-engine.ts.
 
-In aggiunta, e più gravemente: il `payload` di `mapping.error` contiene `error: BrokerError` — un oggetto `Error` con stack trace e potenzialmente `cause: Error` con riferimenti circolari (createBrokerError + originalError). Quando F1 deep-freeze (in dev mode) tenta di freeze il payload, può fallire o accedere a getter che hanno side effect (e.g., `error.stack` lazily computed). Test mancante per questo path.
+**Issue:**
+WR-03 iter1 ha aggiunto `RESERVED_KEYS = new Set(['__proto__', 'constructor', 'prototype'])` in `mapper-engine.ts` per:
+- `compileRules` (line 441-456): rifiuta canonicalField/source riservati.
+- `readPath` (line 728-742): ritorna undefined su segmenti riservati.
 
-E ancora: `JSON.stringify(payload)` in eventuali logger/inspector con `BrokerError + originalError + cause` produce output non deterministico (Error ha `toJSON` undefined in alcuni motori e custom in altri). Il README afferma "Inspector ring buffer bounded" per il count ma il payload effettivo del mapping.error che entra negli handler subscriber è una struttura potenzialmente non serializable.
-
-**Fix:** 
-1. Sanitize il payload prima del publish: estrarre solo `code`, `category`, `message`, `details`, evitare `originalError`/`cause`/`stack` ricorsivi:
+Tuttavia, `AliasRegistry.registerGlobal/registerScoped` accetta QUALUNQUE stringa come `localField` E `canonicalField`. Esempio:
 ```ts
-const safeError = {
-  code: err.code, category: err.category, message: err.message,
-  details: err.details, // already plain object
-}
-this.inner.publish('mapping.error', { error: safeError, sourceEvent: sourceTopic, step }, ...)
-```
-2. Guard esplicito contro recursion: track in-flight mapping errors via Set<string> (sourceTopic+step) e skip se già in chain.
-3. Test caso: subscribe a `mapping.error` con handler che throws → verificare che NON triggera re-publish di `mapping.error` infinito.
-
-## Warnings
-
-### WR-01: Proxy in wrapPluginContext rompe il `this` binding per metodi non-funzione [WARNING]
-
-**File:** `packages/mapper/src/broker-mapper-wrapper.ts:553-579` (wrapPluginContext)
-**Issue:** Il Proxy intercetta `get` e per ogni proprietà funzione fa `value.bind(target)` (riga 573). Questo rompe i metodi che dipendono dal `this` essere il Proxy stesso (per chained calls), e per i getter properties non funzione perde l'identity. In particolare, se il `ctx.broker` originale (PluginScopedBroker di F1) ha proprietà non enumerable o getter (eg. `get pendingAsyncDelivery()`), il proxy ritorna un valore stale. Inoltre: il `subscribe` è intercettato senza supportare il caso `subscribe(pattern, handler)` con 2 argomenti — la chiusura forza `options = {}` come 3° argomento, ok, ma non controlla se `target.subscribe` accetta 3 argomenti. Se F3 cambia la firma del subscribe scoped, questo Proxy rompe silently.
-
-**Fix:** Usare un wrapper esplicito con metodi typed invece di un generic Proxy:
-```ts
-private wrapPluginContext(ctx, pluginId): PluginContext {
-  const inner = ctx.broker as ScopedBrokerLike
-  const wrapped = {
-    subscribe: (pattern, handler, options = {}) => {
-      if (this.mapper.hasInputMap(pluginId)) {
-        return inner.subscribe(pattern, this.wrapConsumerHandler(pluginId, handler), options)
-      }
-      return inner.subscribe(pattern, handler, options)
-    },
-    publish: inner.publish?.bind(inner),
-    // expose other methods as needed explicitly
-  }
-  return { ...ctx, broker: wrapped }
-}
+broker.registerAlias('safeKey', '__proto__', { scope: 'global' })
+// → globalAliases.set('safeKey', '__proto__')
+// publish con payload { safeKey: 'evil' } via plugin compilato:
+// → applyAliasResolution: result['__proto__'] = 'evil' → POLLUTION
 ```
 
-### WR-02: `topicSchemas` placeholder rimane `unknown` ma il TS augmentation non lo tipa — config con shape sbagliata accettato [WARNING]
+Verifica trace:
+- `mapper-engine.ts:706`: `result[resolution.canonical] = source[localField]`
+- `resolution.canonical` proviene da AliasRegistry e NON è validato contro RESERVED_KEYS.
 
-**File:** `packages/core/src/types/config.ts:58` (topicSchemas), `packages/mapper/src/augment.ts` (no topicSchemas augment)
-**Issue:** `topicSchemas?: unknown` rimane tale anche dopo F2. Il `MapperBrokerConfigSchema` Valibot lo accetta come `v.optional(v.unknown())`. In runtime questo significa che ANY shape è accettata e ignorata. Il README dichiara "topicSchemas (F2 V2 deferred): kept as unknown placeholder" — accettabile, ma il consumer può passare `topicSchemas: { weatherTopic: 'invalid-schema' }` aspettandosi validazione e ottenere silent ignore. Un test "regression-prevention" (esempio: warn nel constructor se `topicSchemas` non vuoto) eviterebbe sorprese in F3+.
+Stessa lacuna in `CanonicalRegistry.register(schema)` per `schema.id` e `schema.fields` keys: una `id` o un field name `__proto__` viene accettato silenziosamente (`schemas.set('__proto__', schema)` su Map è safe perché Map non eredita da Object.prototype, ma quando il consumer fa `schema.fields['__proto__']` su un POJO può triggare pollution).
 
-**Fix:** Aggiungere `if (config.topicSchemas !== undefined) this.logger.warn('topicSchemas is reserved for F2 V2 — currently ignored')` nel `MapperBroker` constructor.
+**Impatto severity:**
+- Vector LOCAL (richiede chiamata API esplicita, non via input utente untrusted come in T-02-07-x). PRD §31 dichiara "input from server/user untrusted; APIs API trusted". Questa è defensive depth, non vuln runtime.
+- Comunque WR-03 iter1 ha proteggi a metà — coverage incompleto.
 
-### WR-03: applyMapping non protegge contro `__proto__` / `constructor` keys [WARNING]
+**Fix suggerito:**
 
-**File:** `packages/mapper/src/mapper-engine.ts:404-430` (applyMapping)
-**Issue:** Il payload locale viene letto con `source[path]` e il risultato è accumulato in `result[fm.canonicalField]`. Se un payload utente contiene `{ __proto__: { polluted: true } }`, e un `MappingRule` ha `source: '__proto__'` (improbabile ma possibile), il mapper espone il prototype object al canonical. Più realisticamente: se il `canonicalField` è `__proto__` o `constructor` (impossibile in TS strict, ma possibile via cast), il `result['__proto__'] = ...` può prototype-pollute il `result` object. Anche `readPath` con dot-path `__proto__.polluted` espone gli internal del prototype.
-
-**Fix:** Filtrare keys riservate in `compileRules` e `readPath`:
+`alias-registry.ts:104` (e analogo `:134`):
 ```ts
 const RESERVED_KEYS = new Set(['__proto__', 'constructor', 'prototype'])
-// In compileRules:
-if (RESERVED_KEYS.has(canonicalField)) throw createBrokerError({ code: 'mapping.field.invalid', ... })
-// In readPath:
-if (parts.some(p => RESERVED_KEYS.has(p))) return undefined
+registerGlobal(localField: string, canonicalField: string): boolean {
+  if (RESERVED_KEYS.has(localField) || RESERVED_KEYS.has(canonicalField)) {
+    throw new Error(`alias.field.reserved: localField/canonicalField cannot be ${localField}/${canonicalField} (prototype-pollution guard)`)
+  }
+  // ... resto identico
+}
 ```
-Oppure usare `Object.create(null)` per `result` invece di `{}` (rimuove la prototype chain per output object).
 
-### WR-04: `wrapTap` chiama l'inspector dopo il tap originale — ordine non documentato [WARNING]
-
-**File:** `packages/mapper/src/inspector.ts:209-221` (wrapTap)
-**Issue:** L'ordine di invocazione è: tap originale prima, inspector dopo. Se il tap originale modifica lo snapshot (es. mutates), l'inspector vede il valore mutato. Anche se `PipelineSnapshot` è readonly type-level, in JS niente impedisce mutation. Il commento "il tap originale non deve rompere il chain" implica safety del catch ma non discute ordering. Inoltre, se il tap originale è async (ritorna Promise), `try { original.onPipelineStep(...) }` swallow il throw sincrono ma NON aspetta la promise — eventuali rejection vengono silently lost.
-
-**Fix:** Documentare l'ordine esplicitamente; preferire chiamata inspector-first per leggere snapshot non corrotto:
+`canonical-registry.ts:90`:
 ```ts
-export function wrapTap(original, inspector): EventTap {
-  return {
-    onPipelineStep(step, snapshot): void {
-      // Inspector PRIMA del tap utente — vediamo snapshot pristine.
-      try { inspector.recordSnapshot(step, snapshot) } catch { /* never throw from inspector */ }
-      try { original.onPipelineStep(step, snapshot) } catch { /* swallow user tap */ }
+register(schema: CanonicalSchema, options: RegisterOptions = {}): boolean {
+  if (RESERVED_KEYS.has(schema.id)) {
+    throw createBrokerError({ code: 'canonical.id.reserved', ... })
+  }
+  for (const fieldName of Object.keys(schema.fields)) {
+    if (RESERVED_KEYS.has(fieldName)) {
+      throw createBrokerError({ code: 'canonical.field.reserved', ... })
     }
   }
+  // ... resto identico
 }
 ```
 
-### WR-05: TransformPipeline.unregisterByOwner muta il Map durante l'iterazione [WARNING]
-
-**File:** `packages/mapper/src/transform-pipeline.ts:173-182`
-**Issue:** Il loop `for (const [name, entry] of this.transforms)` chiama `this.transforms.delete(name)` durante l'iterazione. In JS Map iteration semantics, delete durante for-of è ufficialmente safe — l'iteratore visita gli elementi correnti e skippa quelli rimossi. Tuttavia, su engine con implementazioni più aggressive (e in alcuni lint rules), questo è un anti-pattern segnalato. Prevedibile ma stylistically debole.
-
-**Fix:** Collect-then-delete:
-```ts
-unregisterByOwner(pluginId: string): number {
-  const toDelete: string[] = []
-  for (const [name, entry] of this.transforms) {
-    if (entry.ownerId === pluginId) toDelete.push(name)
-  }
-  for (const name of toDelete) this.transforms.delete(name)
-  return toDelete.length
-}
-```
-
-### WR-06: MapperBroker.unregisterPlugin cleanup ordering — risorse rimosse PRIMA della unregister F1 inducono race [WARNING]
-
-**File:** `packages/mapper/src/broker-mapper-wrapper.ts:328-361` (unregisterPlugin)
-**Issue:** L'ordine attuale è: `inner.unregisterPlugin(id)` PRIMA, poi cascade F2 (alias scoped, transform, mapper compiled). Se durante `inner.unregisterPlugin` il plugin esegue `onUnmount` che pubblica un evento, quel publish utilizza ancora il mapper compiled (`mapper.hasCompiled(id) === true`). Se `onUnmount` triggera un mapping che usa un transform di un altro plugin il quale a sua volta è in fase di unregister, può esserci overlap. Più semplicemente: il commento dice che la cascade è coerente con LIFE-02, ma F1 esegue cascade `bus.unsubscribeByOwner(id)` DENTRO `inner.unregisterPlugin`, non dopo. Quindi F2 cascade after F1 è ok per cleanup, ma il documento del README "Cascade isolata: ogni step indipendente" (T-02-10-03) è in tensione con l'ordering.
-
-In aggiunta: `try/catch` swallow di ogni step **non è preceduto da log**: se `mapper.unregisterPluginMappings` rimuove fallisce silently, il consumer non lo sa. Il pattern attuale fa `this.logger.error(...)` ma il logger di default è `silentLogger` — error invisible.
-
-**Fix:** Consolidare l'error reporting via Inspector ring buffer:
-```ts
-async unregisterPlugin(id: string): Promise<void> {
-  await this.inner.unregisterPlugin(id)
-  const errors: BrokerError[] = []
-  const safe = (op: () => void, step: string) => {
-    try { op() }
-    catch (err) {
-      const wrapped = createBrokerError({ code: 'plugin.cascade.failed', category: 'plugin', message: ..., details: { id, step, error: err }})
-      this.inspector.recordError(wrapped)
-      errors.push(wrapped)
-    }
-  }
-  safe(() => this.aliasRegistry.unregisterScopedAll(id), 'alias-cascade')
-  safe(() => this.transformPipeline.unregisterByOwner(id), 'transform-cascade')
-  safe(() => this.mapper.unregisterPluginMappings(id), 'mapper-cascade')
-  // ... canonical schemas
-}
-```
-
-### WR-07: F1 createBroker accetta sezioni F2-F6 come pass-through senza validazione — default sicuro? [WARNING]
-
-**File:** `packages/core/src/public-factory.ts:96-103`
-**Issue:** `createBroker` (F1) riceve un `BrokerConfig` con sezioni F2-F6 augmented dichiarazionalmente. Il `BrokerConfigSchema` usa `v.looseObject` (riga 39), accettando qualsiasi extra key. Se un consumer chiama `createBroker({ canonicalModel: { schemas: 'wrong-shape' } })` (F1-only, senza importare il package mapper), nessuna validazione struttura le sezioni. Acceptable per pass-through ma il consumer non riceve errore. Il commento in `public-factory.ts:55-60` riconosce ciò ("i package F2-F6 hanno la responsabilità di validare le proprie sezioni internamente al momento del wiring") ma il `MapperBroker.bootstrapFromConfig` lo fa solo SE creato via `createMapperBroker` — `new Broker(config)` direttamente con `canonicalModel: {...}` non valida nulla.
-
-Questo si lega a CR-05: il consumer non sa quale factory deve usare.
-
-**Fix:** Documentare nel JSDoc di `createBroker` (F1) che le sezioni F2-F6 sono ignorate al runtime se non si usa la factory specifica. Considerare un log warn in `createBroker` quando sezioni F2-F6 sono presenti ma `@sembridge/mapper` non è caricato.
-
-### WR-08: ValidatorAdapter.validate sopra cast `unknown` a `BaseSchema` può accettare schema runtime errato e ritornare ok [WARNING]
-
-**File:** `packages/mapper/src/valibot-adapter.ts:104-113`
-**Issue:** Il cast `schema as v.BaseSchema<...>` è un cast non-checked. Se il caller passa un objeto che NON è uno schema Valibot (es. `{ type: 'string' }` JSON Schema-like), `v.safeParse` può:
-- Throw un internal error → catturato dal try/catch e ritornato come `{ ok: false, issues: [...] }` ✓
-- Ritornare `{ success: true, output: payload }` se l'oggetto NON-schema accidentalmente non triggera l'errore → adapter ritorna `ok: true` con un payload non-validato → la pipeline F2 prosegue come se la validation fosse passata
-
-In particolare: `v.safeParse({}, payload)` (oggetto vuoto come schema) — il behavior dipende dall'implementazione Valibot 1.x. Test mancante per il caso "non-Valibot schema".
-
-**Fix:** Verificare che lo schema sia un `BaseSchema` con un type guard:
-```ts
-function isValibotSchema(s: unknown): s is v.BaseSchema<unknown, unknown, v.BaseIssue<unknown>> {
-  return typeof s === 'object' && s !== null && '_run' in s && typeof (s as { _run?: unknown })._run === 'function'
-}
-// In validate:
-if (!isValibotSchema(schema)) {
-  return { ok: false, issues: [{ message: 'invalid schema: not a Valibot BaseSchema' }] }
-}
-```
-
-### WR-09: Default `errorBufferSize=10` può troncare errori importanti su burst [WARNING]
-
-**File:** `packages/mapper/src/inspector.ts:109`
-**Issue:** Il ring buffer di default contiene solo 10 errori. In un burst (es. 100 transform fail in 1 secondo per un produttore broken), gli ultimi 90 sostituiscono i primi 10 e il consumer perde l'osservabilità del problema iniziale (root cause). Il README e la JSDoc lo riconoscono come accept ("F2 V1 best-effort"), ma 10 è basso. Lo standard nelle libraries error-tracking è 50-100.
-
-**Fix:** Aumentare default a 50 (`errorBufferSize ?? 50`) e/o esporre `errorBufferSize` nel `MapperBrokerConfig` per permettere override. Aggiungere metric counter "errori droppati" per visibilità:
-```ts
-private droppedCount = 0
-recordError(error: BrokerError): void {
-  this.errorBuffer.push(error)
-  if (this.errorBuffer.length > this.errorBufferSize) {
-    this.errorBuffer.shift()
-    this.droppedCount++
-  }
-}
-getSnapshot(): MappingInspectorSnapshot {
-  return { ..., droppedErrorsCount: this.droppedCount }
-}
-```
-
-## Info
-
-### IN-01: README sezione "Helpers runtime" lista 5 classi ma il barrel ne esporta tutte [INFO]
-
-**File:** `packages/mapper/README.md:189`
-**Issue:** Il README dice "Le 4 classi runtime AliasRegistry, CanonicalRegistry, TransformPipeline, MapperEngine, MappingInspector sono esportate" — sono 5 nomi ma scrive "4 classi". Errore tipografico cosmetico.
-
-**Fix:** Cambiare "4 classi" in "5 classi" o riformulare.
-
-### IN-02: Nomi method `unregisterByOwner` vs `unregisterScopedAll` — naming inconsistency [INFO]
-
-**File:** `packages/mapper/src/transform-pipeline.ts:173`, `packages/mapper/src/alias-registry.ts:203`
-**Issue:** `TransformPipeline.unregisterByOwner(pluginId)` e `AliasRegistry.unregisterScopedAll(pluginId)` fanno la stessa cosa concettualmente (cascade plugin) ma hanno nomi diversi. `MapperEngine.unregisterPluginMappings` usa un terzo naming. Inconsistency surface-level.
-
-**Fix:** Standardizzare su `unregisterByOwner(ownerId)` o `unregisterByPlugin(pluginId)` per i 3 metodi cascade. Refactor:
-- `AliasRegistry.unregisterScopedAll(pluginId)` → `AliasRegistry.unregisterByOwner(pluginId)`
-- `MapperEngine.unregisterPluginMappings(pluginId)` → `MapperEngine.unregisterByOwner(pluginId)`
-
-### IN-03: Test "documentary" che non assertano nulla [INFO]
-
-**File:** `packages/mapper/src/__integration__/transform-failure-modes.test.ts:301-355` (Test 5 e Test 6)
-**Issue:** Due test del suite di failure modes hanno `expect(true).toBe(true)` come unica assertion (riga 303 e 355) "per documentare il behavior corrente". Questi test PASSANO sempre indipendentemente dal codice e non producono regressione signal. Sono noise nel report di test.
-
-**Fix:** Rimuovere questi test, oppure renderli proper assertion-based. Per Test 5 (canonical validation failure), assertare il behavior atteso (sì o no `mapping.error` published) e committare al contract; per Test 6 (skip + required combo), specificare cosa vuole il design e testare quello.
-
-### IN-04: `interface ImportMetaEnv` referenced ma non importata in broker.ts [INFO]
-
-**File:** `packages/core/src/core/broker.ts:103` (cast a `ImportMetaEnv`)
-**Issue:** Il cast `import.meta as unknown as { env?: ImportMetaEnv }` referenzia un type `ImportMetaEnv` che è ambient (provided da Vite/tsup typings). Se il consumer build con un toolchain diverso che non fornisce questo ambient, il typecheck fallisce. Non è in scope F2 ma il review l'ha attraversato.
-
-**Fix:** Definire un type locale narrow `interface ImportMetaEnv { DEV?: boolean }` o usare un narrower cast:
-```ts
-const meta = import.meta as unknown as { env?: { DEV?: boolean } }
-```
-
-### IN-05: `RESERVED` keys in source/canonicalField + magic numbers (errorBufferSize, etc) non centralizzati [INFO]
-
-**File:** `packages/mapper/src/inspector.ts:109`, `packages/mapper/src/mapper-engine.ts:409`
-**Issue:** I default magic value (errorBufferSize=10, payload `?? {}` fallback, payload null check) sono sparsi nel codice. Una sezione `constants.ts` ridurrebbe duplication e renderebbe i tuning visibili.
-
-**Fix:** Creare `packages/mapper/src/constants.ts` con:
-```ts
-export const DEFAULT_ERROR_BUFFER_SIZE = 50
-export const RESERVED_FIELD_KEYS = new Set(['__proto__', 'constructor', 'prototype'])
-export const PIPELINE_F2_STEPS = ['event.source.resolved', 'event.mapped.canonical', 'event.canonical.validated', 'event.mapped.consumer', 'event.final.validated'] as const
-```
+In alternativa, centralizzare `RESERVED_KEYS` in un file shared (es. `types/reserved-keys.ts`) e usarlo da tutti e 3 i punti.
 
 ---
 
-_Reviewed: 2026-04-29_
-_Reviewer: Claude (gsd-code-reviewer)_
-_Depth: standard_
+### WR-04: `event.source.resolved` consumer-side (iter2 add) non corrisponde a Step 4 PRD §28 (publisher-only) [WARNING — design]
+
+**File:** `packages/mapper/src/broker-mapper-wrapper.ts:903-911`
+**Riferimento iter2:** CR-01-RESIDUAL "simmetria — F6 può differenziare publisher vs consumer via metadata.pluginId"
+
+**Issue:**
+Il PRD §28 mappa Step 4 (`event.source.resolved`) come publisher-side step ("alias-resolve / source resolved" — chi pubblica, identificazione del plugin sender). Il fix CR-01-RESIDUAL emette lo STESSO step anche consumer-side ("simmetria — il tap registra il momento in cui il pipeline determina quale plugin sta ricevendo l'evento") — ma il PRD §28 step 11 (`event.mapped.consumer`) e step 12 (`event.final.validated`) sono già la counterpart consumer-side; non c'è un "Step 11.0 source resolved consumer".
+
+Conseguenze:
+- Inspector V2/F6: dovrà differenziare publisher-vs-consumer leggendo `metadata.pluginId` E semantically inferendo dal `step` su quale side è (impossibile col solo step name).
+- Per ogni evento delivered con N consumer + 1 publisher → si vedono `N+1` snapshot di `event.source.resolved` per lo STESSO topic, con `eventId` diversi (publisher è placeholder, consumer è reale). Conta confusing per metriche.
+- Test `weather-scenario.integration.test.ts:107` `expect(...length).toBeGreaterThan(0)` non verifica la cardinalità — non distingue tra "1 publisher only" vs "1 publisher + N consumers".
+
+**Fix suggerito:**
+
+Opzione A — Rimuovere consumer-side emission di `event.source.resolved`:
+```ts
+// broker-mapper-wrapper.ts:wrapConsumerHandler — RIMUOVERE linee 908-911
+private wrapConsumerHandler(pluginId, handler) {
+  return (event: BrokerEvent) => {
+    try {
+      // Step 11: applyInputMap consumer-side (NO event.source.resolved consumer-side)
+      const mappedPayload = this.mapper.applyInputMap(pluginId, event.payload)
+      // ... resto identico
+    }
+  }
+}
+```
+
+Opzione B — Introdurre step distinto F2-only per consumer-side (es. `event.consumer.resolved`) e aggiornare `F2PipelineStep` literal union:
+```ts
+// index.ts:F2PipelineStep
+export type F2PipelineStep =
+  | 'event.source.resolved'        // publisher-side step 4
+  | 'event.consumer.resolved'      // NEW — consumer-side identification
+  | 'event.mapped.canonical'
+  | 'event.canonical.validated'
+  | 'event.mapped.consumer'
+  | 'event.final.validated'
+```
+Aggiornare doc PRD §28 → 6 step F2 (era 5). Aggiornare CLAUDE.md "EventTap interface deve essere instrumentata già in F2" coverage.
+
+Opzione C — Documentare in JSDoc `wrapConsumerHandler` + README §Pipeline che `event.source.resolved` ha doppia semantica F2 V1 con discriminazione via `metadata.pluginId` + `metadata.role: 'publisher'|'consumer'` (non implementato attualmente — `metadata.pluginId` è disambiguante solo se il consumer ed il publisher hanno pluginId diversi, false in plugin-loop scenarios).
+
+---
+
+## Out of scope
+
+Iter 1 + iter 2 hanno chiuso 22 finding totali. Le seguenti restano fuori scope per `fix_scope: critical_warning`:
+- IN-01..IN-05 della review iniziale (info findings, già documentate in `02-REVIEW-FIX.md` iter2 §"Out of scope").
+- Performance e bundle-size: out of scope v1 review per policy GSD.
+
+## Verification
+
+| Tier | Check | Result |
+|------|-------|--------|
+| 1 | Re-read di ogni file iter2-modificato | PASS |
+| 2 | `pnpm -F @sembridge/mapper test` | PASS — 172/172 |
+| 2 | `pnpm -F @sembridge/core test` | PASS — 248/248 (no D-49 regression) |
+| 2 | `pnpm -F @sembridge/mapper exec tsc --noEmit` | PASS — clean |
+| 3 | Trace `event.source.resolved` publisher path (broker-mapper-wrapper.ts:341-356) | PASS — emesso PRIMA di applyOutputMap |
+| 3 | Trace `event.source.resolved` subscriber path (broker-mapper-wrapper.ts:901-911) | PASS — emesso con `event.id` reale, prima di applyInputMap |
+| 3 | Trace alias-only path runtime (registerPlugin → compileMappings → applyOutputMap → applyAliasResolution) | PASS per scoped/global · **EDGE CASE rilevato** per "no maps, no aliases" → BL-01 |
+| 3 | Trace error message `~run` in valibot-adapter.ts:128 | PASS |
+| 3 | Trace duplicate-id detection in topologicalSortSchemas (broker-mapper-wrapper.ts:754-764) | PASS |
+| 3 | Verify `eventId: event.id` propagato a step 11/12 (broker-mapper-wrapper.ts:909, 919, 927) | PASS · **publish-side resta placeholder** → WR-01 |
+| 3 | Verify README WR-D paragraph + Test 25h null-handling | PASS · **README table line 211 ancora obsoleta** → WR-02 |
+| 3 | Verify recursion guard transitivo test (broker-mapper-wrapper.test.ts:503-564) | PASS — 2 mapping.error per topic diversi |
+
+## Recommendations
+
+1. **BL-01 — addressing prima del Phase 2 close:** scegliere fix Opzione A/B/C e implementare con TDD test esplicito per il caso "plugin with only canonicalSchemaId, no maps, no relevant aliases". Decidere se la breaking change post-iter2 è intentional (Opzione C, accept) o richiede compat fix (Opzione A/B).
+2. **WR-02:** allineare README §Field policy table (oneliner). 30 secondi.
+3. **WR-03:** aggiungere prototype-pollution guards in AliasRegistry e CanonicalRegistry per coverage completo (~15 righe + 3-4 unit test).
+4. **WR-01 + WR-04:** entrambi sono design discussions (impact su F6) — possono essere documentate come ADR/known-limitation in attesa di Phase 6 (Inspector reale) invece di essere fixed ora. Decisione di scope.
+
+---
+
+_Reviewed: 2026-04-29T16:30:00Z_
+_Reviewer: Claude (gsd-code-reviewer, opus-4-7-1)_
+_Depth: standard · iteration 3 (post-iter2 fix)_
