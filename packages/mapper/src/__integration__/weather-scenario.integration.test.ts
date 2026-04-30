@@ -101,6 +101,12 @@ describe('Scenario meteo PRD §29 — end-to-end senza HTTP (D-53, success crite
     // Verifica che il tap ha visto la pipeline F1 (event.received → ... → event.delivered)
     expect(harness.byStep('event.received').length).toBeGreaterThan(0)
     expect(harness.byStep('event.delivered').length).toBeGreaterThan(0)
+    // CR-01 fix verification: il tap ha visto anche i 4 step F2 (D-50, vincolo
+    // architetturale CLAUDE.md "EventTap interface deve essere instrumentata già in F1").
+    expect(harness.byStep('event.mapped.canonical' as never).length).toBeGreaterThan(0)
+    expect(harness.byStep('event.canonical.validated' as never).length).toBeGreaterThan(0)
+    expect(harness.byStep('event.mapped.consumer' as never).length).toBeGreaterThan(0)
+    expect(harness.byStep('event.final.validated' as never).length).toBeGreaterThan(0)
   })
 
   it('multiple consumers with different inputMap receive different shapes (TEST-02)', async () => {
