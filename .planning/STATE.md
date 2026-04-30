@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-current_plan: 6
+current_plan: 10
 status: executing
-last_updated: "2026-04-30T08:12:37.548Z"
+last_updated: "2026-04-30T08:52:57.924Z"
 progress:
   total_phases: 6
   completed_phases: 1
   total_plans: 23
-  completed_plans: 20
-  percent: 87
+  completed_plans: 21
+  percent: 91
 ---
 
 # Project State: SemBridge
@@ -29,17 +29,17 @@ progress:
 ## Current Position
 
 Phase: 02 (canonical-model-mapper) — EXECUTING
-Plan: 10 of 12
-Current Plan: 10
+Plan: 11 of 12
+Current Plan: 11
 Total Plans: 12
 
-**Last completed:** Plan 02-09 (augment + barrel) at 2026-04-30T07:57Z — 4 commits (bb0eac5 RED + 3a2840b Rule 1 fix + 2b3c521 GREEN + ef00b46 barrel)
-**Next:** Plan 02-10 (broker wrapper — composition decorator per MapperEngine + MappingInspector)
+**Last completed:** Plan 02-10 (broker wrapper) at 2026-04-30T08:45Z — 4 commits (b51e507 RED MapperBroker + edfd0e0 GREEN MapperBroker + 3a840d0 RED createMapperBroker + a53c260 GREEN createMapperBroker)
+**Next:** Plan 02-11 (integration test scenario meteo PRD §29 senza HTTP — D-53)
 
 - **Phase:** 1 — Core essenziale
 - **Verifier verdict:** PASS (confidence HIGH) — 5/5 success criteria VERIFIED, 27/27 REQ-IDs done, 8/8 gate CI passati. Vedi `.planning/phases/01-core-essenziale/VERIFICATION.md`.
 - **Status:** Ready to execute
-- **Progress:** [█████████░] 87%
+- **Progress:** [█████████░] 91%
 
 ## Phases Overview
 
@@ -76,6 +76,7 @@ Total Plans: 12
 | Phase 02 PP02-07 | 54min | 3 tasks | 2 files |
 | Phase 02 P08 | 12min | 1 tasks | 2 files |
 | Phase 02 P09 | 17min | 2 tasks | 8 files |
+| Phase 02 P10 | 21min | 2 tasks tasks | 6 files files |
 
 ## Accumulated Context
 
@@ -125,6 +126,10 @@ Total Plans: 12
 | Plan 02-09 Rule 1 fix: rimossi placeholder `unknown` da `BrokerConfig` di core per abilitare TS declaration merging F2 | TS rifiuta merging che narrow `unknown` a tipo specifico (TS2717). PLAN preamble dice "NESSUNA modifica a packages/core/src/" ma D-56 richiede esplicitamente declaration merging dai package downstream — i due vincoli sono in conflitto tecnico. Risolto seguendo D-56 intent: rimossi 7 field placeholder (canonicalModel/aliasRegistry/transforms/routes/transport/workers/cache); mantenuto `topicSchemas` (V2 deferred). `BrokerConfigSchema` Valibot da `v.object` a `v.looseObject` per pass-through. Test core 248/248 passing (no regression). | 02-09-SUMMARY.md |
 | Plan 02-09 tree-shake mitigation 3-layer per `__augmentLoaded` side-effect | tsup `treeshake: true` rimuove `import './augment'` da `dist/index.js` anche con sideEffects array. Mitigation: (1) re-export `__augmentLoaded` dal barrel forza preservation dell'import; (2) sideEffects array esteso a 4 patterns (`./dist/augment.js`, `./src/augment.ts`, `**/augment.{js,ts}`); (3) `dist/augment.js` come entry separata (utenti possono `import '@sembridge/mapper/augment'` esplicitamente). Verificato: dist/index.js contiene `var __augmentLoaded = true;`. | 02-09-SUMMARY.md |
 | Plan 02-09 `F2PipelineStep` literal union additive come workaround a TS limitazione type alias | `PipelineStep` di core è type alias literal union, NON interface. TS non permette declaration merging di type alias. Soluzione: barrel mapper esporta `F2PipelineStep` come literal union additive separato con i 5 step F2 (D-50). Consumer F2 fa `type AllSteps = PipelineStep \| F2PipelineStep`. F1 step da core (subset) restano validi. F6 potrà refactor `PipelineStep` da type alias a interface union per veri declaration merging (T-02-09-05 disposition). | 02-09-SUMMARY.md |
+| Plan 02-10 MapperBroker composition wrapper di Broker F1 (NON subclass) — D-49 strict | Vincolo architetturale ARCHITECTURE §3.2 + D-49 di plan 02-CONTEXT.md. Il MapperBroker compone Broker F1 + i 5 moduli F2 (CanonicalRegistry/AliasRegistry/TransformPipeline/MapperEngine/MappingInspector) internamente come dipendenze; delegate F1 surface (publish/subscribe/registerPlugin/unregisterPlugin/getDebugSnapshot) + nuova surface F2 D-31 (registerCanonicalSchema/registerTransform/registerAlias/getMappingInspector). Verificato strict: `git diff HEAD~4 -- packages/core/` → 0 lines diff. | 02-10-SUMMARY.md |
+| Plan 02-10 wrapDescriptorHooks per propagare `ctx.broker` mapper-aware ai plugin (D-51 runtime) | Sfida tecnica: `ctx.broker` di F1 è un Proxy `createPluginScopedBroker` che chiama direttamente `bus.subscribe()`, bypassando il MapperBroker. Soluzione: il MapperBroker.registerPlugin wrappa gli hook lifecycle (onRegister/onMount/onUnmount/onDestroy) PRIMA di delegare a `inner.registerPlugin` — gli hook ricevono un `ctx` con `broker` sostituito da un Proxy mapper-aware che intercetta `subscribe` e applica `applyInputMap(pluginId, ...)` al payload canonico. Soddisfa Test 8 (scenario meteo PRD §29) senza modifiche a F1. | 02-10-SUMMARY.md |
+| Plan 02-10 createMapperBroker(config) pure function (D-30 no singleton) con Valibot validation D-56 | Pattern affine a `createBroker` F1 D-19. `MapperBrokerConfigSchema = v.looseObject({ runtime, debug, topicSchemas, canonicalModel, aliasRegistry, transforms })`: F1/F3-F6 sezioni pass-through; F2 sezioni validate strutturalmente (canonicalModel.schemas array di CanonicalSchema, aliasRegistry.global/scoped record string→string, transforms record string→fn). Throw `Error 'Invalid MapperBrokerConfig: ...'` su Valibot fail. Test 6 verifica `b1 !== b2` (no singleton). | 02-10-SUMMARY.md |
+| Plan 02-10 3 helper introspection aggiunti al MapperEngine (hasCompiled/hasInputMap/getCanonicalSchemaIdFor) | Necessari al broker wrapper per decidere quando applicare outputMap/inputMap/canonical-validation: alternative scartate (a) accesso diretto al `private compiled` Map (viola encapsulation TS error); (b) try/catch su `applyOutputMap` per detect 'no mapping' (catastrophic — semantica errore vs passthrough confusa). I 3 helper sono additive — il contract pubblico esistente di MapperEngine (compileMappings/applyOutputMap/applyInputMap/unregisterPluginMappings/validateCanonical/stats) resta identico. I 26 test plan 02-07 invariati. | 02-10-SUMMARY.md |
 
 ### Open Issues PRD §39 — Phase Assignment
 
@@ -134,7 +139,7 @@ Total Plans: 12
 |------------|-------|--------|
 | Precedenza alias automatici vs mapping esplicito | F2 (MAP-17) | **Closed in 02-04** (AliasRegistry + contract resolve documentato; il mapper-engine plan 02-07 valuta livello 1 esplicito PRIMA di chiamare resolve, quindi esplicito vince per costruzione) |
 | Ordine pipeline mapping/validazione | F1 (skeleton) + F2/F3/F6 (riempimento) | **Partial closed in 02-09** (PIPE-01: F2PipelineStep esposto come literal union additive dal barrel mapper; runtime pipeline orchestration al broker wrapper plan 02-10) |
-| Field mancante: errore o default | F2 (VAL-08) | Pending |
+| Field mancante: errore o default | F2 (VAL-08) | **Closed in 02-07** (mapper-engine.applyOutputMap throw `mapping.field.missing` con `details: { pluginId, fieldName }` su required:true + missing; required:false + default applies; required:false + no default field omesso) |
 | Transform failure: skip o block | F2 (VAL-09) | **Closed in 02-05** (TransformPipeline.apply con onFailure 'block'/'skip'/'fallback' D-44 + cause chaining ES2022 D-45 via createBrokerError; default 'block' enforced; non-Error throw values wrapped) |
 | Topic senza route | F3 (ROUTE-16) | Pending |
 | Più route applicabili stesso topic | F3 (ROUTE-15) | Pending |
@@ -176,7 +181,7 @@ Total Plans: 12
 - [x] Eseguire Plan 02-07 (Wave 4 — `MapperEngine` cuore F2: compileMappings + applyOutputMap + applyInputMap + tap orchestration 5 nuovi step) — completato 2026-04-30
 - [x] Eseguire Plan 02-08 (Wave 5 — `MappingInspector` extension EventTap + wrapTap composition helper) — completato 2026-04-30
 - [x] Eseguire Plan 02-09 (Wave 5 — augment.ts TS declaration merging + barrel mapper finale) — completato 2026-04-30 (2 task, 17min, 4 commit: bb0eac5 RED + 3a2840b Rule 1 fix + 2b3c521 GREEN + ef00b46 barrel; 6 augment test passing + 93 mapper tests + 248 core tests no regression; MAP-03/MAP-13/MAP-14/PIPE-01 done)
-- [ ] Eseguire Plan 02-10 (Wave 6 — broker-mapper-wrapper: composition decorator per agganciare MapperEngine + MappingInspector al Broker F1 senza modificare bus.ts)
+- [x] Eseguire Plan 02-10 (Wave 6 — broker-mapper-wrapper: composition decorator per agganciare MapperEngine + MappingInspector al Broker F1 senza modificare bus.ts) — completato 2026-04-30 (2 task TDD, 21min, 4 commit: b51e507 RED + edfd0e0 GREEN MapperBroker + 3a840d0 RED + a53c260 GREEN createMapperBroker; 15 test wrapper + 8 test factory passing; D-49 strict 0 modifiche a packages/core/; MAP-02/MAP-03/MAP-13/MAP-14/MAP-15/ERR-02/LIFE-02/PIPE-01 done; D-31/D-49/D-50/D-51/D-58/D-59/D-26 ext F2/D-48/D-30/D-56 closed runtime)
 - [ ] Eseguire Plan 02-11 (Wave 7 — integration test scenario meteo PRD §29 senza HTTP)
 - [ ] Eseguire Plan 02-12 (Wave 8 final gate F2 — coverage v8 ≥ 90% + publint/attw/size-limit estesi + DOC-03 README scenario meteo + JSDoc + gsd-verifier)
 
