@@ -252,6 +252,14 @@ export class MapperBroker {
     const userTap: EventTap = config.runtime?.tap ?? noopEventTap
     this.tap = wrapTap(userTap, this.inspector)
 
+    // WR-02 fix: warn se topicSchemas è presente ma F2 V2 deferred — accept silently
+    // ignored ma logger.warn per visibilità (T-02-09-02).
+    if ((config as { topicSchemas?: unknown }).topicSchemas !== undefined) {
+      this.logger.warn(
+        'MapperBroker: config.topicSchemas è riservato per F2 V2 (deferred); attualmente ignorato',
+      )
+    }
+
     // Bootstrap from config (D-56 wired) — sezioni F2 augmented al BrokerConfig.
     this.bootstrapFromConfig(config)
   }
