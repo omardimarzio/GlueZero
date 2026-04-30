@@ -31,17 +31,17 @@ Tutti i requisiti elencati sono table stakes (vincolanti dalla checklist PRD §4
 - [x] **MAP-01**: Canonical Vocabulary Registry con campi canonici tipizzati e alias riconosciuti *(PRD §13.3)*
 - [x] **MAP-02**: `registerCanonicalSchema(schemaDefinition)` per registrare schemi canonici *(PRD §16.2)*
 - [ ] **MAP-03**: Plugin dichiarano `inputMap` e `outputMap` per mapping locale ↔ canonico *(PRD §15.2)*
-- [ ] **MAP-04**: Mapper supporta rename semplice *(PRD §14.2.1)*
-- [ ] **MAP-05**: Mapper supporta mapping nested *(PRD §14.2.2)*
-- [ ] **MAP-06**: Mapper supporta default values *(PRD §14.2.3)*
-- [ ] **MAP-07**: Mapper supporta trasformazioni di formato (es. `parseItalianDate`) *(PRD §14.2.4, §14.4)*
-- [ ] **MAP-08**: Mapper supporta normalizzazione unità di misura *(PRD §14.2.5)*
-- [ ] **MAP-09**: Mapper supporta derivazione di campo (`$derive` da campi multipli con transform) *(PRD §14.2.6, §14.5)*
-- [ ] **MAP-10**: Mapper supporta mapping parziale *(PRD §14.2.7)*
+- [x] **MAP-04**: Mapper supporta rename semplice *(PRD §14.2.1)*
+- [x] **MAP-05**: Mapper supporta mapping nested *(PRD §14.2.2)*
+- [x] **MAP-06**: Mapper supporta default values *(PRD §14.2.3)*
+- [x] **MAP-07**: Mapper supporta trasformazioni di formato (es. `parseItalianDate`) *(PRD §14.2.4, §14.4)*
+- [x] **MAP-08**: Mapper supporta normalizzazione unità di misura *(PRD §14.2.5)*
+- [x] **MAP-09**: Mapper supporta derivazione di campo (`$derive` da campi multipli con transform) *(PRD §14.2.6, §14.5)*
+- [x] **MAP-10**: Mapper supporta mapping parziale *(PRD §14.2.7)*
 - [ ] **MAP-11**: Validazione post-mapping integrata *(PRD §14.2.8, §21.2.4)*
 - [x] **MAP-12**: `registerTransform(name, fn)` per trasformazioni custom; pipeline con gestione errori e fallback *(PRD §14.6, §16.2)*
-- [ ] **MAP-13**: Default V1 — canonicalizzazione interna completa: i dati transitano canonicalizzati internamente *(PRD §13.5)*
-- [ ] **MAP-14**: Mapping bidirezionale canonico → locale plugin in consegna ai consumer *(PRD §14.1)*
+- [x] **MAP-13**: Default V1 — canonicalizzazione interna completa: i dati transitano canonicalizzati internamente *(PRD §13.5)*
+- [x] **MAP-14**: Mapping bidirezionale canonico → locale plugin in consegna ai consumer *(PRD §14.1)*
 - [ ] **MAP-15**: Mapping Inspector: payload originale, canonico, finale, trasformazioni applicate, warning di ambiguità, errori *(PRD §14.8, §25.2)*
 - [x] **MAP-16**: Warning runtime quando un alias è potenzialmente ambiguo *(PRD §14.7)*
 - [x] **MAP-17**: Il mapping esplicito dichiarato dal plugin prevale sempre sugli alias automatici *(PRD §14.7, §39 — open issue da chiudere)*
@@ -106,12 +106,12 @@ Tutti i requisiti elencati sono table stakes (vincolanti dalla checklist PRD §4
 - [ ] **VAL-05**: Validazione risposta server *(PRD §21.2.5)*
 - [x] **VAL-06**: Schema definitions JSON Schema o equivalente tipizzato *(PRD §21.3)*
 - [x] **VAL-07**: Errori di validazione registrati in debug/log; payload invalidi non consegnati salvo configurazione esplicita *(PRD §21.4)*
-- [ ] **VAL-08**: Comportamento esplicito su field mancante (errore vs default) *(PRD §39 — open issue da chiudere)*
+- [x] **VAL-08**: Comportamento esplicito su field mancante (errore vs default) *(PRD §39 — open issue da chiudere)*
 - [x] **VAL-09**: Comportamento esplicito su transform failure (skip vs block) *(PRD §39 — open issue da chiudere)*
 
 #### Errori
 - [x] **ERR-01**: Tipo `BrokerError` con `code`, `message`, `category`, `details`, `originalError`, `routeId`, `topic`, `eventId` *(PRD §22.4)*
-- [ ] **ERR-02**: Eventi standard di errore: `<topic>.failed`, `system.error`, `mapping.error`, `worker.error`, `network.error` *(PRD §22.3)*
+- [x] **ERR-02**: Eventi standard di errore: `<topic>.failed`, `system.error`, `mapping.error`, `worker.error`, `network.error` *(PRD §22.3)*
 - [x] **ERR-03**: Errori isolati: il runtime non collassa salvo guasto critico non recuperabile *(PRD §22.2)*
 
 #### Pipeline & Lifecycle
@@ -206,17 +206,17 @@ Mappatura definitiva REQ-ID → fase. Ogni requisito è assegnato alla **prima f
 | MAP-01 | Phase 2 | Complete | — |
 | MAP-02 | Phase 2 | Complete | Versioning canonical schema (`requires`) |
 | MAP-03 | Phase 2 | Pending | — |
-| MAP-04 | Phase 2 | Pending | — |
-| MAP-05 | Phase 2 | Pending | — |
-| MAP-06 | Phase 2 | Pending | — |
-| MAP-07 | Phase 2 | Pending | Esempio: `parseItalianDate` |
-| MAP-08 | Phase 2 | Pending | — |
-| MAP-09 | Phase 2 | Pending | `$derive` con concat e similari |
-| MAP-10 | Phase 2 | Pending | — |
+| MAP-04 | Phase 2 | Complete | — |
+| MAP-05 | Phase 2 | Complete | — |
+| MAP-06 | Phase 2 | Complete | — |
+| MAP-07 | Phase 2 | Complete | Esempio: `parseItalianDate` |
+| MAP-08 | Phase 2 | Complete | — |
+| MAP-09 | Phase 2 | Complete | `$derive` con concat e similari |
+| MAP-10 | Phase 2 | Complete | — |
 | MAP-11 | Phase 2 | Pending | Pipeline post-mapping |
 | MAP-12 | Phase 2 | Complete | `registerTransform(name, fn)` + fallback policy |
-| MAP-13 | Phase 2 | Pending | Default V1 — canonicalizzazione interna completa |
-| MAP-14 | Phase 2 | Pending | Step 11 della pipeline §28 |
+| MAP-13 | Phase 2 | Complete | Default V1 — canonicalizzazione interna completa |
+| MAP-14 | Phase 2 | Complete | Step 11 della pipeline §28 |
 | MAP-15 | Phase 2 | Pending | Mapping Inspector (estende EventTap) |
 | MAP-16 | Phase 2 | Complete | Warning runtime alias ambiguo |
 | MAP-17 | Phase 2 | Complete | **Closes PRD §39 #1**: mapping esplicito vince sempre |
@@ -290,10 +290,10 @@ Mappatura definitiva REQ-ID → fase. Ogni requisito è assegnato alla **prima f
 | VAL-05 | Phase 3 | Pending | — |
 | VAL-06 | Phase 1 | Done (plan 01-05) | Valibot schema runtime per BrokerEvent in `core/event-validator.ts`. TS interfaces tipizzate restano in `types/` (plan 03). |
 | VAL-07 | Phase 2 | Complete | — |
-| VAL-08 | Phase 2 | Pending | **Closes PRD §39 #3**: `required: true|false` per campo |
+| VAL-08 | Phase 2 | Complete | **Closes PRD §39 #3**: `required: true|false` per campo |
 | VAL-09 | Phase 2 | Complete | **Closes PRD §39 #4**: `onFailure: 'block' | 'skip' | 'fallback'` |
 | ERR-01 | Phase 1 | Done (plan 01-04) | `createBrokerError(params)` factory + `isBrokerError(value)` type guard in `core/broker-error.ts` — ES2022 cause, conditional assignment per `exactOptionalPropertyTypes`, 9/9 test passing |
-| ERR-02 | Phase 2 | Pending | F2: `mapping.error`, F3: `<topic>.failed`+`network.error`, F4: `system.realtime.*`, F5: `worker.error` |
+| ERR-02 | Phase 2 | Complete | F2: `mapping.error`, F3: `<topic>.failed`+`network.error`, F4: `system.realtime.*`, F5: `worker.error` |
 | ERR-03 | Phase 1 | Done (plan 01-07) | Errori isolati nel dispatch loop di `EventBus.deliver()`: ogni handler ha il suo try/catch indipendente; eccezione di un handler NON propaga al loop (gli altri handler ricevono comunque l'evento). 25 test verificano l'invariant. |
 | PIPE-01 | Phase 1 (skeleton) | Pending | Estesa da F2 (step 4-6, 11-12), F3 (step 7-10), F6 (step 14 reale) |
 | LIFE-01 | Phase 1 | Done (plan 01-08) | `Broker.subscribe()` ritorna `Subscription` con `.unsubscribe()` idempotente. Plugin smontabili senza leak via `unregisterPlugin(id)` cascade D-26. F4 estenderà a listener realtime; F5 a MessageChannel worker. |
