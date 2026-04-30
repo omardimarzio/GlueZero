@@ -7,16 +7,15 @@
 //   - `runtime`: debug, deepFreezeInDev, logLevel, logger, tap (tutti opzionali)
 //   - `debug`: enabled, snapshotPayloadsFull
 //
-// F2-F6 sezioni placeholder (validate come `valibot.unknown()` in `public-factory.ts` di plan 08,
-// ignored at runtime in F1):
-//   - `topicSchemas` (F2)
-//   - `canonicalModel` (F2)
-//   - `aliasRegistry` (F2)
-//   - `transforms` (F2)
-//   - `routes` (F3)
-//   - `transport` (F3/F4)
-//   - `workers` (F5)
-//   - `cache` (F6)
+// F2-F6 sezioni: aggiunte via TS declaration merging dai package downstream (D-56):
+//   - F2 `@sembridge/mapper/src/augment.ts` aggiunge `canonicalModel`, `aliasRegistry`, `transforms`
+//   - F3 aggiungerà `routes`, `transport`
+//   - F5 aggiungerà `workers`
+//   - F6 aggiungerà `cache`
+//
+// F1 sezioni placeholder (validate come `valibot.unknown()` in `public-factory.ts` di plan 08,
+// ignored at runtime in F1, sempre tipate `unknown` perché senza wiring a package F2-F6):
+//   - `topicSchemas` (F2 — non augmentato perché topic schema strategy V2)
 //
 // Riferimento decisione D-29 (CONTEXT 01): `runtime.debug` (default: `import.meta.env.DEV`)
 // attiva deep-freeze runtime + verbose logging + tap snapshot full payload.
@@ -28,10 +27,14 @@ import type { EventTap } from './tap'
  * Global broker configuration (PRD §27, REQ CORE-14).
  *
  * F1 implements the `runtime` and `debug` sections; F2-F6 sections
- * (`topicSchemas`, `canonicalModel`, `aliasRegistry`, `transforms`, `routes`,
- * `transport`, `workers`, `cache`) are accepted but ignored at runtime in F1
- * — they are reserved for future phases via TypeScript declaration merging
- * (no breaking change).
+ * (`canonicalModel`, `aliasRegistry`, `transforms`, `routes`, `transport`,
+ * `workers`, `cache`) are added via TypeScript declaration merging by the
+ * downstream packages (`@sembridge/mapper` for F2, etc.). They are accepted
+ * but ignored at runtime in F1 — Valibot schema accepts them as `unknown`
+ * via index-signature pass-through in `public-factory.ts` (no breaking change).
+ *
+ * `topicSchemas` rimane `unknown` placeholder F1 (no augment in F2 — topic
+ * schema strategy è V2 deferred).
  *
  * `runtime.debug` defaults to `import.meta.env.DEV` when available (D-29) and
  * activates deep-freeze runtime + verbose tap snapshots.
@@ -50,13 +53,12 @@ export interface BrokerConfig {
     snapshotPayloadsFull?: boolean
   }
 
-  // F2-F6 placeholder sections (validated as `unknown` in F1, ignored at runtime):
+  // F2 placeholder section (kept as `unknown` — augment NOT planned per topic
+  // schema strategy V2 deferred):
   topicSchemas?: unknown
-  canonicalModel?: unknown
-  aliasRegistry?: unknown
-  transforms?: unknown
-  routes?: unknown
-  transport?: unknown
-  workers?: unknown
-  cache?: unknown
+
+  // F2-F6 sections: aggiunte via TS declaration merging dai package downstream
+  // (D-56 — packages/mapper/src/augment.ts per canonicalModel/aliasRegistry/transforms).
+  // NON dichiarate qui: il declaration merging delle interface richiede che gli
+  // augment NON entrino in conflitto con field già dichiarati con tipo diverso.
 }

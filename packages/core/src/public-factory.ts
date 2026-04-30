@@ -2,15 +2,19 @@
 // (PRD §27, REQ CORE-14, decisioni D-18 config validation, D-19 imperative API,
 // D-30 no singleton).
 //
-// Il `BrokerConfigSchema` Valibot:
+// Il `BrokerConfigSchema` Valibot usa `v.looseObject` per accettare le sezioni F2-F6
+// aggiunte via TS declaration merging dai package downstream (D-56 — vedi
+// `@sembridge/mapper/src/augment.ts`):
 //   - sezione `runtime` (F1 implementata): debug, deepFreezeInDev, logLevel,
 //     logger, tap — validati strutturalmente con tipi specifici dove ha senso
 //     (es. picklist per logLevel) e `unknown` dove l'oggetto è opaque (logger, tap)
 //   - sezione `debug` (F1 implementata): enabled, snapshotPayloadsFull (booleani)
-//   - sezioni F2-F6 (placeholder): topicSchemas, canonicalModel, aliasRegistry,
-//     transforms, routes, transport, workers, cache — tutte validate come
-//     `v.unknown()` (CORE-14). Quando F2-F6 implementeranno le rispettive feature,
-//     il schema verrà esteso senza breaking change.
+//   - `topicSchemas` (F2 V2 deferred): kept as `v.unknown()` placeholder
+//   - sezioni F2-F6 (`canonicalModel`, `aliasRegistry`, `transforms`, `routes`,
+//     `transport`, `workers`, `cache`): NON dichiarate nello schema; il
+//     `v.looseObject` le accetta come pass-through senza validazione strutturale
+//     (i package F2-F6 hanno la responsabilità di validare le proprie sezioni
+//     internamente al momento del wiring).
 //
 // `safeParse` ritorna `{ success: true, output }` o `{ success: false, issues }`.
 // Su fallimento aggreghiamo le issue messages in un singolo `Error` con prefisso
@@ -32,7 +36,7 @@ import * as v from 'valibot'
 import { Broker } from './core/broker'
 import type { BrokerConfig } from './types/config'
 
-const BrokerConfigSchema = v.object({
+const BrokerConfigSchema = v.looseObject({
   runtime: v.optional(
     v.object({
       debug: v.optional(v.boolean()),
@@ -49,21 +53,20 @@ const BrokerConfigSchema = v.object({
     }),
   ),
   topicSchemas: v.optional(v.unknown()),
-  canonicalModel: v.optional(v.unknown()),
-  aliasRegistry: v.optional(v.unknown()),
-  transforms: v.optional(v.unknown()),
-  routes: v.optional(v.unknown()),
-  transport: v.optional(v.unknown()),
-  workers: v.optional(v.unknown()),
-  cache: v.optional(v.unknown()),
+  // Le altre sezioni F2-F6 (`canonicalModel`, `aliasRegistry`, `transforms`, `routes`,
+  // `transport`, `workers`, `cache`) sono accettate come pass-through dal `v.looseObject`
+  // senza validazione strutturale (D-56 — augmented via TS declaration merging dai
+  // package downstream).
 })
 
 /**
  * Creates a new {@link Broker} instance with the given configuration.
  *
  * Phase 1 implements the `runtime` and `debug` config sections; Phase 2-6
- * sections (`topicSchemas`, `canonicalModel`, `routes`, etc.) are accepted
- * as `unknown` and ignored at runtime in F1.
+ * sections (`canonicalModel`, `aliasRegistry`, `transforms`, `routes`,
+ * `transport`, `workers`, `cache`) are added via TS declaration merging dai
+ * package downstream (D-56) e accettate come pass-through al runtime F1
+ * (`v.looseObject`).
  *
  * No singleton (D-30): each call returns an independent instance.
  *

@@ -33,19 +33,24 @@ describe('createBroker', () => {
     )
   })
 
-  it('accepts F2-F6 placeholder sections as unknown (CORE-14)', () => {
-    expect(() =>
-      createBroker({
-        topicSchemas: { x: 1 },
-        canonicalModel: { y: 2 },
-        aliasRegistry: { z: 3 },
-        transforms: {},
-        routes: [],
-        transport: { http: {} },
-        workers: { pool: 4 },
-        cache: { ttl: 1000 },
-      }),
-    ).not.toThrow()
+  it('accepts F2-F6 placeholder sections as unknown via looseObject pass-through (CORE-14)', () => {
+    // F1 BrokerConfig.topicSchemas è ancora `unknown` placeholder.
+    // F2-F6 sezioni (canonicalModel, aliasRegistry, transforms, routes, transport, workers, cache)
+    // sono aggiunte via TS declaration merging dai package downstream (D-56). Senza augment,
+    // qui le passiamo come extra-prop che `v.looseObject` accetta (cast esplicito a
+    // `unknown as BrokerConfig` per bypass del TS type-check del literal — è esattamente
+    // ciò che fa il consumer F2 dopo aver fatto `import '@sembridge/mapper'`).
+    const cfg = {
+      topicSchemas: { x: 1 },
+      canonicalModel: { y: 2 },
+      aliasRegistry: { z: 3 },
+      transforms: {},
+      routes: [],
+      transport: { http: {} },
+      workers: { pool: 4 },
+      cache: { ttl: 1000 },
+    } as unknown as Parameters<typeof createBroker>[0]
+    expect(() => createBroker(cfg)).not.toThrow()
   })
 
   it('accepts runtime config with all F1 fields', () => {
