@@ -139,7 +139,7 @@ Tutti i requisiti elencati sono table stakes (vincolanti dalla checklist PRD §4
 - [x] **DOC-01**: Documentazione API pubblica *(PRD §41.3)*
 - [ ] **DOC-02**: Guida integrazione plugin *(PRD §41.4)*
 - [x] **DOC-03**: Documentazione canonical model + mapper *(PRD §41.5)* — skeleton README iniziale in 02-01; completamento finale al plan 02-12 (scenario meteo end-to-end, JSDoc API pubblica)
-- [ ] **DOC-04**: Documentazione route engine + server gateway *(PRD §41.6)*
+- [x] **DOC-04**: Documentazione route engine + server gateway *(PRD §41.6)*
 - [ ] **DOC-05**: Esempi end-to-end (incluso scenario meteo PRD §29) *(PRD §41.8)*
 - [ ] **DOC-06**: Documentazione debug tooling *(PRD §41.9)*
 
@@ -313,7 +313,7 @@ Mappatura definitiva REQ-ID → fase. Ogni requisito è assegnato alla **prima f
 | DOC-01 | Phase 1 (01-02 skeleton, 01-11 finalizzato) | Done (plan 01-11) | README espanso (271 righe) + JSDoc su 16 runtime export + 19 type pubblici. Bundle TypeDoc-ready. Consolidato in F6 con TypeDoc. |
 | DOC-02 | Phase 6 | Pending | Guida integrazione plugin |
 | DOC-03 | Phase 2 (02-01 skeleton, 02-12 final) | In Progress | README skeleton italiano in 02-01 (sezioni Stato/Cosa contiene/Vincolo D-49/Documentazione/Licenza); completamento al plan 02-12 con scenario meteo end-to-end + JSDoc API pubblica + esempi PRD §14.2 |
-| DOC-04 | Phase 3 | Pending | Documentazione route engine + gateway |
+| DOC-04 | Phase 3 | Complete | Documentazione route engine + gateway |
 | DOC-05 | Phase 6 | Pending | Esempi end-to-end (scenario meteo §29 con cache + tooling) |
 | DOC-06 | Phase 6 | Pending | Documentazione debug tooling |
 
