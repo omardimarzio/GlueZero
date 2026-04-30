@@ -192,15 +192,25 @@ export class MappingInspector {
 /**
  * Helper composition: wrappa un tap esistente con il `MappingInspector` (D-46).
  *
- * Pattern composition (NON parallel API): il tap risultante chiama PRIMA il tap
- * originale e POI `inspector.recordSnapshot`. Errori del tap originale sono
- * swallowed (pattern F1 `safeTapStep` di event-tap.ts:23-34) per non rompere il
- * chain del tap composto (T-02-08-03 mitigation).
+ * Pattern composition (NON parallel API): il tap risultante chiama PRIMA
+ * `inspector.recordSnapshot` e POI il tap originale (WR-04 fix — l'Inspector
+ * vede sempre uno snapshot pristine, indipendentemente da eventuali mutation
+ * dello stesso `snapshot` object da parte del tap utente). Errori del tap
+ * originale sono swallowed (pattern F1 `safeTapStep` di event-tap.ts:23-34)
+ * per non rompere il chain del tap composto (T-02-08-03 mitigation).
  *
  * Il broker wrapper (plan 02-10) usa questo helper per istanziare il tap finale:
  * ```ts
  * const composedTap = wrapTap(config.runtime?.tap ?? noopEventTap, inspector)
  * ```
+ *
+ * NB: il `recordSnapshot` dell'Inspector è no-op in F2 V1 (D-48); la mutation
+ * concern di `snapshot` è preventiva — si attiva solo quando F6 popolerà il
+ * ring buffer per evento. Cambiare ordine ora previene retrofit semantici poi.
+ *
+ * Async tap: se `original.onPipelineStep` ritorna una Promise rejected, il throw
+ * non è catturato (Promise rejection != sync throw). Documentato come limitation
+ * accept — i tap utente devono gestire le proprie Promise internamente (T-02-08-03).
  *
  * @param original - Tap originale fornito dal consumer (può essere `noopEventTap`).
  * @param inspector - Istanza `MappingInspector` da comporre.
@@ -209,13 +219,19 @@ export class MappingInspector {
 export function wrapTap(original: EventTap, inspector: MappingInspector): EventTap {
   return {
     onPipelineStep(step, snapshot): void {
+      // WR-04 fix: Inspector PRIMA del tap utente — vede sempre snapshot pristine.
+      // recordSnapshot è no-op in F2 V1 ma il try/catch è preventivo per F6.
+      try {
+        inspector.recordSnapshot(step, snapshot)
+      } catch {
+        // Inspector non deve mai rompere il chain (defensive — F2 V1 no-op).
+      }
       try {
         original.onPipelineStep(step, snapshot)
       } catch {
         // Swallow — il tap originale non deve rompere il chain (T-02-08-03,
         // pattern F1 safeTapStep).
       }
-      inspector.recordSnapshot(step, snapshot)
     },
   }
 }
