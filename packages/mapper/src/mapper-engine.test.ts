@@ -211,6 +211,66 @@ describe('MapperEngine — chunk A: rename / nested / default / partial / requir
     expect('place' in result).toBe(false)
   })
 
+  it('Test 9b: CR-02 fix — global alias is applied at runtime when no explicit mapping exists (D-40 livello 3)', () => {
+    const { engine, canonical, alias } = makeEngine()
+    canonical.register({
+      id: 'sch9b' as CanonicalSchemaId,
+      fields: { location: { type: 'string', required: false } },
+    })
+    // Alias globale: city → location. NESSUN outputMap esplicito su location.
+    alias.registerGlobal('city', 'location')
+    const desc: MapperPluginDescriptor = {
+      id: 'p-alias-runtime',
+      canonicalSchemaId: 'sch9b' as CanonicalSchemaId,
+      // outputMap vuoto → il mapper deve consultare alias registry per i payload field.
+    }
+    engine.compileMappings(desc)
+    const result = engine.applyOutputMap(desc.id, { city: 'Roma' })
+    // L'alias deve essere applicato a runtime: 'city' (locale) → 'location' (canonical).
+    expect(result).toEqual({ location: 'Roma' })
+  })
+
+  it('Test 9c: CR-02 fix — scoped alias wins over global alias at runtime (D-40 livelli 2 vs 3)', () => {
+    const { engine, canonical, alias } = makeEngine()
+    canonical.register({
+      id: 'sch9c' as CanonicalSchemaId,
+      fields: {
+        place: { type: 'string', required: false },
+        location: { type: 'string', required: false },
+      },
+    })
+    alias.registerGlobal('city', 'location')
+    alias.registerScoped('p-scoped', 'city', 'place')
+    const desc: MapperPluginDescriptor = {
+      id: 'p-scoped',
+      canonicalSchemaId: 'sch9c' as CanonicalSchemaId,
+    }
+    engine.compileMappings(desc)
+    const result = engine.applyOutputMap(desc.id, { city: 'Milano' })
+    // Scoped vince su global (D-40 livello 2 > 3): canonical 'place' (NON 'location').
+    expect(result).toEqual({ place: 'Milano' })
+  })
+
+  it('Test 9d: CR-02 fix — explicit mapping on canonical field overrides alias (D-40 livello 1 wins)', () => {
+    const { engine, canonical, alias } = makeEngine()
+    canonical.register({
+      id: 'sch9d' as CanonicalSchemaId,
+      fields: { location: { type: 'string', required: false } },
+    })
+    // Alias globale 'city' → 'location'.
+    alias.registerGlobal('city', 'location')
+    const desc: MapperPluginDescriptor = {
+      id: 'p-explicit-over-alias',
+      canonicalSchemaId: 'sch9d' as CanonicalSchemaId,
+      // Mapping esplicito: location ← name (NON via alias 'city')
+      outputMap: { location: { source: 'name' } },
+    }
+    engine.compileMappings(desc)
+    // Payload contiene sia 'name' (esplicito) sia 'city' (alias) — esplicito vince.
+    const result = engine.applyOutputMap(desc.id, { name: 'Roma', city: 'Milano' })
+    expect(result).toEqual({ location: 'Roma' })
+  })
+
   it('Test 10: passthrough — plugin without compileMappings returns shallow copy of payload', () => {
     const { engine } = makeEngine()
     const result = engine.applyOutputMap('unregistered-plugin', { foo: 'bar', n: 42 })

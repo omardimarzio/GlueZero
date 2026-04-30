@@ -202,26 +202,38 @@ export class MapperEngine {
   /**
    * Applica il mapping locale → canonico (passo 5 pipeline §28).
    *
-   * Se il plugin non ha compileMappings registrato (o outputMap vuoto), ritorna
-   * uno shallow copy del payload (passthrough).
+   * Resolution order D-40 (CR-02 fix — chiusura PRD §39 #1 / MAP-17 a runtime):
+   *   1. Mapping esplicito (`outputMap`) — sempre prevalente
+   *   2. Alias plugin-scoped (`aliasRegistry.resolve` con `source: 'scoped'`)
+   *   3. Alias globale (`aliasRegistry.resolve` con `source: 'global'`)
+   *   4. Name-match — NON applicato implicitamente in F2: solo i campi dichiarati
+   *      esplicitamente nel `outputMap` o risolti via alias appaiono nel canonical
+   *      (T-02-07-06 partial mapping mantenuto).
+   *
+   * Se il plugin non ha compileMappings registrato → passthrough (shallow copy).
+   * Se ha compileMappings ma outputMap vuoto → applica solo gli alias.
    *
    * @throws `BrokerError 'mapping.field.missing'` se un field required è assente (D-42).
    * @throws `BrokerError 'mapping.transform.failed'` se transform throw + onFailure 'block' (D-44).
    */
   applyOutputMap(pluginId: string, payload: unknown): Record<string, unknown> {
     const compiled = this.compiled.get(pluginId)
-    if (!compiled || compiled.outputCompiled.length === 0) {
+    if (!compiled) {
       return this.shallowCopy(payload)
     }
-    return this.applyMapping(pluginId, payload, compiled.outputCompiled)
+    const result = this.applyMapping(pluginId, payload, compiled.outputCompiled)
+    // CR-02 fix: applica resolution order D-40 livelli 2-3 (alias scoped/global).
+    this.applyAliasResolution(pluginId, payload, compiled, result)
+    return result
   }
 
   /**
    * Applica il mapping canonico → consumer (passo 11 pipeline §28).
    *
-   * Se il plugin non ha compileMappings registrato (o inputMap vuoto), ritorna
-   * uno shallow copy del payload canonico (passthrough — il consumer riceve la
-   * forma canonica direttamente).
+   * Se il plugin non ha compileMappings registrato → passthrough (shallow copy).
+   * Se ha compileMappings ma inputMap vuoto → ritorna shallow copy del canonical
+   * (NB: gli alias sono `local → canonical` quindi non si applicano alla direzione
+   * inversa canonical → consumer; il consumer dichiara la propria forma via inputMap).
    */
   applyInputMap(pluginId: string, canonicalPayload: unknown): Record<string, unknown> {
     const compiled = this.compiled.get(pluginId)
@@ -487,6 +499,67 @@ export class MapperEngine {
       return defaultValue
     }
     return value
+  }
+
+  /**
+   * CR-02 fix — applica resolution order D-40 livelli 2-3 (alias scoped/global) per i
+   * field locali del payload NON coperti da un mapping esplicito.
+   *
+   * Per ogni `localField` del payload:
+   * 1. Se esiste un `MappingRule` esplicito che ha `source === localField` → skip (D-40 livello 1 wins).
+   * 2. Altrimenti, consulta `aliasRegistry.resolve(pluginId, localField)`:
+   *    - `source: 'scoped'` o `'global'` → applica alias `localField → canonical`.
+   *    - `source: 'name-match'` → skip (livello 4 NON applicato — vedi JSDoc applyOutputMap).
+   * 3. Se il `canonical` risolto è già stato popolato da un mapping esplicito → skip
+   *    (D-40 livello 1 wins anche se l'esplicito ha source diverso ma stesso canonical).
+   *
+   * NB: questa implementazione iterazione-per-payload garantisce che gli alias siano
+   * applicati ANCHE quando il payload ha field non dichiarati nel `outputMap`. La
+   * partial-mapping policy (T-02-07-06) resta invariata: solo i field esplicitamente
+   * mappati o aliasati appaiono nel canonical.
+   */
+  private applyAliasResolution(
+    pluginId: string,
+    payload: unknown,
+    compiled: CompiledMapping,
+    result: Record<string, unknown>,
+  ): void {
+    if (payload === null || typeof payload !== 'object') return
+    const source = payload as Record<string, unknown>
+    // Set di localField già consumati da mapping esplicito (rule.source semplice — non dot-path).
+    const explicitLocals = new Set<string>()
+    for (const fm of compiled.outputCompiled) {
+      if (fm.rule.source !== undefined && !fm.rule.source.includes('.')) {
+        explicitLocals.add(fm.rule.source)
+      }
+      if (fm.rule.derive) {
+        for (const s of fm.rule.derive.sources) {
+          if (!s.includes('.')) explicitLocals.add(s)
+        }
+      }
+    }
+    // Set di canonicalField già esplicitamente mappati (D-40 livello 1 wins).
+    const explicitCanonicals = new Set(compiled.outputCompiled.map((fm) => fm.canonicalField))
+
+    for (const localField of Object.keys(source)) {
+      // D-40 livello 1: se il localField è già consumato da mapping esplicito, skip.
+      if (explicitLocals.has(localField)) continue
+      // D-40 livelli 2-3: consulta alias registry.
+      let resolution
+      try {
+        resolution = this.aliasRegistry.resolve(pluginId, localField)
+      } catch {
+        // alias.localField.empty (stringa vuota) — skip silenziosamente.
+        continue
+      }
+      // Solo alias automatici (scoped o global) — name-match NON applicato (vedi JSDoc).
+      if (resolution.source !== 'scoped' && resolution.source !== 'global') continue
+      // Il canonical risolto NON deve essere già popolato esplicitamente (D-40 livello 1 wins).
+      if (explicitCanonicals.has(resolution.canonical)) continue
+      // Non sovrascrivere risultati già scritti da iterazioni precedenti dello stesso loop.
+      if (resolution.canonical in result) continue
+      result[resolution.canonical] = source[localField]
+    }
   }
 
   /** Costruisce il `TransformContext` readonly per la chiamata al transform. */
