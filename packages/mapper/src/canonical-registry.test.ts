@@ -140,4 +140,58 @@ describe('CanonicalRegistry', () => {
     expect((caught as { code: string }).code).toBe('canonical.id.duplicate')
     expect((caught as { details: Record<string, unknown> }).details.id).toBe('weather')
   })
+
+  describe('WR-03 iter3 — prototype pollution guard', () => {
+    // Iter1 WR-03 ha aggiunto RESERVED_KEYS check in mapper-engine.ts solamente.
+    // CanonicalRegistry.register accettava silenziosamente schema.id o field name
+    // === '__proto__' / 'constructor' / 'prototype': accesso successivo via
+    // schema.fields[name] su POJO può triggare prototype pollution.
+    // Iter3 fix: register throw 'canonical.id.reserved' o 'canonical.field.reserved'
+    // sui nomi riservati JS (defense in depth).
+
+    it('register throws canonical.id.reserved on reserved schema id (__proto__)', () => {
+      const reg = new CanonicalRegistry()
+      let caught: unknown
+      try {
+        reg.register({
+          id: '__proto__' as CanonicalSchemaId,
+          fields: { foo: { type: 'string', required: true } },
+        })
+      } catch (e) {
+        caught = e
+      }
+      expect(isBrokerError(caught)).toBe(true)
+      expect((caught as { code: string }).code).toBe('canonical.id.reserved')
+    })
+
+    it('register throws canonical.field.reserved on reserved field name (constructor)', () => {
+      const reg = new CanonicalRegistry()
+      let caught: unknown
+      try {
+        reg.register({
+          id: 'safe-id' as CanonicalSchemaId,
+          fields: { constructor: { type: 'string', required: true } },
+        })
+      } catch (e) {
+        caught = e
+      }
+      expect(isBrokerError(caught)).toBe(true)
+      expect((caught as { code: string }).code).toBe('canonical.field.reserved')
+    })
+
+    it('register throws canonical.field.reserved on reserved field name (prototype)', () => {
+      const reg = new CanonicalRegistry()
+      let caught: unknown
+      try {
+        reg.register({
+          id: 'safe-id-2' as CanonicalSchemaId,
+          fields: { prototype: { type: 'string', required: false } },
+        })
+      } catch (e) {
+        caught = e
+      }
+      expect(isBrokerError(caught)).toBe(true)
+      expect((caught as { code: string }).code).toBe('canonical.field.reserved')
+    })
+  })
 })

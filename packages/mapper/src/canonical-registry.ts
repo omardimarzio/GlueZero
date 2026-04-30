@@ -34,6 +34,16 @@ import { createBrokerError } from '@sembridge/core'
 import type { CanonicalSchema, CanonicalSchemaId } from './types/canonical-schema'
 
 /**
+ * WR-03 iter3: keys riservate JS che NON devono essere accettate come
+ * `schema.id` né come field name in `schema.fields`. Coerente con
+ * `RESERVED_KEYS` di `mapper-engine.ts:110` e `alias-registry.ts`.
+ * Defense-in-depth: blocchiamo la registrazione per prevenire propagation
+ * in path che potrebbero accedere `schema.fields[name]` su POJO e
+ * triggerare prototype pollution.
+ */
+const RESERVED_KEYS: ReadonlySet<string> = new Set(['__proto__', 'constructor', 'prototype'])
+
+/**
  * Opzioni per `CanonicalRegistry.register`.
  *
  * `strict: true` → throw `BrokerError 'canonical.id.duplicate'` se l'id è già registrato.
@@ -88,6 +98,30 @@ export class CanonicalRegistry {
    * @throws `BrokerError 'canonical.id.duplicate'` con `details: { id }` (solo se `strict: true`).
    */
   register(schema: CanonicalSchema, options: RegisterOptions = {}): boolean {
+    // WR-03 iter3: prototype-pollution guard sulle chiavi JS-reserved. Coerente
+    // con mapper-engine.ts RESERVED_KEYS e alias-registry.ts. Defense-in-depth:
+    // schema.id usato come Map key è safe (Map non eredita da Object.prototype),
+    // ma schema.fields[name] su POJO può triggare pollution se un caller fa
+    // `Object.assign({}, schema.fields)` o equivalente.
+    if (RESERVED_KEYS.has(schema.id)) {
+      throw createBrokerError({
+        code: 'canonical.id.reserved',
+        category: 'config',
+        message: `Canonical schema id "${schema.id}" is a JS-reserved key (__proto__/constructor/prototype) and is not allowed (prototype-pollution guard).`,
+        details: { id: schema.id },
+      })
+    }
+    for (const fieldName of Object.keys(schema.fields)) {
+      if (RESERVED_KEYS.has(fieldName)) {
+        throw createBrokerError({
+          code: 'canonical.field.reserved',
+          category: 'config',
+          message: `Canonical schema "${schema.id}" contains JS-reserved field name "${fieldName}" (__proto__/constructor/prototype) — not allowed (prototype-pollution guard).`,
+          details: { id: schema.id, fieldName },
+        })
+      }
+    }
+
     // D-36: requires resolution check
     if (schema.requires && schema.requires.length > 0) {
       const missing = schema.requires.filter((req) => !this.schemas.has(req))

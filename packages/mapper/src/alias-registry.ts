@@ -40,6 +40,24 @@
 import type { CanonicalSchemaId } from './types/canonical-schema'
 
 /**
+ * WR-03 iter3: keys riservate JS che NON devono essere accettate come
+ * `localField` o `canonicalField` in alias (né global né scoped). Coerente
+ * con `RESERVED_KEYS` di `mapper-engine.ts:110`. Defense-in-depth: anche se
+ * `applyAliasResolution` filtra via mapper-engine, blocchiamo la
+ * registrazione per prevenire propagation in path che potrebbero ignorare
+ * il filtro (caller third-party che invocano direttamente `resolve`).
+ */
+const RESERVED_KEYS: ReadonlySet<string> = new Set(['__proto__', 'constructor', 'prototype'])
+
+function assertNotReserved(localField: string, canonicalField: string): void {
+  if (RESERVED_KEYS.has(localField) || RESERVED_KEYS.has(canonicalField)) {
+    throw new Error(
+      `alias.field.reserved: localField/canonicalField cannot be a JS-reserved key (__proto__/constructor/prototype) — got localField="${localField}" canonicalField="${canonicalField}" (prototype-pollution guard)`,
+    )
+  }
+}
+
+/**
  * Source identificativa della risoluzione (D-40, D-41).
  *
  * - `'scoped'` — alias plugin-scoped (livello 2 D-40); mapper-engine emette `mapping.warn`.
@@ -102,6 +120,9 @@ export class AliasRegistry {
    * @throws `Error('alias.global.conflict: ...')` se localField mappa già a canonical diverso.
    */
   registerGlobal(localField: string, canonicalField: string): boolean {
+    // WR-03 iter3: prototype-pollution guard (defense in depth — coerente con
+    // mapper-engine.ts RESERVED_KEYS check su compileRules + readPath).
+    assertNotReserved(localField, canonicalField)
     const existing = this.globalAliases.get(localField)
     if (existing !== undefined) {
       if (existing === canonicalField) return false
@@ -132,6 +153,9 @@ export class AliasRegistry {
    *         nello stesso plugin scope.
    */
   registerScoped(pluginId: string, localField: string, canonicalField: string): boolean {
+    // WR-03 iter3: prototype-pollution guard (defense in depth — coerente con
+    // mapper-engine.ts RESERVED_KEYS check su compileRules + readPath).
+    assertNotReserved(localField, canonicalField)
     let scope = this.pluginScopedAliases.get(pluginId)
     if (!scope) {
       scope = new Map<string, string>()
@@ -169,6 +193,14 @@ export class AliasRegistry {
   resolve(pluginId: string, localField: string): AliasResolution {
     if (localField === '') {
       throw new Error('alias.localField.empty: localField cannot be an empty string')
+    }
+    // WR-03 iter3: defense in depth — anche se register è bloccato, resolve è
+    // una surface pubblica e potrebbe essere chiamata direttamente da caller
+    // third-party con un nome riservato proveniente da input untrusted.
+    if (RESERVED_KEYS.has(localField)) {
+      throw new Error(
+        `alias.field.reserved: localField cannot be a JS-reserved key (__proto__/constructor/prototype) — got "${localField}" (prototype-pollution guard)`,
+      )
     }
 
     // Level 2: scoped

@@ -144,6 +144,49 @@ describe('AliasRegistry', () => {
     })
   })
 
+  describe('WR-03 iter3 — prototype pollution guard', () => {
+    // Iter1 WR-03 ha aggiunto RESERVED_KEYS check in mapper-engine.ts (compileRules +
+    // readPath). AliasRegistry restava aperto: localField o canonicalField === '__proto__'
+    // veniva accettato silenziosamente, e applyAliasResolution avrebbe fatto
+    // result['__proto__'] = value → POLLUTION.
+    // Iter3 fix: registerGlobal/registerScoped throw 'alias.field.reserved' su
+    // localField o canonicalField in {'__proto__', 'constructor', 'prototype'}.
+
+    it('registerGlobal throws on reserved canonicalField (__proto__)', () => {
+      const reg = new AliasRegistry()
+      expect(() => reg.registerGlobal('safeKey', '__proto__')).toThrow(/alias\.field\.reserved/)
+    })
+
+    it('registerGlobal throws on reserved localField (constructor)', () => {
+      const reg = new AliasRegistry()
+      expect(() => reg.registerGlobal('constructor', 'safeCanonical')).toThrow(
+        /alias\.field\.reserved/,
+      )
+    })
+
+    it('registerGlobal throws on reserved canonicalField (prototype)', () => {
+      const reg = new AliasRegistry()
+      expect(() => reg.registerGlobal('safe', 'prototype')).toThrow(/alias\.field\.reserved/)
+    })
+
+    it('registerScoped throws on reserved localField/canonicalField', () => {
+      const reg = new AliasRegistry()
+      expect(() => reg.registerScoped('plugin-a', '__proto__', 'safe')).toThrow(
+        /alias\.field\.reserved/,
+      )
+      expect(() => reg.registerScoped('plugin-a', 'safe', 'constructor')).toThrow(
+        /alias\.field\.reserved/,
+      )
+    })
+
+    it('resolve throws on reserved localField (defense in depth)', () => {
+      const reg = new AliasRegistry()
+      // Anche se register è bloccato, resolve è chiamabile direttamente: difesa in
+      // profondità contro caller che potrebbero passare un nome riservato.
+      expect(() => reg.resolve('plugin-a', '__proto__')).toThrow(/alias\.field\.reserved/)
+    })
+  })
+
   describe('list', () => {
     it('listGlobal returns sorted [localField, canonical][] entries', () => {
       const reg = new AliasRegistry()
