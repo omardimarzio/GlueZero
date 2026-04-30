@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 current_plan: 11
-status: verifying
+status: ready_to_plan
 last_updated: "2026-04-30T10:21:31.673Z"
 progress:
   total_phases: 6
-  completed_phases: 2
+  completed_phases: 3
   total_plans: 23
   completed_plans: 23
-  percent: 100
+  percent: 50
 ---
 
 # Project State: SemBridge
@@ -30,14 +30,14 @@ progress:
 
 Phase: 02 (canonical-model-mapper) — READY FOR VERIFICATION
 Plan: 12 of 12 ✅
-Current Plan: 12
+Current Plan: Not started
 Total Plans: 12
 
 **Last completed:** Plan 02-12 (final gate F2) at 2026-04-30T09:53Z — 3 commits (ad1ceab Task 1 README+JSDoc + 140a502 Task 2 robustness tests + 5320ff6 Task 3 CI gates extension); 16 mapper test files / 149 test passing; core 248 invariati (D-49 strict confermato); 3 CI gates verdi (publint + attw + size-limit); DOC-03 chiuso (366 LOC README).
 **Next:** `gsd-verifier` Phase 2 — goal-backward verification dei 5 success criteria + coverage 27 REQ-IDs F2 + threat model accumulative
 
-- **Phase:** 2 — Canonical Model & Mapper
-- **Status:** Phase complete — ready for verification (gsd-verifier)
+- **Phase:** 3
+- **Status:** Ready to plan
 - **Progress:** [██████████] 100% (12/12 plans done)
 
 ## Phases Overview
