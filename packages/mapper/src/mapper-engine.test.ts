@@ -13,8 +13,8 @@ import { AliasRegistry } from './alias-registry'
 import { CanonicalRegistry } from './canonical-registry'
 import { MapperEngine, type MapperPluginDescriptor } from './mapper-engine'
 import { TransformPipeline } from './transform-pipeline'
-import { valibotAdapter } from './valibot-adapter'
 import type { CanonicalSchema, CanonicalSchemaId } from './types/canonical-schema'
+import { valibotAdapter } from './valibot-adapter'
 
 interface EngineHarness {
   readonly engine: MapperEngine
