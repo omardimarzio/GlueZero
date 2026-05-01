@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-current_plan: "5 (next: 03-05 RouteResolver + TopicTrie reuse + dispatch table)"
+current_plan: "6 (next: 03-06 RouteExecutor + route-handlers local/http/cache/composite)"
 status: executing
-last_updated: "2026-05-01T21:56:25.717Z"
+last_updated: "2026-05-02T00:16:00.000Z"
 progress:
   total_phases: 6
   completed_phases: 2
   total_plans: 37
-  completed_plans: 27
-  percent: 73
+  completed_plans: 28
+  percent: 76
 ---
 
 # Project State: SemBridge
@@ -29,16 +29,16 @@ progress:
 ## Current Position
 
 Phase: 03 (routing-server-gateway-http) — EXECUTING
-Plan: 5 of 14
-Current Plan: 5 (next: 03-05 RouteResolver + TopicTrie reuse + dispatch table)
+Plan: 6 of 14
+Current Plan: 6 (next: 03-06 RouteExecutor + route-handlers)
 Total Plans: 14
 
-**Last completed:** Plan 03-04 (F3 augment gateway — declaration merging BrokerConfig.gateway?: GatewayConfig + barrel HTTP subpath con 18 type re-export + tsup augment entry per dist/augment.js + Pattern S1 sideEffects array già configurato da 03-01) at 2026-05-01T21:46:54Z — 2 commits (34af7a2 Task 1 augment+test 5/5 passing + 47f13fc Task 2 barrel/umbrella/tsup); 2 file creati + 3 modificati; build multi-entry dist/index.js + dist/http/index.js + dist/augment.js (gzip ~280B+250B+110B); 5 REQ-ID coperti a livello tipo (SEC-01..05 + ROUTE-06/07 — runtime in plan 03-08+); 1 deviazione Rule 1 (JSDoc /\* breaking syntax fix); D-83 confermato (core 248/248 + mapper 183/183 + routing 9/9 invariati).
-**Next:** Plan 03-05 (route-resolver — TopicTrie reuse from @sembridge/core/internal + register/unregister/dispatch + ownership tracking)
+**Last completed:** Plan 03-05 (F3 RouteResolver + multi-route strategies + cascade unregisterByOwner — dispatch table pre-compilata D-64 + TopicTrie mirror copy interno ≤120 LOC D-83 strict + 3 strategy first-match/priority-ordered/all D-66 + cascade D-86 LIFE-02 ext F3) at 2026-05-02T00:15:30Z — 3 commits (1e98688 RED Task 1 + cc9630e GREEN Task 1 RouteResolver + 1703265 Task 2 strategies test); 8 file creati (route-resolver.ts 281 LOC + internal/topic-trie.ts 116 LOC mirror F1 + 4 strategies + 2 test files); 30/30 routing test passing (14 resolver + 9 augment + 7 strategies); D-83 confermato strict (core 248/248 + mapper 183/183 invariati, `git diff HEAD~3 -- packages/core/ packages/mapper/` empty); 1 deviazione Rule 1 (TS index signature bracket notation per Record<string, unknown>); ROUTE-15 chiusura PRD §39 #6 per costruzione runtime; LIFE-02 ext F3 a livello modulo (publish runtime in 03-12).
+**Next:** Plan 03-06 (RouteExecutor — async/sync dispatch by type local/http/cache/composite + route-handlers)
 
 - **Phase:** 3
-- **Status:** Ready to execute
-- **Progress:** [███████░░░] 73%
+- **Status:** Executing
+- **Progress:** [████████░░] 76%
 
 ## Phases Overview
 
@@ -82,6 +82,7 @@ Total Plans: 14
 | Phase 03 P02 | 12 min | 2 tasks | 12 files |
 | Phase 03 P03 | 9 min | 2 tasks | 4 files |
 | Phase 03 P04 | ~14 min | 2 tasks | 5 files |
+| Phase 03 P05 | ~25 min | 2 tasks | 8 files |
 
 ## Accumulated Context
 
@@ -142,6 +143,11 @@ Total Plans: 14
 | Plan 02-12 ci:publint + ci:attw extended con filter explicit (no glob '@sembridge/*') | I 7 placeholder package F3-F6 (cache/devtools/gateway/routing/sembridge/worker) hanno `package.json` con `main: ./dist/index.js` ma nessun build → publint errato `pkg.main but file does not exist`. Soluzione: filter explicit `--filter @sembridge/core --filter @sembridge/mapper`. F3-F6 estenderanno il filter quando i package saranno scaffoldati. | 02-12-SUMMARY.md |
 | Plan 02-12 13 robustness test deterministic (TEST-03 closure) | 6 test transform-failure-modes (block/skip/fallback × default presence + canonical validation + ortogonalità required+skip) chiudono D-44/VAL-09; 7 test alias-ambiguity (resolution order D-40 + scope isolation + cascade D-26 ext + 4 bonus end-to-end via MapperBroker) chiudono D-41/MAP-16. NO mock dei moduli interni F2 (createMapperHarness reale). Suite mapper passa da 14/136 a 16/149. | 02-12-SUMMARY.md |
 | Phase 2 chiusa: 5 ROADMAP success criteria coperti + 27 REQ-IDs F2 verificati + D-49 strict | I 12 plan F2 hanno chiuso DOC-03/PKG-04/VAL-09/MAP-16/TEST-03 nel plan 02-12; le altre 22 REQ-IDs (MAP-01..MAP-17 minus closures intermediari + VAL-02..VAL-04, VAL-07..VAL-08 + ERR-02 ext + TEST-01..TEST-02 + LIFE-02 ext F2) sono cumulativamente verified attraverso plan 02-01..02-11. Verificato strict via `git diff` su packages/core/: 0 lines diff (D-49). 248/248 core test invariati. Pronto per gsd-verifier. | 02-12-SUMMARY.md |
+| Plan 03-05 internal/topic-trie.ts mirror copy del F1 TopicTrie (~115 LOC) invece di subpath internal exposure | RESEARCH Open Question Q1: TopicTrie non è esposto pubblicamente da `@sembridge/core`. Per evitare cross-package internal coupling, F3 mantiene una copia letterale interna con header esplicito di rimozione (quando F1 esporrà subpath internal in F6+). D-83 strict ZERO modifiche a packages/core/. Pattern audit-able via grep. | 03-05-SUMMARY.md |
+| Plan 03-05 RouteResolverOptions.strict default `false` (idempotent) coerente con CanonicalRegistry F2 | Replica pattern F2 RegisterOptions.strict opt-in. Test 3 verifica idempotency: register duplicate id non-strict ritorna handle existing senza throw, no double-insert. Strict opt-in per detection accidentale ID collision. | 03-05-SUMMARY.md |
+| Plan 03-05 AmbiguousRouteEvent come callback opt-in invece di publish diretto al broker | Mantiene il RouteResolver puro (no broker dependency). RouterBroker plan 03-12 farà il bind `(event) => broker.publish('routing.ambiguous', event)`. Permette unit test deterministici via mock callback (Test 13). | 03-05-SUMMARY.md |
+| Plan 03-05 priorityOrdered ritorna [vincitore singolo] non sorted full array | Semantica D-66: la policy seleziona UNA route per route HTTP execution. Per fan-out broadcast si usa policy 'all' (allBroadcast). Test 8 verifica priorityOrdered ritorna [{priority:5}] non [{5}, {3}, {1}]. | 03-05-SUMMARY.md |
+| Plan 03-05 TS bracket notation per Record<string, unknown> field access (Rule 1 fix) | TS4111 con noUncheckedIndexedAccess strict richiede `result['queryMap']` invece di `result.queryMap` per oggetti tipizzati come Record. Replica fix simile in mapper-engine.ts F2 (WR-03 iter3 RESERVED_KEYS). | 03-05-SUMMARY.md |
 
 ### Open Issues PRD §39 — Phase Assignment
 
@@ -153,8 +159,8 @@ Total Plans: 14
 | Ordine pipeline mapping/validazione | F1 (skeleton) + F2/F3/F6 (riempimento) | **Partial closed in 02-09** (PIPE-01: F2PipelineStep esposto come literal union additive dal barrel mapper; runtime pipeline orchestration al broker wrapper plan 02-10) |
 | Field mancante: errore o default | F2 (VAL-08) | **Closed in 02-07** (mapper-engine.applyOutputMap throw `mapping.field.missing` con `details: { pluginId, fieldName }` su required:true + missing; required:false + default applies; required:false + no default field omesso) |
 | Transform failure: skip o block | F2 (VAL-09) | **Closed in 02-05** (TransformPipeline.apply con onFailure 'block'/'skip'/'fallback' D-44 + cause chaining ES2022 D-45 via createBrokerError; default 'block' enforced; non-Error throw values wrapped) |
-| Topic senza route | F3 (ROUTE-16) | Pending |
-| Più route applicabili stesso topic | F3 (ROUTE-15) | Pending |
+| Topic senza route | F3 (ROUTE-16) | Type-only ready in 03-03 (CanonicalSchema.requiresRoute augment + RoutingConfig.requiresRouteTopics); runtime publish in 03-12 RouterBroker |
+| Più route applicabili stesso topic | F3 (ROUTE-15) | **Closed runtime in 03-05** (3 strategy first-match/priority-ordered/all + AmbiguousRouteEvent callback dev-mode; publish 'routing.ambiguous' come BrokerEvent in 03-12 RouterBroker) |
 | Unsubscribe automatico in `unregisterPlugin` | F1 (LIFE-02) | **Closed in 01-08** (cascade D-26 deterministico + createPluginScopedBroker wrapper) |
 | Retry 4xx vs 5xx | F3 (ROUTE-09) | Pending |
 | Reconnection rules realtime | F4 (RT-07) | Pending |
@@ -196,6 +202,7 @@ Total Plans: 14
 - [x] Eseguire Plan 02-10 (Wave 6 — broker-mapper-wrapper: composition decorator per agganciare MapperEngine + MappingInspector al Broker F1 senza modificare bus.ts) — completato 2026-04-30 (2 task TDD, 21min, 4 commit: b51e507 RED + edfd0e0 GREEN MapperBroker + 3a840d0 RED + a53c260 GREEN createMapperBroker; 15 test wrapper + 8 test factory passing; D-49 strict 0 modifiche a packages/core/; MAP-02/MAP-03/MAP-13/MAP-14/MAP-15/ERR-02/LIFE-02/PIPE-01 done; D-31/D-49/D-50/D-51/D-58/D-59/D-26 ext F2/D-48/D-30/D-56 closed runtime)
 - [x] Eseguire Plan 02-11 (Wave 7 — integration test scenario meteo PRD §29 senza HTTP) — completato 2026-04-30 (2 task, 33 min, 2 commit: eb923fe + 585f266; 5 integration test files / 20 test; mapper 14/136 vs baseline 9/116; core 248 invariati; TEST-01/TEST-02/MAP-13/MAP-14/MAP-15/LIFE-02 done; tutti i 5 success criteria F2 ROADMAP coperti 1:1)
 - [ ] Eseguire Plan 02-12 (Wave 8 final gate F2 — coverage v8 ≥ 90% + publint/attw/size-limit estesi + DOC-03 README scenario meteo + JSDoc + gsd-verifier)
+- [x] Eseguire Plan 03-05 (Wave 4 — RouteResolver + 3 strategy multi-route + cascade unregisterByOwner + TopicTrie mirror) — completato 2026-05-02 (2 task TDD, 25min, 3 commit: 1e98688 RED + cc9630e GREEN + 1703265 strategies test; 30/30 routing test; D-83 strict OK; ROUTE-15 chiuso runtime)
 
 ### Active Blockers
 

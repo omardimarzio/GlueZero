@@ -116,7 +116,7 @@ ROUTE-01, ROUTE-02, ROUTE-03, ROUTE-04, ROUTE-05, ROUTE-06, ROUTE-07, ROUTE-08, 
 - [x] 03-02-PLAN.md — Public types F3 (RouteDefinition discriminated union, GatewayConfig, 7 Strategy interfaces, GatewayErrorCode)
 - [x] 03-03-PLAN.md — augment.ts routing (PluginDescriptor.routes + BrokerConfig.routes/gateway + CanonicalSchema.requiresRoute) + barrel + sideEffects
 - [x] 03-04-PLAN.md — augment.ts gateway (BrokerConfig.gateway) + http subpath barrel
-- [ ] 03-05-PLAN.md — RouteResolver dispatch table pre-compilato + 3 strategies (first-match/priority-ordered/all-broadcast) + cascade unregisterByOwner (D-86)
+- [x] 03-05-PLAN.md — RouteResolver dispatch table pre-compilato + 3 strategies (first-match/priority-ordered/all-broadcast) + cascade unregisterByOwner (D-86) — completato 2026-05-02 (3 commits: 1e98688 RED, cc9630e GREEN RouteResolver+strategies, 1703265 strategies test; 30/30 routing test; D-83 strict OK; ROUTE-15 chiuso runtime)
 - [ ] 03-06-PLAN.md — RouteExecutor dispatch by type + 3 route handlers (local/cache stub F6/composite workflow) + AbortController tracking
 - [ ] 03-07-PLAN.md — OutcomeCollector step 10 (publish loaded/failed shape D-80, network.error secondario D-81, recursion guard D-82)
 - [ ] 03-08-PLAN.md — HttpGateway core + policy chain + url-allowlist (Pitfall 7) + retry-after-parser + combine-signals + http-handler integrazione mapper+gateway+VAL-05
@@ -296,7 +296,7 @@ I 11 punti che il PRD §39 vieta esplicitamente di lasciare impliciti vengono ch
 |-------|----------------|--------|-----------|
 | 1. Core essenziale | 11/11 | ✅ Complete & Verified | 2026-04-29 |
 | 2. Canonical Model & Mapper | 11/12 | In Progress | - |
-| 3. Routing & Server Gateway HTTP | 1/14 | Plans created (planner 03-01 done) | - |
+| 3. Routing & Server Gateway HTTP | 5/14 | In Progress (03-01..03-05 done) | - |
 | 4. Realtime inbound | 0/0 | Not started | - |
 | 5. Worker Runtime | 0/0 | Not started | - |
 | 6. Cache & Tooling avanzato | 0/0 | Not started | - |
@@ -304,4 +304,4 @@ I 11 punti che il PRD §39 vieta esplicitamente di lasciare impliciti vengono ch
 ---
 
 *Roadmap created: 2026-04-28*
-*Last updated: 2026-05-01 — **Phase 3 Plans created** (14/14 plans con file ownership disgiunta in 9 wave (revision iter 1 fix: wave numbering recalculated topologically dal depends_on graph — WARNING 5 closure); 03-01 già implementato; 03-02..03-14 ready per gsd-execute-phase 3 con yolo+parallelization). **Phase 2 In Progress** (11/12 plan completi: 02-01..02-11 — incluso 02-10 broker wrapper a53c260 + 02-11 integration tests eb923fe+585f266; 14 mapper test files / 136 test passing + core 248 invariati D-49 confermato; MAP-02/MAP-03/MAP-13/MAP-14/MAP-15/ERR-02/LIFE-02/PIPE-01/TEST-01/TEST-02 done; tutti i 5 success criteria F2 ROADMAP coperti via 5 integration test files 1:1; aperti per plan 02-12 final gate F2 con coverage v8 + DOC-03). **Phase 1 COMPLETE & VERIFIED** (gsd-verifier PASS confidence HIGH; 5/5 success criteria, 27/27 REQ-IDs, 8/8 gate CI).*
+*Last updated: 2026-05-02 — **Phase 3 In Progress 5/14 plan completi** (03-01..03-05 done): 03-01 bootstrap routing+gateway; 03-02 public types F3; 03-03 augment routing; 03-04 augment gateway; **03-05 RouteResolver dispatch table pre-compilata + 3 strategies (first-match/priority-ordered/all) + cascade unregisterByOwner (D-86 LIFE-02 ext F3) + TopicTrie mirror copy F1 (~115 LOC) — 30/30 routing test, D-83 strict OK (core 248/248 + mapper 183/183 invariati), ROUTE-15 chiuso PRD §39 #6 runtime per costruzione, ROUTE-16 type-only ready (runtime in 03-12)**; aperti 03-06..03-14. **Phase 3 Plans created** (14/14 plans con file ownership disgiunta in 9 wave). **Phase 2 In Progress** (11/12 plan completi: 02-01..02-11 — aperti per plan 02-12 final gate F2 con coverage v8 + DOC-03). **Phase 1 COMPLETE & VERIFIED** (gsd-verifier PASS confidence HIGH; 5/5 success criteria, 27/27 REQ-IDs, 8/8 gate CI).*
