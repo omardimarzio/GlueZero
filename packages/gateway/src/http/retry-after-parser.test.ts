@@ -11,9 +11,12 @@ import { MAX_BACKOFF_MS, parseRetryAfter } from './retry-after-parser'
 
 describe('retry-after-parser.ts (RFC 7231 — D-69, MAX_BACKOFF_MS cap)', () => {
   it('parses delta-seconds (numeric string) to ms with cap', () => {
-    expect(parseRetryAfter('120')).toBe(120_000)
+    // delta-seconds entro il cap → ritorna ms esatti.
+    expect(parseRetryAfter('30')).toBe(30_000)
     expect(parseRetryAfter('0')).toBe(0)
-    // cap a MAX_BACKOFF_MS (60s default)
+    // delta-seconds OLTRE il cap → cap applicato (T-03-08-03 mitigation).
+    // 120 seconds = 120000 ms; clamped a MAX_BACKOFF_MS = 60000 ms.
+    expect(parseRetryAfter('120')).toBe(MAX_BACKOFF_MS)
     expect(parseRetryAfter('600')).toBe(MAX_BACKOFF_MS)
     expect(MAX_BACKOFF_MS).toBe(60_000)
   })
