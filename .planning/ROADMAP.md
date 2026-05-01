@@ -117,7 +117,7 @@ ROUTE-01, ROUTE-02, ROUTE-03, ROUTE-04, ROUTE-05, ROUTE-06, ROUTE-07, ROUTE-08, 
 - [x] 03-03-PLAN.md — augment.ts routing (PluginDescriptor.routes + BrokerConfig.routes/gateway + CanonicalSchema.requiresRoute) + barrel + sideEffects
 - [x] 03-04-PLAN.md — augment.ts gateway (BrokerConfig.gateway) + http subpath barrel
 - [x] 03-05-PLAN.md — RouteResolver dispatch table pre-compilato + 3 strategies (first-match/priority-ordered/all-broadcast) + cascade unregisterByOwner (D-86) — completato 2026-05-02 (3 commits: 1e98688 RED, cc9630e GREEN RouteResolver+strategies, 1703265 strategies test; 30/30 routing test; D-83 strict OK; ROUTE-15 chiuso runtime)
-- [ ] 03-06-PLAN.md — RouteExecutor dispatch by type + 3 route handlers (local/cache stub F6/composite workflow) + AbortController tracking
+- [x] 03-06-PLAN.md — RouteExecutor dispatch by type + 3 route handlers (local/cache stub F6/composite workflow) + AbortController tracking
 - [ ] 03-07-PLAN.md — OutcomeCollector step 10 (publish loaded/failed shape D-80, network.error secondario D-81, recursion guard D-82)
 - [ ] 03-08-PLAN.md — HttpGateway core + policy chain + url-allowlist (Pitfall 7) + retry-after-parser + combine-signals + http-handler integrazione mapper+gateway+VAL-05
 - [ ] 03-09-PLAN.md — Strategy primitives Wave 4-A: retry (D-69 chiusura ROUTE-09 4xx/5xx/408/429), timeout, idempotency (D-70 SEC-03 Pitfall 3 fix)
@@ -261,7 +261,7 @@ I 11 punti che il PRD §39 vieta esplicitamente di lasciare impliciti vengono ch
 |---|--------------------|-----------|------------------|
 | 1 | Precedenza alias automatici vs mapping esplicito | Mapping esplicito vince sempre (MAP-17) | F2 |
 | 2 | 6/12 | In Progress|  |
-| 3 | Field mancante: errore o default | Configurabile per campo (`required: true`/`false`) | F2 (VAL-08) |
+| 3 | 6/14 | In Progress|  |
 | 4 | Transform failure: skip o block | `onFailure: 'block' | 'skip' | 'fallback'`, default `'block'` | F2 (VAL-09) |
 | 5 | Topic senza route | Default consegna locale, opt-in `requiresRoute: true` | F3 (ROUTE-16) |
 | 6 | Più route applicabili | `'first-match'` default + `'priority-ordered'` + `'all'` | F3 (ROUTE-15) |

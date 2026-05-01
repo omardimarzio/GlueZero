@@ -61,7 +61,7 @@ Tutti i requisiti elencati sono table stakes (vincolanti dalla checklist PRD §4
 - [x] **ROUTE-11**: Deduplica via `dedupeKey` o logica route-specific *(PRD §11.3, §23.4)*
 - [ ] **ROUTE-12**: Pubblicazione automatica eventi `<topic>.failed` su errore route remota *(PRD §22.3, §29.4)*
 - [x] **ROUTE-13**: Cancellazione/invalidazione semantica per task lunghi o richieste obsolete *(PRD §23.5)*
-- [ ] **ROUTE-14**: Route Inspector: route intercettata, policy applicate, esito remote/worker, retry, cache hit/miss *(PRD §25.3)*
+- [x] **ROUTE-14**: Route Inspector: route intercettata, policy applicate, esito remote/worker, retry, cache hit/miss *(PRD §25.3)*
 - [x] **ROUTE-15**: Comportamento esplicito con più route applicabili allo stesso topic (priorità documentata) *(PRD §39 — open issue da chiudere)*
 - [x] **ROUTE-16**: Comportamento esplicito con topic senza route (consegna locale o errore esplicito) *(PRD §39 — open issue da chiudere)*
 
@@ -238,7 +238,7 @@ Mappatura definitiva REQ-ID → fase. Ogni requisito è assegnato alla **prima f
 | ROUTE-11 | Phase 3 | Complete | `dedupeKey` esplicito |
 | ROUTE-12 | Phase 3 | Pending | — |
 | ROUTE-13 | Phase 3 | Complete | AbortSignal propagato |
-| ROUTE-14 | Phase 3 | Pending | Route Inspector (estende EventTap) |
+| ROUTE-14 | Phase 3 | Complete | Route Inspector (estende EventTap) |
 | ROUTE-15 | Phase 3 | Complete | **Closes PRD §39 #6**: `'first-match'` default + warning |
 | ROUTE-16 | Phase 3 | Complete | **Closes PRD §39 #5**: default consegna locale |
 
