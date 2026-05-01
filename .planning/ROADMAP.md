@@ -115,7 +115,7 @@ ROUTE-01, ROUTE-02, ROUTE-03, ROUTE-04, ROUTE-05, ROUTE-06, ROUTE-07, ROUTE-08, 
 - [x] 03-01-PLAN.md — Bootstrap @sembridge/routing + @sembridge/gateway (subpath exports + sideEffects)
 - [x] 03-02-PLAN.md — Public types F3 (RouteDefinition discriminated union, GatewayConfig, 7 Strategy interfaces, GatewayErrorCode)
 - [x] 03-03-PLAN.md — augment.ts routing (PluginDescriptor.routes + BrokerConfig.routes/gateway + CanonicalSchema.requiresRoute) + barrel + sideEffects
-- [ ] 03-04-PLAN.md — augment.ts gateway (BrokerConfig.gateway) + http subpath barrel
+- [x] 03-04-PLAN.md — augment.ts gateway (BrokerConfig.gateway) + http subpath barrel
 - [ ] 03-05-PLAN.md — RouteResolver dispatch table pre-compilato + 3 strategies (first-match/priority-ordered/all-broadcast) + cascade unregisterByOwner (D-86)
 - [ ] 03-06-PLAN.md — RouteExecutor dispatch by type + 3 route handlers (local/cache stub F6/composite workflow) + AbortController tracking
 - [ ] 03-07-PLAN.md — OutcomeCollector step 10 (publish loaded/failed shape D-80, network.error secondario D-81, recursion guard D-82)

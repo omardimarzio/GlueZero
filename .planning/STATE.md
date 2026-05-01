@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-current_plan: 3
+current_plan: "5 (next: 03-05 RouteResolver + TopicTrie reuse + dispatch table)"
 status: executing
-last_updated: "2026-05-01T21:28:34.976Z"
+last_updated: "2026-05-01T21:56:25.717Z"
 progress:
   total_phases: 6
   completed_phases: 2
   total_plans: 37
-  completed_plans: 26
-  percent: 70
+  completed_plans: 27
+  percent: 73
 ---
 
 # Project State: SemBridge
@@ -29,16 +29,16 @@ progress:
 ## Current Position
 
 Phase: 03 (routing-server-gateway-http) — EXECUTING
-Plan: 4 of 14
-Current Plan: 3
+Plan: 5 of 14
+Current Plan: 5 (next: 03-05 RouteResolver + TopicTrie reuse + dispatch table)
 Total Plans: 14
 
-**Last completed:** Plan 03-02 (F3 type contracts routing+gateway) at 2026-04-30T23:21Z — 2 commits (2683895 Task 1 routing types + 55220ee Task 2 gateway types); 9 file type-only creati (5 routing + 4 gateway); 26 type esportati da @sembridge/routing + 17 da @sembridge/gateway/http + isGatewayErrorCode runtime guard; tsc --noEmit 0 errori entrambi i package; 14 REQ-IDs marcati complete (ROUTE-01..05/08/10/11/13, VAL-05, SEC-01..03/05); 2 deviazioni Rule 3 (workspace dep gateway → routing + barrel routing types export); D-83 confermato (core 248/248 + mapper 183/183 invariati).
-**Next:** Plan 03-03 (augment routing — declaration merging PluginDescriptor.routes + BrokerConfig.routing + CanonicalSchema.requiresRoute)
+**Last completed:** Plan 03-04 (F3 augment gateway — declaration merging BrokerConfig.gateway?: GatewayConfig + barrel HTTP subpath con 18 type re-export + tsup augment entry per dist/augment.js + Pattern S1 sideEffects array già configurato da 03-01) at 2026-05-01T21:46:54Z — 2 commits (34af7a2 Task 1 augment+test 5/5 passing + 47f13fc Task 2 barrel/umbrella/tsup); 2 file creati + 3 modificati; build multi-entry dist/index.js + dist/http/index.js + dist/augment.js (gzip ~280B+250B+110B); 5 REQ-ID coperti a livello tipo (SEC-01..05 + ROUTE-06/07 — runtime in plan 03-08+); 1 deviazione Rule 1 (JSDoc /\* breaking syntax fix); D-83 confermato (core 248/248 + mapper 183/183 + routing 9/9 invariati).
+**Next:** Plan 03-05 (route-resolver — TopicTrie reuse from @sembridge/core/internal + register/unregister/dispatch + ownership tracking)
 
 - **Phase:** 3
 - **Status:** Ready to execute
-- **Progress:** [███████░░░] 70%
+- **Progress:** [███████░░░] 73%
 
 ## Phases Overview
 
@@ -81,6 +81,7 @@ Total Plans: 14
 | Phase 03 P01 | ~4 minuti | 3 tasks | 15 files |
 | Phase 03 P02 | 12 min | 2 tasks | 12 files |
 | Phase 03 P03 | 9 min | 2 tasks | 4 files |
+| Phase 03 P04 | ~14 min | 2 tasks | 5 files |
 
 ## Accumulated Context
 
