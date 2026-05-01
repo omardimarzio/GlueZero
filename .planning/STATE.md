@@ -4,13 +4,13 @@ milestone: v1.0
 milestone_name: milestone
 current_plan: 1
 status: executing
-last_updated: "2026-04-30T23:12:51.541Z"
+last_updated: "2026-04-30T23:23:44.305Z"
 progress:
   total_phases: 6
   completed_phases: 2
   total_plans: 37
-  completed_plans: 24
-  percent: 65
+  completed_plans: 25
+  percent: 68
 ---
 
 # Project State: SemBridge
@@ -29,16 +29,16 @@ progress:
 ## Current Position
 
 Phase: 03 (routing-server-gateway-http) — EXECUTING
-Plan: 2 of 14
-Current Plan: 1
-Total Plans: 12
+Plan: 3 of 14
+Current Plan: 3
+Total Plans: 14
 
-**Last completed:** Plan 02-12 (final gate F2) at 2026-04-30T09:53Z — 3 commits (ad1ceab Task 1 README+JSDoc + 140a502 Task 2 robustness tests + 5320ff6 Task 3 CI gates extension); 16 mapper test files / 149 test passing; core 248 invariati (D-49 strict confermato); 3 CI gates verdi (publint + attw + size-limit); DOC-03 chiuso (366 LOC README).
-**Next:** `gsd-verifier` Phase 2 — goal-backward verification dei 5 success criteria + coverage 27 REQ-IDs F2 + threat model accumulative
+**Last completed:** Plan 03-02 (F3 type contracts routing+gateway) at 2026-04-30T23:21Z — 2 commits (2683895 Task 1 routing types + 55220ee Task 2 gateway types); 9 file type-only creati (5 routing + 4 gateway); 26 type esportati da @sembridge/routing + 17 da @sembridge/gateway/http + isGatewayErrorCode runtime guard; tsc --noEmit 0 errori entrambi i package; 14 REQ-IDs marcati complete (ROUTE-01..05/08/10/11/13, VAL-05, SEC-01..03/05); 2 deviazioni Rule 3 (workspace dep gateway → routing + barrel routing types export); D-83 confermato (core 248/248 + mapper 183/183 invariati).
+**Next:** Plan 03-03 (augment routing — declaration merging PluginDescriptor.routes + BrokerConfig.routing + CanonicalSchema.requiresRoute)
 
 - **Phase:** 3
 - **Status:** Ready to execute
-- **Progress:** [███████░░░] 65%
+- **Progress:** [███████░░░] 68%
 
 ## Phases Overview
 
@@ -79,6 +79,7 @@ Total Plans: 12
 | Phase 02 P11 | 33min | 2 tasks | 6 files |
 | Phase 02 P12 | 9min | 3 tasks | 10 files |
 | Phase 03 P01 | ~4 minuti | 3 tasks | 15 files |
+| Phase 03 P02 | 12 min | 2 tasks | 12 files |
 
 ## Accumulated Context
 

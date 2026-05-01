@@ -48,19 +48,19 @@ Tutti i requisiti elencati sono table stakes (vincolanti dalla checklist PRD §4
 
 ### Routing Engine + Server Gateway HTTP (Fase 3)
 
-- [ ] **ROUTE-01**: `registerRoute(routeDefinition)` e `unregisterRoute(routeId)` *(PRD §16.2)*
-- [ ] **ROUTE-02**: Tipo route `local` (consegna a subscriber interni) *(PRD §17.2, §17.3)*
-- [ ] **ROUTE-03**: Tipo route `http` con `request` (method, url, queryMap, bodyMap), `publishes.success`, `publishes.error` *(PRD §17.2, §17.4)*
-- [ ] **ROUTE-04**: Tipo route `cache` (cache-first/network-first/cache-then-network) *(PRD §17.2, §17.6, §20.2)*
-- [ ] **ROUTE-05**: Tipo route `composite` (workflow check-cache → server → update-cache → publish) *(PRD §17.2, §17.7)*
+- [x] **ROUTE-01**: `registerRoute(routeDefinition)` e `unregisterRoute(routeId)` *(PRD §16.2)*
+- [x] **ROUTE-02**: Tipo route `local` (consegna a subscriber interni) *(PRD §17.2, §17.3)*
+- [x] **ROUTE-03**: Tipo route `http` con `request` (method, url, queryMap, bodyMap), `publishes.success`, `publishes.error` *(PRD §17.2, §17.4)*
+- [x] **ROUTE-04**: Tipo route `cache` (cache-first/network-first/cache-then-network) *(PRD §17.2, §17.6, §20.2)*
+- [x] **ROUTE-05**: Tipo route `composite` (workflow check-cache → server → update-cache → publish) *(PRD §17.2, §17.7)*
 - [ ] **ROUTE-06**: Server Gateway centralizza tutte le richieste fetch/AJAX *(PRD §18.1, §18.2)*
 - [ ] **ROUTE-07**: Header auth gestiti centralmente; supporto a token refresh tramite hook/adapter *(PRD §26.2)*
-- [ ] **ROUTE-08**: Policy per route: timeout, retry con backoff esponenziale opzionale, dedupe, cache, concurrency, error, mapping, auth *(PRD §17.8)*
+- [x] **ROUTE-08**: Policy per route: timeout, retry con backoff esponenziale opzionale, dedupe, cache, concurrency, error, mapping, auth *(PRD §17.8)*
 - [ ] **ROUTE-09**: Differenziazione retry su errori 4xx (no retry default) vs 5xx (retry con backoff) — comportamento esplicito *(PRD §39 — open issue da chiudere)*
-- [ ] **ROUTE-10**: Backpressure: queue bounded, drop policy, throttle, debounce, latest-only, merge/coalesce *(PRD §23.3)*
-- [ ] **ROUTE-11**: Deduplica via `dedupeKey` o logica route-specific *(PRD §11.3, §23.4)*
+- [x] **ROUTE-10**: Backpressure: queue bounded, drop policy, throttle, debounce, latest-only, merge/coalesce *(PRD §23.3)*
+- [x] **ROUTE-11**: Deduplica via `dedupeKey` o logica route-specific *(PRD §11.3, §23.4)*
 - [ ] **ROUTE-12**: Pubblicazione automatica eventi `<topic>.failed` su errore route remota *(PRD §22.3, §29.4)*
-- [ ] **ROUTE-13**: Cancellazione/invalidazione semantica per task lunghi o richieste obsolete *(PRD §23.5)*
+- [x] **ROUTE-13**: Cancellazione/invalidazione semantica per task lunghi o richieste obsolete *(PRD §23.5)*
 - [ ] **ROUTE-14**: Route Inspector: route intercettata, policy applicate, esito remote/worker, retry, cache hit/miss *(PRD §25.3)*
 - [ ] **ROUTE-15**: Comportamento esplicito con più route applicabili allo stesso topic (priorità documentata) *(PRD §39 — open issue da chiudere)*
 - [ ] **ROUTE-16**: Comportamento esplicito con topic senza route (consegna locale o errore esplicito) *(PRD §39 — open issue da chiudere)*
@@ -103,7 +103,7 @@ Tutti i requisiti elencati sono table stakes (vincolanti dalla checklist PRD §4
 - [ ] **VAL-02**: Validazione payload topic *(PRD §21.2.2)*
 - [x] **VAL-03**: Validazione modello canonico *(PRD §21.2.3)*
 - [x] **VAL-04**: Validazione post-mapping *(PRD §21.2.4)*
-- [ ] **VAL-05**: Validazione risposta server *(PRD §21.2.5)*
+- [x] **VAL-05**: Validazione risposta server *(PRD §21.2.5)*
 - [x] **VAL-06**: Schema definitions JSON Schema o equivalente tipizzato *(PRD §21.3)*
 - [x] **VAL-07**: Errori di validazione registrati in debug/log; payload invalidi non consegnati salvo configurazione esplicita *(PRD §21.4)*
 - [x] **VAL-08**: Comportamento esplicito su field mancante (errore vs default) *(PRD §39 — open issue da chiudere)*
@@ -120,11 +120,11 @@ Tutti i requisiti elencati sono table stakes (vincolanti dalla checklist PRD §4
 - [x] **LIFE-02**: Unregister plugin rimuove subscription, handler e risorse collegate *(PRD §24.2, §39 — open issue da chiudere)*
 
 #### Sicurezza
-- [ ] **SEC-01**: Header auth centralizzati nel gateway *(PRD §26.2)*
-- [ ] **SEC-02**: Token refresh via hook/adapter configurabile *(PRD §26.2)*
-- [ ] **SEC-03**: Protezione da duplicazioni accidentali di chiamate *(PRD §26.2)*
+- [x] **SEC-01**: Header auth centralizzati nel gateway *(PRD §26.2)*
+- [x] **SEC-02**: Token refresh via hook/adapter configurabile *(PRD §26.2)*
+- [x] **SEC-03**: Protezione da duplicazioni accidentali di chiamate *(PRD §26.2)*
 - [ ] **SEC-04**: Gestione uniforme di status HTTP non validi *(PRD §26.2)*
-- [ ] **SEC-05**: Controllo sugli endpoint consentiti (URL allowlist) *(PRD §26.2)*
+- [x] **SEC-05**: Controllo sugli endpoint consentiti (URL allowlist) *(PRD §26.2)*
 
 #### Test
 - [x] **TEST-01**: Unit test su pub/sub, unsubscribe, wildcard, mapping, reverse mapping, trasformazioni, dedupe, retry/timeout, route HTTP, route worker, realtime normalization, lifecycle cleanup *(PRD §35.1)*
@@ -225,19 +225,19 @@ Mappatura definitiva REQ-ID → fase. Ogni requisito è assegnato alla **prima f
 
 | Requirement | Phase | Status | Note |
 |-------------|-------|--------|------|
-| ROUTE-01 | Phase 3 | Pending | — |
-| ROUTE-02 | Phase 3 | Pending | — |
-| ROUTE-03 | Phase 3 | Pending | queryMap + bodyMap canonico→server |
-| ROUTE-04 | Phase 3 | Pending | Definizione type — implementazione cache adapter in F6 |
-| ROUTE-05 | Phase 3 | Pending | — |
+| ROUTE-01 | Phase 3 | Complete | — |
+| ROUTE-02 | Phase 3 | Complete | — |
+| ROUTE-03 | Phase 3 | Complete | queryMap + bodyMap canonico→server |
+| ROUTE-04 | Phase 3 | Complete | Definizione type — implementazione cache adapter in F6 |
+| ROUTE-05 | Phase 3 | Complete | — |
 | ROUTE-06 | Phase 3 | Pending | — |
 | ROUTE-07 | Phase 3 | Pending | Hook adapter pluggable |
-| ROUTE-08 | Phase 3 | Pending | Strategy Pattern per ogni policy |
+| ROUTE-08 | Phase 3 | Complete | Strategy Pattern per ogni policy |
 | ROUTE-09 | Phase 3 | Pending | **Closes PRD §39 #8**: no retry su 4xx eccetto 408/429 |
-| ROUTE-10 | Phase 3 | Pending | Backpressure priority-aware |
-| ROUTE-11 | Phase 3 | Pending | `dedupeKey` esplicito |
+| ROUTE-10 | Phase 3 | Complete | Backpressure priority-aware |
+| ROUTE-11 | Phase 3 | Complete | `dedupeKey` esplicito |
 | ROUTE-12 | Phase 3 | Pending | — |
-| ROUTE-13 | Phase 3 | Pending | AbortSignal propagato |
+| ROUTE-13 | Phase 3 | Complete | AbortSignal propagato |
 | ROUTE-14 | Phase 3 | Pending | Route Inspector (estende EventTap) |
 | ROUTE-15 | Phase 3 | Pending | **Closes PRD §39 #6**: `'first-match'` default + warning |
 | ROUTE-16 | Phase 3 | Pending | **Closes PRD §39 #5**: default consegna locale |
@@ -287,7 +287,7 @@ Mappatura definitiva REQ-ID → fase. Ogni requisito è assegnato alla **prima f
 | VAL-02 | Phase 2 | Pending | — |
 | VAL-03 | Phase 2 | Complete | — |
 | VAL-04 | Phase 2 | Complete | — |
-| VAL-05 | Phase 3 | Pending | — |
+| VAL-05 | Phase 3 | Complete | — |
 | VAL-06 | Phase 1 | Done (plan 01-05) | Valibot schema runtime per BrokerEvent in `core/event-validator.ts`. TS interfaces tipizzate restano in `types/` (plan 03). |
 | VAL-07 | Phase 2 | Complete | — |
 | VAL-08 | Phase 2 | Complete | **Closes PRD §39 #3**: `required: true|false` per campo |
@@ -298,11 +298,11 @@ Mappatura definitiva REQ-ID → fase. Ogni requisito è assegnato alla **prima f
 | PIPE-01 | Phase 1 (skeleton) | Complete | Estesa da F2 (step 4-6, 11-12), F3 (step 7-10), F6 (step 14 reale) |
 | LIFE-01 | Phase 1 | Done (plan 01-08) | `Broker.subscribe()` ritorna `Subscription` con `.unsubscribe()` idempotente. Plugin smontabili senza leak via `unregisterPlugin(id)` cascade D-26. F4 estenderà a listener realtime; F5 a MessageChannel worker. |
 | LIFE-02 | Phase 1 | Done (plan 01-08) | **Closes PRD §39 #7**: cascade D-26 deterministico in `unregister(id)` — `bus.unsubscribeByOwner` → `abortController.abort()` → `onUnmount` → `onDestroy`. `createPluginScopedBroker` wrapper auto-tagga subscriptions per garantire enforcement F1. Test `getDebugSnapshot()` post-unregister == baseline pre-registrazione. F3 estenderà a route, F4 a realtime, F5 a worker tasks. |
-| SEC-01 | Phase 3 | Pending | — |
-| SEC-02 | Phase 3 | Pending | — |
-| SEC-03 | Phase 3 | Pending | Idempotency token |
+| SEC-01 | Phase 3 | Complete | — |
+| SEC-02 | Phase 3 | Complete | — |
+| SEC-03 | Phase 3 | Complete | Idempotency token |
 | SEC-04 | Phase 3 | Pending | — |
-| SEC-05 | Phase 3 | Pending | URL allowlist |
+| SEC-05 | Phase 3 | Complete | URL allowlist |
 | TEST-01 | Phase 1 (subset) | Done subset (plan 01-09) | PipelineHarness fixture + 8 integration test in `packages/core/src/__integration__/` coprono pub/sub, unsubscribe, wildcard, dedupe (skeleton), lifecycle cleanup deterministico (LIFE-02), event-tap 5 step F1, handler isolation, deep-freeze. 46 nuovi test passing. Estesa progressivamente F2-F6. |
 | TEST-02 | Phase 2 (subset) | Complete | F3 (server), F4 (reconnect), F5 (worker), F6 (cache) |
 | TEST-03 | Phase 1 (subset) | Done subset (plan 01-10) | 4 robustness test in `__integration__/`: storm.test (10000 publish FIFO + pendingAsyncDelivery=0), wildcard-perf.test (10000 sub matched < 50ms), plugin-fault.test (onMount throw → state failed, broker continua), concurrent-unregister.test (AbortSignal vs unregister race). Performance budget rispettati con ampi margini (storm 24ms / wildcard 11ms misurati). F3 estenderà a server malconfigurato, F4 a riconnessione ripetuta, F5 a worker timeout. |

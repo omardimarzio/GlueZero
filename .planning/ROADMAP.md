@@ -113,7 +113,7 @@ ROUTE-01, ROUTE-02, ROUTE-03, ROUTE-04, ROUTE-05, ROUTE-06, ROUTE-07, ROUTE-08, 
 
 **Plans**: 14 plans
 - [x] 03-01-PLAN.md — Bootstrap @sembridge/routing + @sembridge/gateway (subpath exports + sideEffects)
-- [ ] 03-02-PLAN.md — Public types F3 (RouteDefinition discriminated union, GatewayConfig, 7 Strategy interfaces, GatewayErrorCode)
+- [x] 03-02-PLAN.md — Public types F3 (RouteDefinition discriminated union, GatewayConfig, 7 Strategy interfaces, GatewayErrorCode)
 - [ ] 03-03-PLAN.md — augment.ts routing (PluginDescriptor.routes + BrokerConfig.routes/gateway + CanonicalSchema.requiresRoute) + barrel + sideEffects
 - [ ] 03-04-PLAN.md — augment.ts gateway (BrokerConfig.gateway) + http subpath barrel
 - [ ] 03-05-PLAN.md — RouteResolver dispatch table pre-compilato + 3 strategies (first-match/priority-ordered/all-broadcast) + cascade unregisterByOwner (D-86)
