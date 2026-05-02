@@ -1,5 +1,5 @@
 ---
-last_updated: 2026-04-30
+last_updated: 2026-05-02
 status: in_progress
 project: SemBridge
 milestone: v1.0
@@ -31,13 +31,12 @@ session_active: false
 | Mode GSD | yolo + auto_advance + parallelization (sequential exec, no worktree) |
 | Modello attivo | `claude-opus-4-7-1` (opus) — override esplicito su tutti i sub-agent |
 
-## Ultimo step completato (auto-update 2026-04-30T13:30:00Z)
+## Ultimo step completato (auto-update 2026-05-02T11:32:32Z)
 
 - Plan: **03-09** → SUMMARY.md committed
-- 7 commits TDD: 882fb3d/c9add02 (retry RED+GREEN), 43835cb/26bd8bc (timeout RED+GREEN), 3853adc/d5a4d5e (idempotency RED+GREEN), 483017c (barrel)
+- Commit: `0ff3566 docs(03-09): complete strategies retry+timeout+idempotency plan execution`
 - Phase progress: **9/14** plan completati con SUMMARY.md
 - Project progress: 33/37 plan (89%)
-- REQ-IDs chiusi: ROUTE-09 (chiusura PRD §39 #8) — già marcati ROUTE-13/SEC-03
 
 
 ## Prossimo step
