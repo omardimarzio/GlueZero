@@ -144,6 +144,9 @@ importers:
       '@sembridge/core':
         specifier: workspace:*
         version: link:../core
+      '@sembridge/gateway':
+        specifier: workspace:*
+        version: link:../gateway
       '@sembridge/mapper':
         specifier: workspace:*
         version: link:../mapper

@@ -115,3 +115,33 @@ export { MAX_BACKOFF_MS, parseRetryAfter } from './retry-after-parser'
 export { combineSignals } from './combine-signals'
 /** Koa-style compose async middleware per policy chain del gateway (RESEARCH §Pattern 3). */
 export { compose } from './policy-chain'
+
+// ---------- Runtime export: 7 Strategy factories (plan 03-09/10/11 — barrel aggregato) ----------
+//
+// Plan 03-12 RouterEngine importa queste factory da `@sembridge/gateway/http` per
+// instantiate la `HttpGatewayStrategies` bundle config-derived. Mantiene il barrel
+// `./http` come single import path per consumer del routing engine; subpath dedicato
+// `./http/strategies` resta pubblico per consumer avanzati che vogliono override
+// granulari (es. test di terze parti che mockano una sola strategy).
+
+/** AuthStrategy factory (D-72, SEC-01/SEC-02, plan 03-11) — Bearer + single-flight refresh. */
+export { createAuthStrategy } from './strategies/auth-strategy'
+export type { AuthStrategyOptions } from './strategies/auth-strategy'
+/** BackpressureStrategy factory (D-75, ROUTE-10, plan 03-10) — queue/drop/throttle/debounce. */
+export { createBackpressureStrategy } from './strategies/backpressure-strategy'
+export type { BackpressureStrategyOptions } from './strategies/backpressure-strategy'
+/** CircuitBreakerStrategy factory (D-99, plan 03-11) — opt-in DISABLED default. */
+export { createCircuitBreakerStrategy } from './strategies/circuit-breaker'
+export type { CircuitBreakerStrategyOptions } from './strategies/circuit-breaker'
+/** DedupeStrategy factory (D-74, ROUTE-11, plan 03-10) — KeyBased Promise singleton. */
+export { createDedupeStrategy } from './strategies/dedupe-strategy'
+export type { DedupeStrategyOptions } from './strategies/dedupe-strategy'
+/** IdempotencyStrategy factory (D-70, SEC-03, plan 03-09) — auto Idempotency-Key via nanoid. */
+export { createIdempotencyStrategy } from './strategies/idempotency-strategy'
+export type { IdempotencyStrategyOptions } from './strategies/idempotency-strategy'
+/** RetryStrategy factory (D-69, ROUTE-09, plan 03-09) — ExponentialBackoffWithJitter. */
+export { createRetryStrategy } from './strategies/retry-strategy'
+export type { RetryStrategyOptions } from './strategies/retry-strategy'
+/** TimeoutStrategy factory (D-68, plan 03-09) — FixedTimeout via AbortSignal.timeout(). */
+export { createTimeoutStrategy } from './strategies/timeout-strategy'
+export type { TimeoutStrategyOptions } from './strategies/timeout-strategy'
