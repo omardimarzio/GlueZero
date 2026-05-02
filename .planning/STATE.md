@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-current_plan: "6 (next: 03-06 RouteExecutor + route-handlers)"
+current_plan: "9 (next: 03-09 Strategies retry+timeout+idempotency)"
 status: executing
-last_updated: "2026-05-01T22:43:04.234Z"
+last_updated: "2026-04-30T00:00:00.000Z"
 progress:
   total_phases: 6
   completed_phases: 2
   total_plans: 37
-  completed_plans: 30
-  percent: 81
+  completed_plans: 32
+  percent: 86
 ---
 
 # Project State: SemBridge
@@ -29,16 +29,16 @@ progress:
 ## Current Position
 
 Phase: 03 (routing-server-gateway-http) — EXECUTING
-Plan: 8 of 14
-Current Plan: 6 (next: 03-06 RouteExecutor + route-handlers)
+Plan: 9 of 14
+Current Plan: 9 (next: 03-09 Strategies retry+timeout+idempotency)
 Total Plans: 14
 
-**Last completed:** Plan 03-05 (F3 RouteResolver + multi-route strategies + cascade unregisterByOwner — dispatch table pre-compilata D-64 + TopicTrie mirror copy interno ≤120 LOC D-83 strict + 3 strategy first-match/priority-ordered/all D-66 + cascade D-86 LIFE-02 ext F3) at 2026-05-02T00:15:30Z — 3 commits (1e98688 RED Task 1 + cc9630e GREEN Task 1 RouteResolver + 1703265 Task 2 strategies test); 8 file creati (route-resolver.ts 281 LOC + internal/topic-trie.ts 116 LOC mirror F1 + 4 strategies + 2 test files); 30/30 routing test passing (14 resolver + 9 augment + 7 strategies); D-83 confermato strict (core 248/248 + mapper 183/183 invariati, `git diff HEAD~3 -- packages/core/ packages/mapper/` empty); 1 deviazione Rule 1 (TS index signature bracket notation per Record<string, unknown>); ROUTE-15 chiusura PRD §39 #6 per costruzione runtime; LIFE-02 ext F3 a livello modulo (publish runtime in 03-12).
-**Next:** Plan 03-06 (RouteExecutor — async/sync dispatch by type local/http/cache/composite + route-handlers)
+**Last completed:** Plan 03-08 (F3 HttpGateway core + policy chain + http-handler — `HttpGateway` class 373 LOC con execute() che applica allowlist D-71 + auth header injection D-72 + Idempotency-Key D-70 + combineSignals D-77 + retry loop opzionale + redirect:'manual' con Location re-validation Pitfall 7 + circuit breaker D-99 + abortInFlight/abortInFlightByOwner ROUTE-13/LIFE-02; `createHttpHandler` factory 300 LOC in @sembridge/routing che integra mapper.mapToShape D-96 + gateway.execute + mapper.mapToCanonical D-97 + validator.validate VAL-05/D-78 → wrappa in RouteOutcome con metadata; 4 utility gateway primitives combine-signals/retry-after-parser/url-allowlist/policy-chain) at 2026-04-30T00:00:00Z — 5 commits (1f265fc RED utility + 61014e8 GREEN utility + 1dc5a86 RED HttpGateway + 99a1d73 GREEN HttpGateway + bf1477d RED http-handler + 32c3eb8 GREEN http-handler); 35/35 test passing (15 utility + 13 HttpGateway+factory + 7 http-handler); routing 58/58 + gateway 33/33 + core 248/248 + mapper 183/183 zero regressioni; D-83 confermato strict (`git diff HEAD~6 -- packages/core/ packages/mapper/` empty); REQ chiusi ROUTE-03/ROUTE-06/ROUTE-13/SEC-04/SEC-05/VAL-05; structural-typed deps in http-handler per evitare cyclic dependency @sembridge/routing ↔ @sembridge/gateway (RouterBroker plan 03-12 cabla istanze concrete).
+**Next:** Plan 03-09 (Strategies retry + timeout + idempotency — `ExponentialBackoffWithJitter` D-69 + `FixedTimeout` D-68 + `AutoIdempotency` nanoid D-70)
 
 - **Phase:** 3
 - **Status:** Ready to execute
-- **Progress:** [████████░░] 81%
+- **Progress:** [█████████░] 86%
 
 ## Phases Overview
 
@@ -85,6 +85,7 @@ Total Plans: 14
 | Phase 03 P05 | ~25 min | 2 tasks | 8 files |
 | Phase 03 P06 | 30 minutes | 2 tasks | 7 files |
 | Phase 03 P07 | 25min | 1 tasks | 2 files |
+| Phase 03 P08 | ~70min | 3 tasks | 17 files |
 
 ## Accumulated Context
 

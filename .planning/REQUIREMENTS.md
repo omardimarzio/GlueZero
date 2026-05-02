@@ -53,7 +53,7 @@ Tutti i requisiti elencati sono table stakes (vincolanti dalla checklist PRD §4
 - [x] **ROUTE-03**: Tipo route `http` con `request` (method, url, queryMap, bodyMap), `publishes.success`, `publishes.error` *(PRD §17.2, §17.4)*
 - [x] **ROUTE-04**: Tipo route `cache` (cache-first/network-first/cache-then-network) *(PRD §17.2, §17.6, §20.2)*
 - [x] **ROUTE-05**: Tipo route `composite` (workflow check-cache → server → update-cache → publish) *(PRD §17.2, §17.7)*
-- [ ] **ROUTE-06**: Server Gateway centralizza tutte le richieste fetch/AJAX *(PRD §18.1, §18.2)*
+- [x] **ROUTE-06**: Server Gateway centralizza tutte le richieste fetch/AJAX *(PRD §18.1, §18.2)*
 - [ ] **ROUTE-07**: Header auth gestiti centralmente; supporto a token refresh tramite hook/adapter *(PRD §26.2)*
 - [x] **ROUTE-08**: Policy per route: timeout, retry con backoff esponenziale opzionale, dedupe, cache, concurrency, error, mapping, auth *(PRD §17.8)*
 - [ ] **ROUTE-09**: Differenziazione retry su errori 4xx (no retry default) vs 5xx (retry con backoff) — comportamento esplicito *(PRD §39 — open issue da chiudere)*
@@ -123,7 +123,7 @@ Tutti i requisiti elencati sono table stakes (vincolanti dalla checklist PRD §4
 - [x] **SEC-01**: Header auth centralizzati nel gateway *(PRD §26.2)*
 - [x] **SEC-02**: Token refresh via hook/adapter configurabile *(PRD §26.2)*
 - [x] **SEC-03**: Protezione da duplicazioni accidentali di chiamate *(PRD §26.2)*
-- [ ] **SEC-04**: Gestione uniforme di status HTTP non validi *(PRD §26.2)*
+- [x] **SEC-04**: Gestione uniforme di status HTTP non validi *(PRD §26.2)*
 - [x] **SEC-05**: Controllo sugli endpoint consentiti (URL allowlist) *(PRD §26.2)*
 
 #### Test
@@ -230,7 +230,7 @@ Mappatura definitiva REQ-ID → fase. Ogni requisito è assegnato alla **prima f
 | ROUTE-03 | Phase 3 | Complete | queryMap + bodyMap canonico→server |
 | ROUTE-04 | Phase 3 | Complete | Definizione type — implementazione cache adapter in F6 |
 | ROUTE-05 | Phase 3 | Complete | — |
-| ROUTE-06 | Phase 3 | Pending | — |
+| ROUTE-06 | Phase 3 | Complete | HttpGateway centralizzato (PRD §18 / 03-08); RouterBroker plan 03-12 ne forza l'uso |
 | ROUTE-07 | Phase 3 | Pending | Hook adapter pluggable |
 | ROUTE-08 | Phase 3 | Complete | Strategy Pattern per ogni policy |
 | ROUTE-09 | Phase 3 | Pending | **Closes PRD §39 #8**: no retry su 4xx eccetto 408/429 |
@@ -301,7 +301,7 @@ Mappatura definitiva REQ-ID → fase. Ogni requisito è assegnato alla **prima f
 | SEC-01 | Phase 3 | Complete | — |
 | SEC-02 | Phase 3 | Complete | — |
 | SEC-03 | Phase 3 | Complete | Idempotency token |
-| SEC-04 | Phase 3 | Pending | — |
+| SEC-04 | Phase 3 | Complete | http-handler emette BrokerError 'gateway.4xx'/'gateway.5xx' uniformi via response.status (D-80 shape) — plan 03-08 |
 | SEC-05 | Phase 3 | Complete | URL allowlist |
 | TEST-01 | Phase 1 (subset) | Done subset (plan 01-09) | PipelineHarness fixture + 8 integration test in `packages/core/src/__integration__/` coprono pub/sub, unsubscribe, wildcard, dedupe (skeleton), lifecycle cleanup deterministico (LIFE-02), event-tap 5 step F1, handler isolation, deep-freeze. 46 nuovi test passing. Estesa progressivamente F2-F6. |
 | TEST-02 | Phase 2 (subset) | Complete | F3 (server), F4 (reconnect), F5 (worker), F6 (cache) |

@@ -5,7 +5,7 @@ project: SemBridge
 milestone: v1.0
 current_phase: 3
 current_wave: 4
-current_plan: 03-08
+current_plan: 03-09
 session_active: false
 ---
 
@@ -24,31 +24,21 @@ session_active: false
 | Campo | Valore |
 |-------|--------|
 | Fase | **Phase 3 — Routing & Server Gateway HTTP** |
-| Wave | **4 / 9** |
-| Plan in esecuzione | **03-08** (HttpGateway core + policy chain + http-handler) |
-| Plan progress F3 | **7 / 14 completati** (03-01 → 03-07 con SUMMARY.md ✓) |
-| Plan progress globale | 30 / 37 (81%) |
+| Wave | **5 / 9** (next: 03-09 Strategies retry+timeout+idempotency) |
+| Plan in esecuzione | — (03-08 chiuso ✓) |
+| Plan progress F3 | **8 / 14 completati** (03-01 → 03-08 con SUMMARY.md ✓) |
+| Plan progress globale | 32 / 37 (86%) |
 | Mode GSD | yolo + auto_advance + parallelization (sequential exec, no worktree) |
 | Modello attivo | `claude-opus-4-7-1` (opus) — override esplicito su tutti i sub-agent |
 
 ## Ultimo step completato
 
-- **03-07 OutcomeCollector** → SUMMARY committed `7b52b1e` (`docs(03-07): complete OutcomeCollector plan execution`)
-- **D-83 verificato:** core 248/248 + mapper 183/183 invariati, ZERO modifiche `packages/core/` e `packages/mapper/` runtime
-
-## Plan 03-08 — stato in-progress (interrotto)
-
-Commit già in repo (NON ancora SUMMARY-completed):
-- `1f265fc` — test(03-08): test RED gateway primitives (combine-signals, retry-after-parser, url-allowlist, policy-chain)
-- `61014e8` — feat(03-08): GREEN gateway primitives
-- `1dc5a86` — test(03-08): test RED HttpGateway class + createHttpGateway factory
-
-**Mancano (da completare per chiudere 03-08):**
-- feat GREEN HttpGateway core (`packages/gateway/src/http/http-gateway.ts`)
-- feat GREEN http-handler integration in `@sembridge/routing` (`packages/routing/src/route-handlers/http-handler.ts`) — integra `mapper.mapToShape` request build + `httpGateway.execute` + response parse + `valibotAdapter.validate` (VAL-05)
-- SUMMARY.md (`03-08-SUMMARY.md`)
-- Update STATE.md + ROADMAP.md + REQUIREMENTS.md
-- Acceptance criteria: `pnpm test --filter @sembridge/gateway -- http-gateway.test.ts exits 0`, `size-limit reports @sembridge/gateway/http < 8 KB gz`
+- **03-08 HttpGateway core + policy chain + http-handler** → SUMMARY committed (`docs(03-08): complete plan execution`)
+- 6 commits sequenziali: `1f265fc` test RED utility + `61014e8` feat GREEN utility + `1dc5a86` test RED HttpGateway + `99a1d73` feat GREEN HttpGateway + `bf1477d` test RED http-handler + `32c3eb8` feat GREEN http-handler
+- 35/35 test passing (15 utility + 13 HttpGateway+factory + 7 http-handler); routing 58/58 + gateway 33/33 zero regressioni
+- **D-83 verificato strict:** `git diff HEAD~6 -- packages/core/ packages/mapper/` → empty; core 248/248 + mapper 183/183 invariati
+- REQ-IDs chiusi: ROUTE-03, ROUTE-06, ROUTE-13, SEC-04, SEC-05, VAL-05
+- Decisione architetturale: structural-typed deps in `http-handler` (HttpHandlerGateway/Mapper/Validator) per evitare cyclic dependency `@sembridge/routing` ↔ `@sembridge/gateway` — RouterBroker plan 03-12 cabla istanze concrete
 
 ## Prossimo step
 
