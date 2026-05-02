@@ -121,7 +121,7 @@ ROUTE-01, ROUTE-02, ROUTE-03, ROUTE-04, ROUTE-05, ROUTE-06, ROUTE-07, ROUTE-08, 
 - [x] 03-07-PLAN.md — OutcomeCollector step 10 (publish loaded/failed shape D-80, network.error secondario D-81, recursion guard D-82)
 - [x] 03-08-PLAN.md — HttpGateway core + policy chain + url-allowlist (Pitfall 7) + retry-after-parser + combine-signals + http-handler integrazione mapper+gateway+VAL-05 — completato 2026-04-30 (6 commits: 1f265fc RED utility + 61014e8 GREEN utility + 1dc5a86 RED HttpGateway + 99a1d73 GREEN HttpGateway + bf1477d RED http-handler + 32c3eb8 GREEN http-handler; 35/35 test passing — 15 utility + 13 HttpGateway+factory + 7 http-handler; routing 58/58 + gateway 33/33 zero regressioni; D-83 strict OK; ROUTE-03/ROUTE-06/ROUTE-13/SEC-04/SEC-05/VAL-05 chiusi runtime)
 - [x] 03-09-PLAN.md — Strategy primitives Wave 4-A: retry (D-69 chiusura ROUTE-09 4xx/5xx/408/429), timeout, idempotency (D-70 SEC-03 Pitfall 3 fix)
-- [ ] 03-10-PLAN.md — Strategy primitives Wave 4-B: dedupe (D-74 KeyBased Promise singleton), backpressure (D-75 6 policy + critical bypass Pitfall 4)
+- [x] 03-10-PLAN.md — Strategy primitives Wave 4-B: dedupe (D-74 KeyBased Promise singleton), backpressure (D-75 6 policy + critical bypass Pitfall 4)
 - [ ] 03-11-PLAN.md — Strategy primitives Wave 4-C: auth (D-72 single-flight refresh Pattern 5 Pitfall 5), circuit-breaker (D-99 opt-in DISABLED default)
 - [ ] 03-12-PLAN.md — RouterBroker composition wrapper + RouterEngine glue + createRouterBroker factory + LIFE-02 ext F3 cascade (D-86)
 - [ ] 03-13-PLAN.md — createRouterHarness + 6 integration test (scenario meteo HTTP D-89, retry, dedupe, latest-only, allowlist, cascade cleanup)
