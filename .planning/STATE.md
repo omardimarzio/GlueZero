@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-current_plan: "9 (next: 03-09 Strategies retry+timeout+idempotency)"
+current_plan: "10 (next: 03-10 Strategies dedupe+backpressure)"
 status: executing
-last_updated: "2026-04-30T00:00:00.000Z"
+last_updated: "2026-04-30T13:30:00.000Z"
 progress:
   total_phases: 6
   completed_phases: 2
   total_plans: 37
-  completed_plans: 32
-  percent: 86
+  completed_plans: 33
+  percent: 89
 ---
 
 # Project State: SemBridge
@@ -29,16 +29,16 @@ progress:
 ## Current Position
 
 Phase: 03 (routing-server-gateway-http) — EXECUTING
-Plan: 9 of 14
-Current Plan: 9 (next: 03-09 Strategies retry+timeout+idempotency)
+Plan: 10 of 14
+Current Plan: 10 (next: 03-10 Strategies dedupe+backpressure)
 Total Plans: 14
 
-**Last completed:** Plan 03-08 (F3 HttpGateway core + policy chain + http-handler — `HttpGateway` class 373 LOC con execute() che applica allowlist D-71 + auth header injection D-72 + Idempotency-Key D-70 + combineSignals D-77 + retry loop opzionale + redirect:'manual' con Location re-validation Pitfall 7 + circuit breaker D-99 + abortInFlight/abortInFlightByOwner ROUTE-13/LIFE-02; `createHttpHandler` factory 300 LOC in @sembridge/routing che integra mapper.mapToShape D-96 + gateway.execute + mapper.mapToCanonical D-97 + validator.validate VAL-05/D-78 → wrappa in RouteOutcome con metadata; 4 utility gateway primitives combine-signals/retry-after-parser/url-allowlist/policy-chain) at 2026-04-30T00:00:00Z — 5 commits (1f265fc RED utility + 61014e8 GREEN utility + 1dc5a86 RED HttpGateway + 99a1d73 GREEN HttpGateway + bf1477d RED http-handler + 32c3eb8 GREEN http-handler); 35/35 test passing (15 utility + 13 HttpGateway+factory + 7 http-handler); routing 58/58 + gateway 33/33 + core 248/248 + mapper 183/183 zero regressioni; D-83 confermato strict (`git diff HEAD~6 -- packages/core/ packages/mapper/` empty); REQ chiusi ROUTE-03/ROUTE-06/ROUTE-13/SEC-04/SEC-05/VAL-05; structural-typed deps in http-handler per evitare cyclic dependency @sembridge/routing ↔ @sembridge/gateway (RouterBroker plan 03-12 cabla istanze concrete).
-**Next:** Plan 03-09 (Strategies retry + timeout + idempotency — `ExponentialBackoffWithJitter` D-69 + `FixedTimeout` D-68 + `AutoIdempotency` nanoid D-70)
+**Last completed:** Plan 03-09 (F3 Wave 4-A Strategies retry + timeout + idempotency — `createRetryStrategy` ExponentialBackoffWithJitter 150 LOC chiusura D-69/ROUTE-09 PRD §39 #8 con 4xx vs 5xx vs 408/429 vs network differentiation + full jitter formula esatta `min(maxDelay, base*2^attempt) * (0.5 + Math.random() * 0.5)` Pitfall 2 fix + Retry-After priority + cap MAX_BACKOFF_MS; `createTimeoutStrategy` FixedTimeout 60 LOC D-68 wrapper su AbortSignal.timeout() ES2022 con override fromMs per polyfill custom; `createIdempotencyStrategy` AutoIdempotency 116 LOC chiusura D-70/SEC-03 + Pitfall 3 fix con Map<eventId, token> persistence garantita sui retry + LRU bounded maxEventsTracked default 1000 + nanoid 21-char default + headerName Stripe/AWS standard; barrel parziale strategies/index.ts Wave 4-A — 03-10 e 03-11 estendono) at 2026-04-30T13:25:00Z — 7 commits (882fb3d RED retry + c9add02 GREEN retry + 43835cb RED timeout + 26bd8bc GREEN timeout + 3853adc RED idempotency + d5a4d5e GREEN idempotency + 483017c barrel); 27/27 nuovi test passing (15 retry + 4 timeout + 8 idempotency); gateway 60/60 + core 248/248 + mapper 183/183 + routing 58/58 zero regressioni; D-83 confermato strict (`git diff HEAD~7 -- packages/core/ packages/mapper/ packages/routing/` empty); REQ chiusi ROUTE-09 (chiusura PRD §39 #8) + SEC-03 (idempotency) + ROUTE-13 (cancellazione AbortSignal); Pitfall 2 (retry storm) + Pitfall 3 (idempotency rotation) chiusi.
+**Next:** Plan 03-10 (Strategies Wave 4-B dedupe + backpressure — `KeyBased` DedupeStrategy con Promise singleton D-74 + `LatestOnly` BackpressureStrategy priority-aware D-75 con bypass critical PITFALLS #4)
 
 - **Phase:** 3
 - **Status:** Ready to execute
-- **Progress:** [█████████░] 86%
+- **Progress:** [█████████░] 89%
 
 ## Phases Overview
 
@@ -86,6 +86,7 @@ Total Plans: 14
 | Phase 03 P06 | 30 minutes | 2 tasks | 7 files |
 | Phase 03 P07 | 25min | 1 tasks | 2 files |
 | Phase 03 P08 | ~70min | 3 tasks | 17 files |
+| Phase 3 P9 | 1800 | 4 tasks | 7 files |
 
 ## Accumulated Context
 
@@ -151,6 +152,10 @@ Total Plans: 14
 | Plan 03-05 AmbiguousRouteEvent come callback opt-in invece di publish diretto al broker | Mantiene il RouteResolver puro (no broker dependency). RouterBroker plan 03-12 farà il bind `(event) => broker.publish('routing.ambiguous', event)`. Permette unit test deterministici via mock callback (Test 13). | 03-05-SUMMARY.md |
 | Plan 03-05 priorityOrdered ritorna [vincitore singolo] non sorted full array | Semantica D-66: la policy seleziona UNA route per route HTTP execution. Per fan-out broadcast si usa policy 'all' (allBroadcast). Test 8 verifica priorityOrdered ritorna [{priority:5}] non [{5}, {3}, {1}]. | 03-05-SUMMARY.md |
 | Plan 03-05 TS bracket notation per Record<string, unknown> field access (Rule 1 fix) | TS4111 con noUncheckedIndexedAccess strict richiede `result['queryMap']` invece di `result.queryMap` per oggetti tipizzati come Record. Replica fix simile in mapper-engine.ts F2 (WR-03 iter3 RESERVED_KEYS). | 03-05-SUMMARY.md |
+| Plan 03-09 D-69 closed: ExponentialBackoffWithJitter (RetryStrategy default) | Differenzia 4xx vs 5xx vs 408/429 vs network. DEFAULT_RETRY_STATUSES = Set([408, 429]) + range esplicito 500-599. Full jitter formula esatta `min(maxDelayMs, baseDelayMs * 2^attempt) * (0.5 + Math.random() * 0.5)` (PITFALLS #5). Retry-After parsing rispettato + cap MAX_BACKOFF_MS=60s. maxAttempts default 3 / opt-out 0 / custom retryOnStatuses override. **Closes PRD §39 #8 (ROUTE-09)**. Test 15 varianza > 100ms su 100 sample (Pitfall 2 fix). | 03-09-SUMMARY.md |
+| Plan 03-09 D-68 closed: FixedTimeout (TimeoutStrategy default) | Wrapper su `AbortSignal.timeout()` ES2022 nativo (RESEARCH "Don't Hand-Roll"). Override `fromMs` per polyfill custom o test fake-timer. Pattern Strategy permette swap futuro senza modifica HttpGateway. | 03-09-SUMMARY.md |
+| Plan 03-09 D-70 closed: AutoIdempotency (IdempotencyStrategy default + Pitfall 3 fix) | nanoid 21-char default (126-bit entropy). Map<eventId, token> persistence garantisce stesso token sui retry — chiusura PITFALLS #3. LRU bounded `maxEventsTracked: 1000` default (T-03-09-03 DoS mitigation). headerName default `'Idempotency-Key'` (Stripe/AWS standard). tokenFactory custom override per test/UUID/HMAC. **Closes SEC-03**. | 03-09-SUMMARY.md |
+| Plan 03-09 barrel strategies/index.ts parziale Wave 4-A | File ownership disgiunta documentata: 03-10 dedupe+backpressure, 03-11 auth+circuit-breaker estendono SOLO le proprie righe export — merge safe. | 03-09-SUMMARY.md |
 
 ### Open Issues PRD §39 — Phase Assignment
 
@@ -165,7 +170,7 @@ Total Plans: 14
 | Topic senza route | F3 (ROUTE-16) | Type-only ready in 03-03 (CanonicalSchema.requiresRoute augment + RoutingConfig.requiresRouteTopics); runtime publish in 03-12 RouterBroker |
 | Più route applicabili stesso topic | F3 (ROUTE-15) | **Closed runtime in 03-05** (3 strategy first-match/priority-ordered/all + AmbiguousRouteEvent callback dev-mode; publish 'routing.ambiguous' come BrokerEvent in 03-12 RouterBroker) |
 | Unsubscribe automatico in `unregisterPlugin` | F1 (LIFE-02) | **Closed in 01-08** (cascade D-26 deterministico + createPluginScopedBroker wrapper) |
-| Retry 4xx vs 5xx | F3 (ROUTE-09) | Pending |
+| Retry 4xx vs 5xx | F3 (ROUTE-09) | **Closed in 03-09** (ExponentialBackoffWithJitter D-69: 4xx no-retry eccetto 408/429; 5xx + 408 + 429 + network → retry; full jitter formula + Retry-After priority + cap MAX_BACKOFF_MS) |
 | Reconnection rules realtime | F4 (RT-07) | Pending |
 | Format metriche | F6 (TOOL-05) | Pending |
 | Serializzazione messaggi worker | F5 (WK-07) | Pending |

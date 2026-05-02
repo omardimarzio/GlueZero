@@ -120,7 +120,7 @@ ROUTE-01, ROUTE-02, ROUTE-03, ROUTE-04, ROUTE-05, ROUTE-06, ROUTE-07, ROUTE-08, 
 - [x] 03-06-PLAN.md — RouteExecutor dispatch by type + 3 route handlers (local/cache stub F6/composite workflow) + AbortController tracking
 - [x] 03-07-PLAN.md — OutcomeCollector step 10 (publish loaded/failed shape D-80, network.error secondario D-81, recursion guard D-82)
 - [x] 03-08-PLAN.md — HttpGateway core + policy chain + url-allowlist (Pitfall 7) + retry-after-parser + combine-signals + http-handler integrazione mapper+gateway+VAL-05 — completato 2026-04-30 (6 commits: 1f265fc RED utility + 61014e8 GREEN utility + 1dc5a86 RED HttpGateway + 99a1d73 GREEN HttpGateway + bf1477d RED http-handler + 32c3eb8 GREEN http-handler; 35/35 test passing — 15 utility + 13 HttpGateway+factory + 7 http-handler; routing 58/58 + gateway 33/33 zero regressioni; D-83 strict OK; ROUTE-03/ROUTE-06/ROUTE-13/SEC-04/SEC-05/VAL-05 chiusi runtime)
-- [ ] 03-09-PLAN.md — Strategy primitives Wave 4-A: retry (D-69 chiusura ROUTE-09 4xx/5xx/408/429), timeout, idempotency (D-70 SEC-03 Pitfall 3 fix)
+- [x] 03-09-PLAN.md — Strategy primitives Wave 4-A: retry (D-69 chiusura ROUTE-09 4xx/5xx/408/429), timeout, idempotency (D-70 SEC-03 Pitfall 3 fix)
 - [ ] 03-10-PLAN.md — Strategy primitives Wave 4-B: dedupe (D-74 KeyBased Promise singleton), backpressure (D-75 6 policy + critical bypass Pitfall 4)
 - [ ] 03-11-PLAN.md — Strategy primitives Wave 4-C: auth (D-72 single-flight refresh Pattern 5 Pitfall 5), circuit-breaker (D-99 opt-in DISABLED default)
 - [ ] 03-12-PLAN.md — RouterBroker composition wrapper + RouterEngine glue + createRouterBroker factory + LIFE-02 ext F3 cascade (D-86)
@@ -260,8 +260,8 @@ I 11 punti che il PRD §39 vieta esplicitamente di lasciare impliciti vengono ch
 | # | Open Issue PRD §39 | Decisione | Fase di chiusura |
 |---|--------------------|-----------|------------------|
 | 1 | Precedenza alias automatici vs mapping esplicito | Mapping esplicito vince sempre (MAP-17) | F2 |
-| 2 | 6/12 | In Progress|  |
-| 3 | 6/14 | In Progress|  |
+| 2 | Field mancante: errore o default | `required: true` → throw `mapping.field.missing`; `required: false` + default → applica; altrimenti omette | F2 (VAL-08) |
+| 3 | Ordine pipeline mapping/validazione | Pipeline §28 ufficiale a 14 step; mapping output→canonico al passo 5, validazione canonica al passo 6, mapping consumer al passo 11, validazione finale al passo 12 | F1 (skeleton) + F2/F3/F6 (riempimento) (PIPE-01) |
 | 4 | Transform failure: skip o block | `onFailure: 'block' | 'skip' | 'fallback'`, default `'block'` | F2 (VAL-09) |
 | 5 | Topic senza route | Default consegna locale, opt-in `requiresRoute: true` | F3 (ROUTE-16) |
 | 6 | Più route applicabili | `'first-match'` default + `'priority-ordered'` + `'all'` | F3 (ROUTE-15) |
@@ -296,7 +296,7 @@ I 11 punti che il PRD §39 vieta esplicitamente di lasciare impliciti vengono ch
 |-------|----------------|--------|-----------|
 | 1. Core essenziale | 11/11 | ✅ Complete & Verified | 2026-04-29 |
 | 2. Canonical Model & Mapper | 11/12 | In Progress | - |
-| 3. Routing & Server Gateway HTTP | 5/14 | In Progress (03-01..03-05 done) | - |
+| 3. Routing & Server Gateway HTTP | 9/14 | In Progress (03-01..03-09 done) | - |
 | 4. Realtime inbound | 0/0 | Not started | - |
 | 5. Worker Runtime | 0/0 | Not started | - |
 | 6. Cache & Tooling avanzato | 0/0 | Not started | - |
@@ -304,4 +304,4 @@ I 11 punti che il PRD §39 vieta esplicitamente di lasciare impliciti vengono ch
 ---
 
 *Roadmap created: 2026-04-28*
-*Last updated: 2026-04-30 — **Phase 3 In Progress 8/14 plan completi** (03-01..03-08 done): 03-01 bootstrap routing+gateway; 03-02 public types F3; 03-03 augment routing; 03-04 augment gateway; 03-05 RouteResolver dispatch table pre-compilata + 3 strategies + cascade unregisterByOwner; 03-06 RouteExecutor dispatch by type + 3 route handlers; 03-07 OutcomeCollector step 10 publish loaded/failed shape D-80; **03-08 HttpGateway core (373 LOC) + policy chain + 4 utility (combine-signals/retry-after-parser/url-allowlist/policy-chain) + createHttpGateway factory + http-handler integrazione mapper+gateway+VAL-05 — 35/35 test passing, ROUTE-03/06/13 + SEC-04/05 + VAL-05 chiusi runtime, D-83 strict OK (core 248/248 + mapper 183/183 invariati), structural-typed deps in http-handler per evitare cyclic dep routing↔gateway**; aperti 03-09..03-14. **Phase 3 Plans created** (14/14 plans con file ownership disgiunta in 9 wave). **Phase 2 In Progress** (11/12 plan completi: 02-01..02-11 — aperti per plan 02-12 final gate F2 con coverage v8 + DOC-03). **Phase 1 COMPLETE & VERIFIED** (gsd-verifier PASS confidence HIGH; 5/5 success criteria, 27/27 REQ-IDs, 8/8 gate CI).*
+*Last updated: 2026-04-30 — **Phase 3 In Progress 9/14 plan completi** (03-01..03-09 done): 03-01 bootstrap routing+gateway; 03-02 public types F3; 03-03 augment routing; 03-04 augment gateway; 03-05 RouteResolver dispatch table pre-compilata + 3 strategies + cascade unregisterByOwner; 03-06 RouteExecutor dispatch by type + 3 route handlers; 03-07 OutcomeCollector step 10 publish loaded/failed shape D-80; 03-08 HttpGateway core (373 LOC) + policy chain + 4 utility + createHttpGateway factory + http-handler integrazione mapper+gateway+VAL-05; **03-09 Strategies Wave 4-A retry+timeout+idempotency: ExponentialBackoffWithJitter (D-69 chiusura ROUTE-09 / PRD §39 #8 — 4xx vs 5xx + full jitter formula esatta `min(maxDelay, base*2^attempt) * (0.5 + Math.random() * 0.5)` + Retry-After priority + cap MAX_BACKOFF_MS) + FixedTimeout (D-68 wrapper AbortSignal.timeout ES2022) + AutoIdempotency (D-70 chiusura SEC-03 + Pitfall 3 fix con Map<eventId,token> persistence + LRU bounded maxEventsTracked default 1000 + nanoid 21-char) + barrel parziale Wave 4-A — 27/27 nuovi test passing (15 retry + 4 timeout + 8 idempotency), gateway 60/60 + core 248/248 + mapper 183/183 + routing 58/58 zero regressioni, D-83 strict OK**; aperti 03-10..03-14. **Phase 3 Plans created** (14/14 plans con file ownership disgiunta in 9 wave). **Phase 2 In Progress** (11/12 plan completi: 02-01..02-11 — aperti per plan 02-12 final gate F2 con coverage v8 + DOC-03). **Phase 1 COMPLETE & VERIFIED** (gsd-verifier PASS confidence HIGH; 5/5 success criteria, 27/27 REQ-IDs, 8/8 gate CI).*

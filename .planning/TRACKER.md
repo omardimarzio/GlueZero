@@ -1,11 +1,11 @@
 ---
-last_updated: 2026-05-02
+last_updated: 2026-04-30
 status: in_progress
 project: SemBridge
 milestone: v1.0
 current_phase: 3
-current_wave: 4
-current_plan: 03-09
+current_wave: 5
+current_plan: 03-10
 session_active: false
 ---
 
@@ -24,36 +24,36 @@ session_active: false
 | Campo | Valore |
 |-------|--------|
 | Fase | **Phase 3 — Routing & Server Gateway HTTP** |
-| Wave | **5 / 9** (next: 03-09 Strategies retry+timeout+idempotency) |
-| Plan in esecuzione | — (03-08 chiuso ✓) |
-| Plan progress F3 | **8 / 14 completati** (03-01 → 03-08 con SUMMARY.md ✓) |
-| Plan progress globale | 32 / 37 (86%) |
+| Wave | **6 / 9** (next: 03-10 Strategies dedupe+backpressure) |
+| Plan in esecuzione | — (03-09 chiuso ✓) |
+| Plan progress F3 | **9 / 14 completati** (03-01 → 03-09 con SUMMARY.md ✓) |
+| Plan progress globale | 33 / 37 (89%) |
 | Mode GSD | yolo + auto_advance + parallelization (sequential exec, no worktree) |
 | Modello attivo | `claude-opus-4-7-1` (opus) — override esplicito su tutti i sub-agent |
 
-## Ultimo step completato (auto-update 2026-05-02T11:00:41Z)
+## Ultimo step completato (auto-update 2026-04-30T13:30:00Z)
 
-- Plan: **03-08** → SUMMARY.md committed
-- Commit: `1093903 docs(03-08): complete HttpGateway core + http-handler plan execution`
-- Phase progress: **8/14** plan completati con SUMMARY.md
-- Project progress: 32/37 plan (86%)
+- Plan: **03-09** → SUMMARY.md committed
+- 7 commits TDD: 882fb3d/c9add02 (retry RED+GREEN), 43835cb/26bd8bc (timeout RED+GREEN), 3853adc/d5a4d5e (idempotency RED+GREEN), 483017c (barrel)
+- Phase progress: **9/14** plan completati con SUMMARY.md
+- Project progress: 33/37 plan (89%)
+- REQ-IDs chiusi: ROUTE-09 (chiusura PRD §39 #8) — già marcati ROUTE-13/SEC-03
 
 
 ## Prossimo step
 
 **Per riprendere F3 da dove ci siamo fermati:**
 ```
-/gsd-execute-phase 3 --auto --wave 4
+/gsd-execute-phase 3 --auto --wave 5
 ```
 
-Oppure spawn diretto agente per completare 03-08:
+Oppure spawn diretto agente per 03-10:
 ```
-Agent(subagent_type="gsd-executor", model="opus", prompt="Execute plan 03-08 — completare i task GREEN HttpGateway + http-handler già iniziati. Read existing partial commits 1f265fc/61014e8/1dc5a86. Create SUMMARY.md. Update STATE/ROADMAP.")
+Agent(subagent_type="gsd-executor", model="opus", prompt="Execute plan 03-10 — Strategies Wave 4-B dedupe+backpressure. Read 03-10-PLAN.md. Create SUMMARY.md. Update STATE/ROADMAP.")
 ```
 
-Dopo 03-08 il piano prosegue:
-- 03-09 (Wave 4) — Strategies retry+timeout+idempotency
-- 03-10 (Wave 5) — Strategies dedupe+backpressure
+Dopo 03-10 il piano prosegue:
+- 03-10 (Wave 5) — Strategies dedupe+backpressure ← NEXT
 - 03-11 (Wave 6) — Strategies auth+circuit-breaker
 - 03-12 (Wave 7) — RouterBroker composition + LIFE-02 cascade
 - 03-13 (Wave 8) — Integration tests scenario meteo
