@@ -16,19 +16,67 @@ Libreria JavaScript browser-side (TypeScript-first, ESM) che combina sei capabil
 
 ## Vincoli operativi (non negoziabili)
 
+### Boot protocol (PRIMA AZIONE di ogni nuova sessione)
+1. **Leggi `.planning/TRACKER.md`** se esiste — contiene stato corrente (fase/wave/plan), ultimo step completato, prossimo comando GSD da lanciare, agenti in background da riprendere via `SendMessage`.
+2. **Leggi `.planning/STATE.md`** per cross-check.
+3. Se TRACKER.md mostra agente in background con `id` ancora attivo → riprendi via `SendMessage` invece di spawn nuovo.
+
 ### Modello AI per agenti GSD
 **Tutti i sotto-agenti GSD devono usare `claude-opus-4-7-1`** (alias `opus` per il tool Agent di Claude Code, profilo GSD `quality`).
-- Mai usare `sonnet` o `haiku` per spawn agenti, anche per task brevi.
-- Override esplicito `model: "opus"` in ogni `Agent` call (non fidarsi dei default GSD: `synthesizer_model` di default è `sonnet` anche con profilo quality).
+- Mai usare `sonnet` o `haiku` per spawn agenti, anche per task brevi/sintesi/verifier/checker.
+- Override esplicito `model: "opus"` in ogni `Agent` call (non fidarsi dei default GSD: `verifier_model`/`checker_model`/`synthesizer_model` di default sono `sonnet` anche con profilo `quality`).
+- Config GSD `.planning/config.json` deve avere `model_profile: "quality"` ma NON è sufficiente da solo: i sub-agent vanno comunque spawnati con `model: "opus"` esplicito.
 
 ### Lingua
-**Tutto in italiano** salvo richiesta esplicita diversa: risposte utente, prompt agenti, REQ-ID descrittivi, success criteria. Restano in inglese: codice, identificatori, comandi shell, nomi librerie/file/package, error messages letterali, log keywords.
+**Tutto in italiano** salvo richiesta esplicita diversa: risposte utente, prompt agenti, commit message, descrizioni REQ-ID, success criteria, JSDoc descrittivi. Restano in inglese: codice, identificatori, comandi shell, nomi librerie/file/package, error messages letterali, log keywords.
 
-### Domande
-**Minimizzare le interazioni utente.** Il PRD copre quasi tutto. Procedere su default ragionevoli quando il PRD risolve. Chiedere solo per ambiguità reali, scelte irreversibili, valori che solo l'utente può fornire.
+### Boundary di sicurezza
+**Area di lavoro libera:** `/Users/omarmarzio/programming/prova AI/` e tutte le sottocartelle (incluso SemBridge, API-Integrator, fasttrack3, ecc.) — crei, modifichi, sposti, cancelli, esegui senza chiedere conferma.
+
+**Fuori da quella directory:** solo lettura e creazione di NUOVI file/directory. **MAI** cancellare/sovrascrivere/spostare/modificare file esistenti, eseguire `rm`/`mv`/`git reset --hard` su path esterni, modificare config globali (`~/.claude/settings.json`, `~/.gitconfig`, `~/.zshrc`, settings di sistema). Eccezione: aggiornamenti alle memorie GSD-Claude in `~/.claude/projects/<projectDir>/memory/` sono OK (create/update), ma DELETE/MOVE richiedono conferma.
+
+Se un'operazione richiede di toccare qualcosa fuori boundary, fermarsi e chiedere.
+
+### Logica decisionale (alta autonomia)
+**NON chiedere — procedi su default ragionevoli per:**
+- Default tecnici già coperti da PRD, CONTEXT.md, ROADMAP.md, REQUIREMENTS.md, research/.
+- Override `human_needed` del verifier quando il caveat è esplicitamente un deferral pianificato e documentato.
+- Scelte tra varianti equivalenti dove la documentazione raccomanda chiaramente una.
+- Cleanup/refactor minor (typo, formatter, checkbox stale, JSDoc).
+- Spawn sotto-agenti, parallelizzazione, retry, fix di code review.
+- Auto-advance a fine fase: transition automatico discuss → plan → execute.
+- Code review post-execution con BLOCKER: applica `/gsd-code-review-fix --auto` (cap 3 iter) prima del verifier.
+
+**CHIEDI solo per:**
+- Scope irreversibili (rinomina API pubblica, breaking change, deferimento REQ-ID locked, cambio stack/dipendenza maggiore).
+- Valori che solo l'utente conosce (chiavi API, branding, priorità tra feature equivalenti senza raccomandazione).
+- BLOCKER architetturale che viola un vincolo CLAUDE.md esplicito + fix richiede tradeoff decision.
+
+Format domande: max 4 opzioni con default raccomandato in prima posizione. Mai chiedere conferma di azioni già autorizzate.
 
 ### Agent-swarm
-Quando si lavora con GSD, **preferire parallelizzazione**: spawnare più agenti in un singolo messaggio con tool calls multipli, sempre con override `model: "opus"`.
+Quando si lavora con GSD, **preferire parallelizzazione**: spawnare più agenti in un singolo messaggio con tool calls multipli, sempre con override `model: "opus"`. Vincolo: file ownership disgiunta entro la stessa wave per evitare conflitti git index.
+
+### Tracking di progetto (TRACKER.md)
+**File:** `.planning/TRACKER.md` (commitato in repo).
+
+**Quando aggiornarlo:**
+- Dopo ogni plan completato (post-SUMMARY.md commit).
+- Dopo ogni wave completata.
+- Dopo ogni decisione architetturale nuova (D-XX).
+- Prima di sospendere lavoro per interruzione utente esplicita.
+- All'avvio di una nuova fase.
+- Quando aggiungi/recuperi agent in background (`agentId`).
+
+**Contenuto minimo:**
+1. Fase corrente, wave corrente, plan in esecuzione, agent attivi (id + status)
+2. Ultimo step completato (commit hash + path SUMMARY.md di riferimento)
+3. Prossimo step (comando GSD da lanciare per riprendere)
+4. Vincoli attivi (modello, lingua, boundary, decisioni recenti)
+5. Decisioni recenti non ancora committate
+6. Note libere
+
+**Protocollo update:** modifica via `Edit` (preserva struttura), commit insieme a SUMMARY.md/STATE.md per consistency con `gsd-sdk query commit`.
 
 ## Vincoli architetturali (dal PRD §33.2 — non negoziabili)
 
