@@ -24,8 +24,8 @@
 // - T-03-11-04 (DoS — cooldownMs:Infinity blocca route per sempre): accept (consumer
 //   responsibility — config validation in plan 03-12 RouterBroker).
 
-import type { CircuitBreakerStrategy } from '../types/http-strategies'
 import type { CircuitBreakerConfig } from '../types/gateway-config'
+import type { CircuitBreakerStrategy } from '../types/http-strategies'
 
 /**
  * Stato interno per-route del circuit breaker.

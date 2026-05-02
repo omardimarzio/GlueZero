@@ -12,8 +12,8 @@
 // - Inflight flag esposto via isInflightRefresh
 // - Failure path: tutti i caller rejected con stesso error + nuovo refresh chiama config
 
-import { describe, expect, it, vi } from 'vitest'
 import { isBrokerError } from '@sembridge/core'
+import { describe, expect, it, vi } from 'vitest'
 import { createAuthStrategy } from './auth-strategy'
 
 describe('createAuthStrategy — BearerHookAuth (D-72, SEC-01/SEC-02/ROUTE-07 + Pitfall 5)', () => {
@@ -101,7 +101,13 @@ describe('createAuthStrategy — BearerHookAuth (D-72, SEC-01/SEC-02/ROUTE-07 + 
     const tokens = await Promise.all(promises)
 
     expect(refreshSpy).toHaveBeenCalledTimes(1)
-    expect(tokens).toEqual(['shared-new-token', 'shared-new-token', 'shared-new-token', 'shared-new-token', 'shared-new-token'])
+    expect(tokens).toEqual([
+      'shared-new-token',
+      'shared-new-token',
+      'shared-new-token',
+      'shared-new-token',
+      'shared-new-token',
+    ])
   })
 
   it('Test 7: dopo Test 6 settle, nuovo refresh() → config.refresh invocato (release flag)', async () => {

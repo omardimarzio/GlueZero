@@ -29,8 +29,8 @@
 //   message (solo code+message generico).
 
 import { createBrokerError } from '@sembridge/core'
-import type { AuthStrategy } from '../types/http-strategies'
 import type { AuthStrategyConfig } from '../types/gateway-config'
+import type { AuthStrategy } from '../types/http-strategies'
 
 /**
  * Opzioni di configurazione per `createAuthStrategy`.
@@ -86,11 +86,7 @@ export function createAuthStrategy(options: AuthStrategyOptions): AuthStrategy {
   return {
     async getToken(): Promise<string | undefined> {
       // Cache hit: ritorna token cached se entro la finestra tokenCacheMs.
-      if (
-        tokenCacheMs > 0 &&
-        cachedToken !== undefined &&
-        Date.now() - cachedAt < tokenCacheMs
-      ) {
+      if (tokenCacheMs > 0 && cachedToken !== undefined && Date.now() - cachedAt < tokenCacheMs) {
         return cachedToken
       }
       // Cache miss / disabled: invoca config.getToken consumer-provided.
