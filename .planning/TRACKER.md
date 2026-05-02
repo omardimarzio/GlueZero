@@ -31,11 +31,11 @@ session_active: false
 | Mode GSD | yolo + auto_advance + parallelization (sequential exec, no worktree) |
 | Modello attivo | `claude-opus-4-7-1` (opus) — override esplicito su tutti i sub-agent |
 
-## Ultimo step completato (auto-update 2026-05-02T11:32:32Z)
+## Ultimo step completato (auto-update 2026-05-02T17:27:31Z)
 
-- Plan: **03-09** → SUMMARY.md committed
-- Commit: `0ff3566 docs(03-09): complete strategies retry+timeout+idempotency plan execution`
-- Phase progress: **9/14** plan completati con SUMMARY.md
+- Plan: **03-10** → SUMMARY.md committed
+- Commit: `896be7f docs(03-10): complete strategies dedupe + backpressure plan execution`
+- Phase progress: **10/14** plan completati con SUMMARY.md
 - Project progress: 33/37 plan (89%)
 
 
