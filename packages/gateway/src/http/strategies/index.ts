@@ -34,8 +34,12 @@ export type { DedupeStrategyOptions } from './dedupe-strategy'
 export { createBackpressureStrategy } from './backpressure-strategy'
 export type { BackpressureStrategyOptions } from './backpressure-strategy'
 
-// 03-11 aggiungerà:
-// export { createAuthStrategy } from './auth-strategy'
-// export type { AuthStrategyOptions } from './auth-strategy'
-// export { createCircuitBreakerStrategy } from './circuit-breaker'
-// export type { CircuitBreakerStrategyOptions } from './circuit-breaker'
+// 03-11 — AuthStrategy (D-72, SEC-01/SEC-02/ROUTE-07 chiusura, Pitfall 5 fix)
+// Single-flight refresh — N caller paralleli → 1 sola config.refresh invocation
+export { createAuthStrategy } from './auth-strategy'
+export type { AuthStrategyOptions } from './auth-strategy'
+
+// 03-11 — CircuitBreakerStrategy (D-99 opt-in DISABLED default)
+// State machine per-route: closed → open → half-open → closed
+export { createCircuitBreakerStrategy } from './circuit-breaker'
+export type { CircuitBreakerStrategyOptions } from './circuit-breaker'
