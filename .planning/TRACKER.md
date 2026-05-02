@@ -4,8 +4,8 @@ status: in_progress
 project: SemBridge
 milestone: v1.0
 current_phase: 3
-current_wave: 5
-current_plan: 03-10
+current_wave: 7
+current_plan: 03-12
 session_active: false
 ---
 
@@ -31,13 +31,12 @@ session_active: false
 | Mode GSD | yolo + auto_advance + parallelization (sequential exec, no worktree) |
 | Modello attivo | `claude-opus-4-7-1` (opus) — override esplicito su tutti i sub-agent |
 
-## Ultimo step completato (auto-update 2026-05-02T17:35:00Z)
+## Ultimo step completato (auto-update 2026-05-02T17:44:24Z)
 
 - Plan: **03-11** → SUMMARY.md committed
-- Commits: `181247e RED auth` + `3e48e5e GREEN auth` + `12f5a2f RED cb` + `6c00e7f GREEN cb` + `188a356 barrel` + `b7b092c style`
+- Commit: `65dee18 docs(03-11): complete strategies auth + circuit-breaker plan execution`
 - Phase progress: **11/14** plan completati con SUMMARY.md
 - Project progress: 34/37 plan (92%)
-- BLOCKER 1 fix iter 1 verified: grep `category: 'auth'` packages/gateway/src/http/strategies/auth-strategy.ts → 0 occorrenze; `category: 'config'` → 3 occorrenze (esatto, D-83 strict invariant)
 
 
 ## Prossimo step
