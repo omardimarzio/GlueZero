@@ -54,7 +54,7 @@ Tutti i requisiti elencati sono table stakes (vincolanti dalla checklist PRD §4
 - [x] **ROUTE-04**: Tipo route `cache` (cache-first/network-first/cache-then-network) *(PRD §17.2, §17.6, §20.2)*
 - [x] **ROUTE-05**: Tipo route `composite` (workflow check-cache → server → update-cache → publish) *(PRD §17.2, §17.7)*
 - [x] **ROUTE-06**: Server Gateway centralizza tutte le richieste fetch/AJAX *(PRD §18.1, §18.2)*
-- [ ] **ROUTE-07**: Header auth gestiti centralmente; supporto a token refresh tramite hook/adapter *(PRD §26.2)*
+- [x] **ROUTE-07**: Header auth gestiti centralmente; supporto a token refresh tramite hook/adapter *(PRD §26.2)*
 - [x] **ROUTE-08**: Policy per route: timeout, retry con backoff esponenziale opzionale, dedupe, cache, concurrency, error, mapping, auth *(PRD §17.8)*
 - [x] **ROUTE-09**: Differenziazione retry su errori 4xx (no retry default) vs 5xx (retry con backoff) — comportamento esplicito *(PRD §39 — open issue da chiudere)*
 - [x] **ROUTE-10**: Backpressure: queue bounded, drop policy, throttle, debounce, latest-only, merge/coalesce *(PRD §23.3)*
@@ -231,7 +231,7 @@ Mappatura definitiva REQ-ID → fase. Ogni requisito è assegnato alla **prima f
 | ROUTE-04 | Phase 3 | Complete | Definizione type — implementazione cache adapter in F6 |
 | ROUTE-05 | Phase 3 | Complete | — |
 | ROUTE-06 | Phase 3 | Complete | HttpGateway centralizzato (PRD §18 / 03-08); RouterBroker plan 03-12 ne forza l'uso |
-| ROUTE-07 | Phase 3 | Pending | Hook adapter pluggable |
+| ROUTE-07 | Phase 3 | Complete | Hook adapter pluggable |
 | ROUTE-08 | Phase 3 | Complete | Strategy Pattern per ogni policy |
 | ROUTE-09 | Phase 3 | Complete | **Closes PRD §39 #8**: no retry su 4xx eccetto 408/429 |
 | ROUTE-10 | Phase 3 | Complete | Backpressure priority-aware |

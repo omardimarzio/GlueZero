@@ -24,37 +24,36 @@ session_active: false
 | Campo | Valore |
 |-------|--------|
 | Fase | **Phase 3 — Routing & Server Gateway HTTP** |
-| Wave | **6 / 9** (next: 03-10 Strategies dedupe+backpressure) |
-| Plan in esecuzione | — (03-09 chiuso ✓) |
-| Plan progress F3 | **9 / 14 completati** (03-01 → 03-09 con SUMMARY.md ✓) |
-| Plan progress globale | 33 / 37 (89%) |
+| Wave | **7 / 9** (next: 03-12 RouterBroker composition + LIFE-02 cascade) |
+| Plan in esecuzione | — (03-11 chiuso ✓) |
+| Plan progress F3 | **11 / 14 completati** (03-01 → 03-11 con SUMMARY.md ✓) |
+| Plan progress globale | 34 / 37 (92%) |
 | Mode GSD | yolo + auto_advance + parallelization (sequential exec, no worktree) |
 | Modello attivo | `claude-opus-4-7-1` (opus) — override esplicito su tutti i sub-agent |
 
-## Ultimo step completato (auto-update 2026-05-02T17:27:31Z)
+## Ultimo step completato (auto-update 2026-05-02T17:35:00Z)
 
-- Plan: **03-10** → SUMMARY.md committed
-- Commit: `896be7f docs(03-10): complete strategies dedupe + backpressure plan execution`
-- Phase progress: **10/14** plan completati con SUMMARY.md
-- Project progress: 33/37 plan (89%)
+- Plan: **03-11** → SUMMARY.md committed
+- Commits: `181247e RED auth` + `3e48e5e GREEN auth` + `12f5a2f RED cb` + `6c00e7f GREEN cb` + `188a356 barrel` + `b7b092c style`
+- Phase progress: **11/14** plan completati con SUMMARY.md
+- Project progress: 34/37 plan (92%)
+- BLOCKER 1 fix iter 1 verified: grep `category: 'auth'` packages/gateway/src/http/strategies/auth-strategy.ts → 0 occorrenze; `category: 'config'` → 3 occorrenze (esatto, D-83 strict invariant)
 
 
 ## Prossimo step
 
 **Per riprendere F3 da dove ci siamo fermati:**
 ```
-/gsd-execute-phase 3 --auto --wave 5
+/gsd-execute-phase 3 --auto --wave 7
 ```
 
-Oppure spawn diretto agente per 03-10:
+Oppure spawn diretto agente per 03-12:
 ```
-Agent(subagent_type="gsd-executor", model="opus", prompt="Execute plan 03-10 — Strategies Wave 4-B dedupe+backpressure. Read 03-10-PLAN.md. Create SUMMARY.md. Update STATE/ROADMAP.")
+Agent(subagent_type="gsd-executor", model="opus", prompt="Execute plan 03-12 — RouterBroker composition + LIFE-02 cascade. Read 03-12-PLAN.md. Create SUMMARY.md. Update STATE/ROADMAP.")
 ```
 
-Dopo 03-10 il piano prosegue:
-- 03-10 (Wave 5) — Strategies dedupe+backpressure ← NEXT
-- 03-11 (Wave 6) — Strategies auth+circuit-breaker
-- 03-12 (Wave 7) — RouterBroker composition + LIFE-02 cascade
+Dopo 03-11 il piano prosegue:
+- 03-12 (Wave 7) — RouterBroker composition + LIFE-02 cascade ← NEXT
 - 03-13 (Wave 8) — Integration tests scenario meteo
 - 03-14 (Wave 9) — Final gate (coverage, CI, DOC-04)
 

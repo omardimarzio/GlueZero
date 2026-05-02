@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-current_plan: "10 (next: 03-10 Strategies dedupe+backpressure)"
+current_plan: "12 (next: 03-12 RouterBroker composition + LIFE-02 cascade)"
 status: executing
-last_updated: "2026-05-02T17:27:14.274Z"
+last_updated: "2026-05-02T17:37:30.004Z"
 progress:
   total_phases: 6
   completed_phases: 2
   total_plans: 37
-  completed_plans: 33
-  percent: 89
+  completed_plans: 34
+  percent: 92
 ---
 
 # Project State: SemBridge
@@ -29,16 +29,16 @@ progress:
 ## Current Position
 
 Phase: 03 (routing-server-gateway-http) — EXECUTING
-Plan: 11 of 14
-Current Plan: 10 (next: 03-10 Strategies dedupe+backpressure)
+Plan: 12 of 14
+Current Plan: 12 (next: 03-12 RouterBroker composition + LIFE-02 cascade)
 Total Plans: 14
 
-**Last completed:** Plan 03-09 (F3 Wave 4-A Strategies retry + timeout + idempotency — `createRetryStrategy` ExponentialBackoffWithJitter 150 LOC chiusura D-69/ROUTE-09 PRD §39 #8 con 4xx vs 5xx vs 408/429 vs network differentiation + full jitter formula esatta `min(maxDelay, base*2^attempt) * (0.5 + Math.random() * 0.5)` Pitfall 2 fix + Retry-After priority + cap MAX_BACKOFF_MS; `createTimeoutStrategy` FixedTimeout 60 LOC D-68 wrapper su AbortSignal.timeout() ES2022 con override fromMs per polyfill custom; `createIdempotencyStrategy` AutoIdempotency 116 LOC chiusura D-70/SEC-03 + Pitfall 3 fix con Map<eventId, token> persistence garantita sui retry + LRU bounded maxEventsTracked default 1000 + nanoid 21-char default + headerName Stripe/AWS standard; barrel parziale strategies/index.ts Wave 4-A — 03-10 e 03-11 estendono) at 2026-04-30T13:25:00Z — 7 commits (882fb3d RED retry + c9add02 GREEN retry + 43835cb RED timeout + 26bd8bc GREEN timeout + 3853adc RED idempotency + d5a4d5e GREEN idempotency + 483017c barrel); 27/27 nuovi test passing (15 retry + 4 timeout + 8 idempotency); gateway 60/60 + core 248/248 + mapper 183/183 + routing 58/58 zero regressioni; D-83 confermato strict (`git diff HEAD~7 -- packages/core/ packages/mapper/ packages/routing/` empty); REQ chiusi ROUTE-09 (chiusura PRD §39 #8) + SEC-03 (idempotency) + ROUTE-13 (cancellazione AbortSignal); Pitfall 2 (retry storm) + Pitfall 3 (idempotency rotation) chiusi.
-**Next:** Plan 03-10 (Strategies Wave 4-B dedupe + backpressure — `KeyBased` DedupeStrategy con Promise singleton D-74 + `LatestOnly` BackpressureStrategy priority-aware D-75 con bypass critical PITFALLS #4)
+**Last completed:** Plan 03-11 (F3 Wave 4-C Strategies auth + circuit-breaker — `createAuthStrategy` BearerHookAuth 142 LOC chiusura D-72/SEC-01/SEC-02/ROUTE-07 con SINGLE-FLIGHT REFRESH Pattern 5 RESEARCH (5 caller paralleli → 1 sola config.refresh invocation, Pitfall 5 fix); always-provide refresh method + tokenCacheMs opt-in cache; **BLOCKER 1 fix iter 1**: `category: 'config'` (NON 'auth' — ErrorCategory union NON include 'auth' e D-83 vieta modifica core); `createCircuitBreakerStrategy` PerRouteCircuitBreaker 180 LOC chiusura D-99 con state machine 3-states `closed → open → half-open → closed` + lazy transition (no setTimeout overhead) + per-route state isolation Map<routeId, CircuitState> + DEFAULT DISABLED (consumer opt-in via gateway.circuitBreaker); barrel strategies/index.ts FINAL Wave 4-C — 7 export create*Strategy totali) at 2026-05-02T17:35:00Z — 6 commits (181247e RED auth + 3e48e5e GREEN auth + 12f5a2f RED cb + 6c00e7f GREEN cb + 188a356 barrel + b7b092c style); 19/19 nuovi test passing (9 auth + 10 cb); gateway 97/97 + core 248/248 + mapper 183/183 + routing 58/58 zero regressioni; D-83 confermato strict (`git diff HEAD~6 -- packages/core/ packages/mapper/ packages/routing/` empty); REQ chiusi SEC-01 + SEC-02 (already complete) + ROUTE-07 (chiusura via D-72); Pitfall 5 (token refresh storm) chiuso via single-flight Promise singleton.
+**Next:** Plan 03-12 (Wave 7 RouterBroker composition + LIFE-02 cascade — composition wrapper su MapperBroker D-83; iniezione 7 strategy default Wave 4-A/B/C in HttpGatewayStrategies bundle; cascade unregister D-86 esteso route + abort cascade AbortController; ROUTE-16 chiusura via opt-in requiresRouteTopics + loud throw)
 
 - **Phase:** 3
 - **Status:** Ready to execute
-- **Progress:** [█████████░] 89%
+- **Progress:** [█████████░] 92%
 
 ## Phases Overview
 
@@ -88,6 +88,7 @@ Total Plans: 14
 | Phase 03 P08 | ~70min | 3 tasks | 17 files |
 | Phase 3 P9 | 1800 | 4 tasks | 7 files |
 | Phase 03 P10 | 6min | - tasks | - files |
+| Phase 03 P11 | ~6min | 3 tasks | 5 files |
 
 ## Accumulated Context
 
@@ -157,6 +158,9 @@ Total Plans: 14
 | Plan 03-09 D-68 closed: FixedTimeout (TimeoutStrategy default) | Wrapper su `AbortSignal.timeout()` ES2022 nativo (RESEARCH "Don't Hand-Roll"). Override `fromMs` per polyfill custom o test fake-timer. Pattern Strategy permette swap futuro senza modifica HttpGateway. | 03-09-SUMMARY.md |
 | Plan 03-09 D-70 closed: AutoIdempotency (IdempotencyStrategy default + Pitfall 3 fix) | nanoid 21-char default (126-bit entropy). Map<eventId, token> persistence garantisce stesso token sui retry — chiusura PITFALLS #3. LRU bounded `maxEventsTracked: 1000` default (T-03-09-03 DoS mitigation). headerName default `'Idempotency-Key'` (Stripe/AWS standard). tokenFactory custom override per test/UUID/HMAC. **Closes SEC-03**. | 03-09-SUMMARY.md |
 | Plan 03-09 barrel strategies/index.ts parziale Wave 4-A | File ownership disgiunta documentata: 03-10 dedupe+backpressure, 03-11 auth+circuit-breaker estendono SOLO le proprie righe export — merge safe. | 03-09-SUMMARY.md |
+| Plan 03-11 D-72 closed: BearerHookAuth + Single-flight refresh (Pattern 5 RESEARCH, Pitfall 5 fix) | `inflightRefresh: Promise<string> \| null` Promise singleton condiviso fra N caller paralleli. Test 6 verifica 5 paralleli → 1 sola config.refresh invocation. Cleanup in finally garantisce release sia su resolve che reject (Test 7+8). Always-provide refresh method che throw 'auth.refresh.unavailable' quando config.refresh undefined. Token caching opt-in via tokenCacheMs (default 0=disabled). **Closes SEC-01 + SEC-02 + ROUTE-07 + Pitfall 5**. | 03-11-SUMMARY.md |
+| Plan 03-11 D-99 closed: PerRouteCircuitBreaker state machine 3-states opt-in DISABLED default | State machine `closed → open → half-open → closed` per route. Lazy transition open → half-open al canExecute/getState (no setTimeout overhead per route inattive). Per-route state isolation Map<routeId, CircuitState>. Default DISABLED: `createCircuitBreakerStrategy()` senza config = pass-through (canExecute sempre true). Test 9 verifica behavior DISABLED. Sliding window stats → V1.x. | 03-11-SUMMARY.md |
+| Plan 03-11 BLOCKER 1 fix iter 1: category 'config' (NON 'auth') per auth.refresh.unavailable | ErrorCategory union (`packages/core/src/types/error.ts:19-28`) NON include 'auth' — solo 'validation'\|'plugin'\|'mapping'\|'route'\|'network'\|'worker'\|'system'\|'config'\|'topic'. Per evitare modifica core (D-83 strict), lockato `category: 'config'` coerente con 03-08 (gateway-config errors). Verifica grep esplicita: `category: 'auth'` = 0 occorrenze, `category: 'config'` = 3 occorrenze. Test 5 (auth-strategy.test.ts) verifica esplicitamente `err.category === 'config'`. | 03-11-SUMMARY.md |
 
 ### Open Issues PRD §39 — Phase Assignment
 
