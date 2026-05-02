@@ -26,11 +26,13 @@ export type { TimeoutStrategyOptions } from './timeout-strategy'
 export { createIdempotencyStrategy } from './idempotency-strategy'
 export type { IdempotencyStrategyOptions } from './idempotency-strategy'
 
-// 03-10 aggiungerà:
-// export { createDedupeStrategy } from './dedupe-strategy'
-// export type { DedupeStrategyOptions } from './dedupe-strategy'
-// export { createBackpressureStrategy } from './backpressure-strategy'
-// export type { BackpressureStrategyOptions } from './backpressure-strategy'
+// 03-10 — DedupeStrategy (D-74, ROUTE-11 chiusura)
+export { createDedupeStrategy } from './dedupe-strategy'
+export type { DedupeStrategyOptions } from './dedupe-strategy'
+
+// 03-10 — BackpressureStrategy (D-75, ROUTE-10 chiusura, Pitfall 4 fix)
+export { createBackpressureStrategy } from './backpressure-strategy'
+export type { BackpressureStrategyOptions } from './backpressure-strategy'
 
 // 03-11 aggiungerà:
 // export { createAuthStrategy } from './auth-strategy'
