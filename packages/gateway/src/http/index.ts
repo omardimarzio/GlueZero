@@ -97,3 +97,21 @@ export type {
 
 /** Runtime type guard set-based per `GatewayErrorCode` (D-80) — narrow `string → GatewayErrorCode`. */
 export { isGatewayErrorCode } from './types/http-error'
+
+// ---------- Runtime export: HttpGateway class + factory + utility (plan 03-08) ----------
+
+/** Server Gateway HTTP centralizzato (PRD §18, ROUTE-06, D-71/D-72/D-77/D-99). */
+export { HttpGateway } from './http-gateway'
+/** Strategy bundle iniettato a HttpGateway.execute() — D-68 dependency injection. */
+export type { HttpGatewayRouteInfo, HttpGatewayStrategies } from './http-gateway'
+/** Factory pubblica con Valibot validation della GatewayConfig (D-71/D-72/D-99). */
+export { createHttpGateway } from './public-factory'
+/** Guard pre-fetch URL allowlist (SEC-05, D-71) + post-redirect re-validation Pitfall 7. */
+export { validateAgainstAllowlist } from './url-allowlist'
+export type { AllowlistValidationContext } from './url-allowlist'
+/** Parse RFC 7231 §7.1.3 Retry-After header con cap MAX_BACKOFF_MS = 60_000 ms (D-69). */
+export { MAX_BACKOFF_MS, parseRetryAfter } from './retry-after-parser'
+/** Polyfill AbortSignal.any() per ES2022 target (Pitfall 4 fix, D-77). */
+export { combineSignals } from './combine-signals'
+/** Koa-style compose async middleware per policy chain del gateway (RESEARCH §Pattern 3). */
+export { compose } from './policy-chain'
