@@ -1,5 +1,5 @@
 ---
-last_updated: 2026-04-30
+last_updated: 2026-05-02
 status: in_progress
 project: SemBridge
 milestone: v1.0
@@ -31,14 +31,13 @@ session_active: false
 | Mode GSD | yolo + auto_advance + parallelization (sequential exec, no worktree) |
 | Modello attivo | `claude-opus-4-7-1` (opus) — override esplicito su tutti i sub-agent |
 
-## Ultimo step completato
+## Ultimo step completato (auto-update 2026-05-02T11:00:41Z)
 
-- **03-08 HttpGateway core + policy chain + http-handler** → SUMMARY committed (`docs(03-08): complete plan execution`)
-- 6 commits sequenziali: `1f265fc` test RED utility + `61014e8` feat GREEN utility + `1dc5a86` test RED HttpGateway + `99a1d73` feat GREEN HttpGateway + `bf1477d` test RED http-handler + `32c3eb8` feat GREEN http-handler
-- 35/35 test passing (15 utility + 13 HttpGateway+factory + 7 http-handler); routing 58/58 + gateway 33/33 zero regressioni
-- **D-83 verificato strict:** `git diff HEAD~6 -- packages/core/ packages/mapper/` → empty; core 248/248 + mapper 183/183 invariati
-- REQ-IDs chiusi: ROUTE-03, ROUTE-06, ROUTE-13, SEC-04, SEC-05, VAL-05
-- Decisione architetturale: structural-typed deps in `http-handler` (HttpHandlerGateway/Mapper/Validator) per evitare cyclic dependency `@sembridge/routing` ↔ `@sembridge/gateway` — RouterBroker plan 03-12 cabla istanze concrete
+- Plan: **03-08** → SUMMARY.md committed
+- Commit: `1093903 docs(03-08): complete HttpGateway core + http-handler plan execution`
+- Phase progress: **8/14** plan completati con SUMMARY.md
+- Project progress: 32/37 plan (86%)
+
 
 ## Prossimo step
 
