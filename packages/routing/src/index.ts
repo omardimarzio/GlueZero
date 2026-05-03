@@ -99,3 +99,27 @@ export type {
   MultipleRoutesPolicy,
   RoutingConfig,
 } from './types/routing-config'
+
+// ---------- Runtime exports F3 (Plan 03-12 Task 3) ----------
+//
+// Plan 03-12 popola i runtime export del package: RouterBroker class + createRouterBroker
+// factory (Valibot validation + composition wrapper di MapperBroker D-83).
+//
+// Ri-esportiamo anche RouteResolver per consumer avanzati (test, dev tools F6) che
+// vogliono iterare le route registrate (`resolver.list()`) o introspect via
+// `countByOwner`. Il RouteExecutor / OutcomeCollector / HttpGateway sono incapsulati
+// nel RouterEngine privato del RouterBroker — non ri-esportati al barrel pubblico
+// (consumer interagiscono via RouterBroker.registerRoute / publish / unregisterPlugin).
+
+/** RouterBroker class — composition wrapper di MapperBroker (D-83 — Plan 03-12 Task 2). */
+export { RouterBroker } from './router-broker-wrapper'
+export type { RouterBrokerConfig } from './router-broker-wrapper'
+/** Factory pubblica con Valibot validation della RouterBrokerConfig (Plan 03-12 Task 3). */
+export { createRouterBroker } from './public-factory'
+/** RouteResolver — dispatch table pre-compilata (Plan 03-05). Ri-esportata per dev tools / test. */
+export { RouteResolver } from './route-resolver'
+export type {
+  AmbiguousRouteEvent,
+  CompiledRoute,
+  RouteRegistration,
+} from './route-resolver'
