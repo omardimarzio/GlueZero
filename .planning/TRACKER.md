@@ -31,10 +31,10 @@ session_active: false
 | Mode GSD | yolo + auto_advance + parallelization (sequential exec, no worktree) |
 | Modello attivo | `claude-opus-4-7-1` (opus) — override esplicito su tutti i sub-agent |
 
-## Ultimo step completato (auto-update 2026-05-03T18:24:55Z)
+## Ultimo step completato (auto-update 2026-05-03T20:31:13Z)
 
 - Plan: **03-13** → SUMMARY.md committed
-- Commits: `15440a0 feat(03-13): aggiunge createRouterHarness fixture + msw 2.13.6 setupServer` + `63cceb9 feat(03-13): aggiunge 6 integration test scenari F3 end-to-end (16 test)`
+- Commit: `07ef378 docs(03-13): complete integration test scenari F3 plan execution`
 - Phase progress: **13/14** plan completati con SUMMARY.md
 - Project progress: 36/37 plan (97%)
 
