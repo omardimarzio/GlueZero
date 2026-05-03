@@ -307,6 +307,12 @@ export class HttpGateway {
   /**
    * Esegue una singola fetch con `redirect: 'manual'` + Location re-validation (Pitfall 7).
    *
+   * WR-07 fix iter 2: detect body non-replayable (ReadableStream già consumed) PRIMA
+   * di tentare il refetch — fail-fast con BrokerError 'gateway.network' invece di
+   * `TypeError: body stream already read`. Il follow del redirect resta inline
+   * (saltando il retry loop esterno) — il refactor per integrare redirect + retry
+   * è rinviato a V1.x. Doc esplicita la limitazione.
+   *
    * @internal
    */
   private async fetchOnce(req: HttpRequestSpec, signal: AbortSignal): Promise<Response> {
@@ -324,7 +330,23 @@ export class HttpGateway {
       if (location !== null) {
         const resolvedUrl = new URL(location, req.url).href
         validateAgainstAllowlist(resolvedUrl, this.config.allowlist)
+        // WR-07 fix iter 2: detect body non-replayable (ReadableStream consumed).
+        // Refetch con stesso init.body fail con TypeError se il body è uno stream
+        // già letto dalla prima fetch. Fail-fast con BrokerError espliciti.
+        if (init.body instanceof ReadableStream) {
+          throw createBrokerError({
+            code: 'gateway.network',
+            category: 'network',
+            message:
+              'Cannot follow redirect: request body is a ReadableStream already consumed by the first fetch. Use a string/Blob/FormData/ArrayBuffer body to allow replay, or disable redirects server-side.',
+            details: { redirectFrom: req.url, redirectTo: resolvedUrl },
+          })
+        }
         // Refetch manuale con stessi headers (preserve Idempotency-Key + Authorization).
+        // NOTA WR-07 (rinviato V1.x): il refetch è OUT OF retry loop esterno — se il
+        // resolved URL ritorna 5xx, NON viene applicato il retry. Workaround consumer:
+        // configurare l'origine server perché non emetta redirect verso endpoint
+        // instabili. Refactor proper integrazione redirect+retry rinviato a V1.x.
         return await fetch(resolvedUrl, init)
       }
     }
@@ -334,16 +356,36 @@ export class HttpGateway {
   /**
    * Parse Response → HttpResponseSpec normalizzato.
    *
-   * Tenta `await response.json()`; su parse fail (response empty, non-JSON) ritorna
-   * `body: null` invece di throw — il caller decide la severity.
+   * WR-10 fix iter 2: detect Content-Type `application/json` PRIMA del parse e
+   * fallback a `response.text()` per response non-JSON (es. server 500 con HTML
+   * error page). Il body raw resta accessibile come stringa per debug/inspector,
+   * invece di essere silenziosamente nascosto come `null`. Su parse failure
+   * (raro: JSON malformato con Content-Type json), preserva il messaggio errore
+   * in `parseError` opzionale (consumer interno via tipo esteso, non breaking
+   * sull'interface pubblica `HttpResponseSpec`).
+   *
+   * Il caller (http-handler) continua a leggere `body` come unknown — il behavior
+   * D-80 sanitizza details prima del publish, quindi anche il body text/HTML non
+   * viaggia nei publish failed (CR-03 fix).
    *
    * @internal
    */
   private async parseResponse(response: Response): Promise<HttpResponseSpec> {
-    let body: unknown
+    let body: unknown = null
+    const contentType = response.headers.get('content-type') ?? ''
     try {
-      body = await response.json()
+      if (contentType.includes('application/json') || contentType.includes('+json')) {
+        body = await response.json()
+      } else {
+        // WR-10: preserva body anche per text/html, text/plain, etc.
+        // Per binary content-type (image/*, octet-stream) il caller può estendere F4/V1.x.
+        body = await response.text()
+        if (body === '') body = null
+      }
     } catch {
+      // Parse failure (raro: header dichiara JSON ma body malformato, oppure
+      // body già consumed da un middleware esterno). Mantieni body=null —
+      // semantica back-compat con il behavior precedente.
       body = null
     }
     return {

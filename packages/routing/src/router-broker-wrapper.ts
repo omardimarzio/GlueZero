@@ -520,9 +520,15 @@ export class RouterBroker {
   /**
    * Deriva il topic `<prefix>.failed` da un topic originale.
    *
+   * NB WR-09 (iter 2): logica DUPLICATA con `outcome-collector.ts` deriveFailedTopic
+   * (allineata identica). Estrazione in modulo helper rinviata a V1.x per evitare
+   * churn pubblico in F3 (entrambe sono `private` / module-local). Se l'una cambia,
+   * aggiornare ANCHE l'altra (grep `deriveFailedTopic` per trovare i call site).
+   *
    * @example
    * deriveFailedTopic('weather.requested') === 'weather.failed'
    * deriveFailedTopic('weather') === 'weather.failed'
+   * deriveFailedTopic('auth.login.success') === 'auth.login.success.failed' (no `.requested` suffix)
    */
   private deriveFailedTopic(topic: string): string {
     const idx = topic.lastIndexOf('.')
