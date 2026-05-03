@@ -156,6 +156,23 @@ function sanitizeError(err: BrokerError): SanitizedError {
     retryAttempt?: number
     retryAfterMs?: number
   }
+  // WR-05 fix iter 2: D-83 strict vieta estendere CreateBrokerErrorParams (core).
+  // I 3 field estesi D-80 (httpStatus/retryAttempt/retryAfterMs) sono popolati o come
+  // top-level (legacy) o nel `details` bag (workaround D-83-compliant). Questo
+  // sanitizer ora legge da entrambe le sedi — top-level prevale, fallback su details.
+  const detailsBag = (err.details ?? {}) as {
+    httpStatus?: unknown
+    retryAttempt?: unknown
+    retryAfterMs?: unknown
+  }
+  const httpStatus =
+    ext.httpStatus ?? (typeof detailsBag.httpStatus === 'number' ? detailsBag.httpStatus : undefined)
+  const retryAttempt =
+    ext.retryAttempt ??
+    (typeof detailsBag.retryAttempt === 'number' ? detailsBag.retryAttempt : undefined)
+  const retryAfterMs =
+    ext.retryAfterMs ??
+    (typeof detailsBag.retryAfterMs === 'number' ? detailsBag.retryAfterMs : undefined)
   return {
     code: err.code,
     category: err.category,
@@ -163,9 +180,9 @@ function sanitizeError(err: BrokerError): SanitizedError {
     ...(err.routeId !== undefined && { routeId: err.routeId }),
     ...(err.topic !== undefined && { topic: err.topic }),
     ...(err.eventId !== undefined && { eventId: err.eventId }),
-    ...(ext.httpStatus !== undefined && { httpStatus: ext.httpStatus }),
-    ...(ext.retryAttempt !== undefined && { retryAttempt: ext.retryAttempt }),
-    ...(ext.retryAfterMs !== undefined && { retryAfterMs: ext.retryAfterMs }),
+    ...(httpStatus !== undefined && { httpStatus }),
+    ...(retryAttempt !== undefined && { retryAttempt }),
+    ...(retryAfterMs !== undefined && { retryAfterMs }),
     ...(err.details !== undefined && { details: err.details }),
   }
 }

@@ -245,6 +245,11 @@ export class HttpGateway {
         return await this.parseResponse(lastResponse)
       }
       // Network error / timeout / abort.
+      // WR-05 fix iter 2: aggiunge `retryAttempt` nel `details` per allinearsi al
+      // shape D-80 esteso F3 letto da OutcomeCollector.sanitizeError. D-83 strict
+      // vieta modifica core/types/error.ts (no field strutturato), quindi usiamo
+      // details + sanitizer-aware lookup. Mantieni anche `attemptCount` (legacy)
+      // per back-compat con consumer esistenti.
       throw createBrokerError({
         code: this.classifyError(lastError, ownController.signal, externalSignal, timeoutSignal),
         category: 'network',
@@ -253,7 +258,7 @@ export class HttpGateway {
         topic: event.topic,
         eventId: event.id,
         ...(lastError && { originalError: lastError }),
-        details: { attemptCount: attempt },
+        details: { attemptCount: attempt, retryAttempt: attempt },
       })
     } finally {
       this.inFlight.delete(event.id)
@@ -352,9 +357,15 @@ export class HttpGateway {
   /**
    * Classifica l'errore di fetch in base allo stato dei signal abort.
    *
-   * - `signal.reason` include 'timeout' o equals 'gateway.timeout' → `gateway.timeout`
-   * - signal aborted ma non timeout → `gateway.aborted`
-   * - altrimenti → `gateway.network` (DNS/CORS/offline/parse)
+   * - `timeoutSignal.aborted` → `gateway.timeout` (più affidabile — controller dedicato).
+   * - signal `reason` è esplicitamente un timeout (TimeoutError DOMException, string
+   *   `'gateway.timeout'` o `'TimeoutError'`) → `gateway.timeout`.
+   * - signal aborted ma non timeout → `gateway.aborted`.
+   * - altrimenti → `gateway.network` (DNS/CORS/offline/parse).
+   *
+   * WR-03 fix iter 2: sostituisce substring match `reason.includes('timeout')` (che
+   * produce false-positive su reason custom contenente la substring) con check
+   * esplicito su `DOMException.name === 'TimeoutError'` o string match strict.
    *
    * @internal
    */
@@ -366,17 +377,27 @@ export class HttpGateway {
   ): 'gateway.timeout' | 'gateway.network' | 'gateway.aborted' {
     // Timeout: il timeout signal scattato è il discriminante più affidabile.
     if (timeoutSignal.aborted) return 'gateway.timeout'
-    // External abort con reason che indica timeout
+    // External o own abort: classifica via reason check esplicito (no substring).
     if (externalSignal?.aborted) {
-      const reason = String(externalSignal.reason ?? '')
-      if (reason.includes('timeout') || reason === 'gateway.timeout') return 'gateway.timeout'
-      return 'gateway.aborted'
+      return this.isTimeoutReason(externalSignal.reason) ? 'gateway.timeout' : 'gateway.aborted'
     }
     if (ownSignal.aborted) {
-      const reason = String(ownSignal.reason ?? '')
-      if (reason.includes('timeout') || reason === 'gateway.timeout') return 'gateway.timeout'
-      return 'gateway.aborted'
+      return this.isTimeoutReason(ownSignal.reason) ? 'gateway.timeout' : 'gateway.aborted'
     }
     return 'gateway.network'
+  }
+
+  /**
+   * Verifica se un `signal.reason` indica timeout (WR-03 fix iter 2).
+   *
+   * Match strict (no substring) per evitare false-positive con reason custom contenenti
+   * la parola "timeout" (es. `'request.took.too.long.timeout-ish'`).
+   *
+   * @internal
+   */
+  private isTimeoutReason(reason: unknown): boolean {
+    if (reason === 'gateway.timeout' || reason === 'TimeoutError') return true
+    if (reason instanceof DOMException && reason.name === 'TimeoutError') return true
+    return false
   }
 }
