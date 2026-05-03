@@ -1,11 +1,11 @@
 ---
 last_updated: 2026-05-03
-status: in_progress
+status: phase_3_complete
 project: SemBridge
 milestone: v1.0
-current_phase: 3
-current_wave: 9
-current_plan: 03-14
+current_phase: 4
+current_wave: 1
+current_plan: pending_verifier_then_discuss_phase_4
 session_active: false
 ---
 
@@ -23,36 +23,39 @@ session_active: false
 
 | Campo | Valore |
 |-------|--------|
-| Fase | **Phase 3 — Routing & Server Gateway HTTP** |
-| Wave | **9 / 9** (next: 03-14 final gate F3) |
-| Plan in esecuzione | — (03-13 chiuso ✓) |
-| Plan progress F3 | **13 / 14 completati** (03-01 → 03-13 con SUMMARY.md ✓) |
-| Plan progress globale | 36 / 37 (97%) |
+| Fase | **Phase 3 — Routing & Server Gateway HTTP — ✅ COMPLETE** |
+| Wave | **9 / 9** completata (03-14 final gate ✓) |
+| Plan in esecuzione | — (Phase 3 chiusa, ready for verifier) |
+| Plan progress F3 | **14 / 14 completati** (03-01 → 03-14 con SUMMARY.md ✓) |
+| Plan progress globale | 37 / 37 (100%) |
 | Mode GSD | yolo + auto_advance + parallelization (sequential exec, no worktree) |
 | Modello attivo | `claude-opus-4-7-1` (opus) — override esplicito su tutti i sub-agent |
 
-## Ultimo step completato (auto-update 2026-05-03T20:31:13Z)
+## Ultimo step completato (auto-update 2026-05-03T23:05Z)
 
-- Plan: **03-13** → SUMMARY.md committed
-- Commit: `07ef378 docs(03-13): complete integration test scenari F3 plan execution`
-- Phase progress: **13/14** plan completati con SUMMARY.md
-- Project progress: 36/37 plan (97%)
+- Plan: **03-14** → final gate F3 + SUMMARY.md committed
+- Commits: `86790f0` (README italiani 600 LOC), `660fec6` (biome cleanup + manual TS bracket fix), `9922a36` (CI gates extension + size budget realistic)
+- Phase progress: **14/14** plan completati
+- Project progress: 37/37 plan (100%)
+- 4 open issues PRD §39 chiusi cumulativamente F3: #5 ROUTE-16, #6 ROUTE-15, #7 LIFE-02 ext F3, #8 ROUTE-09
+- D-83 strict ✓ (zero modifiche packages/core/ né packages/mapper/ runtime per tutta F3 — 14 plan)
 
 
 ## Prossimo step
 
-**Per riprendere F3 da dove ci siamo fermati:**
+**Phase 3 → verifier → Phase 4 discuss:**
+
 ```
-/gsd-execute-phase 3 --auto --wave 9
+/gsd-verifier 3   # goal-backward verification 5 success criteria + 29 REQ-IDs
+/gsd-discuss-phase 4 --auto --research   # Realtime SSE/WS adapter
 ```
 
-Oppure spawn diretto agente per 03-14:
-```
-Agent(subagent_type="gsd-executor", model="opus", prompt="Execute plan 03-14 — Final gate F3: coverage v8 + DOC-04 + publint/attw/size-limit ext. Read 03-14-PLAN.md. Create SUMMARY.md. Update STATE/ROADMAP.")
-```
-
-Dopo 03-13 il piano prosegue:
-- 03-14 (Wave 9) — Final gate (coverage, CI, DOC-04) ← NEXT
+Phase 4 prevede:
+- Adapter SSE prioritario (`@sembridge/gateway/sse-ws`)
+- Adapter WebSocket opzionale
+- Reconnection policy (Last-Event-ID per SSE, ping app-level per WS, exponential backoff full-jitter cap 30s, Visibility API integration)
+- Chiude PRD §39 #9 (RT-07)
+- 7 REQ-IDs: RT-01..RT-07
 
 ## Vincoli attivi (da CLAUDE.md)
 

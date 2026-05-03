@@ -12,7 +12,11 @@ SemBridge è una **libreria JavaScript browser-side** (TypeScript-first, distrib
 
 ### Validated
 
-(Nessuno — progetto greenfield, da validare con la prima release)
+**Phase 1 (Core essenziale)** — chiusa 2026-04-29 con gsd-verifier PASS confidence HIGH. 11/11 plans, 5/5 success criteria, 27 REQ-IDs CORE/VAL/ERR/LIFE/PKG/DOC validati (vedi `.planning/phases/01-core-essenziale/VERIFICATION.md`).
+
+**Phase 2 (Canonical Model & Mapper)** — chiusa 2026-04-30, ready for verifier. 12/12 plans, 5/5 success criteria, 27 REQ-IDs F2 (MAP-01..MAP-17 + VAL-02..VAL-09 + ERR-02 ext + TEST-01..TEST-02 + DOC-03 + LIFE-02 ext F2 + PKG-04 ext F2). Open issues PRD §39 #1/#3/#4 chiusi (MAP-17/VAL-08/VAL-09).
+
+**Phase 3 (Routing & Server Gateway HTTP)** — chiusa 2026-05-03, ready for verifier. 14/14 plans, 5/5 success criteria, 29 REQ-IDs F3 (ROUTE-01..ROUTE-16 + VAL-05 + ERR-02 ext + SEC-01..SEC-05 + TEST-01..TEST-03 + DOC-04 + LIFE-02 ext F3). Open issues PRD §39 #5/#6/#7/#8 chiusi (ROUTE-16/ROUTE-15/LIFE-02 ext F3/ROUTE-09).
 
 ### Active
 
@@ -177,4 +181,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-04-30 after Phase 2 (canonical-model-mapper) closure — 12/12 plans, 5/5 success criteria, 27 code review findings fixed in 3 iterations, 183/183 mapper test, 248/248 core test (D-49 strict). Open issues PRD §39 #1/#3/#4 closed.*
+*Last updated: 2026-05-03 after Phase 3 (routing-server-gateway-http) closure — 14/14 plans, 5/5 success criteria, 29/29 REQ-IDs F3 verificati, 200 test F3 (103 routing + 97 gateway), 248/248 core + 183/183 mapper invariati (D-83 strict ✓). Open issues PRD §39 #5/#6/#7/#8 chiusi (ROUTE-16/ROUTE-15/LIFE-02 ext F3/ROUTE-09). Pattern composition wrapper (RouterBroker = wrap(MapperBroker)) replicato da F2 D-49 → D-83. Cyclic dep routing↔gateway (type-only) gestito via 4-pass build (build:f3 root script). Lesson learned: bundle size budget pre-implementation sotto-stimato sistematicamente per F3+ (mapper 5→9.68 KB = 1.94x F2; routing 6→19.15 KB = 3.2x F3 — pattern raised post-implementation con +20-30% headroom). BLOCKER 4 fix iter 1 in plan 03-12: type-isolated bind del CanonicalRegistry private F2 con loud throw + opt-in `requiresRouteTopics` bypass (D-100). PostToolUse hook efficacia confermata: TRACKER.md auto-update post-commit per persistence anti-clear/crash.*

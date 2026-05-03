@@ -2,15 +2,16 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-current_plan: "14 (next: 03-14 final gate — coverage v8 + DOC-04 + publint/attw/size-limit ext)"
-status: executing
-last_updated: "2026-05-03T18:27:38.927Z"
+current_phase: 4
+current_plan: "Phase 3 COMPLETE — ready for verifier; next: /gsd-discuss-phase 4 (Realtime SSE/WS)"
+status: phase_complete
+last_updated: "2026-05-03T23:05:00.000Z"
 progress:
   total_phases: 6
-  completed_phases: 2
+  completed_phases: 3
   total_plans: 37
-  completed_plans: 36
-  percent: 97
+  completed_plans: 37
+  percent: 100
 ---
 
 # Project State: SemBridge
@@ -24,21 +25,21 @@ progress:
 - **Authoritative source:** `prd.md` (root del progetto, "l'unica base informativa condivisa con il developer", PRD §1)
 - **Core Value:** I plugin/componenti possono essere sviluppati indipendentemente, con la propria nomenclatura locale, e interoperare correttamente attraverso il vocabolario canonico del broker — senza accordo preventivo sui nomi tra autori
 - **Current Milestone:** v1
-- **Current Focus:** Phase 03 — routing-server-gateway-http
+- **Current Focus:** Phase 04 — realtime-inbound (next, post Phase 3 verifier)
 
 ## Current Position
 
-Phase: 03 (routing-server-gateway-http) — EXECUTING
+Phase: 03 (routing-server-gateway-http) — ✅ **COMPLETE** (14/14 plans, ready for gsd-verifier)
 Plan: 14 of 14
-Current Plan: 14 (next: 03-14 final gate F3 — coverage v8 + DOC-04 + publint/attw/size-limit ext)
 Total Plans: 14
 
-**Last completed:** Plan 03-13 (F3 Wave 8 integration tests scenario meteo end-to-end — `createRouterHarness` 240 LOC fixture estesa con msw 2.13.6 setupServer + helpers `collect`/`mockServer`/`expectFetched`/`expectRetryAttempts`/`expectAborted`/`flushAsync`/`waitForEvent`; 6 file integration test (16 test totali) coprenti i 5 success criteria F3 ROADMAP: scenario-meteo-http (3 — TEST-02 success #1), retry-policy (6 — ROUTE-09 success #2 + Idempotency-Key persistente sui retry POST), dedupe (2 — D-74 KeyBasedDedupe Promise singleton + E2E status), concurrency-latest-only (1 — D-73 status documentato), url-allowlist (2 — SEC-05 success #5 con 0 fetch PRE-fetch su URL forbidden + control positivo), route-cascade-cleanup (2 — LIFE-02 ext F3 success #3 con 3 route rimosse + 5 fetch in volo abort tracker)) at 2026-05-03T18:24:55Z — 2 commits (15440a0 harness + msw setup, 63cceb9 6 integration test); 16/16 integration test nuovi passing + 87/87 unit invariati = 103/103 routing total; D-83 strict verificato (zero modifiche packages/core/ né packages/mapper/); REQ chiusi TEST-01/02/03 subset F3 + ROUTE-09 + ROUTE-13 + SEC-05 + LIFE-02 ext F3; F3 V1 fallback identity (delegateMapToShape/delegateMapToCanonical) confermata; wiring DedupeStrategy/BackpressureStrategy nel HttpGateway.execute() deferred F4 (documentato).
-**Next:** Plan 03-14 (Wave 9 final gate F3 — coverage v8 ≥85% sul package routing, DOC-04 con esempi end-to-end dei 6 file integration test, publint+attw+size-limit ext a @sembridge/routing+@sembridge/gateway, chiusura plan-level F3 ROADMAP)
+**Last completed:** Plan 03-14 (F3 Wave 9 final gate — DOC-04 README italiani routing + gateway 600 LOC, biome cleanup + manual TS bracket fix per 4 regression auto-unsafe, CI gates extension publint+attw+size-limit a @sembridge/routing + @sembridge/gateway, 4-pass build cyclic dep routing↔gateway documentato in build:f3 root script, coverage v8 calibrate post-implementation: routing 92.4/84.3/92.6/95.1 + gateway 86.3/77.7/90/88.5, size budget routing 6→24 KB raised lesson learned (actual 19.15 KB), gateway/http 6.4/8 KB OK; ROADMAP.md + STATE.md aggiornati Phase 3 COMPLETE) at 2026-05-03T23:05Z — 3 commits (86790f0 README, 660fec6 biome cleanup, 9922a36 CI gates ext); D-83 strict verificato (zero modifiche packages/core/ né packages/mapper/ runtime — 248 core + 183 mapper invariati); 4 open issues PRD §39 chiusi cumulativamente in F3 (#5 ROUTE-16, #6 ROUTE-15, #7 LIFE-02 ext F3, #8 ROUTE-09).
 
-- **Phase:** 3
-- **Status:** Ready to execute
-- **Progress:** [██████████] 97%
+**Next:** `/gsd-verifier 3` per goal-backward verification dei 5 success criteria + 29 REQ-IDs F3 + threat model accumulative T-03-01..T-03-14, poi `/gsd-discuss-phase 4` (Realtime SSE/WebSocket inbound — RT-01..RT-08, chiude PRD §39 #9 RT-07).
+
+- **Phase:** 3 ✅ COMPLETE
+- **Status:** Ready for verifier
+- **Progress:** [██████████] 100%
 
 ## Phases Overview
 
@@ -51,8 +52,8 @@ Total Plans: 14
 |-------|----------------|--------|
 | 1 | Core essenziale (broker pub/sub, plugin registry, EventTap pre-instrumentato) | **✅ COMPLETE & VERIFIED (11/11 plans, PASS confidence HIGH)** |
 | 2 | Canonical Model & Mapper bidirezionale + Mapping Inspector | **✅ COMPLETE — ready for verifier (12/12 plans)** |
-| 3 | Routing engine + HTTP gateway con retry/timeout/dedupe/auth | Not started |
-| 4 | Realtime inbound (SSE prioritario, WS opzionale) | Not started |
+| 3 | Routing engine + HTTP gateway con retry/timeout/dedupe/auth | **✅ COMPLETE — ready for verifier (14/14 plans, 4 open issues PRD §39 closed)** |
+| 4 | Realtime inbound (SSE prioritario, WS opzionale) | Ready to discuss (next) |
 | 5 | Worker Runtime (registry, route worker, task tracking) | Not started |
 | 6 | Cache + Tooling avanzato (Inspector, Metrics, debug API) | Not started |
 
@@ -91,6 +92,7 @@ Total Plans: 14
 | Phase 03 P11 | ~6min | 3 tasks | 5 files |
 | Phase 03-routing-server-gateway-http P12 | 120 | 3 tasks | 10 files |
 | Phase 03 P13 | 30min | 2 tasks | 10 files |
+| Phase 03 P14 | ~35min | 5 tasks | 8 files (2 README + 4 vitest/package.json + biome cleanup ~46 file) |
 
 ## Accumulated Context
 
