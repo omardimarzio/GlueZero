@@ -10,10 +10,15 @@
 //
 // AbortController tracking per ROUTE-13 (cancellazione user-level) + LIFE-02 ext F3
 // (cascade abort plugin-scoped, D-86):
-// - `inFlight: Map<eventId, InFlightEntry>` — registry delle request HTTP/composite
-//   in volo. Local/cache sono SYNC → entry brevissima vita (creata + cleanup nel `finally`).
+// - `inFlight: Map<compositeKey, InFlightEntry>` — registry delle request HTTP/composite
+//   in volo. Composite key = `${routeId}::${eventId}` (CR-04 fix iter 2 — chiude race
+//   condition per cascade abort owner durante composite e double-execute con stesso
+//   eventId). Local/cache sono SYNC → entry brevissima vita (creata + cleanup nel `finally`).
 // - `abortInFlight(eventId)` — abort puntuale via `AbortController.abort(reason)`.
+//   Itera tutte le entry del Map dove la chiave termina con `::${eventId}` per garantire
+//   abort di TUTTE le route che servono lo stesso eventId (composite + sub-route).
 // - `abortInFlightByOwner(ownerId)` — cascade abort per LIFE-02 ext F3 (D-76, D-86).
+//   Itera per ownerId — ogni entry traccia il suo owner reale (composite vs sub-route).
 //
 // EventTap step 9 (`event.route.executed`) emesso post-dispatch con metadata
 // {routeId, routeType, ok}. Pattern try/catch swallow analogo a F2 `emitF2Tap`
@@ -125,6 +130,9 @@ export class RouteExecutor {
   async execute(route: CompiledRoute, event: BrokerEvent): Promise<RouteOutcome> {
     const startTime = performance.now()
     const controller = this.getOrCreateController(event.id, route)
+    // CR-04 fix iter 2: composite key per cleanup deterministico anche con
+    // double-execute concorrente sullo stesso eventId.
+    const inflightKey = this.makeInflightKey(route.id, event.id)
     let outcome: RouteOutcome
     try {
       switch (route.definition.type) {
@@ -158,25 +166,34 @@ export class RouteExecutor {
         }
       }
     } finally {
-      this.inFlight.delete(event.id)
+      this.inFlight.delete(inflightKey)
     }
     this.emitTap(startTime, event, route, outcome)
     return outcome
   }
 
   /**
-   * Abort puntuale di una request HTTP/composite in volo (ROUTE-13).
+   * Abort puntuale di tutte le request in volo bound al `eventId` (ROUTE-13).
+   *
+   * CR-04 fix iter 2: con composite key `${routeId}::${eventId}`, un singolo
+   * eventId può corrispondere a più entry (composite + sub-route con stesso eventId).
+   * Aborta TUTTE le entry con suffix `::${eventId}` per garantire abort completo.
    *
    * @param eventId - id dell'evento che ha originato la request.
    * @param reason - motivo abort (default `'gateway.aborted'`). Propagato a
    *   `AbortController.abort(reason)` e visibile via `signal.reason` nel handler.
-   * @returns `true` se l'abort è stato eseguito, `false` se l'eventId non era in volo.
+   * @returns `true` se almeno un abort è stato eseguito, `false` se nessuna entry trovata.
    */
   abortInFlight(eventId: string, reason: string = 'gateway.aborted'): boolean {
-    const entry = this.inFlight.get(eventId)
-    if (!entry) return false
-    entry.controller.abort(reason)
-    return true
+    const suffix = `::${eventId}`
+    let aborted = false
+    for (const [key, entry] of this.inFlight.entries()) {
+      if (key.endsWith(suffix)) {
+        entry.controller.abort(reason)
+        aborted = true
+      }
+    }
+    return aborted
   }
 
   /**
@@ -209,21 +226,42 @@ export class RouteExecutor {
   }
 
   /**
-   * Crea (o riusa) il `AbortController` per il dato eventId.
+   * Crea (o riusa) il `AbortController` per la coppia (routeId, eventId).
    *
-   * Riuso: utile per il composite handler, che deve condividere il signal tra il
-   * dispatch del composite e il dispatch del sub-http step (stesso eventId).
+   * CR-04 fix iter 2: composite key `${routeId}::${eventId}` garantisce che:
+   * 1. Cascade abort owner-scoped (`abortInFlightByOwner`) trovi la sub-route
+   *    inflight con il SUO ownerId reale (non quello del composite parent).
+   * 2. Double-execute concorrente con stesso eventId su DIVERSE route non si
+   *    sovrascriva l'entry — ogni (routeId, eventId) è isolato.
+   *
+   * Per il composite handler che invoca `httpHandler(e, subRoute)`: il wrapper in
+   * constructor chiama `getOrCreateController(e.id, subRoute)` → crea entry con
+   * key `${subRoute.id}::${e.id}` separata dall'entry composite `${composite.id}::${e.id}`.
+   * Questo permette a `abortInFlightByOwner(subRoute.ownerId)` di abortare la
+   * sub-fetch in volo (chiusura race del review).
+   *
+   * @internal
    */
   private getOrCreateController(eventId: string, route: CompiledRoute): AbortController {
-    const existing = this.inFlight.get(eventId)
+    const key = this.makeInflightKey(route.id, eventId)
+    const existing = this.inFlight.get(key)
     if (existing) return existing.controller
     const controller = new AbortController()
-    this.inFlight.set(eventId, {
+    this.inFlight.set(key, {
       controller,
       ownerId: route.ownerId,
       routeId: route.id,
     })
     return controller
+  }
+
+  /**
+   * Costruisce la composite key per il registry inFlight (CR-04 fix iter 2).
+   *
+   * @internal
+   */
+  private makeInflightKey(routeId: string, eventId: string): string {
+    return `${routeId}::${eventId}`
   }
 
   /**
