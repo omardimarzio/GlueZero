@@ -105,10 +105,14 @@ export function createBackpressureStrategy(
     return s
   }
 
-  async function executeTracked<T>(state: RouteState, task: () => Promise<T>): Promise<T> {
+  async function executeTracked<T>(
+    state: RouteState,
+    task: (signal?: AbortSignal) => Promise<T>,
+    signal?: AbortSignal,
+  ): Promise<T> {
     state.inFlight++
     try {
-      return await task()
+      return await task(signal)
     } finally {
       state.inFlight--
     }
@@ -118,7 +122,7 @@ export function createBackpressureStrategy(
     async schedule<T>(
       routeId: string,
       priority: 'critical' | 'high' | 'normal' | 'low',
-      task: () => Promise<T>,
+      task: (signal?: AbortSignal) => Promise<T>,
     ): Promise<T> {
       // CRITICAL bypass — Pitfall 4 fix.
       // Eventi system.error (priority: 'critical') vengono SEMPRE eseguiti, indipendente
@@ -149,12 +153,14 @@ export function createBackpressureStrategy(
                   }),
                 )
               }
-              // Nuovo task viene tracciato in pending per consentire abort futuri
+              // Nuovo task viene tracciato in pending per consentire abort futuri.
+              // WR-02 fix iter 2: passa controller.signal al task per propagare abort
+              // alla fetch (prevenire orphan execution).
               const controller = new AbortController()
               return await new Promise<T>((resolve, reject) => {
                 const entry = { controller, reject }
                 state.pending.push(entry)
-                executeTracked(state, task)
+                executeTracked(state, task, controller.signal)
                   .then((v) => {
                     // Rimuovi entry dopo esecuzione
                     const idx = state.pending.indexOf(entry)
@@ -178,11 +184,12 @@ export function createBackpressureStrategy(
           }
           // Sotto il cap: track + esegui. Tracciamo in pending per consentire abort
           // futuri da policy 'latest-only' o dropOldest.
+          // WR-02 fix iter 2: passa controller.signal al task.
           const controller = new AbortController()
           return await new Promise<T>((resolve, reject) => {
             const entry = { controller, reject }
             state.pending.push(entry)
-            executeTracked(state, task)
+            executeTracked(state, task, controller.signal)
               .then((v) => {
                 const idx = state.pending.indexOf(entry)
                 if (idx >= 0) state.pending.splice(idx, 1)
@@ -259,11 +266,13 @@ export function createBackpressureStrategy(
           }
           state.pending = []
           // Esegui il nuovo task tracciandolo per future abort cascade.
+          // WR-02 fix iter 2: passa controller.signal al task per propagare abort
+          // (chiusura orphan execution su latest-only superseded).
           const controller = new AbortController()
           return await new Promise<T>((resolve, reject) => {
             const entry = { controller, reject }
             state.pending.push(entry)
-            executeTracked(state, task)
+            executeTracked(state, task, controller.signal)
               .then((v) => {
                 const idx = state.pending.indexOf(entry)
                 if (idx >= 0) state.pending.splice(idx, 1)
@@ -292,11 +301,12 @@ export function createBackpressureStrategy(
             )
           }
           state.pending = []
+          // WR-02 fix iter 2: passa controller.signal al task.
           const controller = new AbortController()
           return await new Promise<T>((resolve, reject) => {
             const entry = { controller, reject }
             state.pending.push(entry)
-            executeTracked(state, task)
+            executeTracked(state, task, controller.signal)
               .then((v) => {
                 const idx = state.pending.indexOf(entry)
                 if (idx >= 0) state.pending.splice(idx, 1)

@@ -127,12 +127,25 @@ export interface DedupeStrategy {
  * Priority-aware: eventi `priority: 'critical'` BYPASSANO la policy (consegna
  * immediata). `schedule` accoda/throttle/drop/debounce in base alla policy della
  * route; `queueLength` per assertion test e Inspector.
+ *
+ * WR-02 fix iter 2: il `task` riceve un `AbortSignal` opzionale che la strategy
+ * aborta quando la policy droppa la entry corrispondente (latest-only, queue-bounded
+ * dropOldest, coalesce). Il caller (HttpGateway, F4 wiring) deve combinarlo via
+ * `combineSignals(externalSignal, ownController.signal, timeoutSignal,
+ * backpressureSignal)` per propagare l'abort effettivo alla fetch e prevenire
+ * orphan execution (consumo bandwidth + side-effect server su POST/PUT
+ * di task superseded).
+ *
+ * Per backward-compat con implementation V1 che ignorano il signal, il parametro
+ * è opzionale al call-site della task — task non sensibili al signal continuano a
+ * funzionare invariati (V1 default backpressure-strategy.ts non passa il signal
+ * direttamente, ma il caller F4 è responsabile di propagarlo via combineSignals).
  */
 export interface BackpressureStrategy {
   schedule<T>(
     routeId: string,
     priority: 'critical' | 'high' | 'normal' | 'low',
-    task: () => Promise<T>,
+    task: (signal?: AbortSignal) => Promise<T>,
   ): Promise<T>
   queueLength(routeId: string): number
 }
