@@ -20,8 +20,11 @@
 // - T-03-09-01 (Repudiation — retry rigenera Idempotency-Key → server crea N ordini):
 //   `Map<eventId, token>` persistenza garantita; Test 3 verifica 3 chiamate consecutive
 //   con stesso eventId ritornano lo stesso token.
-// - T-03-09-03 (DoS — Map cresce illimitato): LRU bounded `maxEventsTracked: 1000`
-//   default; quando il Map supera la soglia, drop oldest (Map preserva insertion order).
+// - T-03-09-03 (DoS — Map cresce illimitato): FIFO bounded `maxEventsTracked: 1000`
+//   default; quando il Map supera la soglia, drop oldest insertion (Map preserva
+//   insertion order — eviction è FIFO, NON true-LRU. Vedi WR-04 fix iter 2:
+//   per retry budget tipico ≤ 30s e maxTracked=1000, FIFO è sufficiente; true-LRU
+//   richiederebbe touch-on-get che è overhead non motivato per V1).
 // - T-03-08-04 RESEARCH (Spoofing — Idempotency-Key replay): nanoid 21-char ha
 //   126-bit entropy → collision probability ~10^-19 anche su 10^9 chiavi. La chiave
 //   è bound al BrokerEvent.id (a sua volta nanoid) — replay protection delegata al
@@ -54,11 +57,13 @@ export interface IdempotencyStrategyOptions {
    */
   readonly tokenFactory?: () => string
   /**
-   * Cap LRU della Map `eventId → token` per prevenire memory leak in long-running
-   * client (Pitfall threat T-03-09-03). Default: `1000`.
+   * Cap FIFO bounded della Map `eventId → token` per prevenire memory leak in
+   * long-running client (T-03-09-03 mitigation). Default: `1000`.
    *
-   * Quando il Map supera la soglia, viene rimosso l'entry più vecchio (FIFO —
-   * `Map` JS preserva insertion order). Cap appropriato perché il retry budget
+   * Quando il Map supera la soglia, viene rimosso l'entry più vecchio per
+   * insertion order (`Map` JS preserva insertion order — eviction è FIFO, NON
+   * true-LRU). WR-04 fix iter 2: rinominato da "LRU bounded" → "FIFO bounded"
+   * per coerenza con il behavior reale. Cap appropriato perché il retry budget
    * tipico è di pochi secondi: non ha senso tracciare token molto vecchi.
    */
   readonly maxEventsTracked?: number
@@ -101,8 +106,10 @@ export function createIdempotencyStrategy(
       // First attempt: genera nuovo token.
       const token = tokenFactory()
       tokenByEventId.set(eventId, token)
-      // LRU bounded (T-03-09-03 mitigation): drop oldest se supera maxTracked.
-      // `Map.keys().next().value` ritorna il primo entry (oldest insertion).
+      // FIFO bounded (T-03-09-03 mitigation, WR-04 doc-rename iter 2): drop oldest
+      // se supera maxTracked. `Map.keys().next().value` ritorna il primo entry
+      // (oldest insertion). NB: NON true-LRU (no touch-on-get) — sufficient per V1
+      // dato il retry budget tipico ≤ 30s.
       if (tokenByEventId.size > maxTracked) {
         const firstKey = tokenByEventId.keys().next().value
         if (firstKey !== undefined) tokenByEventId.delete(firstKey)

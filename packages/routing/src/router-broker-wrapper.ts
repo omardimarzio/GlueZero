@@ -309,8 +309,15 @@ export class RouterBroker {
     }
 
     // ----- Step 9 + 10 per ogni route — async parallel (D-65) -----
+    // WR-01 fix iter 2: defense-in-depth .catch fire-and-forget. executeRoute è già
+    // try/catch internally, ma se throw fuori dal try/catch (es. collector.collect
+    // post-tap-emit, oppure createBrokerError fail), la Promise rejecta unhandled
+    // → 'unhandledrejection' event in Node strict / browser dev. Pattern difensivo.
     for (const route of matches) {
-      void this.executeRoute(route, topic, payload, safeOptions, eventId)
+      this.executeRoute(route, topic, payload, safeOptions, eventId).catch(() => {
+        // No-op: l'errore è già loggato dall'executor try/catch. Il .catch qui
+        // serve solo a sopprimere unhandledrejection in caso di throw inaspettato.
+      })
     }
     // Local consumer ricevono comunque se almeno una route NON è 'local'
     // (D-65 default 'parallel': local + remote in parallelo). Se TUTTE le route sono

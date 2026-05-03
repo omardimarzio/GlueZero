@@ -77,6 +77,14 @@ export interface RetryStrategyOptions {
    * Delay di base in millisecondi per il backoff esponenziale. Default: 300.
    *
    * Formula: `min(maxDelayMs, baseDelayMs * 2^attempt) * (0.5 + Math.random() * 0.5)`.
+   *
+   * Nota WR-06 (iter 2 doc-clarity): `attempt` è il counter dell'invocazione
+   * appena fallita (post-incremento in http-gateway.ts retry loop), 1-indexed:
+   * - Primo retry (dopo 1° fail): attempt=1 → exponential = baseDelayMs * 2 = 600ms (con default 300)
+   * - Secondo retry (dopo 2° fail): attempt=2 → exponential = baseDelayMs * 4 = 1200ms
+   * - Terzo retry: attempt=3 → exponential = baseDelayMs * 8 = 2400ms
+   * Il `baseDelayMs` rappresenta il delay "base" del backoff esponenziale, NON il
+   * delay del primo retry (il primo retry parte già a 2x baseDelayMs).
    */
   readonly baseDelayMs?: number
   /**

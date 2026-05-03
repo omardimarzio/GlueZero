@@ -12,6 +12,18 @@
 //   garantisce auto-cleanup del listener al primo abort.
 // - T-03-08-02 (Tampering — reason cross-leak): preserviamo `signal.reason` originario via
 //   `composite.abort(sig.reason)` — il caller può discriminare il source dell'abort.
+//
+// WR-11 fix iter 2 (leak listener parziale, polyfill path):
+// - Se IL COMPOSITE aborta per qualsiasi causa (input signal aborta o caller chiama
+//   abort upstream), rimuoviamo TUTTI i listener residui sugli input signal → no leak.
+// - SCENARIO RESIDUO (mitigato ma non eliminato): se tutti gli input signal sono
+//   long-lived e il composite NON aborta (es. fetch completa con successo), i listener
+//   sugli input signal restano fino a che gli input non aborti. Il browser/Node poi
+//   garbage-collecta il composite quando gli input aborti, rimuovendo i listener via
+//   `{ once: true }`. Per long-lived external signal con N fetch successo concatenate,
+//   il caller deve preferire `AbortSignal.any` nativo (ES2024) che non leak.
+//   Eliminazione completa richiederebbe un'API breaking che ritorna `{ signal, dispose }` —
+//   trade-off rinviato a V1.x se profiling rivela impatto reale.
 
 /**
  * Coordina N signal in un singolo `AbortSignal` composito (D-77, Pitfall 4 fix).
@@ -43,13 +55,32 @@ export function combineSignals(...signals: ReadonlyArray<AbortSignal | undefined
     .any
   if (typeof Native === 'function') return Native.call(AbortSignal, real)
   // Polyfill manuale per ES2022 target.
+  // WR-11 fix iter 2: track listener registrati per cleanup quando il composite aborta.
+  // Senza cleanup, su long-lived external signal (es. subscriber) i listener si accumulano
+  // linearmente con N fetch → memory leak. Soluzione: quando il composite aborta (per
+  // qualsiasi causa), rimuoviamo tutti i listener sui signal di input residui.
   const composite = new AbortController()
+  const handlers: Array<{ readonly sig: AbortSignal; readonly fn: () => void }> = []
+  const cleanup = (): void => {
+    for (const h of handlers) h.sig.removeEventListener('abort', h.fn)
+    handlers.length = 0
+  }
   for (const sig of real) {
     if (sig.aborted) {
       composite.abort(sig.reason)
-      break
+      cleanup()
+      return composite.signal
     }
-    sig.addEventListener('abort', () => composite.abort(sig.reason), { once: true })
+    const fn = (): void => {
+      composite.abort(sig.reason)
+      cleanup()
+    }
+    sig.addEventListener('abort', fn, { once: true })
+    handlers.push({ sig, fn })
   }
+  // Cleanup anche se il composite viene abortito da fonte esterna (es. caller chiama
+  // controller.abort sul controller upstream non incluso in `signals`). Listener
+  // self-cleanup via { once: true }.
+  composite.signal.addEventListener('abort', cleanup, { once: true })
   return composite.signal
 }
