@@ -31,10 +31,10 @@ session_active: false
 | Mode GSD | yolo + auto_advance + parallelization (sequential exec, no worktree) |
 | Modello attivo | `claude-opus-4-7-1` (opus) — override esplicito su tutti i sub-agent |
 
-## Ultimo step completato (auto-update 2026-05-03T09:35:11Z)
+## Ultimo step completato (auto-update 2026-05-03T09:49:13Z)
 
 - Plan: **03-12** → SUMMARY.md committed
-- Commit: `97638b1 feat(03-12): createRouterBroker public-factory + index runtime exports — Task 3`
+- Commit: `2def867 docs(03-12): complete RouterBroker composition wrapper plan execution`
 - Phase progress: **12/14** plan completati con SUMMARY.md
 - Project progress: 35/37 plan (95%)
 
