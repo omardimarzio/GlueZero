@@ -185,6 +185,17 @@ export class HttpGateway {
         })
       }
 
+      // FIXME(F4): wiring dedupe/backpressure deferred — vedi 03-VERIFICATION.md override #1/#2.
+      // `strategies.dedupe` e `strategies.backpressure` (se forniti) NON sono invocati qui in F3.
+      // Per chiudere ROUTE-11 (dedupe end-to-end) e ROUTE-10 (latest-only/queue-bounded
+      // end-to-end), F4 dovrà:
+      //   - wrappare il retry loop con `strategies.dedupe.execute(dedupeKey, () => { /* loop */ })`
+      //     (dedupeKey derivato da routeId + sortedQueryParams — D-74 fallback)
+      //   - wrappare ulteriormente con `strategies.backpressure.schedule(routeId, priority,
+      //     (signal) => /* loop */)` propagando il signal via combineSignals (chiusura WR-02).
+      // Le primitive `dedupe-strategy.ts` / `backpressure-strategy.ts` sono complete e testate
+      // in isolation — solo il wiring runtime nel gateway è skippato.
+      //
       // Retry loop — delega a RetryStrategy.shouldRetry/delayMs.
       let attempt = 0
       let lastError: Error | undefined

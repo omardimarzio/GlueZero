@@ -207,6 +207,22 @@ export class RouterBroker {
     if (config.routes) {
       for (const r of config.routes) this.engine.resolver.register(r)
     }
+
+    // 5. CR-05 fix iter 2: dev-mode boot warning UNA VOLTA se dedupe/backpressure
+    //    configurati ma wiring runtime skipped. Surface esplicito per developer F4
+    //    che legge il gateway code e si aspetta che le strategy siano invocate.
+    //    Guard `runtime.debug === true` consumer-side (default false in produzione → no console noise).
+    if (config.runtime?.debug === true) {
+      const hasDedupeDefault = config.gateway?.defaults?.dedupe !== undefined
+      const hasBackpressureDefault = config.gateway?.defaults?.backpressure !== undefined
+      if (hasDedupeDefault || hasBackpressureDefault) {
+        // FIXME(F4): wiring dedupe/backpressure deferred — vedi 03-VERIFICATION.md override #1/#2.
+        // biome-ignore lint/suspicious/noConsole: dev-mode warning consumer-facing
+        console.warn(
+          '[SemBridge F3] gateway.defaults.dedupe/backpressure è configurato ma il wiring runtime nel HttpGateway è deferred a F4 (vedi 03-VERIFICATION.md override #1/#2). Le primitive sono complete e testate in isolation; ROUTE-10/ROUTE-11 end-to-end saranno chiusi in F4.',
+        )
+      }
+    }
   }
 
   // ============================================================
@@ -567,42 +583,34 @@ export class RouterBroker {
   /**
    * Delegate a `inner.mapper.mapToShape` (D-96 — usato dal http-handler).
    *
-   * Cast `as unknown as` accettato — pattern composition wrapper (W9 trade-off).
-   * Se F2 espone helper public `getMapper()`, sostituire qui.
+   * FIXME(F4): wiring mapToShape deferred — vedi 03-VERIFICATION.md override #3.
+   * F2 MapperEngine non espone `mapToShape(canonical, inlineMap)` pubblicamente — il
+   * vero contract è `applyOutputMap(pluginId, payload)`. Per il http-handler `mapToShape`
+   * riceve un OutputMap inline (route-level), non bound a un pluginId.
+   *
+   * V1 IDENTITY PASSTHROUGH (override #3 deferred F4/F6): ritorna `canonical` invariato.
+   * Quando F2 espone `MapperEngine.mapToShape(canonical, inlineMap)` (refactor F4/F6),
+   * sostituire con `return this.inner.mapper.mapToShape(canonical, outputMap)`.
    *
    * @internal
    */
-  private delegateMapToShape(canonical: unknown, outputMap: unknown): unknown {
-    const inner = this.inner as unknown as {
-      mapper?: { applyOutputMap?: (id: string, payload: unknown) => unknown }
-    }
-    // F2 MapperEngine non espone `mapToShape` direttamente — il vero contract è
-    // `applyOutputMap(pluginId, payload)`. Per il http-handler `mapToShape` riceve un
-    // OutputMap inline (route-level), non bound a un pluginId. Strategia V1: il http
-    // route consuma queryMap/bodyMap come configurazione locale; il `mapToShape` qui
-    // è una fallback identity (F4/F6 implementeranno il vero "shape from inline map"
-    // tramite MapperEngine refactor — fuori scope F3 plan 03-12).
-    void inner
-    void outputMap
+  private delegateMapToShape(canonical: unknown, _outputMap: unknown): unknown {
+    // FIXME(F4): identity passthrough — vedi 03-VERIFICATION.md override #3.
     return canonical
   }
 
   /**
    * Delegate a `inner.mapper.mapToCanonical` (D-97 — usato dal http-handler).
    *
-   * Cast `as unknown as` accettato — pattern composition wrapper (W9 trade-off).
+   * FIXME(F4): wiring mapToCanonical deferred — vedi 03-VERIFICATION.md override #3.
+   * Stessa nota di delegateMapToShape: F2 non espone `mapToCanonical(payload, schemaId)`
+   * pubblicamente. V1 fallback identity (response viene poi validato dal valibotAdapter
+   * contro lo schema canonical — VAL-05 / D-78). Refactor F4/F6.
    *
    * @internal
    */
-  private delegateMapToCanonical(shape: unknown, schemaId: string): unknown {
-    const inner = this.inner as unknown as {
-      mapper?: { applyInputMap?: (id: string, payload: unknown) => unknown }
-    }
-    // Stessa nota di delegateMapToShape: F2 non espone `mapToCanonical(payload, schemaId)`
-    // pubblicamente. V1 fallback identity (response viene poi validato dal valibotAdapter
-    // contro lo schema canonical — VAL-05 / D-78). Refactor F4/F6.
-    void inner
-    void schemaId
+  private delegateMapToCanonical(shape: unknown, _schemaId: string): unknown {
+    // FIXME(F4): identity passthrough — vedi 03-VERIFICATION.md override #3.
     return shape
   }
 }
