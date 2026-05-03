@@ -24,7 +24,12 @@
 // Threat coverage:
 // - T-03-08-04 (Spoofing — Idempotency-Key replay): mitigato dal gateway, qui passthrough.
 // - T-03-08-05 (Information Disclosure — error stack trace): originalError preservato in
-//   BrokerError; OutcomeCollector plan 03-07 sanitizza prima del publish.
+//   BrokerError; OutcomeCollector plan 03-07 sanitizza `originalError`/`cause`/`stack`
+//   prima del publish.
+// - CR-03 fix (Information Disclosure — response body leak): per response 4xx/5xx
+//   `details` espone SOLO `httpStatus`. Il `response.body` server (potenzialmente
+//   token/PII/stack debug) NON viaggia in `<topic>.failed`. Inspector F6 può accedere
+//   al body raw via EventTap step 9 (route.executed) per debug; mai pubblicato.
 // - VAL-05 contract: server response invalid → handler emette outcome.error che il
 //   RouteExecutor mappa a `<topic>.failed` (D-80).
 
@@ -232,6 +237,12 @@ export function createHttpHandler(
       if (!response.ok) {
         const code: 'gateway.4xx' | 'gateway.5xx' =
           response.status >= 500 ? 'gateway.5xx' : 'gateway.4xx'
+        // CR-03 fix (Information Disclosure): NON includere `response.body` raw nei
+        // details — può contenere token/PII/stack server. Manteniamo solo metadata
+        // strutturati (httpStatus). Il body server completo è disponibile al
+        // developer SOLO via EventTap step 9/10 (Inspector F6) → non viaggia mai
+        // nel publish `<topic>.failed` consumato dai subscriber generici.
+        // PITFALLS #17 chiusura (no-token-logging).
         const error = createBrokerError({
           code,
           category: 'network',
@@ -239,7 +250,7 @@ export function createHttpHandler(
           routeId: route.id,
           topic: event.topic,
           eventId: event.id,
-          details: { httpStatus: response.status, body: response.body },
+          details: { httpStatus: response.status },
         })
         return { ok: false, routeId: route.id, error }
       }
