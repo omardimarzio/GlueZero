@@ -31,23 +31,66 @@ export interface AllowlistValidationContext {
 }
 
 /**
+ * Verifica match string-entry vs URL parsed con boundary check robusto (CR-02 fix).
+ *
+ * Strategia (chiusura BLOCKER iter 2 — bypass via subdomain spoofing / typo squat /
+ * userinfo trick):
+ * 1. Parse l'`entry` come URL (struct compare invece di string prefix).
+ * 2. `parsed.origin` deve `===` `entryUrl.origin` (no subdomain spoofing
+ *    `api.example.com.evil.com`).
+ * 3. `parsed.pathname` deve essere `===` a `entryUrl.pathname` oppure inizia con
+ *    `entryUrl.pathname + '/'` (boundary su slash → no `foo` matcha `foobar`).
+ *
+ * Se `entry` non è un URL valido (es. legacy plain string `'https://api.example.com'`),
+ * fallback al match strict-equality (no startsWith) sull'URL completo — coerente con
+ * il match doc precedente ma SENZA il pattern bypass-prone `startsWith`.
+ *
+ * @internal
+ */
+function matchStringEntry(parsed: URL, entry: string): boolean {
+  let entryUrl: URL
+  try {
+    entryUrl = new URL(entry)
+  } catch {
+    // Fallback strict-equality (no prefix bypass).
+    return parsed.href === entry
+  }
+  // 1. Origin (scheme + host + port) deve essere identico — chiude il bypass via
+  //    `api.example.com.evil.com` (host diverso) e `api.example.com@evil.com` (host evil).
+  if (parsed.origin !== entryUrl.origin) return false
+  // 2. Path prefix con boundary `/` — chiude bypass via typo squat `comp` su `com`.
+  const entryPath = entryUrl.pathname
+  const urlPath = parsed.pathname
+  if (entryPath === '/' || entryPath === '') return true
+  if (urlPath === entryPath) return true
+  // Aggiungi `/` finale a entryPath se mancante per garantire boundary.
+  const entryPrefix = entryPath.endsWith('/') ? entryPath : `${entryPath}/`
+  return urlPath.startsWith(entryPrefix)
+}
+
+/**
  * Valida un URL contro la `gateway.allowlist` (SEC-05, D-71).
  *
  * - `allowlist === undefined` → ritorna silenziosamente (dev convenience).
- * - `allowlist` array di string|RegExp → match richiesto (string = prefix/equality
- *   via `String.startsWith`, RegExp = `regex.test(url)`).
+ * - `allowlist` array di string|RegExp → match richiesto:
+ *   * `string` → URL parsing strutturato (CR-02 fix): origin esatto + pathname prefix
+ *     con boundary `/` (no subdomain spoofing/typo squat/userinfo trick).
+ *   * `RegExp` → `regex.test(url)`.
  * - URL fuori allowlist → throw `BrokerError 'gateway.url.forbidden'` con
  *   `category: 'config'` e `details: { url, allowlist }`.
+ * - URL non parsabile come `URL` → throw `BrokerError 'gateway.url.forbidden'`
+ *   (CR-02 fix: prima ritornava silenziosamente con startsWith, ora fail-fast).
  *
  * Re-utilizzata POST-redirect dal gateway (Pitfall 7 mitigation): se response 3xx
  * contiene `Location`, la function viene chiamata di nuovo prima del refetch per
  * prevenire bypass via redirect a host non autorizzati.
  *
  * @param url - URL della request HTTP.
- * @param allowlist - Array di entry `string` (prefix match) o `RegExp` (pattern match).
+ * @param allowlist - Array di entry `string` (origin+path prefix con boundary) o
+ *   `RegExp` (pattern match).
  * @param context - Opzionale: routeId/topic/eventId per popolare il `BrokerError`.
  * @throws `BrokerError 'gateway.url.forbidden'` (`category: 'config'`) se l'URL non
- *   è in allowlist.
+ *   è in allowlist o non è un URL valido.
  *
  * @example
  * ```ts
@@ -58,6 +101,14 @@ export interface AllowlistValidationContext {
  *
  * validateAgainstAllowlist('https://evil.com/x', ['https://api.example.com'])
  * // throws BrokerError code='gateway.url.forbidden'
+ *
+ * // CR-02: i seguenti bypass ora sono BLOCCATI (prima passavano):
+ * validateAgainstAllowlist('https://api.example.com.evil.com/x', ['https://api.example.com'])
+ * // throws (subdomain spoofing)
+ * validateAgainstAllowlist('https://api.example.comp/x', ['https://api.example.com'])
+ * // throws (typo squat)
+ * validateAgainstAllowlist('https://api.example.com@evil.com/x', ['https://api.example.com'])
+ * // throws (userinfo trick — host = evil.com)
  * ```
  */
 export function validateAgainstAllowlist(
@@ -66,8 +117,28 @@ export function validateAgainstAllowlist(
   context: AllowlistValidationContext = {},
 ): void {
   if (!allowlist) return
+  // CR-02 fix: parse l'URL UNA volta strutturato per applicare match con boundary.
+  // Se l'URL non è parsabile come URL valido, fail-fast (previene match accidentali).
+  let parsedUrl: URL
+  try {
+    parsedUrl = new URL(url)
+  } catch {
+    throw createBrokerError({
+      code: 'gateway.url.forbidden',
+      category: 'config',
+      message: `URL "${url}" is not a valid absolute URL (SEC-05)`,
+      details: {
+        url,
+        allowlist: allowlist.map((e) => (e instanceof RegExp ? e.source : String(e))),
+        reason: 'invalid-url',
+      },
+      ...(context.routeId !== undefined && { routeId: context.routeId }),
+      ...(context.topic !== undefined && { topic: context.topic }),
+      ...(context.eventId !== undefined && { eventId: context.eventId }),
+    })
+  }
   const ok = allowlist.some((entry) =>
-    entry instanceof RegExp ? entry.test(url) : url === entry || url.startsWith(entry),
+    entry instanceof RegExp ? entry.test(url) : matchStringEntry(parsedUrl, entry),
   )
   if (!ok) {
     throw createBrokerError({
