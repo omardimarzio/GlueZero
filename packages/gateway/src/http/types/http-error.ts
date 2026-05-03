@@ -30,7 +30,7 @@
  * | `gateway.url.forbidden` | `config` | URL non in allowlist (SEC-05) | NO RETRY |
  * | `response.validation.failed` | `validation` | Valibot fail su canonical schema (VAL-05) | NO RETRY |
  * | `route.required.missing` | `config` | Topic richiede route ma nessuna registrata (ROUTE-16) | NO RETRY |
- * | `auth.expired` | `auth` | Token refresh fallito o ritorna stesso token | NO RETRY |
+ * | `auth.expired` | `config` | Token refresh fallito o ritorna stesso token | NO RETRY |
  * | `circuit.open` | `network` | Circuit breaker open per route (D-99) | NO RETRY (fail-fast) |
  * | `cache.not-implemented` | `config` | Cache adapter F6 non ancora disponibile | NO RETRY |
  * | `route.id.duplicate` | `config` | `registerRoute` strict + id già registrato | NO RETRY |
