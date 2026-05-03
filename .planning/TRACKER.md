@@ -1,11 +1,11 @@
 ---
-last_updated: 2026-05-02
+last_updated: 2026-05-03
 status: in_progress
 project: SemBridge
 milestone: v1.0
 current_phase: 3
-current_wave: 7
-current_plan: 03-12
+current_wave: 8
+current_plan: 03-13
 session_active: false
 ---
 
@@ -24,36 +24,35 @@ session_active: false
 | Campo | Valore |
 |-------|--------|
 | Fase | **Phase 3 — Routing & Server Gateway HTTP** |
-| Wave | **7 / 9** (next: 03-12 RouterBroker composition + LIFE-02 cascade) |
-| Plan in esecuzione | — (03-11 chiuso ✓) |
-| Plan progress F3 | **11 / 14 completati** (03-01 → 03-11 con SUMMARY.md ✓) |
-| Plan progress globale | 34 / 37 (92%) |
+| Wave | **8 / 9** (next: 03-13 integration tests scenario meteo) |
+| Plan in esecuzione | — (03-12 chiuso ✓) |
+| Plan progress F3 | **12 / 14 completati** (03-01 → 03-12 con SUMMARY.md ✓) |
+| Plan progress globale | 35 / 37 (95%) |
 | Mode GSD | yolo + auto_advance + parallelization (sequential exec, no worktree) |
 | Modello attivo | `claude-opus-4-7-1` (opus) — override esplicito su tutti i sub-agent |
 
-## Ultimo step completato (auto-update 2026-05-02T17:44:24Z)
+## Ultimo step completato (auto-update 2026-05-03T09:35:11Z)
 
-- Plan: **03-11** → SUMMARY.md committed
-- Commit: `65dee18 docs(03-11): complete strategies auth + circuit-breaker plan execution`
-- Phase progress: **11/14** plan completati con SUMMARY.md
-- Project progress: 34/37 plan (92%)
+- Plan: **03-12** → SUMMARY.md committed
+- Commit: `97638b1 feat(03-12): createRouterBroker public-factory + index runtime exports — Task 3`
+- Phase progress: **12/14** plan completati con SUMMARY.md
+- Project progress: 35/37 plan (95%)
 
 
 ## Prossimo step
 
 **Per riprendere F3 da dove ci siamo fermati:**
 ```
-/gsd-execute-phase 3 --auto --wave 7
+/gsd-execute-phase 3 --auto --wave 8
 ```
 
-Oppure spawn diretto agente per 03-12:
+Oppure spawn diretto agente per 03-13:
 ```
-Agent(subagent_type="gsd-executor", model="opus", prompt="Execute plan 03-12 — RouterBroker composition + LIFE-02 cascade. Read 03-12-PLAN.md. Create SUMMARY.md. Update STATE/ROADMAP.")
+Agent(subagent_type="gsd-executor", model="opus", prompt="Execute plan 03-13 — Integration tests scenario meteo end-to-end. Read 03-13-PLAN.md. Create SUMMARY.md. Update STATE/ROADMAP.")
 ```
 
-Dopo 03-11 il piano prosegue:
-- 03-12 (Wave 7) — RouterBroker composition + LIFE-02 cascade ← NEXT
-- 03-13 (Wave 8) — Integration tests scenario meteo
+Dopo 03-12 il piano prosegue:
+- 03-13 (Wave 8) — Integration tests scenario meteo ← NEXT
 - 03-14 (Wave 9) — Final gate (coverage, CI, DOC-04)
 
 ## Vincoli attivi (da CLAUDE.md)
@@ -67,11 +66,14 @@ Dopo 03-11 il piano prosegue:
 
 ## Decisioni recenti rilevanti
 
+- **Plan 03-12 (Wave 7) ESEGUITO ✓** — RouterBroker composition wrapper + RouterEngine + createRouterBroker. 29/29 test deterministici TDD GREEN. D-83 strict verificato. 5 BLOCKER iter1 fix applicati. Cyclic workspace dep routing↔gateway gestito (type-only).
 - **D-100** (NEW da revision plan iter 1): `RouterBroker` isola accesso `CanonicalRegistry` private di F2 via getter `getCanonicalSchemaForTopic` con loud throw + opt-in `requiresRouteTopics` come bypass. Documentata in `.planning/phases/03-routing-server-gateway-http/03-CONTEXT.md`.
-- **Plan 03-12 (Wave 7) modifiche revision iter 1:**
-  - topic `'routing.composite.cache-deferred'` → `'routing.composite.deferred'` (TOPIC_REGEX no hyphen)
-  - aggiunto `subscribe<T>(...)` delegate esplicito su RouterBroker
-  - ROUTE-16 chiusura via opt-in `requiresRouteTopics` + loud throw (no silent fallback)
+- **Plan 03-12 fix tecnici** (auto-fix Rule 1/3 in execution):
+  - Workspace dep: aggiunto `@sembridge/gateway` come dep di routing
+  - Subpath: aggiunti re-export 7 createXxxStrategy a `@sembridge/gateway/http`
+  - validator F3 V1 NO default (valibotAdapter signature mismatch — adapter conversion deferred F4/F6)
+  - safeOptions injection per inner.publish (D-23 source default 'system:router')
+  - emitTapStep inline pattern (startStep/safeTapStep non barrel-exposed in core)
 - **Plan 03-11 (Wave 6) modifica revision iter 1:** `category: 'auth'` → `category: 'config'` (ErrorCategory union non include 'auth' e D-83 vieta modifica core).
 
 ## Agent in background

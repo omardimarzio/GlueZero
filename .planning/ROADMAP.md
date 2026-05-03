@@ -123,7 +123,7 @@ ROUTE-01, ROUTE-02, ROUTE-03, ROUTE-04, ROUTE-05, ROUTE-06, ROUTE-07, ROUTE-08, 
 - [x] 03-09-PLAN.md — Strategy primitives Wave 4-A: retry (D-69 chiusura ROUTE-09 4xx/5xx/408/429), timeout, idempotency (D-70 SEC-03 Pitfall 3 fix)
 - [x] 03-10-PLAN.md — Strategy primitives Wave 4-B: dedupe (D-74 KeyBased Promise singleton), backpressure (D-75 6 policy + critical bypass Pitfall 4)
 - [x] 03-11-PLAN.md — Strategy primitives Wave 4-C: auth (D-72 single-flight refresh Pattern 5 Pitfall 5), circuit-breaker (D-99 opt-in DISABLED default)
-- [ ] 03-12-PLAN.md — RouterBroker composition wrapper + RouterEngine glue + createRouterBroker factory + LIFE-02 ext F3 cascade (D-86)
+- [x] 03-12-PLAN.md — RouterBroker composition wrapper + RouterEngine glue + createRouterBroker factory + LIFE-02 ext F3 cascade (D-86)
 - [ ] 03-13-PLAN.md — createRouterHarness + 6 integration test (scenario meteo HTTP D-89, retry, dedupe, latest-only, allowlist, cascade cleanup)
 - [ ] 03-14-PLAN.md — Final gate F3: coverage v8 ≥ 90% + publint/attw/size-limit (routing 6 KB / gateway/http 8 KB) + DOC-04 README + JSDoc API + ROADMAP/STATE update
 **Needs research**: yes
@@ -261,7 +261,7 @@ I 11 punti che il PRD §39 vieta esplicitamente di lasciare impliciti vengono ch
 |---|--------------------|-----------|------------------|
 | 1 | Precedenza alias automatici vs mapping esplicito | Mapping esplicito vince sempre (MAP-17) | F2 |
 | 2 | Field mancante: errore o default | `required: true` → throw `mapping.field.missing`; `required: false` + default → applica; altrimenti omette | F2 (VAL-08) |
-| 3 | Ordine pipeline mapping/validazione | Pipeline §28 ufficiale a 14 step; mapping output→canonico al passo 5, validazione canonica al passo 6, mapping consumer al passo 11, validazione finale al passo 12 | F1 (skeleton) + F2/F3/F6 (riempimento) (PIPE-01) |
+| 3 | 12/14 | In Progress|  |
 | 4 | Transform failure: skip o block | `onFailure: 'block' | 'skip' | 'fallback'`, default `'block'` | F2 (VAL-09) |
 | 5 | Topic senza route | Default consegna locale, opt-in `requiresRoute: true` | F3 (ROUTE-16) |
 | 6 | Più route applicabili | `'first-match'` default + `'priority-ordered'` + `'all'` | F3 (ROUTE-15) |
