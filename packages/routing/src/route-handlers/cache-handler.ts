@@ -15,8 +15,8 @@
 // - T-03-06-04 (Information Disclosure): `BrokerError.details` NON include payload —
 //   solo `phase: 'F6-pending'` come metadato sicuro.
 
-import { createBrokerError } from '@sembridge/core'
 import type { BrokerEvent } from '@sembridge/core'
+import { createBrokerError } from '@sembridge/core'
 import type { CompiledRoute } from '../route-resolver'
 import type { RouteOutcome } from '../types/route-outcome'
 
@@ -34,8 +34,7 @@ export function cacheHandler(event: BrokerEvent, route: CompiledRoute): RouteOut
   const error = createBrokerError({
     code: 'cache.not-implemented',
     category: 'config',
-    message:
-      'Cache adapter is implemented in Phase 6 (F6). Route type "cache" is type-only in F3.',
+    message: 'Cache adapter is implemented in Phase 6 (F6). Route type "cache" is type-only in F3.',
     routeId: route.id,
     topic: event.topic,
     eventId: event.id,

@@ -13,7 +13,7 @@
 // - T-03-13-01 (Tampering — handler leakage tra test): mitigate via `server.resetHandlers()`
 //   in `afterEach` del setup (vedi `vitest.setup.ts`).
 
-import { http, HttpResponse, type RequestHandler } from 'msw'
+import { HttpResponse, http, type RequestHandler } from 'msw'
 import { setupServer } from 'msw/node'
 
 /**
@@ -23,7 +23,7 @@ import { setupServer } from 'msw/node'
  * 5xx/4xx/408/429/network-error/redirect/etc. Il `resetHandlers` in `afterEach` riporta
  * lo stato a `defaultHandlers` puro (no leak fra test).
  */
-export const defaultHandlers: ReadonlyArray<RequestHandler> = [
+export const defaultHandlers: readonly RequestHandler[] = [
   http.get('/api/weather', ({ request }) => {
     const url = new URL(request.url, 'http://localhost')
     return HttpResponse.json({

@@ -23,8 +23,18 @@ describe('createBackpressureStrategy — 6 policy + critical bypass (D-75, ROUTE
 
     let resolveT1: (v: string) => void = () => {}
     let resolveT2: (v: string) => void = () => {}
-    const t1 = vi.fn().mockImplementation(() => new Promise<string>((r) => { resolveT1 = r }))
-    const t2 = vi.fn().mockImplementation(() => new Promise<string>((r) => { resolveT2 = r }))
+    const t1 = vi.fn().mockImplementation(
+      () =>
+        new Promise<string>((r) => {
+          resolveT1 = r
+        }),
+    )
+    const t2 = vi.fn().mockImplementation(
+      () =>
+        new Promise<string>((r) => {
+          resolveT2 = r
+        }),
+    )
     const t3 = vi.fn().mockResolvedValue('ok')
 
     const p1 = strategy.schedule('routeA', 'normal', t1)
@@ -50,7 +60,12 @@ describe('createBackpressureStrategy — 6 policy + critical bypass (D-75, ROUTE
     let resolveT3: (v: string) => void = () => {}
     const t1 = vi.fn().mockImplementation(() => new Promise(() => {})) // never resolves
     const t2 = vi.fn().mockImplementation(() => new Promise(() => {})) // never resolves
-    const t3 = vi.fn().mockImplementation(() => new Promise<string>((r) => { resolveT3 = r }))
+    const t3 = vi.fn().mockImplementation(
+      () =>
+        new Promise<string>((r) => {
+          resolveT3 = r
+        }),
+    )
 
     const p1 = strategy.schedule('routeA', 'normal', t1)
     const p2 = strategy.schedule('routeA', 'normal', t2)
@@ -72,7 +87,12 @@ describe('createBackpressureStrategy — 6 policy + critical bypass (D-75, ROUTE
     })
 
     let resolveT1: (v: string) => void = () => {}
-    const t1 = vi.fn().mockImplementation(() => new Promise<string>((r) => { resolveT1 = r }))
+    const t1 = vi.fn().mockImplementation(
+      () =>
+        new Promise<string>((r) => {
+          resolveT1 = r
+        }),
+    )
     const t2 = vi.fn().mockResolvedValue('ok-2')
 
     const p1 = strategy.schedule('routeB', 'normal', t1)
@@ -114,9 +134,7 @@ describe('createBackpressureStrategy — 6 policy + critical bypass (D-75, ROUTE
       defaultPolicy: { type: 'debounce', waitMs: 50 },
     })
 
-    const tasks = Array.from({ length: 5 }, (_, i) =>
-      vi.fn().mockResolvedValue(`task-${i}`),
-    )
+    const tasks = Array.from({ length: 5 }, (_, i) => vi.fn().mockResolvedValue(`task-${i}`))
 
     const promises = tasks.map((t) => strategy.schedule('routeD', 'normal', t))
 
@@ -194,7 +212,12 @@ describe('createBackpressureStrategy — 6 policy + critical bypass (D-75, ROUTE
     })
 
     let resolveT1: (v: string) => void = () => {}
-    const t1 = vi.fn().mockImplementation(() => new Promise<string>((r) => { resolveT1 = r }))
+    const t1 = vi.fn().mockImplementation(
+      () =>
+        new Promise<string>((r) => {
+          resolveT1 = r
+        }),
+    )
     const tCritical = vi.fn().mockResolvedValue('critical-ok')
 
     // 1st in volo

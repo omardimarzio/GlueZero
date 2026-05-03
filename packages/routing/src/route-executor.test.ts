@@ -10,8 +10,9 @@
 // - Test 7: emette tap step `event.route.executed` via callback (verifica via spy)
 // - Test 8: route.type sconosciuto → RouteOutcome.error 'route.type.unknown'
 
+import type { BrokerEvent, EventTap, PipelineSnapshot, PipelineStep } from '@sembridge/core'
 import { describe, expect, it, vi } from 'vitest'
-import type { BrokerEvent, EventTap, PipelineStep, PipelineSnapshot } from '@sembridge/core'
+import { RouteExecutor } from './route-executor'
 import type { CompiledRoute } from './route-resolver'
 import type {
   RouteCacheDefinition,
@@ -20,7 +21,6 @@ import type {
   RouteLocalDefinition,
 } from './types/route-definition'
 import type { RouteOutcome } from './types/route-outcome'
-import { RouteExecutor } from './route-executor'
 
 function makeEvent(id: string, topic: string, payload: unknown): BrokerEvent {
   return {
@@ -57,7 +57,12 @@ function makeRoute(
   } else if (type === 'cache') {
     definition = { id, type: 'cache', topic, strategy: 'cache-first' }
   } else {
-    definition = { id, type: 'composite', topic, steps: steps ?? [{ type: 'http', route: 'sub-http' }] }
+    definition = {
+      id,
+      type: 'composite',
+      topic,
+      steps: steps ?? [{ type: 'http', route: 'sub-http' }],
+    }
   }
   return { id, definition, ownerId, priority: 0 }
 }
@@ -120,7 +125,7 @@ describe('RouteExecutor.execute', () => {
     }
   })
 
-  it('Test 4: dispatch a composite → workflow delega all\'httpHandler con sub-route', async () => {
+  it("Test 4: dispatch a composite → workflow delega all'httpHandler con sub-route", async () => {
     const subRoute = makeRoute('sub-http', 'weather.requested', 'http')
     const httpHandlerMock = vi.fn(
       async (_e: BrokerEvent, r: CompiledRoute): Promise<RouteOutcome> => ({
@@ -170,14 +175,14 @@ describe('RouteExecutor.execute', () => {
     // microtask yield così httpHandler captura signal
     await Promise.resolve()
     expect(capturedSignal).toBeInstanceOf(AbortSignal)
-    expect(capturedSignal!.aborted).toBe(false)
+    expect(capturedSignal?.aborted).toBe(false)
 
     const aborted = executor.abortInFlight('e-5', 'gateway.aborted')
     expect(aborted).toBe(true)
-    expect(capturedSignal!.aborted).toBe(true)
+    expect(capturedSignal?.aborted).toBe(true)
 
     // unblock pending promise per evitare leak
-    resolveHttp!({ ok: false, error: new Error('aborted') as never, routeId: route.id })
+    resolveHttp?.({ ok: false, error: new Error('aborted') as never, routeId: route.id })
     await promise
   })
 
@@ -189,7 +194,7 @@ describe('RouteExecutor.execute', () => {
     })
     let countResolved = 0
     const httpHandlerMock = vi.fn(
-      (e: BrokerEvent, r: CompiledRoute, signal: AbortSignal): Promise<RouteOutcome> => {
+      (_e: BrokerEvent, r: CompiledRoute, signal: AbortSignal): Promise<RouteOutcome> => {
         signals.push({ ownerId: r.ownerId ?? 'none', signal })
         return new Promise<RouteOutcome>((resolve) => {
           // resolve once aborted o tramite resolveAll
@@ -255,10 +260,10 @@ describe('RouteExecutor.execute', () => {
     await executor.execute(route, event)
 
     expect(taps).toHaveLength(1)
-    expect(taps[0]!.step).toBe('event.route.executed')
-    expect(taps[0]!.snapshot.eventId).toBe('e-7')
-    expect(taps[0]!.snapshot.topic).toBe('weather.loaded')
-    expect(taps[0]!.snapshot.metadata).toMatchObject({
+    expect(taps[0]?.step).toBe('event.route.executed')
+    expect(taps[0]?.snapshot.eventId).toBe('e-7')
+    expect(taps[0]?.snapshot.topic).toBe('weather.loaded')
+    expect(taps[0]?.snapshot.metadata).toMatchObject({
       routeId: 'weather-local',
       routeType: 'local',
       ok: true,

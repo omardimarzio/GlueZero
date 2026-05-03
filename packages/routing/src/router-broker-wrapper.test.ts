@@ -15,9 +15,9 @@
 // - Test 15 (BLOCKER 4 fix): composite topic 'routing.composite.deferred' (no hyphen)
 // - Test 16 (BLOCKER 4 fix): loud failure throw se canonical-registry unreachable
 
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { type EventTap, isBrokerError, type PipelineStep } from '@sembridge/core'
 import type { CanonicalSchemaId } from '@sembridge/mapper'
-import { isBrokerError, type EventTap, type PipelineStep } from '@sembridge/core'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { RouterBroker } from './router-broker-wrapper'
 import type { RouteHttpDefinition, RouteLocalDefinition } from './types/route-definition'
 
@@ -93,9 +93,13 @@ describe('RouterBroker (Plan 03-12 Task 2 — composition wrapper D-83)', () => 
     const loadedHandler = vi.fn()
     broker.subscribe('weather.loaded', loadedHandler)
 
-    broker.publish('weather.requested', { location: 'Roma' }, {
-      source: { type: 'plugin', id: 'form' },
-    })
+    broker.publish(
+      'weather.requested',
+      { location: 'Roma' },
+      {
+        source: { type: 'plugin', id: 'form' },
+      },
+    )
 
     // Attesa async — il http handler è async; aspettiamo qualche tick di event loop.
     await new Promise((res) => setTimeout(res, 100))

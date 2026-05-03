@@ -119,7 +119,7 @@ export interface CircuitBreakerConfig {
  */
 export interface GatewayConfig {
   readonly auth?: AuthStrategyConfig
-  readonly allowlist?: ReadonlyArray<AllowlistEntry>
+  readonly allowlist?: readonly AllowlistEntry[]
   readonly defaults?: DefaultsConfig
   /** `false` esplicito disabilita il circuit breaker (default). */
   readonly circuitBreaker?: CircuitBreakerConfig | false

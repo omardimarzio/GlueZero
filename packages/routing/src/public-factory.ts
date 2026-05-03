@@ -66,11 +66,7 @@ const RouterBrokerConfigSchema = v.looseObject({
   routing: v.optional(
     v.object({
       multipleRoutesPolicy: v.optional(
-        v.union([
-          v.literal('first-match'),
-          v.literal('priority-ordered'),
-          v.literal('all'),
-        ]),
+        v.union([v.literal('first-match'), v.literal('priority-ordered'), v.literal('all')]),
       ),
       emitAmbiguousWarning: v.optional(v.boolean()),
       // BLOCKER 4 revision fix (D-100): opt-in esplicito per ROUTE-16/D-67 senza

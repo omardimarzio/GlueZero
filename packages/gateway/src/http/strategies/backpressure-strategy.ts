@@ -90,8 +90,7 @@ export function createBackpressureStrategy(
   function getState(routeId: string): RouteState {
     let s = states.get(routeId)
     if (!s) {
-      const policy =
-        options.resolvePolicy?.(routeId) ??
+      const policy = options.resolvePolicy?.(routeId) ??
         options.defaultPolicy ?? { type: 'queue-bounded', max: 100 }
       s = {
         policy,

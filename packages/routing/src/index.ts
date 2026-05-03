@@ -72,7 +72,13 @@ export type {
   RouteHttpResponseSpec,
   RouteLocalDefinition,
 } from './types/route-definition'
-
+// RouteOutcome discriminated + alias (D-80, D-82 — pattern ValidationResult F2).
+export type {
+  RouteError,
+  RouteOutcome,
+  RouteOutcomeMetadata,
+  RouteResult,
+} from './types/route-outcome'
 // RoutePolicies + 7 sub-config types (D-68/D-69/D-70/D-72/D-73/D-74/D-75 + ROUTE-08/10/11/13 + SEC-01/03).
 export type {
   AuthPolicyConfig,
@@ -85,14 +91,6 @@ export type {
   RoutePolicies,
   TimeoutPolicyConfig,
 } from './types/route-policies'
-
-// RouteOutcome discriminated + alias (D-80, D-82 — pattern ValidationResult F2).
-export type {
-  RouteError,
-  RouteOutcome,
-  RouteOutcomeMetadata,
-  RouteResult,
-} from './types/route-outcome'
 
 // RoutingConfig + MultipleRoutesPolicy (D-66/D-67/D-100, ROUTE-15/ROUTE-16).
 export type {
@@ -111,15 +109,15 @@ export type {
 // nel RouterEngine privato del RouterBroker — non ri-esportati al barrel pubblico
 // (consumer interagiscono via RouterBroker.registerRoute / publish / unregisterPlugin).
 
-/** RouterBroker class — composition wrapper di MapperBroker (D-83 — Plan 03-12 Task 2). */
-export { RouterBroker } from './router-broker-wrapper'
-export type { RouterBrokerConfig } from './router-broker-wrapper'
 /** Factory pubblica con Valibot validation della RouterBrokerConfig (Plan 03-12 Task 3). */
 export { createRouterBroker } from './public-factory'
-/** RouteResolver — dispatch table pre-compilata (Plan 03-05). Ri-esportata per dev tools / test. */
-export { RouteResolver } from './route-resolver'
 export type {
   AmbiguousRouteEvent,
   CompiledRoute,
   RouteRegistration,
 } from './route-resolver'
+/** RouteResolver — dispatch table pre-compilata (Plan 03-05). Ri-esportata per dev tools / test. */
+export { RouteResolver } from './route-resolver'
+export type { RouterBrokerConfig } from './router-broker-wrapper'
+/** RouterBroker class — composition wrapper di MapperBroker (D-83 — Plan 03-12 Task 2). */
+export { RouterBroker } from './router-broker-wrapper'

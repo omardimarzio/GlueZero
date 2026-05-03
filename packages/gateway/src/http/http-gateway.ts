@@ -189,9 +189,7 @@ export class HttpGateway {
       let attempt = 0
       let lastError: Error | undefined
       let lastResponse: Response | undefined
-      const maxAttempts = strategies.retry
-        ? (this.config.defaults?.retry?.maxAttempts ?? 3)
-        : 1
+      const maxAttempts = strategies.retry ? (this.config.defaults?.retry?.maxAttempts ?? 3) : 1
 
       while (attempt < maxAttempts) {
         attempt++

@@ -32,8 +32,8 @@
 // - T-03-06-04 (Information Disclosure): `BrokerError.details` NON include payload —
 //   solo routeId+topic+eventId (sanitize a livello createBrokerError).
 
+import type { BrokerEvent, EventTap, PipelineSnapshot, PipelineStep } from '@sembridge/core'
 import { createBrokerError } from '@sembridge/core'
-import type { BrokerEvent, EventTap, PipelineStep, PipelineSnapshot } from '@sembridge/core'
 import { cacheHandler } from './route-handlers/cache-handler'
 import { createCompositeHandler } from './route-handlers/composite-handler'
 import { localHandler } from './route-handlers/local-handler'

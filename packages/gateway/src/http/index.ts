@@ -100,21 +100,21 @@ export { isGatewayErrorCode } from './types/http-error'
 
 // ---------- Runtime export: HttpGateway class + factory + utility (plan 03-08) ----------
 
-/** Server Gateway HTTP centralizzato (PRD §18, ROUTE-06, D-71/D-72/D-77/D-99). */
-export { HttpGateway } from './http-gateway'
-/** Strategy bundle iniettato a HttpGateway.execute() — D-68 dependency injection. */
-export type { HttpGatewayRouteInfo, HttpGatewayStrategies } from './http-gateway'
-/** Factory pubblica con Valibot validation della GatewayConfig (D-71/D-72/D-99). */
-export { createHttpGateway } from './public-factory'
-/** Guard pre-fetch URL allowlist (SEC-05, D-71) + post-redirect re-validation Pitfall 7. */
-export { validateAgainstAllowlist } from './url-allowlist'
-export type { AllowlistValidationContext } from './url-allowlist'
-/** Parse RFC 7231 §7.1.3 Retry-After header con cap MAX_BACKOFF_MS = 60_000 ms (D-69). */
-export { MAX_BACKOFF_MS, parseRetryAfter } from './retry-after-parser'
 /** Polyfill AbortSignal.any() per ES2022 target (Pitfall 4 fix, D-77). */
 export { combineSignals } from './combine-signals'
+/** Strategy bundle iniettato a HttpGateway.execute() — D-68 dependency injection. */
+export type { HttpGatewayRouteInfo, HttpGatewayStrategies } from './http-gateway'
+/** Server Gateway HTTP centralizzato (PRD §18, ROUTE-06, D-71/D-72/D-77/D-99). */
+export { HttpGateway } from './http-gateway'
 /** Koa-style compose async middleware per policy chain del gateway (RESEARCH §Pattern 3). */
 export { compose } from './policy-chain'
+/** Factory pubblica con Valibot validation della GatewayConfig (D-71/D-72/D-99). */
+export { createHttpGateway } from './public-factory'
+/** Parse RFC 7231 §7.1.3 Retry-After header con cap MAX_BACKOFF_MS = 60_000 ms (D-69). */
+export { MAX_BACKOFF_MS, parseRetryAfter } from './retry-after-parser'
+export type { AllowlistValidationContext } from './url-allowlist'
+/** Guard pre-fetch URL allowlist (SEC-05, D-71) + post-redirect re-validation Pitfall 7. */
+export { validateAgainstAllowlist } from './url-allowlist'
 
 // ---------- Runtime export: 7 Strategy factories (plan 03-09/10/11 — barrel aggregato) ----------
 //
@@ -124,24 +124,24 @@ export { compose } from './policy-chain'
 // `./http/strategies` resta pubblico per consumer avanzati che vogliono override
 // granulari (es. test di terze parti che mockano una sola strategy).
 
+export type { AuthStrategyOptions } from './strategies/auth-strategy'
 /** AuthStrategy factory (D-72, SEC-01/SEC-02, plan 03-11) — Bearer + single-flight refresh. */
 export { createAuthStrategy } from './strategies/auth-strategy'
-export type { AuthStrategyOptions } from './strategies/auth-strategy'
+export type { BackpressureStrategyOptions } from './strategies/backpressure-strategy'
 /** BackpressureStrategy factory (D-75, ROUTE-10, plan 03-10) — queue/drop/throttle/debounce. */
 export { createBackpressureStrategy } from './strategies/backpressure-strategy'
-export type { BackpressureStrategyOptions } from './strategies/backpressure-strategy'
+export type { CircuitBreakerStrategyOptions } from './strategies/circuit-breaker'
 /** CircuitBreakerStrategy factory (D-99, plan 03-11) — opt-in DISABLED default. */
 export { createCircuitBreakerStrategy } from './strategies/circuit-breaker'
-export type { CircuitBreakerStrategyOptions } from './strategies/circuit-breaker'
+export type { DedupeStrategyOptions } from './strategies/dedupe-strategy'
 /** DedupeStrategy factory (D-74, ROUTE-11, plan 03-10) — KeyBased Promise singleton. */
 export { createDedupeStrategy } from './strategies/dedupe-strategy'
-export type { DedupeStrategyOptions } from './strategies/dedupe-strategy'
+export type { IdempotencyStrategyOptions } from './strategies/idempotency-strategy'
 /** IdempotencyStrategy factory (D-70, SEC-03, plan 03-09) — auto Idempotency-Key via nanoid. */
 export { createIdempotencyStrategy } from './strategies/idempotency-strategy'
-export type { IdempotencyStrategyOptions } from './strategies/idempotency-strategy'
+export type { RetryStrategyOptions } from './strategies/retry-strategy'
 /** RetryStrategy factory (D-69, ROUTE-09, plan 03-09) — ExponentialBackoffWithJitter. */
 export { createRetryStrategy } from './strategies/retry-strategy'
-export type { RetryStrategyOptions } from './strategies/retry-strategy'
+export type { TimeoutStrategyOptions } from './strategies/timeout-strategy'
 /** TimeoutStrategy factory (D-68, plan 03-09) — FixedTimeout via AbortSignal.timeout(). */
 export { createTimeoutStrategy } from './strategies/timeout-strategy'
-export type { TimeoutStrategyOptions } from './strategies/timeout-strategy'

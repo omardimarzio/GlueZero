@@ -204,10 +204,7 @@ export class RouteResolver {
    * @param policy - Strategia di selezione: `'first-match'` (default), `'priority-ordered'`, `'all'`.
    * @returns Array di CompiledRoute selezionati dalla strategy.
    */
-  resolve(
-    topic: string,
-    policy: MultipleRoutesPolicy = 'first-match'
-  ): readonly CompiledRoute[] {
+  resolve(topic: string, policy: MultipleRoutesPolicy = 'first-match'): readonly CompiledRoute[] {
     const matches = this.trie.match(topic)
     if (matches.length === 0) return []
     if (policy === 'first-match') {
@@ -215,9 +212,11 @@ export class RouteResolver {
         this.onAmbiguous({
           topic,
           candidateRouteIds: matches.map((r) => r.id),
+          // biome-ignore lint/style/noNonNullAssertion: matches.length > 1 guaranteed
           selectedRouteId: matches[0]!.id,
         })
       }
+      // biome-ignore lint/style/noNonNullAssertion: matches.length > 0 guaranteed by guard above
       return [matches[0]!]
     }
     if (policy === 'priority-ordered') return priorityOrdered(matches)

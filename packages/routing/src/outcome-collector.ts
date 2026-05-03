@@ -318,11 +318,7 @@ export class OutcomeCollector {
    * sistemici (telemetria, banner offline UI) si sottoscrivono a `network.error`
    * direttamente.
    */
-  private publishNetworkError(
-    error: BrokerError,
-    route: CompiledRoute,
-    event: BrokerEvent,
-  ): void {
+  private publishNetworkError(error: BrokerError, route: CompiledRoute, event: BrokerEvent): void {
     const safeError = sanitizeError(error)
     this.deps.publishFn(
       'network.error',

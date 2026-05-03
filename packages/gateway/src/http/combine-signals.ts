@@ -36,9 +36,7 @@
  * await fetch(url, { signal: composite })
  * ```
  */
-export function combineSignals(
-  ...signals: ReadonlyArray<AbortSignal | undefined>
-): AbortSignal {
+export function combineSignals(...signals: ReadonlyArray<AbortSignal | undefined>): AbortSignal {
   const real = signals.filter((s): s is AbortSignal => s !== undefined)
   // Native AbortSignal.any (ES2024) — preferito quando disponibile per evitare leak listener.
   const Native = (AbortSignal as unknown as { any?: (s: readonly AbortSignal[]) => AbortSignal })

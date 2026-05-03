@@ -13,9 +13,9 @@
 //   String prefix match con startsWith; RegExp test pattern.
 //   Default `allowlist: undefined` → tutti URL consentiti (warning dev).
 
-import { http, HttpResponse } from 'msw'
-import { describe, expect, it, beforeEach, afterEach } from 'vitest'
 import type { CanonicalSchemaId } from '@sembridge/mapper'
+import { HttpResponse, http } from 'msw'
+import { afterEach, describe, expect, it } from 'vitest'
 import { createRouterHarness, type RouterHarness } from '../test-utils/router-harness'
 
 describe('URL allowlist (D-71, SEC-05, F3 success criterion #5, PITFALLS #7)', () => {

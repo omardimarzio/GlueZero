@@ -3,14 +3,14 @@
 // Coverage: 13 test deterministici per resolver dispatch table + multi-route policy +
 // cascade unregisterByOwner.
 
-import { describe, expect, it, vi } from 'vitest'
 import { isBrokerError } from '@sembridge/core'
-import type { RouteDefinition, RouteHttpDefinition, RouteLocalDefinition } from './types/route-definition'
-import {
-  type AmbiguousRouteEvent,
-  type CompiledRoute,
-  RouteResolver,
-} from './route-resolver'
+import { describe, expect, it, vi } from 'vitest'
+import { type AmbiguousRouteEvent, type CompiledRoute, RouteResolver } from './route-resolver'
+import type {
+  RouteDefinition,
+  RouteHttpDefinition,
+  RouteLocalDefinition,
+} from './types/route-definition'
 
 // Helper factory: minimal RouteLocalDefinition con id/topic configurabili e priority opzionale.
 function localRoute(id: string, topic: string, priority?: number): RouteLocalDefinition {

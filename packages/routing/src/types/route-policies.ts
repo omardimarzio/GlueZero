@@ -48,7 +48,7 @@ export interface RetryPolicyConfig {
   readonly baseDelayMs?: number
   readonly maxDelayMs?: number
   /** Lista esplicita di status code retry-able (override default 5xx + 408/429). */
-  readonly retryOn?: ReadonlyArray<number>
+  readonly retryOn?: readonly number[]
 }
 
 /**
@@ -68,7 +68,7 @@ export interface RetryPolicyConfig {
  */
 export interface DedupePolicyConfig {
   readonly key?: (event: unknown) => string
-  readonly keyFrom?: ReadonlyArray<string>
+  readonly keyFrom?: readonly string[]
 }
 
 /**

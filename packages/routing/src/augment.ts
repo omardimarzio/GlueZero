@@ -56,7 +56,6 @@
 //   "F3 augmentation" + reference D-93/D-94/D-95 + reference ai placeholder F1
 //   (commento `F3 will add: routes` in core/types/plugin.ts:49).
 
-import type { CanonicalSchema } from '@sembridge/mapper'
 import type { RouteDefinition } from './types/route-definition'
 import type { RoutingConfig } from './types/routing-config'
 

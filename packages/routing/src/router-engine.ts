@@ -19,6 +19,7 @@
 // gateway + mapper + validator + strategies in un unico async handler.
 
 import type { EventTap } from '@sembridge/core'
+import type { GatewayConfig, HttpGatewayStrategies } from '@sembridge/gateway/http'
 import {
   createAuthStrategy,
   createBackpressureStrategy,
@@ -29,11 +30,10 @@ import {
   createTimeoutStrategy,
   HttpGateway,
 } from '@sembridge/gateway/http'
-import type { GatewayConfig, HttpGatewayStrategies } from '@sembridge/gateway/http'
 import { OutcomeCollector, type PublishFn } from './outcome-collector'
 import { RouteExecutor } from './route-executor'
-import { type AmbiguousRouteEvent, RouteResolver } from './route-resolver'
 import { createHttpHandler } from './route-handlers/http-handler'
+import { type AmbiguousRouteEvent, RouteResolver } from './route-resolver'
 import type { RoutingConfig } from './types/routing-config'
 
 /**
@@ -62,7 +62,10 @@ export interface RouterEngineValidatorAdapter {
     | { readonly ok: true }
     | {
         readonly ok: false
-        readonly issues: ReadonlyArray<{ readonly message: string; readonly path?: ReadonlyArray<string> }>
+        readonly issues: ReadonlyArray<{
+          readonly message: string
+          readonly path?: readonly string[]
+        }>
       }
 }
 

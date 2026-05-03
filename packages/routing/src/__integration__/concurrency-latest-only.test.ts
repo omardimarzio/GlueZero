@@ -17,9 +17,9 @@
 //   - Test 2 (status comportamento attuale): 2 publish consecutive → 2 fetch separate
 //     (no latest-only abort) — documenta il gap che il wiring chiuderà in F4.
 
-import { http, HttpResponse } from 'msw'
-import { describe, expect, it, beforeEach, afterEach } from 'vitest'
 import type { CanonicalSchemaId } from '@sembridge/mapper'
+import { HttpResponse, http } from 'msw'
+import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { createRouterHarness, type RouterHarness } from '../test-utils/router-harness'
 
 describe('Concurrency latest-only (D-73, ROUTE-13, F3 success criterion #4, PITFALLS #2.A)', () => {
@@ -67,8 +67,7 @@ describe('Concurrency latest-only (D-73, ROUTE-13, F3 success criterion #4, PITF
         // se latest-only fosse wired. Altrimenti entrambe completano.
         await new Promise((res) => setTimeout(res, callCount === 1 ? 50 : 10))
         return HttpResponse.json({
-          city:
-            url.searchParams.get('location') ?? url.searchParams.get('city') ?? 'Unknown',
+          city: url.searchParams.get('location') ?? url.searchParams.get('city') ?? 'Unknown',
           date: '2026-04-30',
           temp: 22,
           condition: 'sunny',

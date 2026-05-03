@@ -92,10 +92,7 @@ describe('createDedupeStrategy — KeyBasedDedupe (D-74, ROUTE-11)', () => {
     const fnA = vi.fn().mockResolvedValue('result-A')
     const fnB = vi.fn().mockResolvedValue('result-B')
 
-    const [rA, rB] = await Promise.all([
-      dedupe.execute('keyA', fnA),
-      dedupe.execute('keyB', fnB),
-    ])
+    const [rA, rB] = await Promise.all([dedupe.execute('keyA', fnA), dedupe.execute('keyB', fnB)])
 
     expect(rA).toBe('result-A')
     expect(rB).toBe('result-B')

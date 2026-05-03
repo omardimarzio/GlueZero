@@ -10,15 +10,12 @@
 // - Test 7: topic prefix resolution per multi-segmento (es. `weather.alert.requested` → loaded `weather.alert.loaded`)
 // - Test 8: outcome.error con `originalError` → published payload include shape sanitized SENZA stack/originalError ma CON code/category/message/details
 
-import { describe, expect, it, vi } from 'vitest'
-import { createBrokerError } from '@sembridge/core'
 import type { BrokerEvent, EventTap, PipelineSnapshot, PipelineStep } from '@sembridge/core'
+import { createBrokerError } from '@sembridge/core'
+import { describe, expect, it, vi } from 'vitest'
 import { OutcomeCollector } from './outcome-collector'
 import type { CompiledRoute } from './route-resolver'
-import type {
-  RouteHttpDefinition,
-  RouteLocalDefinition,
-} from './types/route-definition'
+import type { RouteHttpDefinition, RouteLocalDefinition } from './types/route-definition'
 import type { RouteOutcome } from './types/route-outcome'
 
 function makeEvent(id: string, topic: string, payload: unknown = {}): BrokerEvent {
@@ -53,7 +50,7 @@ function makeHttpRoute(
 }
 
 describe('OutcomeCollector.collect', () => {
-  it("Test 1: outcome.ok → publishFn invocato con `<topic-prefix>.loaded` + canonicalPayload + metadata", () => {
+  it('Test 1: outcome.ok → publishFn invocato con `<topic-prefix>.loaded` + canonicalPayload + metadata', () => {
     const publishFn = vi.fn()
     const collector = new OutcomeCollector({ publishFn })
     const event = makeEvent('e-1', 'weather.requested')
@@ -99,7 +96,7 @@ describe('OutcomeCollector.collect', () => {
     collector.collect(outcome, route, event)
 
     expect(publishFn).toHaveBeenCalledTimes(1)
-    expect(publishFn.mock.calls[0]![0]).toBe('weather.fresh')
+    expect(publishFn.mock.calls[0]?.[0]).toBe('weather.fresh')
   })
 
   it("Test 3: outcome.error category='validation' → publishFn invocato con `<topic-prefix>.failed` + payload BrokerError shape D-80", () => {
@@ -160,16 +157,16 @@ describe('OutcomeCollector.collect', () => {
     collector.collect(outcome, route, event)
 
     expect(publishFn).toHaveBeenCalledTimes(2)
-    expect(publishFn.mock.calls[0]![0]).toBe('weather.failed')
-    expect(publishFn.mock.calls[1]![0]).toBe('network.error')
-    expect(publishFn.mock.calls[1]![1]).toMatchObject({
+    expect(publishFn.mock.calls[0]?.[0]).toBe('weather.failed')
+    expect(publishFn.mock.calls[1]?.[0]).toBe('network.error')
+    expect(publishFn.mock.calls[1]?.[1]).toMatchObject({
       error: { code: 'gateway.network', category: 'network' },
       sourceEvent: { topic: 'weather.requested', eventId: 'e-4' },
       routeId: 'weather-http',
     })
   })
 
-  it("Test 5: due `collect` consecutivi con stesso eventId → solo UNA publishFn call (recursion guard D-82)", () => {
+  it('Test 5: due `collect` consecutivi con stesso eventId → solo UNA publishFn call (recursion guard D-82)', () => {
     const publishFn = vi.fn()
     let reentrantCalled = false
     // Quando publishFn viene invocato la prima volta, simuliamo un re-entry sincrono
@@ -220,7 +217,7 @@ describe('OutcomeCollector.collect', () => {
     expect(callOrder).toEqual(['tap:event.outcome.collected', 'publish'])
   })
 
-  it("Test 7: topic prefix resolution per multi-segmento (`weather.alert.requested` → `weather.alert.loaded`/`weather.alert.failed`)", () => {
+  it('Test 7: topic prefix resolution per multi-segmento (`weather.alert.requested` → `weather.alert.loaded`/`weather.alert.failed`)', () => {
     const publishFn = vi.fn()
     const collector = new OutcomeCollector({ publishFn })
     const event = makeEvent('e-7', 'weather.alert.requested')
@@ -232,7 +229,7 @@ describe('OutcomeCollector.collect', () => {
       route,
       event,
     )
-    expect(publishFn.mock.calls[0]![0]).toBe('weather.alert.loaded')
+    expect(publishFn.mock.calls[0]?.[0]).toBe('weather.alert.loaded')
 
     // Error
     const event2 = makeEvent('e-7b', 'weather.alert.requested')
@@ -243,11 +240,11 @@ describe('OutcomeCollector.collect', () => {
     })
     collector.collect({ ok: false, error, routeId: 'weather-alert' }, route, event2)
     // Error genera 2 publish (failed + network.error perché category='network')
-    expect(publishFn.mock.calls[1]![0]).toBe('weather.alert.failed')
-    expect(publishFn.mock.calls[2]![0]).toBe('network.error')
+    expect(publishFn.mock.calls[1]?.[0]).toBe('weather.alert.failed')
+    expect(publishFn.mock.calls[2]?.[0]).toBe('network.error')
   })
 
-  it("Test 8: outcome.error con `originalError` → payload sanitized SENZA stack/originalError ma CON code/category/message/details", () => {
+  it('Test 8: outcome.error con `originalError` → payload sanitized SENZA stack/originalError ma CON code/category/message/details', () => {
     const publishFn = vi.fn()
     const collector = new OutcomeCollector({ publishFn })
     const event = makeEvent('e-8', 'weather.requested')
@@ -268,7 +265,7 @@ describe('OutcomeCollector.collect', () => {
     collector.collect(outcome, route, event)
 
     expect(publishFn).toHaveBeenCalledTimes(1)
-    const payload = publishFn.mock.calls[0]![1] as { error: Record<string, unknown> }
+    const payload = publishFn.mock.calls[0]?.[1] as { error: Record<string, unknown> }
     // Shape sanitized DEVE contenere code/category/message/details + ids
     expect(payload.error).toMatchObject({
       code: 'gateway.5xx',

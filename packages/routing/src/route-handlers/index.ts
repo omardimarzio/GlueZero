@@ -10,9 +10,8 @@
 // `RouteExecutor` (`route-executor.ts`).
 
 export { cacheHandler } from './cache-handler'
-export { createCompositeHandler } from './composite-handler'
 export type { CompositeHandlerDeps } from './composite-handler'
-export { createHttpHandler } from './http-handler'
+export { createCompositeHandler } from './composite-handler'
 export type {
   HttpHandlerDeps,
   HttpHandlerGateway,
@@ -24,4 +23,5 @@ export type {
   HttpHandlerValidationResult,
   HttpHandlerValidator,
 } from './http-handler'
+export { createHttpHandler } from './http-handler'
 export { localHandler } from './local-handler'

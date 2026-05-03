@@ -62,7 +62,7 @@ export interface AllowlistValidationContext {
  */
 export function validateAgainstAllowlist(
   url: string,
-  allowlist: ReadonlyArray<AllowlistEntry> | undefined,
+  allowlist: readonly AllowlistEntry[] | undefined,
   context: AllowlistValidationContext = {},
 ): void {
   if (!allowlist) return

@@ -25,9 +25,9 @@
 // Threat coverage:
 // - T-03-13-01 (handler leakage): mitigated da `vitest.setup.ts` resetHandlers.
 
-import { http, HttpResponse } from 'msw'
-import { describe, expect, it, beforeEach, afterEach } from 'vitest'
 import type { CanonicalSchemaId } from '@sembridge/mapper'
+import { HttpResponse, http } from 'msw'
+import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { createRouterHarness, type RouterHarness } from '../test-utils/router-harness'
 
 describe('Scenario meteo HTTP end-to-end (PRD §29, D-89, F3 success criterion #1)', () => {
@@ -85,8 +85,7 @@ describe('Scenario meteo HTTP end-to-end (PRD §29, D-89, F3 success criterion #
         const url = new URL(request.url, 'http://localhost')
         return HttpResponse.json({
           city: url.searchParams.get('location') ?? url.searchParams.get('city') ?? 'Unknown',
-          date:
-            url.searchParams.get('forecast_date') ?? url.searchParams.get('date') ?? '',
+          date: url.searchParams.get('forecast_date') ?? url.searchParams.get('date') ?? '',
           temp: 22,
           condition: 'sunny',
         })
@@ -154,10 +153,8 @@ describe('Scenario meteo HTTP end-to-end (PRD §29, D-89, F3 success criterion #
         callCount++
         const url = new URL(request.url, 'http://localhost')
         return HttpResponse.json({
-          city:
-            url.searchParams.get('location') ?? url.searchParams.get('city') ?? 'Unknown',
-          date:
-            url.searchParams.get('forecast_date') ?? url.searchParams.get('date') ?? '',
+          city: url.searchParams.get('location') ?? url.searchParams.get('city') ?? 'Unknown',
+          date: url.searchParams.get('forecast_date') ?? url.searchParams.get('date') ?? '',
           temp: 20 + callCount,
           condition: callCount === 1 ? 'sunny' : 'cloudy',
         })

@@ -110,7 +110,7 @@ export interface HttpHandlerMapper {
  */
 export interface HttpHandlerValidationIssue {
   readonly message: string
-  readonly path?: ReadonlyArray<string>
+  readonly path?: readonly string[]
 }
 
 /**
@@ -121,7 +121,7 @@ export interface HttpHandlerValidationIssue {
  */
 export type HttpHandlerValidationResult =
   | { readonly ok: true }
-  | { readonly ok: false; readonly issues: ReadonlyArray<HttpHandlerValidationIssue> }
+  | { readonly ok: false; readonly issues: readonly HttpHandlerValidationIssue[] }
 
 /**
  * Subset minimal del `ValidatorAdapter` F2 consumato dal handler (VAL-05).
@@ -200,7 +200,7 @@ export function createHttpHandler(
           : undefined
 
       // Build query string (skip undefined/null values)
-      const queryEntries: Array<[string, string]> = []
+      const queryEntries: [string, string][] = []
       for (const [k, v] of Object.entries(queryShape ?? {})) {
         if (v !== undefined && v !== null) queryEntries.push([k, String(v)])
       }

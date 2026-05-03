@@ -12,8 +12,8 @@
 //
 // Vincolo D-83: NESSUNA modifica a packages/core/ né packages/mapper/ runtime.
 
-import { describe, expect, it, vi } from 'vitest'
 import type { BrokerEvent } from '@sembridge/core'
+import { describe, expect, it, vi } from 'vitest'
 import type { CompiledRoute } from '../route-resolver'
 import type {
   RouteCompositeDefinition,
@@ -51,7 +51,11 @@ function makeHttpRoute(id: string, topic: string): CompiledRoute {
   return { id, definition: def, ownerId: undefined, priority: 0 }
 }
 
-function makeCompositeRoute(id: string, topic: string, steps: RouteCompositeDefinition['steps']): CompiledRoute {
+function makeCompositeRoute(
+  id: string,
+  topic: string,
+  steps: RouteCompositeDefinition['steps'],
+): CompiledRoute {
   const def: RouteCompositeDefinition = { id, type: 'composite', topic, steps }
   return { id, definition: def, ownerId: undefined, priority: 0 }
 }
@@ -112,11 +116,13 @@ describe('compositeHandler', () => {
     ])
     const subHttpRoute = makeHttpRoute('weather-http', 'weather.requested')
 
-    const httpHandlerMock = vi.fn(async (_e: BrokerEvent, _r: CompiledRoute): Promise<RouteOutcome> => ({
-      ok: true,
-      canonicalPayload: { location: 'Roma', temp: 22 },
-      routeId: 'weather-http',
-    }))
+    const httpHandlerMock = vi.fn(
+      async (_e: BrokerEvent, _r: CompiledRoute): Promise<RouteOutcome> => ({
+        ok: true,
+        canonicalPayload: { location: 'Roma', temp: 22 },
+        routeId: 'weather-http',
+      }),
+    )
     const resolveSubRouteMock = vi.fn((id: string) =>
       id === 'weather-http' ? subHttpRoute : undefined,
     )

@@ -52,5 +52,5 @@ export type MultipleRoutesPolicy = 'first-match' | 'priority-ordered' | 'all'
 export interface RoutingConfig {
   readonly multipleRoutesPolicy?: MultipleRoutesPolicy
   readonly emitAmbiguousWarning?: boolean
-  readonly requiresRouteTopics?: ReadonlyArray<string>
+  readonly requiresRouteTopics?: readonly string[]
 }

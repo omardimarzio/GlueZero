@@ -93,11 +93,7 @@ export type GatewayMiddleware = (ctx: GatewayContext, next: () => Promise<void>)
  * `min(maxDelayMs, baseDelayMs * 2^attempt) * (0.5 + Math.random() * 0.5)`.
  */
 export interface RetryStrategy {
-  shouldRetry(
-    response: Response | undefined,
-    error: Error | undefined,
-    attempt: number,
-  ): boolean
+  shouldRetry(response: Response | undefined, error: Error | undefined, attempt: number): boolean
   delayMs(attempt: number, retryAfterHeader?: string | null): number
 }
 

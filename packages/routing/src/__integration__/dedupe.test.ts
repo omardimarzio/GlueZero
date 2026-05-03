@@ -20,12 +20,12 @@
 //   - Test 2 (E2E status): 2 publish identiche → comportamento attuale documentato
 //     (verifica almeno la struttura — 2 weather.loaded raccolti).
 
-import { http, HttpResponse } from 'msw'
-import { describe, expect, it, beforeEach, afterEach } from 'vitest'
 import { createDedupeStrategy } from '@sembridge/gateway/http'
 import type { CanonicalSchemaId } from '@sembridge/mapper'
-import { createRouterHarness, type RouterHarness } from '../test-utils/router-harness'
+import { HttpResponse, http } from 'msw'
+import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { server } from '../test-utils/msw-server'
+import { createRouterHarness, type RouterHarness } from '../test-utils/router-harness'
 
 describe('Dedupe via DedupeStrategy (D-74, ROUTE-11, TEST-01)', () => {
   let harness: RouterHarness

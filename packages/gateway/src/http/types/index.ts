@@ -5,6 +5,6 @@
 // identico a `isMappingErrorCode` di F2) — esportato come runtime function dal barrel.
 
 export type * from './gateway-config'
-export type * from './http-strategies'
 export type * from './http-error'
 export { isGatewayErrorCode } from './http-error'
+export type * from './http-strategies'

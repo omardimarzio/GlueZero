@@ -50,9 +50,9 @@ describe('HttpGateway (D-71/D-72/D-77/D-99 + Pitfall 7)', () => {
   })
 
   it('2. createHttpGateway throws on invalid config (Valibot fail)', () => {
-    expect(() =>
-      createHttpGateway({ allowlist: 'invalid' as unknown as undefined }),
-    ).toThrow(/Invalid GatewayConfig/)
+    expect(() => createHttpGateway({ allowlist: 'invalid' as unknown as undefined })).toThrow(
+      /Invalid GatewayConfig/,
+    )
   })
 
   it('3. execute injects Authorization Bearer header from auth.getToken', async () => {

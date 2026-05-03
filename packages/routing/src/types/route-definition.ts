@@ -172,7 +172,7 @@ export interface RouteCompositeStep {
  */
 export interface RouteCompositeDefinition extends RouteDefinitionBase {
   readonly type: 'composite'
-  readonly steps: ReadonlyArray<RouteCompositeStep>
+  readonly steps: readonly RouteCompositeStep[]
 }
 
 /**

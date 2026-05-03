@@ -48,9 +48,7 @@ export interface TimeoutStrategyOptions {
  * @param options - Configurazione opzionale (vedi `TimeoutStrategyOptions`).
  * @returns Istanza `TimeoutStrategy` con `signal(timeoutMs)`.
  */
-export function createTimeoutStrategy(
-  options: TimeoutStrategyOptions = {},
-): TimeoutStrategy {
+export function createTimeoutStrategy(options: TimeoutStrategyOptions = {}): TimeoutStrategy {
   const factory = options.fromMs ?? ((ms: number): AbortSignal => AbortSignal.timeout(ms))
   return {
     signal(timeoutMs: number): AbortSignal {

@@ -17,7 +17,9 @@ describe('url-allowlist.ts (SEC-05 — D-71)', () => {
 
   it('regex entry matching URL returns silently', () => {
     expect(() =>
-      validateAgainstAllowlist('https://api.example.com/v1/weather', [/^https:\/\/api\.example\.com\//]),
+      validateAgainstAllowlist('https://api.example.com/v1/weather', [
+        /^https:\/\/api\.example\.com\//,
+      ]),
     ).not.toThrow()
   })
 
@@ -30,11 +32,11 @@ describe('url-allowlist.ts (SEC-05 — D-71)', () => {
   it('URL outside allowlist throws BrokerError gateway.url.forbidden with context', () => {
     let caught: unknown
     try {
-      validateAgainstAllowlist(
-        'https://evil.com/exfil',
-        ['https://api.example.com'],
-        { routeId: 'r-1', topic: 'weather.requested', eventId: 'evt-123' },
-      )
+      validateAgainstAllowlist('https://evil.com/exfil', ['https://api.example.com'], {
+        routeId: 'r-1',
+        topic: 'weather.requested',
+        eventId: 'evt-123',
+      })
     } catch (err) {
       caught = err
     }

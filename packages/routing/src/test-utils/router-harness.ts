@@ -31,11 +31,11 @@
 //   sono responsabili di chiamare `vi.useRealTimers()` nel teardown. Il harness NON
 //   forza timer mode.
 
-import { vi } from 'vitest'
-import type { RequestHandler } from 'msw'
 import type { EventTap, PipelineSnapshot, PipelineStep } from '@sembridge/core'
 import type { GatewayConfig } from '@sembridge/gateway/http'
 import type { CanonicalSchema, TransformFn } from '@sembridge/mapper'
+import type { RequestHandler } from 'msw'
+import { vi } from 'vitest'
 import { createRouterBroker, type RouterBroker } from '../public-factory'
 import type { RouteDefinition } from '../types/route-definition'
 import { server } from './msw-server'
@@ -63,7 +63,7 @@ export interface RouterHarnessOptions {
   readonly routing?: {
     readonly multipleRoutesPolicy?: 'first-match' | 'priority-ordered' | 'all'
     readonly emitAmbiguousWarning?: boolean
-    readonly requiresRouteTopics?: ReadonlyArray<string>
+    readonly requiresRouteTopics?: readonly string[]
   }
   /**
    * Topic da pre-collezionare automaticamente al boot del harness. Ogni evento

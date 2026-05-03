@@ -55,7 +55,9 @@ function makeHttpRoute(): CompiledRoute {
   return { id: def.id, definition: def, ownerId: undefined, priority: 0 }
 }
 
-function makeMockGateway(executeImpl: HttpHandlerDeps['gateway']['execute']): HttpHandlerDeps['gateway'] {
+function makeMockGateway(
+  executeImpl: HttpHandlerDeps['gateway']['execute'],
+): HttpHandlerDeps['gateway'] {
   return {
     execute: executeImpl,
   }
@@ -74,7 +76,9 @@ const minimalStrategies: HttpHandlerDeps['strategies'] = {}
 
 describe('createHttpHandler (Task 3 plan 03-08, ROUTE-03 + ROUTE-06 + VAL-05)', () => {
   it('1. createHttpHandler returns async handler function', () => {
-    const gateway = makeMockGateway(vi.fn().mockResolvedValue({ ok: true, status: 200, headers: {}, body: {} }))
+    const gateway = makeMockGateway(
+      vi.fn().mockResolvedValue({ ok: true, status: 200, headers: {}, body: {} }),
+    )
     const handler = createHttpHandler({
       gateway,
       mapper: noopMapper,
@@ -106,7 +110,7 @@ describe('createHttpHandler (Task 3 plan 03-08, ROUTE-03 + ROUTE-06 + VAL-05)', 
 
     // gateway.execute invocato con request.url contenente query string
     expect(execute).toHaveBeenCalledTimes(1)
-    const httpRequest = execute.mock.calls[0]![0] as { url: string; method: string }
+    const httpRequest = execute.mock.calls[0]?.[0] as { url: string; method: string }
     expect(httpRequest.method).toBe('GET')
     expect(httpRequest.url).toContain('https://api.example.com/v1/weather')
     expect(httpRequest.url).toContain('city=Roma')

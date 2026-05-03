@@ -6,6 +6,6 @@
 // questo barrel per aggregare i 4 file di tipo del routing engine.
 
 export type * from './route-definition'
-export type * from './route-policies'
 export type * from './route-outcome'
+export type * from './route-policies'
 export type * from './routing-config'

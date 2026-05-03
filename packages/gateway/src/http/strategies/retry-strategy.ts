@@ -92,7 +92,7 @@ export interface RetryStrategyOptions {
    * Esempio: `[503]` → retry SOLO su 503 (nessun altro). Sconsigliato: rispettare
    * `Retry-After` sui 429 è importante per non bannare il client.
    */
-  readonly retryOnStatuses?: ReadonlyArray<number>
+  readonly retryOnStatuses?: readonly number[]
 }
 
 /**

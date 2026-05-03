@@ -32,8 +32,8 @@ describe('createHttpGateway (Valibot validation — D-72/D-99)', () => {
   })
 
   it('throws Invalid GatewayConfig on schema validation fail', () => {
-    expect(() =>
-      createHttpGateway({ allowlist: 'not-an-array' as unknown as undefined }),
-    ).toThrow(/Invalid GatewayConfig/)
+    expect(() => createHttpGateway({ allowlist: 'not-an-array' as unknown as undefined })).toThrow(
+      /Invalid GatewayConfig/,
+    )
   })
 })

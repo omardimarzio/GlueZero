@@ -26,10 +26,10 @@
 // - T-03-12-05 (DoS — publish cascade infinito): OutcomeCollector recursion guard (D-82).
 
 import {
-  createBrokerError,
-  isBrokerError,
   type BrokerEvent,
+  createBrokerError,
   type EventTap,
+  isBrokerError,
   type PipelineSnapshot,
   type PipelineStep,
   type PluginDescriptor,
@@ -37,8 +37,8 @@ import {
 } from '@sembridge/core'
 import { MapperBroker } from '@sembridge/mapper'
 import { nanoid } from 'nanoid'
-import { RouterEngine } from './router-engine'
 import type { CompiledRoute, RouteRegistration } from './route-resolver'
+import { RouterEngine } from './router-engine'
 import type { RouteDefinition } from './types/route-definition'
 import type { MultipleRoutesPolicy, RoutingConfig } from './types/routing-config'
 
@@ -325,9 +325,10 @@ export class RouterBroker {
       topic,
       payload,
       timestamp: Date.now(),
-      source:
-        (options as { source?: BrokerEvent['source'] }).source ??
-        { type: 'plugin', id: 'unknown' },
+      source: (options as { source?: BrokerEvent['source'] }).source ?? {
+        type: 'plugin',
+        id: 'unknown',
+      },
     } as BrokerEvent
     try {
       const outcome = await this.engine.executor.execute(route, event)
@@ -395,9 +396,7 @@ export class RouterBroker {
    * `applyInputMap` consumer-side se options.ownerId è dichiarato — il delegate qui
    * preserva la semantica F2 senza override.
    */
-  subscribe(
-    ...args: Parameters<MapperBroker['subscribe']>
-  ): Subscription {
+  subscribe(...args: Parameters<MapperBroker['subscribe']>): Subscription {
     return this.inner.subscribe(...args)
   }
 
