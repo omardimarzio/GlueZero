@@ -39,6 +39,8 @@
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage --passWithNoTests",
     "typecheck": "tsc --noEmit",
+    "publint": "publint --strict",
+    "attw": "attw --pack --profile=esm-only",
     "clean": "rm -rf dist"
   },
   "dependencies": {

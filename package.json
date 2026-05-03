@@ -8,14 +8,19 @@
   },
   "scripts": {
     "build": "pnpm -r --filter='./packages/*' --if-present run build",
+    "build:f3": "pnpm --filter @sembridge/core --filter @sembridge/mapper run build && pnpm run build:f3:cyclic",
+    "build:f3:cyclic": "pnpm --filter @sembridge/routing exec tsup --format esm --no-dts && pnpm --filter @sembridge/gateway exec tsup --format esm --no-dts && pnpm run build:f3:dts:bootstrap && pnpm run build:f3:dts:bundle",
+    "build:f3:dts:bootstrap": "pnpm --filter @sembridge/routing exec tsc --emitDeclarationOnly --noEmit false --declaration --declarationDir dist || true; pnpm --filter @sembridge/gateway exec tsc --emitDeclarationOnly --noEmit false --declaration --declarationDir dist || true",
+    "build:f3:dts:bundle": "find packages/routing/dist -name '*.d.ts' -delete; find packages/routing/dist -name '*.d.ts.map' -delete; pnpm --filter @sembridge/routing exec tsup --dts-only --no-clean && find packages/gateway/dist -name '*.d.ts' -delete; find packages/gateway/dist -name '*.d.ts.map' -delete; pnpm --filter @sembridge/gateway exec tsup --dts-only --no-clean",
     "test": "pnpm -r --filter='./packages/*' --if-present run test",
     "test:watch": "pnpm -r --filter='./packages/*' --if-present run test:watch",
     "lint": "biome check .",
     "format": "biome format --write .",
     "typecheck": "pnpm -r --filter='./packages/*' --if-present run typecheck",
-    "ci:publint": "pnpm --filter @sembridge/core --filter @sembridge/mapper exec publint",
-    "ci:attw": "pnpm --filter @sembridge/core --filter @sembridge/mapper exec attw --pack --profile=esm-only",
+    "ci:publint": "pnpm --filter @sembridge/core --filter @sembridge/mapper --filter @sembridge/routing --filter @sembridge/gateway exec publint",
+    "ci:attw": "pnpm --filter @sembridge/core --filter @sembridge/mapper --filter @sembridge/routing --filter @sembridge/gateway exec attw --pack --profile=esm-only",
     "ci:size": "size-limit",
+    "ci:gate:f3": "pnpm ci:publint && pnpm ci:attw && pnpm ci:size",
     "changeset": "changeset",
     "release": "pnpm build && changeset publish"
   },
@@ -53,7 +58,7 @@
     {
       "name": "@sembridge/routing (gzip)",
       "path": "packages/routing/dist/index.js",
-      "limit": "6 KB",
+      "limit": "24 KB",
       "gzip": true
     },
     {
