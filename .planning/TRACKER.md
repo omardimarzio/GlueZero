@@ -4,8 +4,8 @@ status: in_progress
 project: SemBridge
 milestone: v1.0
 current_phase: 3
-current_wave: 8
-current_plan: 03-13
+current_wave: 9
+current_plan: 03-14
 session_active: false
 ---
 
@@ -24,36 +24,35 @@ session_active: false
 | Campo | Valore |
 |-------|--------|
 | Fase | **Phase 3 — Routing & Server Gateway HTTP** |
-| Wave | **8 / 9** (next: 03-13 integration tests scenario meteo) |
-| Plan in esecuzione | — (03-12 chiuso ✓) |
-| Plan progress F3 | **12 / 14 completati** (03-01 → 03-12 con SUMMARY.md ✓) |
-| Plan progress globale | 35 / 37 (95%) |
+| Wave | **9 / 9** (next: 03-14 final gate F3) |
+| Plan in esecuzione | — (03-13 chiuso ✓) |
+| Plan progress F3 | **13 / 14 completati** (03-01 → 03-13 con SUMMARY.md ✓) |
+| Plan progress globale | 36 / 37 (97%) |
 | Mode GSD | yolo + auto_advance + parallelization (sequential exec, no worktree) |
 | Modello attivo | `claude-opus-4-7-1` (opus) — override esplicito su tutti i sub-agent |
 
-## Ultimo step completato (auto-update 2026-05-03T09:49:13Z)
+## Ultimo step completato (auto-update 2026-05-03T18:24:55Z)
 
-- Plan: **03-12** → SUMMARY.md committed
-- Commit: `2def867 docs(03-12): complete RouterBroker composition wrapper plan execution`
-- Phase progress: **12/14** plan completati con SUMMARY.md
-- Project progress: 35/37 plan (95%)
+- Plan: **03-13** → SUMMARY.md committed
+- Commits: `15440a0 feat(03-13): aggiunge createRouterHarness fixture + msw 2.13.6 setupServer` + `63cceb9 feat(03-13): aggiunge 6 integration test scenari F3 end-to-end (16 test)`
+- Phase progress: **13/14** plan completati con SUMMARY.md
+- Project progress: 36/37 plan (97%)
 
 
 ## Prossimo step
 
 **Per riprendere F3 da dove ci siamo fermati:**
 ```
-/gsd-execute-phase 3 --auto --wave 8
+/gsd-execute-phase 3 --auto --wave 9
 ```
 
-Oppure spawn diretto agente per 03-13:
+Oppure spawn diretto agente per 03-14:
 ```
-Agent(subagent_type="gsd-executor", model="opus", prompt="Execute plan 03-13 — Integration tests scenario meteo end-to-end. Read 03-13-PLAN.md. Create SUMMARY.md. Update STATE/ROADMAP.")
+Agent(subagent_type="gsd-executor", model="opus", prompt="Execute plan 03-14 — Final gate F3: coverage v8 + DOC-04 + publint/attw/size-limit ext. Read 03-14-PLAN.md. Create SUMMARY.md. Update STATE/ROADMAP.")
 ```
 
-Dopo 03-12 il piano prosegue:
-- 03-13 (Wave 8) — Integration tests scenario meteo ← NEXT
-- 03-14 (Wave 9) — Final gate (coverage, CI, DOC-04)
+Dopo 03-13 il piano prosegue:
+- 03-14 (Wave 9) — Final gate (coverage, CI, DOC-04) ← NEXT
 
 ## Vincoli attivi (da CLAUDE.md)
 

@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-current_plan: "12 (next: 03-12 RouterBroker composition + LIFE-02 cascade)"
+current_plan: "14 (next: 03-14 final gate — coverage v8 + DOC-04 + publint/attw/size-limit ext)"
 status: executing
-last_updated: "2026-05-03T09:42:19.909Z"
+last_updated: "2026-05-03T18:27:38.927Z"
 progress:
   total_phases: 6
   completed_phases: 2
   total_plans: 37
-  completed_plans: 35
-  percent: 95
+  completed_plans: 36
+  percent: 97
 ---
 
 # Project State: SemBridge
@@ -29,16 +29,16 @@ progress:
 ## Current Position
 
 Phase: 03 (routing-server-gateway-http) — EXECUTING
-Plan: 13 of 14
-Current Plan: 12 (next: 03-12 RouterBroker composition + LIFE-02 cascade)
+Plan: 14 of 14
+Current Plan: 14 (next: 03-14 final gate F3 — coverage v8 + DOC-04 + publint/attw/size-limit ext)
 Total Plans: 14
 
-**Last completed:** Plan 03-11 (F3 Wave 4-C Strategies auth + circuit-breaker — `createAuthStrategy` BearerHookAuth 142 LOC chiusura D-72/SEC-01/SEC-02/ROUTE-07 con SINGLE-FLIGHT REFRESH Pattern 5 RESEARCH (5 caller paralleli → 1 sola config.refresh invocation, Pitfall 5 fix); always-provide refresh method + tokenCacheMs opt-in cache; **BLOCKER 1 fix iter 1**: `category: 'config'` (NON 'auth' — ErrorCategory union NON include 'auth' e D-83 vieta modifica core); `createCircuitBreakerStrategy` PerRouteCircuitBreaker 180 LOC chiusura D-99 con state machine 3-states `closed → open → half-open → closed` + lazy transition (no setTimeout overhead) + per-route state isolation Map<routeId, CircuitState> + DEFAULT DISABLED (consumer opt-in via gateway.circuitBreaker); barrel strategies/index.ts FINAL Wave 4-C — 7 export create*Strategy totali) at 2026-05-02T17:35:00Z — 6 commits (181247e RED auth + 3e48e5e GREEN auth + 12f5a2f RED cb + 6c00e7f GREEN cb + 188a356 barrel + b7b092c style); 19/19 nuovi test passing (9 auth + 10 cb); gateway 97/97 + core 248/248 + mapper 183/183 + routing 58/58 zero regressioni; D-83 confermato strict (`git diff HEAD~6 -- packages/core/ packages/mapper/ packages/routing/` empty); REQ chiusi SEC-01 + SEC-02 (already complete) + ROUTE-07 (chiusura via D-72); Pitfall 5 (token refresh storm) chiuso via single-flight Promise singleton.
-**Next:** Plan 03-12 (Wave 7 RouterBroker composition + LIFE-02 cascade — composition wrapper su MapperBroker D-83; iniezione 7 strategy default Wave 4-A/B/C in HttpGatewayStrategies bundle; cascade unregister D-86 esteso route + abort cascade AbortController; ROUTE-16 chiusura via opt-in requiresRouteTopics + loud throw)
+**Last completed:** Plan 03-13 (F3 Wave 8 integration tests scenario meteo end-to-end — `createRouterHarness` 240 LOC fixture estesa con msw 2.13.6 setupServer + helpers `collect`/`mockServer`/`expectFetched`/`expectRetryAttempts`/`expectAborted`/`flushAsync`/`waitForEvent`; 6 file integration test (16 test totali) coprenti i 5 success criteria F3 ROADMAP: scenario-meteo-http (3 — TEST-02 success #1), retry-policy (6 — ROUTE-09 success #2 + Idempotency-Key persistente sui retry POST), dedupe (2 — D-74 KeyBasedDedupe Promise singleton + E2E status), concurrency-latest-only (1 — D-73 status documentato), url-allowlist (2 — SEC-05 success #5 con 0 fetch PRE-fetch su URL forbidden + control positivo), route-cascade-cleanup (2 — LIFE-02 ext F3 success #3 con 3 route rimosse + 5 fetch in volo abort tracker)) at 2026-05-03T18:24:55Z — 2 commits (15440a0 harness + msw setup, 63cceb9 6 integration test); 16/16 integration test nuovi passing + 87/87 unit invariati = 103/103 routing total; D-83 strict verificato (zero modifiche packages/core/ né packages/mapper/); REQ chiusi TEST-01/02/03 subset F3 + ROUTE-09 + ROUTE-13 + SEC-05 + LIFE-02 ext F3; F3 V1 fallback identity (delegateMapToShape/delegateMapToCanonical) confermata; wiring DedupeStrategy/BackpressureStrategy nel HttpGateway.execute() deferred F4 (documentato).
+**Next:** Plan 03-14 (Wave 9 final gate F3 — coverage v8 ≥85% sul package routing, DOC-04 con esempi end-to-end dei 6 file integration test, publint+attw+size-limit ext a @sembridge/routing+@sembridge/gateway, chiusura plan-level F3 ROADMAP)
 
 - **Phase:** 3
 - **Status:** Ready to execute
-- **Progress:** [██████████] 95%
+- **Progress:** [██████████] 97%
 
 ## Phases Overview
 
@@ -90,6 +90,7 @@ Total Plans: 14
 | Phase 03 P10 | 6min | - tasks | - files |
 | Phase 03 P11 | ~6min | 3 tasks | 5 files |
 | Phase 03-routing-server-gateway-http P12 | 120 | 3 tasks | 10 files |
+| Phase 03 P13 | 30min | 2 tasks | 10 files |
 
 ## Accumulated Context
 
