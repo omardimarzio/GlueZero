@@ -131,6 +131,16 @@ export class RouteResolver {
    * @throws `BrokerError 'topic.pattern.invalid'` se topic pattern malformato.
    */
   register(def: RouteDefinition, options: { ownerId?: string } = {}): RouteRegistration {
+    // IN-05 fix iter 3: validazione minima dell'id — protegge da silent corruption
+    // su id vuoti/whitespace-only (collision con default values, hard-to-debug).
+    if (typeof def.id !== 'string' || def.id.trim() === '') {
+      throw createBrokerError({
+        code: 'route.id.invalid',
+        category: 'config',
+        message: 'RouteDefinition.id must be a non-empty string',
+        details: { received: typeof def.id === 'string' ? `'${def.id}'` : typeof def.id },
+      })
+    }
     validateTopicPattern(def.topic)
     if (this.byId.has(def.id)) {
       if (this.strict) {
