@@ -31,11 +31,10 @@ session_active: true
 | Mode GSD | yolo + auto_advance + parallelization (sequential exec, no worktree) |
 | Modello attivo | `claude-opus-4-7-1` (opus) — override esplicito su tutti i sub-agent |
 
-## Ultimo step completato (auto-update 2026-05-04T15:00:00Z)
+## Ultimo step completato (auto-update 2026-05-04T13:03:02Z)
 
-- Plan: **04-03** → SUMMARY.md in attesa di commit
-- Commit RED: `cfe6020 test(04-03): add failing tests for createReconnectStrategy (D-107, D-109, Q3)`
-- Commit GREEN: `d3b3921 feat(04-03): implement createReconnectStrategy state machine (D-107 fallback + D-109 full jitter + Q3 consolidationMs)`
+- Plan: **04-03** → SUMMARY.md committed
+- Commit: `5d4ee91 docs(04-03): complete plan SUMMARY + STATE/ROADMAP/TRACKER update — Phase 4 Wave 2 reconnect-strategy done`
 - Phase progress: **3/9** plan completati con SUMMARY.md
 - Project progress: 40/46 plan (87%)
 
