@@ -72,8 +72,8 @@ Tutti i requisiti elencati sono table stakes (vincolanti dalla checklist PRD §4
 - [ ] **RT-03**: `connectRealtime()` e `disconnectRealtime()` API pubbliche *(PRD §16.2)* — manager API esposte in 04-07; consumer-facing API verrà esposta dal RealtimeBroker in 04-08
 - [ ] **RT-04**: Messaggi server convertiti in eventi interni con `source: { type: 'server', id: 'realtime-channel', name: 'sse'|'websocket' }` *(PRD §18.5)*
 - [ ] **RT-05**: Reconnection policy configurabile: retry interval, exponential backoff, max retry, heartbeats, stale connection detection, jitter *(PRD §18.6)* — orchestratore runReconnectLoop completato in 04-07; consumer wiring in 04-08
-- [ ] **RT-06**: Normalizzazione payload inbound dal server verso il modello canonico *(PRD §18.1)*
-- [ ] **RT-07**: Regole di riconnessione realtime documentate (Last-Event-ID per SSE, ping app-level per WS) *(PRD §39 — open issue da chiudere)*
+- [x] **RT-06**: Normalizzazione payload inbound dal server verso il modello canonico *(PRD §18.1)*
+- [x] **RT-07**: Regole di riconnessione realtime documentate (Last-Event-ID per SSE, ping app-level per WS) *(PRD §39 — open issue da chiudere)*
 
 ### Worker Runtime (Fase 5)
 

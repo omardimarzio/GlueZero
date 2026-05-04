@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-last_updated: "2026-05-04T16:30:00.000Z"
+last_updated: "2026-05-04T15:39:49.406Z"
 progress:
   total_phases: 6
   completed_phases: 3
   total_plans: 46
-  completed_plans: 44
-  percent: 96
+  completed_plans: 45
+  percent: 98
 ---
 
 # Project State: SemBridge
@@ -28,16 +28,16 @@ progress:
 ## Current Position
 
 Phase: 04 (Realtime inbound (SSE prioritario, WS opzionale)) — EXECUTING
-Plan: 8 of 9 (next, Wave 5 — 04-08 RealtimeBroker composition wrapper)
+Plan: 9 of 9 (next, Wave 6 — 04-09 final gate publint/attw/size-limit)
 Total Plans: 9 (Phase 4)
 
-**Last completed:** Plan 04-07 (Wave 4 — RealtimeChannelManager) at 2026-05-04 — 2 commits atomic (`2247c69` RED test + `1ee900f` GREEN feat); 2 nuovi file 1067 LOC (realtime-channel-manager.ts 578 + realtime-channel-manager.test.ts 489). `RealtimeChannelManager` class production-ready: registry N-canale `Map<string, ChannelEntry>` indicizzato per `name` (D-102, anti-AP-11 zero multiplex by URL), lazy-init del `VisibilityDetector` al PRIMO connect + teardown automatico all'ULTIMO disconnect (D-110), cascade cleanup `disconnectByOwner(ownerId)` D-112 (pattern http-gateway.abortInFlightByOwner), factory dispatch SseAdapter (mode='sse'|'auto') / WebSocketAdapter (mode='websocket') con default 'auto'→'sse' (D-107 SSE-first), duplicate guard `realtime.channel.duplicate` (BrokerError category 'config'), `runReconnectLoop` privato con clock DI per testabilità sync (B-4 closure D-107 auto-fallback effettivo + B-NEW-1 signature fix iter 2 — interface ReconnectStrategy 04-03 strict: getMode() / nextDelayMs() no-arg / recordFailure() no-arg / fallback() toggla mode). B-4 cycle-cap: maxAttempts/globalCycleCap esauriti → publish `system.realtime.failed` con `reason='cycle-cap-exceeded'`. `entry.manuallyClosed` flag blocca runReconnectLoop su user disconnect (T-04-07-04 mitigation). 16/16 test PASS + 191/191 gateway suite + **725/725 monorepo full** + tsc clean su 4 package. D-83 strict ✓ (zero modifiche fuori `gateway/src/sse-ws/`). Anti-AP-3 verificato (0 import reconnecting-websocket); AP-11 verificato (Map indicizzata per name, zero multiplex by URL). RT-01/RT-02/RT-03/RT-04/RT-05 progress; ERR-02 ext (system.realtime.reconnecting/connected/failed via publishSystem helper). Building block pronto per consumer 04-08 RealtimeBroker (composition wrapper di RouterBroker — comporrà il manager via `new RealtimeChannelManager` con publishFn legato al RouterBroker.publish interno).
+**Last completed:** Plan 04-08 (Wave 5 — RealtimeBroker composition + integration tests Tier-1/2/3) at 2026-05-04 — 4 commits atomic (`c436293` RED test + `2d3417e` GREEN feat broker+factory + `48acfae` feat harness + `ccedd3a` test integration+barrel); 18 nuovi file ~1620 LOC (realtime-broker.ts 296 + realtime-broker.test.ts 220 + public-factory.ts 123 + public-factory.test.ts 64 + realtime-harness.ts 223 + 11 integration test files + 1 browser smoke). RealtimeBroker composition wrapper di RouterBroker (D-101 + D-83 strict — verified live: RouterBroker.publish accetta options.source/id) + createRealtimeBroker public factory (D-30 + Valibot safeParse, prefix "Invalid RealtimeBrokerConfig") + createRealtimeHarness fixture (subscribe wildcard multi-depth W-3 closure + byChannelName routing B-2/B-NEW-2 closure). 14 integration test 3-tier: Tier-1 jsdom 8 file 13 test passing (B-2/B-3/B-4/D-110/D-112/D-115/W-1/W-5 closure), Tier-2 MSW 3 file describe.skip V1.x deferred (jsdom no native EventSource per RT-07 round-trip), Tier-3 Playwright real Chromium 1 test attivo (W-NEW-1 EventSource API verified). Vitest 4.x browser provider API change: `provider: playwright()` factory + devDeps `@vitest/browser 4.1.5` + `@vitest/browser-playwright 4.1.5` + msw 2.13.6. `vitest.config.ts` exclude `**/__browser__/**` (W-NEW-3 closure). Test totale: 222/225 gateway (3 skip MSW V1.x); 756/759 monorepo (core 248 + mapper 183 + routing 103 + gateway 222). Build OK: `dist/sse-ws/{index,augment}.{js,d.ts}` con `createRealtimeBroker` esportato. D-83 strict ✓ (zero modifiche fuori `gateway/src/sse-ws/` — solo config build/test in `gateway/{vitest.config.ts,vitest.browser.config.ts,package.json}`).
 
-**Next:** `/gsd-execute-phase 4` Wave 5 — Plan 04-08 (RealtimeBroker composition wrapper + integration tests Tier-1/2/3, usa MockEventSource.byChannelName + MockWebSocket.byChannelName per harness routing strict B-NEW-2).
+**Next:** `/gsd-execute-phase 4` Wave 6 — Plan 04-09 (final gate publint/attw/size-limit + DOC-04 update).
 
 - **Phase:** 3 ✅ COMPLETE
 - **Status:** Ready to execute
-- **Progress:** [█████████░] 96%
+- **Progress:** [██████████] 98%
 
 ## Phases Overview
 
