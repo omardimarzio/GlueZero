@@ -162,7 +162,7 @@ RT-01, RT-02, RT-03, RT-04, RT-05, RT-06, RT-07, ERR-02 (extension: `system.real
 
 **Plans**: 9 plans
 - [x] 04-01-PLAN.md — Bootstrap @sembridge/gateway/sse-ws + augment + types F4 (Wave 1) — completato 2026-05-04 (2 commits: d090a1b feat scaffold + 2624c66 chore build/test config; 6 nuovi file 503 LOC + 4 modificati; 8 test smoke decl merging passed; 105/105 gateway suite; D-83 strict ✓; placeholder F1 in core/types/plugin.ts:50 chiuso via decl merging additive; subpath @sembridge/gateway/sse-ws risolvibile; RT-01/RT-02/RT-03/RT-05 type-level done)
-- [ ] 04-02-PLAN.md — frame-parser.ts (envelope JSON D-106 + isInternalTopic strict anti-AP-6) (Wave 2)
+- [x] 04-02-PLAN.md — frame-parser.ts (envelope JSON D-106 + isInternalTopic strict anti-AP-6) (Wave 2) — completato 2026-05-04 (2 commits TDD: 26cc3c2 RED test + edcbf3b GREEN feat; 3 nuovi file 332 LOC: types/frame-envelope.ts 50 + frame-parser.ts 140 + frame-parser.test.ts 142; 15/15 frame-parser test passed; 120/120 gateway suite + 654/654 monorepo full PASS; D-83 strict ✓ — zero modifiche fuori `gateway/src/sse-ws/`; PITFALL §11.7 chiusura Q1 anti-AP-6 verificato — `grep startsWith('__')` = 0 in source code; Q2 closure 04-CONTEXT — riuso ERR-02 ext F3 `network.error` per frame parse errors; building blocks pronti per consumer 04-06 websocket-adapter)
 - [ ] 04-03-PLAN.md — reconnect-strategy.ts (full jitter D-109 + auto-fallback D-107 + consolidationMs Q3) (Wave 2)
 - [ ] 04-04-PLAN.md — visibility-detector.ts (D-110 + DI guard Worker/SSR) (Wave 2)
 - [ ] 04-05-PLAN.md — sse-adapter.ts (EventSource wrapper + Last-Event-ID + backpressure D-115) (Wave 3)
@@ -313,7 +313,7 @@ I 11 punti che il PRD §39 vieta esplicitamente di lasciare impliciti vengono ch
 | 1. Core essenziale | 11/11 | ✅ Complete & Verified | 2026-04-29 |
 | 2. Canonical Model & Mapper | 12/12 | ✅ Complete | 2026-04-30 |
 | 3. Routing & Server Gateway HTTP | 14/14 | ✅ Complete | 2026-05-03 |
-| 4. Realtime inbound | 1/9 | In Progress (04-01 done — Wave 1) | - |
+| 4. Realtime inbound | 2/9 | In Progress (04-01 done — Wave 1; 04-02 done — Wave 2 frame-parser) | - |
 | 5. Worker Runtime | 0/0 | Not started | - |
 | 6. Cache & Tooling avanzato | 0/0 | Not started | - |
 

@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-last_updated: "2026-05-04T14:38:00Z"
+last_updated: "2026-05-04T12:52:04.543Z"
 progress:
   total_phases: 6
   completed_phases: 3
   total_plans: 46
-  completed_plans: 38
-  percent: 83
+  completed_plans: 39
+  percent: 85
 ---
 
 # Project State: SemBridge
@@ -28,16 +28,16 @@ progress:
 ## Current Position
 
 Phase: 04 (Realtime inbound (SSE prioritario, WS opzionale)) — EXECUTING
-Plan: 2 of 9 (next)
+Plan: 3 of 9 (next)
 Total Plans: 9 (Phase 4)
 
-**Last completed:** Plan 04-01 (Wave 1 — Bootstrap @sembridge/gateway/sse-ws subpath: types F4 + augment.ts decl merging + barrel skeleton + build/test config) at 2026-05-04T14:38Z — 2 commits atomic (d090a1b feat scaffold + 2624c66 chore build/test config); 6 nuovi file 503 LOC source+test (augment.ts 105 + realtime-config.ts 87 + realtime-channel-def.ts 125 + types/index.ts 18 + index.ts 33 + augment.test.ts 135) + 4 modificati (package.json exports, tsup.config entries, vitest.config exclude, src/index.ts umbrella re-export). Placeholder F1 in core/types/plugin.ts:50 ("F4 will add: realtimeChannels") chiuso via declaration merging additive senza modifiche al core. 8 test smoke decl merging passed + 105/105 gateway suite OK + tsc clean + build success ESM 71ms + DTS 577ms (dist/sse-ws/{index,augment}.{js,d.ts} prodotti). D-83 strict ✓ (zero modifiche runtime a packages/{core,mapper,routing}/src/ né packages/gateway/src/http/). RT-01/RT-02/RT-03/RT-05 type-level done.
+**Last completed:** Plan 04-02 (Wave 2 — Frame parser puro WebSocket envelope JSON) at 2026-05-04 — 2 commits TDD atomic (26cc3c2 RED test + edcbf3b GREEN feat); 3 nuovi file 332 LOC (types/frame-envelope.ts 50 + frame-parser.ts 140 + frame-parser.test.ts 142). `parseFrame(raw: unknown): FrameParseResult` pure function difensiva (input `unknown` per defense-in-depth `MessageEvent.data` `any`), discriminated union 3 reason path (`malformed-json`/`missing-topic`/`invalid-shape`). `INTERNAL_TOPICS` frozen + `isInternalTopic` strict equality match (PITFALL §11.7 chiusura Q1 anti-AP-6 — Test 13 `weather.__ping__` === false blocca regressione). Q2 closure: riuso ERR-02 ext F3 `network.error` con `category: 'protocol'` (NO nuovo event type). 15/15 frame-parser test PASS + 120/120 gateway suite + 654/654 monorepo full + tsc clean + ESM 70ms + DTS 590ms. D-83 strict ✓ (zero modifiche fuori `gateway/src/sse-ws/`). RT-02/RT-04/RT-06/ERR-02 building blocks pronti per consumer 04-06.
 
-**Next:** `/gsd-execute-phase 4` per Wave 2 (3 plan paralleli con file ownership disgiunta): 04-02 (frame-parser.ts envelope JSON D-106 + isInternalTopic strict), 04-03 (reconnect-strategy.ts full-jitter D-109 + auto-fallback D-107 + consolidationMs Q3), 04-04 (visibility-detector.ts D-110 + DI guard Worker/SSR).
+**Next:** `/gsd-execute-phase 4` per Wave 2 plan paralleli rimanenti (file ownership disgiunta): 04-03 (reconnect-strategy.ts full-jitter D-109 + auto-fallback D-107 + consolidationMs Q3), 04-04 (visibility-detector.ts D-110 + DI guard Worker/SSR).
 
 - **Phase:** 3 ✅ COMPLETE
-- **Status:** Executing Phase 04
-- **Progress:** [██████████] 100%
+- **Status:** Ready to execute
+- **Progress:** [█████████░] 85%
 
 ## Phases Overview
 
@@ -51,7 +51,7 @@ Total Plans: 9 (Phase 4)
 | 1 | Core essenziale (broker pub/sub, plugin registry, EventTap pre-instrumentato) | **✅ COMPLETE & VERIFIED (11/11 plans, PASS confidence HIGH)** |
 | 2 | Canonical Model & Mapper bidirezionale + Mapping Inspector | **✅ COMPLETE — ready for verifier (12/12 plans)** |
 | 3 | Routing engine + HTTP gateway con retry/timeout/dedupe/auth | **✅ COMPLETE — ready for verifier (14/14 plans, 4 open issues PRD §39 closed)** |
-| 4 | Realtime inbound (SSE prioritario, WS opzionale) | **In Progress — 1/9 plans (04-01 Wave 1 done)** |
+| 4 | Realtime inbound (SSE prioritario, WS opzionale) | **In Progress — 2/9 plans (04-01 Wave 1 + 04-02 Wave 2 frame-parser done)** |
 | 5 | Worker Runtime (registry, route worker, task tracking) | Not started |
 | 6 | Cache + Tooling avanzato (Inspector, Metrics, debug API) | Not started |
 
@@ -92,6 +92,7 @@ Total Plans: 9 (Phase 4)
 | Phase 03 P13 | 30min | 2 tasks | 10 files |
 | Phase 03 P14 | ~35min | 5 tasks | 8 files (2 README + 4 vitest/package.json + biome cleanup ~46 file) |
 | Phase 04 P01 | ~10min | 2 tasks | 10 files (6 nuovi 503 LOC + 4 modificati build/test config) |
+| Phase 04 P02 | 12min | 1 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -164,6 +165,9 @@ Total Plans: 9 (Phase 4)
 | Plan 03-11 D-72 closed: BearerHookAuth + Single-flight refresh (Pattern 5 RESEARCH, Pitfall 5 fix) | `inflightRefresh: Promise<string> \| null` Promise singleton condiviso fra N caller paralleli. Test 6 verifica 5 paralleli → 1 sola config.refresh invocation. Cleanup in finally garantisce release sia su resolve che reject (Test 7+8). Always-provide refresh method che throw 'auth.refresh.unavailable' quando config.refresh undefined. Token caching opt-in via tokenCacheMs (default 0=disabled). **Closes SEC-01 + SEC-02 + ROUTE-07 + Pitfall 5**. | 03-11-SUMMARY.md |
 | Plan 03-11 D-99 closed: PerRouteCircuitBreaker state machine 3-states opt-in DISABLED default | State machine `closed → open → half-open → closed` per route. Lazy transition open → half-open al canExecute/getState (no setTimeout overhead per route inattive). Per-route state isolation Map<routeId, CircuitState>. Default DISABLED: `createCircuitBreakerStrategy()` senza config = pass-through (canExecute sempre true). Test 9 verifica behavior DISABLED. Sliding window stats → V1.x. | 03-11-SUMMARY.md |
 | Plan 03-11 BLOCKER 1 fix iter 1: category 'config' (NON 'auth') per auth.refresh.unavailable | ErrorCategory union (`packages/core/src/types/error.ts:19-28`) NON include 'auth' — solo 'validation'\|'plugin'\|'mapping'\|'route'\|'network'\|'worker'\|'system'\|'config'\|'topic'. Per evitare modifica core (D-83 strict), lockato `category: 'config'` coerente con 03-08 (gateway-config errors). Verifica grep esplicita: `category: 'auth'` = 0 occorrenze, `category: 'config'` = 3 occorrenze. Test 5 (auth-strategy.test.ts) verifica esplicitamente `err.category === 'config'`. | 03-11-SUMMARY.md |
+| Plan 04-02 D-106 envelope JSON shape locked: `{ topic: string non-vuoto, data: unknown, id?: string }` | Topic vuoto rifiutato come `missing-topic` (Test 4). `id` non-string ignorato graceful (Test 10 — no crash, envelope.id undefined). L'adapter 04-06 genererà via nanoid se mancante. Frame non-conformi → consumer publica `network.error` con `category: 'protocol'` riusando ERR-02 ext F3 (Q2 closure 04-CONTEXT — NIENTE nuovo `realtime.protocol.error` event). | 04-02-SUMMARY.md |
+| Plan 04-02 D-111 + PITFALL §11.7 chiusura Q1: `isInternalTopic` strict equality match (NO prefix) | `topic === '__ping__' \|\| topic === '__pong__'` esatto. NO `startsWith('__')`, NO regex prefix `/^__/`. Topic legittimi consumer come `weather.__ping__` NON sono filtrati (Test 13 esplicito blocca regressione). Verifica: `grep -v "^//" frame-parser.ts \| grep -c "startsWith('__')"` = 0. INTERNAL_TOPICS frozen const (`Readonly<{readonly PING; readonly PONG}>` annotation per --isolatedDeclarations). | 04-02-SUMMARY.md |
+| Plan 04-02 input difensivo `unknown` per parseFrame (defense-in-depth pipeline §28) | `MessageEvent.data` è `any` da DOM lib, può essere ArrayBuffer/Blob/number. V1 supporta solo testo JSON (D-106) → input non-string ritorna `malformed-json` graceful con `raw: String(raw)`. Pattern coerente con principio "trust no one" della pipeline §28. Estende il pattern `parseRetryAfter` F3 (analog parser puro). | 04-02-SUMMARY.md |
 
 ### Open Issues PRD §39 — Phase Assignment
 

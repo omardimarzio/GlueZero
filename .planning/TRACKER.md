@@ -1,11 +1,11 @@
 ---
 last_updated: 2026-05-04
-status: phase_4_executing_wave_1_done
+status: phase_4_executing_wave_2_partial_04_02_done
 project: SemBridge
 milestone: v1.0
 current_phase: 4
 current_wave: 2
-current_plan: phase_4_wave_2_ready_to_execute
+current_plan: phase_4_wave_2_continue_04_03_04_04
 session_active: true
 ---
 
@@ -23,39 +23,43 @@ session_active: true
 
 | Campo | Valore |
 |-------|--------|
-| Fase | **Phase 4 — Realtime inbound (SSE/WS) — 🟢 EXECUTING (Wave 1 done)** |
-| Wave | **1 / 6 done** (Wave 2 next: 04-02 ∥ 04-03 ∥ 04-04) |
-| Plan in esecuzione | — (04-01 completato; Wave 2 ready: 3 plan paralleli) |
-| Plan progress F4 | 1 / 9 plan committed (04-01 done; 04-02..04-09 todo) |
-| Plan progress globale | 38 / 46 (83%) |
+| Fase | **Phase 4 — Realtime inbound (SSE/WS) — 🟢 EXECUTING (Wave 2 partial: 04-02 done)** |
+| Wave | **1 / 6 done + Wave 2 partial** (Wave 2 remaining: 04-03 ∥ 04-04) |
+| Plan in esecuzione | — (04-02 completato; Wave 2 remaining: 04-03 + 04-04) |
+| Plan progress F4 | 2 / 9 plan committed (04-01 + 04-02 done; 04-03..04-09 todo) |
+| Plan progress globale | 39 / 46 (85%) |
 | Mode GSD | yolo + auto_advance + parallelization (sequential exec, no worktree) |
 | Modello attivo | `claude-opus-4-7-1` (opus) — override esplicito su tutti i sub-agent |
 
-## Ultimo step completato (auto-update 2026-05-04T12:41:52Z)
+## Ultimo step completato (2026-05-04 — plan 04-02)
 
-- Plan: **04-01** → SUMMARY.md committed
-- Commit: `a3c3004 docs(04-01): complete plan SUMMARY + STATE/ROADMAP/TRACKER update — Phase 4 Wave 1 done`
-- Phase progress: **1/9** plan completati con SUMMARY.md
-- Project progress: 38/46 plan (83%)
+- Plan: **04-02** → SUMMARY.md committed (frame-parser puro WebSocket envelope JSON)
+- Commits TDD: `26cc3c2` RED test + `edcbf3b` GREEN feat (+ commit metadata SUMMARY/STATE/ROADMAP/TRACKER finale)
+- Files: 3 nuovi (332 LOC: types/frame-envelope.ts 50 + frame-parser.ts 140 + frame-parser.test.ts 142)
+- Tests: 15/15 frame-parser PASS + 120/120 gateway suite + 654/654 monorepo full
+- D-83 strict ✓ (zero modifiche fuori `gateway/src/sse-ws/`)
+- PITFALL §11.7 chiusura Q1 anti-AP-6 verificato (`grep startsWith('__')` = 0)
+- Q2 closure 04-CONTEXT — riuso ERR-02 ext F3 `network.error` per frame parse errors
+- Phase progress: **2/9** plan completati con SUMMARY.md
+- Project progress: 39/46 plan (85%)
 
 
 ## Prossimo step
 
-**Wave 2 — 3 plan paralleli con file ownership disgiunta:**
+**Wave 2 — 2 plan paralleli rimanenti con file ownership disgiunta (04-02 already done):**
 
 ```
 Skill: gsd-execute-phase 4
 ```
 
-Plan da eseguire (parallel-friendly, no scrittura su file 04-01):
-- **04-02** — frame-parser.ts (envelope JSON D-106 + isInternalTopic strict anti-AP-6) → scrive `frame-parser.{ts,test.ts}` + `types/frame-envelope.ts`
+Plan da eseguire (parallel-friendly, no scrittura su file 04-01/04-02):
 - **04-03** — reconnect-strategy.ts (full-jitter D-109 + auto-fallback D-107 + consolidationMs Q3) → scrive `reconnect-strategy.{ts,test.ts}`
 - **04-04** — visibility-detector.ts (D-110 + DI guard Worker/SSR) → scrive `visibility-detector.{ts,test.ts}`
 
 Wave struttura globale F4:
 - ✅ Wave 1: 04-01 (bootstrap) — DONE 2026-05-04
-- 🟡 Wave 2: 04-02 ∥ 04-03 ∥ 04-04 (3 parallel — NEXT)
-- ⏳ Wave 3: 04-05 ∥ 04-06 (2 parallel — SSE/WS adapters)
+- 🟡 Wave 2: 04-02 done ∥ 04-03 todo ∥ 04-04 todo
+- ⏳ Wave 3: 04-05 ∥ 04-06 (2 parallel — SSE/WS adapters; 04-06 consuma parseFrame da 04-02)
 - ⏳ Wave 4: 04-07 (RealtimeChannelManager + runReconnectLoop)
 - ⏳ Wave 5: 04-08 (RealtimeBroker + integration tests Tier-1/2/3)
 - ⏳ Wave 6: 04-09 (final gate)
