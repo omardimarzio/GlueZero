@@ -1,11 +1,11 @@
 ---
 last_updated: 2026-05-04
-status: phase_4_executing_wave_3_04_05_done_pending_04_06
+status: phase_4_executing_wave_3_done_pending_wave_4_04_07_manager
 project: SemBridge
 milestone: v1.0
 current_phase: 4
-current_wave: 3
-current_plan: phase_4_wave_3_04_06_ws_adapter_next
+current_wave: 4
+current_plan: phase_4_wave_4_04_07_realtime_channel_manager_next
 session_active: true
 ---
 
@@ -23,39 +23,41 @@ session_active: true
 
 | Campo | Valore |
 |-------|--------|
-| Fase | **Phase 4 — Realtime inbound (SSE/WS) — 🟢 EXECUTING (Wave 3: 04-05 SSE adapter ✅ DONE; pending 04-06 WS adapter)** |
-| Wave | **3 / 6 in progress** (04-05 done; 04-06 next) |
-| Plan in esecuzione | — (04-05 completato; 04-06 next sequential) |
-| Plan progress F4 | 5 / 9 plan committed (04-01 + 04-02 + 04-03 + 04-04 + 04-05 done; 04-06..04-09 todo) |
-| Plan progress globale | 42 / 46 (91%) |
+| Fase | **Phase 4 — Realtime inbound (SSE/WS) — 🟢 EXECUTING (Wave 3 ✅ DONE: SSE+WS adapters; Wave 4 pending — 04-07 RealtimeChannelManager)** |
+| Wave | **3 / 6 done; Wave 4 next** (04-05 + 04-06 done; 04-07 next sequential) |
+| Plan in esecuzione | — (04-06 completato; 04-07 next sequential) |
+| Plan progress F4 | 6 / 9 plan committed (04-01 + 04-02 + 04-03 + 04-04 + 04-05 + 04-06 done; 04-07..04-09 todo) |
+| Plan progress globale | 43 / 46 (93%) |
 | Mode GSD | yolo + auto_advance + parallelization (sequential exec, no worktree) |
 | Modello attivo | `claude-opus-4-7-1` (opus) — override esplicito su tutti i sub-agent |
 
-## Ultimo step completato (auto-update 2026-05-04T13:50:30Z)
+## Ultimo step completato (auto-update 2026-05-04T16:05:00Z)
 
-- Plan: **04-05** → SUMMARY.md committed
-- Commit: `bf848a1 docs(04-05): complete plan SUMMARY + STATE/ROADMAP/REQUIREMENTS/TRACKER update — Phase 4 Wave 3 SSE adapter done`
-- Phase progress: **5/9** plan completati con SUMMARY.md
-- Project progress: 42/46 plan (91%)
+- Plan: **04-06** → SUMMARY.md ready for commit
+- Commit GREEN: `740ba5b feat(04-06): implement WebSocketAdapter (envelope JSON + ping/pong + stale + scheme switch + bufferedAmount cap)`
+- Commit RED: `4349b8a test(04-06): add failing tests for WebSocketAdapter (D-101/D-106/D-107/D-111, RT-02/04/05/06)`
+- Commit Helper: `4d4d654 test(04-06): add MockWebSocket test util with byChannelName indexing (B-NEW-2 fix iter 2)`
+- Phase progress: **6/9** plan completati con SUMMARY.md
+- Project progress: 43/46 plan (93%)
 
 
 ## Prossimo step
 
-**Wave 3 — 04-06 WS adapter (sequential):**
+**Wave 4 — 04-07 RealtimeChannelManager (sequential):**
 
 ```
 Skill: gsd-execute-phase 4
 ```
 
 Plan da eseguire:
-- **04-06** — websocket-adapter.ts (envelope JSON D-106 + ping/pong app-level D-111 + scheme switch D-107 http/ws + state machine timing) → consuma `parseFrame` + `INTERNAL_TOPICS` + `isInternalTopic` da 04-02; usa `createReconnectStrategy` da 04-03; pattern adapter analog `sse-adapter.ts` da 04-05
+- **04-07** — realtime-channel-manager.ts (N-channel registry + cascade D-112 + visibility orchestration + reconnect loop) → consuma `createVisibilityDetector` da 04-04 + `createReconnectStrategy` da 04-03 + `SseAdapter` da 04-05 + `WebSocketAdapter` da 04-06; orchestration auto-fallback SSE↔WS (D-107 + reconnect.shouldFallback() / fallback() / globalCycleCap 5)
 
 Wave struttura globale F4:
 - ✅ Wave 1: 04-01 (bootstrap) — DONE 2026-05-04
 - ✅ Wave 2: 04-02 + 04-03 + 04-04 — DONE 2026-05-04 (3 plan TDD building blocks)
-- 🟡 Wave 3: 04-05 ✅ DONE + 04-06 ⏳ pending (SSE/WS adapters)
+- ✅ Wave 3: 04-05 + 04-06 — DONE 2026-05-04 (SSE+WS adapters production-ready)
 - ⏳ Wave 4: 04-07 (RealtimeChannelManager + runReconnectLoop, consuma createVisibilityDetector da 04-04 + createReconnectStrategy da 04-03 + SseAdapter da 04-05 + WSAdapter da 04-06)
-- ⏳ Wave 5: 04-08 (RealtimeBroker + integration tests Tier-1/2/3, usa MockEventSource.byChannelName per harness routing strict B-NEW-2)
+- ⏳ Wave 5: 04-08 (RealtimeBroker + integration tests Tier-1/2/3, usa MockEventSource.byChannelName + MockWebSocket.byChannelName per harness routing strict B-NEW-2)
 - ⏳ Wave 6: 04-09 (final gate)
 
 Phase 4 lock highlights:
@@ -79,6 +81,7 @@ Phase 4 lock highlights:
 
 ## Decisioni recenti rilevanti
 
+- **Plan 04-06 ESEGUITO ✓ (Wave 3 close — WS adapter)** — `WebSocketAdapter` class production-ready: lifecycle connect/disconnect/checkFreshness, scheme switch automatico http(s)→ws(s) (D-107 — `switchScheme` con `URL` API + fallback regex), envelope JSON parsing strict via `parseFrame` di 04-02 (D-106), heartbeat ping/pong applicativo `{topic:'__ping__',data:{ts}}` ogni 30s con stale watchdog 60s (D-111 + anti-AP-4 RESEARCH §4.6 — `Date.now()-lastPongAt > staleTimeoutMs` → close + recordFailure), bufferedAmount cap 64KB pre-send (RESEARCH §4.4 — `BUFFERED_AMOUNT_PING_CAP` constant), close codes routing RFC 6455 §7.4 (`shouldReconnectOnCloseCode` pure function — 1000 normal/1002/1003/1007/1009/1010/1015 fatali → no recordFailure; altri → recordFailure manager-triggered), wsSubprotocols passthrough opt-in (Q4 — `new Ctor(wsUrl, subprotocols as string\|string[])`), AbortController cascade (D-112) con re-init al re-connect (pattern coerente con 04-05 Rule 1 fix), backpressure DI adapter-level (D-115 riuso F3 1:1 — schedule(channelName, 'normal', task)), DI WebSocketCtor per test jsdom (RESEARCH §9.1). PITFALL §11.7 anti-AP-6 verificato runtime: `isInternalTopic` strict (frame-parser di 04-02) — `__ping__`/`__pong__` consumed (pong aggiorna lastPongAt), `weather.__ping__` passa through (Test 7+15). 15/15 websocket-adapter test PASS, 175/175 gateway, **709/709 monorepo full**, tsc clean su 4 package. Anti-AP-3 verificato (0 import `reconnecting-websocket`); anti-AP-6 (0 `startsWith('__')`); anti-AP-2 (0 `Authorization`). MockWebSocket test util con `byChannelName` Map indicizzata via `?_channel=<name>` (B-NEW-2 fix iter 2 owned da 04-06, parallelo a MockEventSource owned da 04-05 — abilita harness routing strict 04-08). RT-02 closed (WebSocket adapter production-ready); RT-04/RT-05/RT-06/RT-07 progress (WS source descriptor + heartbeat + envelope JSON + ping/pong stale detection); ERR-02 ext (network.error category protocol Test 6 + system.realtime.connected/disconnected close codes Test 4/11/12). D-83 strict ✓ (zero modifiche fuori `gateway/src/sse-ws/`). Issue minore: DTS build TS5055 race condition con `clean: true` di tsup transient (risolto con `rm -rf dist` prima del rebuild — non è issue del codice).
 - **Plan 04-05 ESEGUITO ✓ (Wave 3 — SSE adapter)** — `SseAdapter` class production-ready: lifecycle connect/disconnect/checkFreshness, Last-Event-ID via query string `?lastEventId=` (D-105 / RESEARCH §3.2 / chiusura RT-07), W-4 SC-1 closure (def.eventTypes loop addEventListener — topic deriva da event field SSE), B-5 Q5 closure (def.sseHeartbeatEventTypes default ['heartbeat'] silent freshness update senza publish), backpressure DI adapter-level (D-115 riuso F3), AbortController cascade (D-112) con re-init al re-connect (Rule 1 fix), DI EventSourceCtor per test jsdom (RESEARCH §9.1). MockEventSource test util con `byChannelName` Map (B-NEW-2 fix iter 2 owned da 04-05 — abilita harness routing strict 04-08). 14/14 test PASS, 160/160 gateway, **694/694 monorepo full**, tsc clean. Anti-AP-2 verificato (0 `Authorization`); anti-AP-3 (0 import `reconnecting-websocket`); AP-4 implicito (`es.close()` esplicito su error). RT-01/RT-04/RT-06/RT-07 progress (SSE-side closed; pending WS 04-06 + integration 04-07/04-08); RT-05 partial (createReconnectStrategy istanziata, loop reconnect del manager).
 - **Plan 04-04 ESEGUITO ✓ (Wave 2 close)** — `createVisibilityDetector({ onChange, document })` factory event-driven. Pattern listener tracking analog `combine-signals.ts:62-86` (memoize listener ref + addEventListener + removeEventListener puntuale). DI guard 3-way: `undefined` → `globalThis.document`, `null` → explicit Worker/SSR disable (no-op + getState 'visible' default sicuro), `Document` mock → test injection. Idempotenza esplicita start/stop (T-04-04-02/03 mitigation). Anti-AP-5 verificato: 0 setInterval/setTimeout (event-driven puro). 11/11 test PASS, **680/680 monorepo full**, tsc clean su 4 package. RT-05 progresso (visibility wrapper done; pending heartbeat 04-05/06 + manager 04-07).
 - **Plan 04-03 ESEGUITO ✓ (Wave 2)** — `createReconnectStrategy` factory state machine: full jitter D-109 + auto-fallback D-107 (threshold 3 + cycle cap 5) + Q3 §6.2 consolidationMs guard anti-flap (default 5000ms — opzione B). Interface 8 metodi, DI random+now per test deterministici. 15/15 test PASS, 669/669 monorepo, anti-AP-3 verificato (no `reconnecting-websocket` import). Pattern factory + closure analog circuit-breaker.ts F3.

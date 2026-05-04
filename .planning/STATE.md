@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-last_updated: "2026-05-04T15:45:00.000Z"
+last_updated: "2026-05-04T16:05:00.000Z"
 progress:
   total_phases: 6
   completed_phases: 3
   total_plans: 46
-  completed_plans: 42
-  percent: 91
+  completed_plans: 43
+  percent: 93
 ---
 
 # Project State: SemBridge
@@ -28,16 +28,16 @@ progress:
 ## Current Position
 
 Phase: 04 (Realtime inbound (SSE prioritario, WS opzionale)) — EXECUTING
-Plan: 6 of 9 (next, after Wave 3 — 04-06 WS adapter)
+Plan: 7 of 9 (next, Wave 4 — 04-07 RealtimeChannelManager)
 Total Plans: 9 (Phase 4)
 
-**Last completed:** Plan 04-05 (Wave 3 — SSE adapter) at 2026-05-04 — 3 commits atomic (ba74ed6 helper test util MockEventSource + b581aa7 RED test + fde59f8 GREEN feat); 3 nuovi file 876 LOC (sse-adapter.ts 464 + sse-adapter.test.ts 278 + test-utils/mock-event-source.ts 134). `SseAdapter` class production-ready con lifecycle connect/disconnect/checkFreshness, Last-Event-ID injection manuale via query string `?lastEventId=` (D-105 / RESEARCH §3.2 / chiusura RT-07), W-4 SC-1 closure (def.eventTypes loop addEventListener — topic deriva da event field SSE), B-5 Q5 closure (def.sseHeartbeatEventTypes default ['heartbeat'] silent freshness update senza publish), backpressure DI adapter-level (D-115 riuso F3 1:1), AbortController cascade (D-112) con re-init al re-connect (Rule 1 fix), DI EventSourceCtor per test jsdom (RESEARCH §9.1). 14/14 sse-adapter test PASS + 160/160 gateway suite + **694/694 monorepo full** + tsc clean su 4 package. D-83 strict ✓ (zero modifiche fuori `gateway/src/sse-ws/`). Anti-AP-2 verificato (0 Authorization literal); anti-AP-3 (0 import reconnecting-websocket); AP-4 implicito (es.close() forzato su error). RT-01/RT-04/RT-06/RT-07 closed; RT-05 partial (createReconnectStrategy istanziata, loop di reconnect è del manager 04-07). MockEventSource.byChannelName Map indicizzata via `?_channel=<name>` query param (B-NEW-2 fix owned da 04-05). Building block pronto per consumer 04-07 RealtimeChannelManager (manager istanzia `new SseAdapter(def, deps)` e gestisce loop reconnect).
+**Last completed:** Plan 04-06 (Wave 3 close — WS adapter) at 2026-05-04 — 3 commits atomic (4d4d654 helper test util MockWebSocket + 4349b8a RED test + 740ba5b GREEN feat); 3 nuovi file 1116 LOC (websocket-adapter.ts 583 + websocket-adapter.test.ts 341 + test-utils/mock-websocket.ts 192). `WebSocketAdapter` class production-ready con lifecycle connect/disconnect/checkFreshness, scheme switch automatico http(s)→ws(s) (D-107), envelope JSON parsing strict via parseFrame di 04-02 (D-106), heartbeat ping/pong applicativo `{topic:'__ping__',data:{ts}}` ogni 30s con stale watchdog 60s (D-111 + anti-AP-4 RESEARCH §4.6), bufferedAmount cap 64KB pre-send (RESEARCH §4.4), close codes routing RFC 6455 §7.4 (1000 normal vs 1006 abnormal vs fatali no-recovery via `shouldReconnectOnCloseCode` helper), wsSubprotocols passthrough opt-in (Q4), AbortController cascade (D-112) con re-init al re-connect, backpressure DI adapter-level (D-115 riuso F3 1:1), DI WebSocketCtor per test jsdom (RESEARCH §9.1). 15/15 websocket-adapter test PASS + 175/175 gateway suite + **709/709 monorepo full** + tsc clean su 4 package. D-83 strict ✓ (zero modifiche fuori `gateway/src/sse-ws/`). Anti-AP-3 verificato (0 import reconnecting-websocket); anti-AP-6 verificato (0 `startsWith('__')`); anti-AP-2 verificato (0 Authorization literal); AP-4 implicito (ping/pong app-level + stale watchdog NON `readyState===OPEN` come liveness). RT-02 closed (WebSocket adapter production-ready); RT-04 progress (source.name='websocket' Test 4); RT-05/RT-06/RT-07 progress (ping/pong app-level + envelope JSON D-106 + close codes RFC 6455 + bufferedAmount cap). MockWebSocket.byChannelName Map indicizzata via `?_channel=<name>` query param (B-NEW-2 fix owned da 04-06, parallelo a MockEventSource owned da 04-05). PITFALL §11.7 anti-AP-6 verificato runtime: Test 7 (`__ping__` filtrato strict) + Test 15 (`weather.__ping__` passa through). Building block pronto per consumer 04-07 RealtimeChannelManager (manager istanzia `new WebSocketAdapter(def, deps)` e gestisce loop reconnect cross-channel).
 
-**Next:** `/gsd-execute-phase 4` Wave 3 — Plan 04-06 (WS adapter, consuma parseFrame da 04-02 + envelope JSON D-106 + ping/pong D-111 + scheme switch D-107) per chiudere Wave 3, poi Wave 4 (04-07 RealtimeChannelManager).
+**Next:** `/gsd-execute-phase 4` Wave 4 — Plan 04-07 (RealtimeChannelManager + runReconnectLoop, consuma createVisibilityDetector da 04-04 + createReconnectStrategy da 04-03 + SseAdapter da 04-05 + WSAdapter da 04-06).
 
 - **Phase:** 3 ✅ COMPLETE
 - **Status:** Ready to execute
-- **Progress:** [█████████░] 91%
+- **Progress:** [█████████░] 93%
 
 ## Phases Overview
 
@@ -51,7 +51,7 @@ Total Plans: 9 (Phase 4)
 | 1 | Core essenziale (broker pub/sub, plugin registry, EventTap pre-instrumentato) | **✅ COMPLETE & VERIFIED (11/11 plans, PASS confidence HIGH)** |
 | 2 | Canonical Model & Mapper bidirezionale + Mapping Inspector | **✅ COMPLETE — ready for verifier (12/12 plans)** |
 | 3 | Routing engine + HTTP gateway con retry/timeout/dedupe/auth | **✅ COMPLETE — ready for verifier (14/14 plans, 4 open issues PRD §39 closed)** |
-| 4 | Realtime inbound (SSE prioritario, WS opzionale) | **In Progress — 5/9 plans (04-01 Wave 1 + 04-02..04-04 Wave 2 + 04-05 Wave 3 SSE adapter done; 04-06 WS adapter next)** |
+| 4 | Realtime inbound (SSE prioritario, WS opzionale) | **In Progress — 6/9 plans (04-01 Wave 1 + 04-02..04-04 Wave 2 + 04-05+04-06 Wave 3 SSE+WS adapters done; 04-07 RealtimeChannelManager next — Wave 4)** |
 | 5 | Worker Runtime (registry, route worker, task tracking) | Not started |
 | 6 | Cache + Tooling avanzato (Inspector, Metrics, debug API) | Not started |
 
@@ -96,6 +96,7 @@ Total Plans: 9 (Phase 4)
 | Phase 04 P03 | 4min | 1 tasks | 2 files (reconnect-strategy.{ts,test.ts} 407 LOC; 15/15 test PASS, 669/669 monorepo) |
 | Phase 04 P04 | ~18min | 1 tasks | 2 files (visibility-detector.{ts,test.ts} 275 LOC; 11/11 test PASS, 680/680 monorepo) |
 | Phase 04 P05 | ~15min | 2 tasks | 3 files (sse-adapter.{ts,test.ts} + test-utils/mock-event-source.ts; 876 LOC; 14/14 test PASS, 694/694 monorepo, anti-AP-2/3 ✓, D-83 strict ✓) |
+| Phase 04 P06 | ~15min | 2 tasks | 3 files (websocket-adapter.{ts,test.ts} + test-utils/mock-websocket.ts; 1116 LOC; 15/15 test PASS, 709/709 monorepo, anti-AP-2/3/6 ✓ + AP-4 implicito, D-83 strict ✓) |
 
 ## Accumulated Context
 
@@ -177,6 +178,13 @@ Total Plans: 9 (Phase 4)
 | Plan 04-05 Rule 1 fix: AbortController re-init al re-connect (era bloccato da disconnect) | Il pattern originale `private readonly controller = new AbortController()` (single-instance per lifetime) bloccava qualsiasi re-connect dopo `disconnect()` perché `disconnect()` chiama `controller.abort(reason)` e `connect()` aveva guard `if (controller.signal.aborted) return`. Fix: rimosso `readonly`, aggiunto re-init opportunistic in `connect()` se `controller.signal.aborted`. Mantenuta guard sull'`externalSignal` (early return se l'external è abortito). Pattern coerente con http-gateway.ts fetch lifecycle multi-attempt. Test 6 (Last-Event-ID injection) ha rivelato il bug. | 04-05-SUMMARY.md |
 | Plan 04-05 B-NEW-2 fix iter 2: MockEventSource.byChannelName Map indicizzata via `?_channel=<name>` query param (owned da 04-05) | Test util in `test-utils/mock-event-source.ts` espone `static byChannelName: Map<string, MockEventSource>`. Constructor parsa il query param `_channel` e si registra: `MockEventSource.byChannelName.set(channelName, this)`. `__reset()` chiama anche `byChannelName.clear()`. Permette `MockEventSource.byChannelName.get('orders')` lookup deterministico nel harness routing strict per-canale di plan 04-08, evitando il fallback ambiguo a `MockEventSource.lastInstance` (cross-canale pollution pre-fix B-2). Owned da 04-05 invece di retrofittare in 04-08. | 04-05-SUMMARY.md |
 | Plan 04-05 ErrorCategory union F1 → 'protocol' viaggia in payload del network.error event (NOT come BrokerError.category) | L'union `ErrorCategory` di F1 (`packages/core/src/types/error.ts:19-28`) NON include `'protocol'`. Per evitare modifica core (D-83 strict), il topic invalid (regex F1 fail) pubblica un `BrokerEvent` con `topic: 'network.error'` e `payload: { category: 'protocol', code: 'realtime.topic.invalid', channel: def.name, rawTopic }` — la category 'protocol' è una stringa nel payload, NON il `BrokerError.category` field. Coerente con D-106 (frame parse errors → network.error riuso ERR-02 ext F3) e Q2 RESEARCH. Verifica Test 9: `expect(errorCall![0].payload).toMatchObject({ category: 'protocol', code: 'realtime.topic.invalid', ... })`. | 04-05-SUMMARY.md |
+| Plan 04-06 D-107 closure: scheme switch automatico http(s)→ws(s) | `WebSocketAdapter.switchScheme()` usa `URL` API per parsing strict (gestisce path/host/protocol) + fallback regex `^https?:\/\/` per URL relativi/malformati. Permette al consumer di passare un URL HTTP coerente con il resto dell'API (es. `https://api.example.com/ws`) senza dover gestire la conversione. Test 1 verifica `buildUrl='https://api.example.com/ws'` → `MockWebSocket.lastInstance.url === 'wss://api.example.com/ws'`. Auto-fallback SSE↔WS V1 (D-107 + reconnect-strategy 04-03 globalCycleCap 5) è orchestrato dal manager 04-07; l'adapter 04-06 gestisce solo la conversione URL del proprio mode. | 04-06-SUMMARY.md |
+| Plan 04-06 D-111 closure: ping/pong applicativo + stale watchdog (anti-AP-4) | Heartbeat timer setInterval(intervalMs default 30s) invia `{topic:'__ping__',data:{ts}}` via `ws.send(JSON.stringify(...))`. Server risponde con `{topic:'__pong__'}` → `lastPongAt = Date.now()` (reset watchdog). Stale check FIRST in ogni tick: se `Date.now() - lastPongAt > staleTimeoutMs` (default 60s) → publish `system.realtime.disconnected reason='stale.no-pong'` + `recordFailure()` + `ws.close()` + `stopHeartbeat()`. Anti-AP-4 mitigation: NON trustare `readyState===OPEN` come liveness (RESEARCH §4.6 — TCP zombie OPEN-but-dead dietro NAT). Test 4/8/9/10 verificano end-to-end. | 04-06-SUMMARY.md |
+| Plan 04-06 RFC 6455 §7.4 close codes routing — `shouldReconnectOnCloseCode` helper | Pure function: `code === 1000` (normal) → false; `code in {1002,1003,1007,1009,1010,1015}` (fatali protocol/policy/TLS) → false; tutti gli altri (1001 Going Away, 1006 Abnormal Closure, 1011 Server Error, 1012 Service Restart, 1013 Try Again Later, 1014 Bad Gateway) → true. Il listener `'close'` chiama `recordFailure()` SOLO se `shouldReconnectOnCloseCode(code) && !this.intentionallyClosed` (chiusura manuale via `disconnect()` setta `intentionallyClosed=true` per disabilitare recordFailure). Test 11 verifica close 1006 → publishFn `system.realtime.disconnected payload.code=1006`; Test 12 verifica close 1000 → publish ma NO recordFailure (proxy: readyState===CLOSED senza ulteriori publish stale/failed). | 04-06-SUMMARY.md |
+| Plan 04-06 Q4 closure: wsSubprotocols passthrough opt-in | `def.wsSubprotocols?: string \| readonly string[]` (Q4 / PITFALL §11.3). Se popolato → `new WebSocket(wsUrl, subprotocols as string \| string[])`. Se omesso → `new WebSocket(wsUrl)`. Test 2 verifica `def.wsSubprotocols=['sembridge-v1']` → `MockWebSocket.lastInstance.protocol === 'sembridge-v1'`. Permette auth handshake server-side (es. server richiede subprotocol custom per identificare la API version o token bearer alternativo). | 04-06-SUMMARY.md |
+| Plan 04-06 RESEARCH §4.4 closure: bufferedAmount cap 64KB pre-send ping | `BUFFERED_AMOUNT_PING_CAP = 64_000` costante. In ogni tick heartbeat, `if (!this.ws \|\| this.ws.bufferedAmount > 64_000) return` → ping skipped. Quando il TCP send buffer è saturo (tab in background, network slow), inviare ulteriori frame ping aggraverebbe la pressione memoria senza benefit (il socket sta già drenando lentamente). Compromesso empirico (RESEARCH §4.4 / §4.7). Test 13 verifica `__setBufferedAmount(100_000) + advanceTimers(1_100)` → `sentFrames.length` invariato. | 04-06-SUMMARY.md |
+| Plan 04-06 PITFALL §11.7 anti-AP-6 closure runtime: `__ping__`/`__pong__` strict, `weather.__ping__` passa through | `dispatchInbound()` chiama `isInternalTopic(topic)` di frame-parser plan 04-02 (match `topic === '__ping__' \|\| topic === '__pong__'` esatto, NON `startsWith('__')`). `__ping__` consumed silenziosamente (server-emitted, no publish utente); `__pong__` aggiorna `lastPongAt` (reset watchdog). Topic legittimi consumer come `weather.__ping__` (raro ma legittimo) NON sono internal — passano through al `publishFn`. Test 7 verifica `__ping__` → publishFn NON invocato; Test 15 verifica `weather.__ping__` → publishFn invocato con `topic='weather.__ping__'`. Verifica grep runtime: `grep -v '^//' websocket-adapter.ts \| grep -c "startsWith('__')" === 0`. | 04-06-SUMMARY.md |
+| Plan 04-06 B-NEW-2 fix iter 2 owned: MockWebSocket.byChannelName Map indicizzata via `?_channel=<name>` query param (owned da 04-06) | Test util in `test-utils/mock-websocket.ts` espone `static byChannelName: Map<string, MockWebSocket>`. Constructor parsa il query param `_channel` e si registra: `MockWebSocket.byChannelName.set(channelName, this)`. `__reset()` chiama anche `byChannelName.clear()`. Permette `MockWebSocket.byChannelName.get('orders')` lookup deterministico nel harness routing strict per-canale di plan 04-08, parallelo a `MockEventSource.byChannelName` owned da 04-05. Pattern unificato test-utils tra SSE e WS. | 04-06-SUMMARY.md |
 
 ### Open Issues PRD §39 — Phase Assignment
 
