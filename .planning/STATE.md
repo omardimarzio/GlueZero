@@ -2,14 +2,14 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: verifying
-last_updated: "2026-05-04T07:19:43.281Z"
+status: executing
+last_updated: "2026-05-04T14:38:00Z"
 progress:
   total_phases: 6
   completed_phases: 3
-  total_plans: 37
-  completed_plans: 37
-  percent: 100
+  total_plans: 46
+  completed_plans: 38
+  percent: 83
 ---
 
 # Project State: SemBridge
@@ -23,20 +23,20 @@ progress:
 - **Authoritative source:** `prd.md` (root del progetto, "l'unica base informativa condivisa con il developer", PRD §1)
 - **Core Value:** I plugin/componenti possono essere sviluppati indipendentemente, con la propria nomenclatura locale, e interoperare correttamente attraverso il vocabolario canonico del broker — senza accordo preventivo sui nomi tra autori
 - **Current Milestone:** v1
-- **Current Focus:** Phase 04 — realtime-inbound (next, post Phase 3 verifier)
+- **Current Focus:** Phase 04 — Realtime inbound (SSE prioritario, WS opzionale)
 
 ## Current Position
 
-Phase: 03 (routing-server-gateway-http) — ✅ **COMPLETE** (14/14 plans, ready for gsd-verifier)
-Plan: 14 of 14
-Total Plans: 14
+Phase: 04 (Realtime inbound (SSE prioritario, WS opzionale)) — EXECUTING
+Plan: 2 of 9 (next)
+Total Plans: 9 (Phase 4)
 
-**Last completed:** Plan 03-14 (F3 Wave 9 final gate — DOC-04 README italiani routing + gateway 600 LOC, biome cleanup + manual TS bracket fix per 4 regression auto-unsafe, CI gates extension publint+attw+size-limit a @sembridge/routing + @sembridge/gateway, 4-pass build cyclic dep routing↔gateway documentato in build:f3 root script, coverage v8 calibrate post-implementation: routing 92.4/84.3/92.6/95.1 + gateway 86.3/77.7/90/88.5, size budget routing 6→24 KB raised lesson learned (actual 19.15 KB), gateway/http 6.4/8 KB OK; ROADMAP.md + STATE.md aggiornati Phase 3 COMPLETE) at 2026-05-03T23:05Z — 3 commits (86790f0 README, 660fec6 biome cleanup, 9922a36 CI gates ext); D-83 strict verificato (zero modifiche packages/core/ né packages/mapper/ runtime — 248 core + 183 mapper invariati); 4 open issues PRD §39 chiusi cumulativamente in F3 (#5 ROUTE-16, #6 ROUTE-15, #7 LIFE-02 ext F3, #8 ROUTE-09).
+**Last completed:** Plan 04-01 (Wave 1 — Bootstrap @sembridge/gateway/sse-ws subpath: types F4 + augment.ts decl merging + barrel skeleton + build/test config) at 2026-05-04T14:38Z — 2 commits atomic (d090a1b feat scaffold + 2624c66 chore build/test config); 6 nuovi file 503 LOC source+test (augment.ts 105 + realtime-config.ts 87 + realtime-channel-def.ts 125 + types/index.ts 18 + index.ts 33 + augment.test.ts 135) + 4 modificati (package.json exports, tsup.config entries, vitest.config exclude, src/index.ts umbrella re-export). Placeholder F1 in core/types/plugin.ts:50 ("F4 will add: realtimeChannels") chiuso via declaration merging additive senza modifiche al core. 8 test smoke decl merging passed + 105/105 gateway suite OK + tsc clean + build success ESM 71ms + DTS 577ms (dist/sse-ws/{index,augment}.{js,d.ts} prodotti). D-83 strict ✓ (zero modifiche runtime a packages/{core,mapper,routing}/src/ né packages/gateway/src/http/). RT-01/RT-02/RT-03/RT-05 type-level done.
 
-**Next:** `/gsd-verifier 3` per goal-backward verification dei 5 success criteria + 29 REQ-IDs F3 + threat model accumulative T-03-01..T-03-14, poi `/gsd-discuss-phase 4` (Realtime SSE/WebSocket inbound — RT-01..RT-08, chiude PRD §39 #9 RT-07).
+**Next:** `/gsd-execute-phase 4` per Wave 2 (3 plan paralleli con file ownership disgiunta): 04-02 (frame-parser.ts envelope JSON D-106 + isInternalTopic strict), 04-03 (reconnect-strategy.ts full-jitter D-109 + auto-fallback D-107 + consolidationMs Q3), 04-04 (visibility-detector.ts D-110 + DI guard Worker/SSR).
 
 - **Phase:** 3 ✅ COMPLETE
-- **Status:** Ready for verifier
+- **Status:** Executing Phase 04
 - **Progress:** [██████████] 100%
 
 ## Phases Overview
@@ -51,7 +51,7 @@ Total Plans: 14
 | 1 | Core essenziale (broker pub/sub, plugin registry, EventTap pre-instrumentato) | **✅ COMPLETE & VERIFIED (11/11 plans, PASS confidence HIGH)** |
 | 2 | Canonical Model & Mapper bidirezionale + Mapping Inspector | **✅ COMPLETE — ready for verifier (12/12 plans)** |
 | 3 | Routing engine + HTTP gateway con retry/timeout/dedupe/auth | **✅ COMPLETE — ready for verifier (14/14 plans, 4 open issues PRD §39 closed)** |
-| 4 | Realtime inbound (SSE prioritario, WS opzionale) | Ready to discuss (next) |
+| 4 | Realtime inbound (SSE prioritario, WS opzionale) | **In Progress — 1/9 plans (04-01 Wave 1 done)** |
 | 5 | Worker Runtime (registry, route worker, task tracking) | Not started |
 | 6 | Cache + Tooling avanzato (Inspector, Metrics, debug API) | Not started |
 
@@ -91,6 +91,7 @@ Total Plans: 14
 | Phase 03-routing-server-gateway-http P12 | 120 | 3 tasks | 10 files |
 | Phase 03 P13 | 30min | 2 tasks | 10 files |
 | Phase 03 P14 | ~35min | 5 tasks | 8 files (2 README + 4 vitest/package.json + biome cleanup ~46 file) |
+| Phase 04 P01 | ~10min | 2 tasks | 10 files (6 nuovi 503 LOC + 4 modificati build/test config) |
 
 ## Accumulated Context
 

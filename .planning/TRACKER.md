@@ -1,11 +1,11 @@
 ---
 last_updated: 2026-05-04
-status: phase_4_planning_complete
+status: phase_4_executing_wave_1_done
 project: SemBridge
 milestone: v1.0
 current_phase: 4
-current_wave: 1
-current_plan: phase_4_plans_ready_chain_to_execute
+current_wave: 2
+current_plan: phase_4_wave_2_ready_to_execute
 session_active: true
 ---
 
@@ -23,36 +23,43 @@ session_active: true
 
 | Campo | Valore |
 |-------|--------|
-| Fase | **Phase 4 — Realtime inbound (SSE/WS) — 🟡 PLANNING COMPLETE** |
-| Wave | **0 / 6** (ready for execute, wave 1 next) |
-| Plan in esecuzione | — (9 plan committed, verifier passed iter 3) |
-| Plan progress F4 | 0 / 9 plan committed (04-01..04-09) |
-| Plan progress globale | 37 / 46 (F4 9 plan aggiunti) |
+| Fase | **Phase 4 — Realtime inbound (SSE/WS) — 🟢 EXECUTING (Wave 1 done)** |
+| Wave | **1 / 6 done** (Wave 2 next: 04-02 ∥ 04-03 ∥ 04-04) |
+| Plan in esecuzione | — (04-01 completato; Wave 2 ready: 3 plan paralleli) |
+| Plan progress F4 | 1 / 9 plan committed (04-01 done; 04-02..04-09 todo) |
+| Plan progress globale | 38 / 46 (83%) |
 | Mode GSD | yolo + auto_advance + parallelization (sequential exec, no worktree) |
 | Modello attivo | `claude-opus-4-7-1` (opus) — override esplicito su tutti i sub-agent |
 
-## Ultimo step completato (auto-update 2026-05-04)
+## Ultimo step completato (auto-update 2026-05-04T14:38Z)
 
-- Step: **Phase 4 plan-phase** → 9 PLAN.md + RESEARCH.md + PATTERNS.md committed; verifier PASSED iter 3
-- Commit chain: `3a17b23` (CONTEXT) → `7f74906` (RESEARCH 1398 LOC) → `e4350fa` (PATTERNS 1838 LOC) → `7d10686` (9 PLAN) → `6ec5633` (revision iter 1: B-1..B-5 + W-1..W-5) → `b4c42d0` (revision iter 2: B-NEW-1/2 + W-NEW-1/2/3)
-- Verifier trend: iter 1 (5B+5W=10) → iter 2 (2B+3W=5) → iter 3 (0+0=0) → ✅ PASSED
-- File: 9 plan in `.planning/phases/04-realtime-inbound-sse-prioritario-ws-opzionale/04-{01..09}-PLAN.md`
+- Step: **Phase 4 Wave 1 — Plan 04-01 EXECUTED ✓** (Bootstrap @sembridge/gateway/sse-ws subpath)
+- Commit chain: `d090a1b` (feat scaffold: 6 nuovi file 503 LOC types+augment+barrel+test) → `2624c66` (chore build/test config: package.json exports + tsup entries + vitest exclude + umbrella barrel)
+- Risultato: 8 test smoke decl merging passed + 105/105 gateway suite OK + tsc clean + build success ESM 71ms + DTS 577ms (dist/sse-ws/{index,augment}.{js,d.ts} prodotti)
+- D-83 strict ✓ (zero modifiche runtime a packages/{core,mapper,routing}/src/ né packages/gateway/src/http/)
+- RT-01/RT-02/RT-03/RT-05 type-level done; placeholder F1 in core/types/plugin.ts:50 chiuso via decl merging additive
+- File: SUMMARY.md prodotto in `.planning/phases/04-realtime-inbound-sse-prioritario-ws-opzionale/04-01-SUMMARY.md`
 
 ## Prossimo step
 
-**Auto-advance via `--chain` → execute-phase 4:**
+**Wave 2 — 3 plan paralleli con file ownership disgiunta:**
 
 ```
 Skill: gsd-execute-phase 4
 ```
 
-Wave structure (6 wave, parallel-friendly):
-- Wave 1: 04-01 (bootstrap)
-- Wave 2: 04-02 ∥ 04-03 ∥ 04-04 (3 parallel — frame-parser, reconnect-strategy, visibility-detector)
-- Wave 3: 04-05 ∥ 04-06 (2 parallel — SSE/WS adapters)
-- Wave 4: 04-07 (RealtimeChannelManager + runReconnectLoop)
-- Wave 5: 04-08 (RealtimeBroker + integration tests Tier-1/2/3)
-- Wave 6: 04-09 (final gate)
+Plan da eseguire (parallel-friendly, no scrittura su file 04-01):
+- **04-02** — frame-parser.ts (envelope JSON D-106 + isInternalTopic strict anti-AP-6) → scrive `frame-parser.{ts,test.ts}` + `types/frame-envelope.ts`
+- **04-03** — reconnect-strategy.ts (full-jitter D-109 + auto-fallback D-107 + consolidationMs Q3) → scrive `reconnect-strategy.{ts,test.ts}`
+- **04-04** — visibility-detector.ts (D-110 + DI guard Worker/SSR) → scrive `visibility-detector.{ts,test.ts}`
+
+Wave struttura globale F4:
+- ✅ Wave 1: 04-01 (bootstrap) — DONE 2026-05-04
+- 🟡 Wave 2: 04-02 ∥ 04-03 ∥ 04-04 (3 parallel — NEXT)
+- ⏳ Wave 3: 04-05 ∥ 04-06 (2 parallel — SSE/WS adapters)
+- ⏳ Wave 4: 04-07 (RealtimeChannelManager + runReconnectLoop)
+- ⏳ Wave 5: 04-08 (RealtimeBroker + integration tests Tier-1/2/3)
+- ⏳ Wave 6: 04-09 (final gate)
 
 Phase 4 lock highlights:
 - Auth-agnostic via `buildUrl()` hook (D-104)

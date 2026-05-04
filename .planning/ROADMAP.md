@@ -161,7 +161,7 @@ RT-01, RT-02, RT-03, RT-04, RT-05, RT-06, RT-07, ERR-02 (extension: `system.real
   5. `connectRealtime(config)` accetta `{ mode: 'sse' | 'websocket', url, reconnect: { interval, maxAttempts, backoff, jitter, heartbeat, staleDetection } }`; `disconnectRealtime()` chiude il canale e libera tutte le risorse senza memory leak (verificato con `getDebugSnapshot()`).
 
 **Plans**: 9 plans
-- [ ] 04-01-PLAN.md — Bootstrap @sembridge/gateway/sse-ws + augment + types F4 (Wave 1)
+- [x] 04-01-PLAN.md — Bootstrap @sembridge/gateway/sse-ws + augment + types F4 (Wave 1) — completato 2026-05-04 (2 commits: d090a1b feat scaffold + 2624c66 chore build/test config; 6 nuovi file 503 LOC + 4 modificati; 8 test smoke decl merging passed; 105/105 gateway suite; D-83 strict ✓; placeholder F1 in core/types/plugin.ts:50 chiuso via decl merging additive; subpath @sembridge/gateway/sse-ws risolvibile; RT-01/RT-02/RT-03/RT-05 type-level done)
 - [ ] 04-02-PLAN.md — frame-parser.ts (envelope JSON D-106 + isInternalTopic strict anti-AP-6) (Wave 2)
 - [ ] 04-03-PLAN.md — reconnect-strategy.ts (full jitter D-109 + auto-fallback D-107 + consolidationMs Q3) (Wave 2)
 - [ ] 04-04-PLAN.md — visibility-detector.ts (D-110 + DI guard Worker/SSR) (Wave 2)
@@ -311,9 +311,9 @@ I 11 punti che il PRD §39 vieta esplicitamente di lasciare impliciti vengono ch
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Core essenziale | 11/11 | ✅ Complete & Verified | 2026-04-29 |
-| 2. Canonical Model & Mapper | 11/12 | In Progress | - |
-| 3. Routing & Server Gateway HTTP | 9/14 | In Progress (03-01..03-09 done) | - |
-| 4. Realtime inbound | 0/0 | Not started | - |
+| 2. Canonical Model & Mapper | 12/12 | ✅ Complete | 2026-04-30 |
+| 3. Routing & Server Gateway HTTP | 14/14 | ✅ Complete | 2026-05-03 |
+| 4. Realtime inbound | 1/9 | In Progress (04-01 done — Wave 1) | - |
 | 5. Worker Runtime | 0/0 | Not started | - |
 | 6. Cache & Tooling avanzato | 0/0 | Not started | - |
 
