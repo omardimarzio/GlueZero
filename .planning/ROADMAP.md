@@ -160,7 +160,16 @@ RT-01, RT-02, RT-03, RT-04, RT-05, RT-06, RT-07, ERR-02 (extension: `system.real
   4. Tab in background: il timer heartbeat è soggetto a throttling browser; il client riconosce questa condizione via Visibility API e su `visibilitychange → visible` forza un check di freschezza prima di considerare la connessione viva.
   5. `connectRealtime(config)` accetta `{ mode: 'sse' | 'websocket', url, reconnect: { interval, maxAttempts, backoff, jitter, heartbeat, staleDetection } }`; `disconnectRealtime()` chiude il canale e libera tutte le risorse senza memory leak (verificato con `getDebugSnapshot()`).
 
-**Plans**: TBD
+**Plans**: 9 plans
+- [ ] 04-01-PLAN.md — Bootstrap @sembridge/gateway/sse-ws + augment + types F4 (Wave 1)
+- [ ] 04-02-PLAN.md — frame-parser.ts (envelope JSON D-106 + isInternalTopic strict anti-AP-6) (Wave 2)
+- [ ] 04-03-PLAN.md — reconnect-strategy.ts (full jitter D-109 + auto-fallback D-107 + consolidationMs Q3) (Wave 2)
+- [ ] 04-04-PLAN.md — visibility-detector.ts (D-110 + DI guard Worker/SSR) (Wave 2)
+- [ ] 04-05-PLAN.md — sse-adapter.ts (EventSource wrapper + Last-Event-ID + backpressure D-115) (Wave 3)
+- [ ] 04-06-PLAN.md — websocket-adapter.ts (envelope JSON + ping/pong D-111 + scheme switch D-107) (Wave 3)
+- [ ] 04-07-PLAN.md — realtime-channel-manager.ts (N-channel registry + cascade D-112 + visibility orchestration) (Wave 4)
+- [ ] 04-08-PLAN.md — realtime-broker.ts composition wrapper + createRealtimeBroker factory + 6 integration test D-119 (Wave 5)
+- [ ] 04-09-PLAN.md — Final gate F4: CI gates + DOC-04 README + JSDoc + ROADMAP/STATE/REQUIREMENTS update + RT-01..RT-07 → Complete (Wave 6)
 **Needs research**: yes
 **UI hint**: no
 
