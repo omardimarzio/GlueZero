@@ -48,7 +48,7 @@ import { createBrokerError, type BrokerEvent, type PluginDescriptor, type Subscr
 import { RouterBroker, type RouterBrokerConfig } from '@sembridge/routing'
 
 import { WorkerRegistry, type WorkerEntry, type WorkerRegistrySnapshot } from './worker-registry'
-import { WorkerPool, type WorkerPoolSnapshot } from './worker-pool'
+import { WorkerPool, type WorkerBridgeLike, type WorkerPoolSnapshot } from './worker-pool'
 import {
   WorkerBridge,
   type WorkerBridgeDeps,
@@ -96,6 +96,17 @@ export interface WorkerBrokerConfig extends RouterBrokerConfig {
    * `WorkerBridge` per uso da `desc.factory()`.
    */
   readonly WorkerCtor?: typeof Worker
+  /**
+   * DI bridge factory per integration test Tier-1 (D-150). Quando fornita,
+   * sostituisce il default `WorkerBridge` (Comlink-based). Permette di iniettare
+   * un `MockBridge` deterministico senza dipendere dal Comlink RPC.
+   *
+   * Default: undefined → il broker usa `new WorkerBridge(desc, deps)` con
+   * `WorkerCtor` + `assertSerializableMode` propagati.
+   *
+   * @internal — usato principalmente da `__integration__/` con MockBridge.
+   */
+  readonly bridgeFactory?: (desc: WorkerDescriptor) => WorkerBridgeLike
 }
 
 /**
@@ -171,6 +182,8 @@ export class WorkerBroker {
   private readonly WorkerCtor: typeof Worker | undefined
   /** AssertSerializable mode propagato al WorkerBridge factory. */
   private readonly assertSerializableMode: AssertSerializableMode | undefined
+  /** Custom bridge factory (DI integration test). */
+  private readonly customBridgeFactory: ((desc: WorkerDescriptor) => WorkerBridgeLike) | undefined
 
   constructor(config: WorkerBrokerConfig = {}) {
     // 1. Compose RouterBroker (F3) — pattern identico RealtimeBroker → RouterBroker
@@ -181,6 +194,7 @@ export class WorkerBroker {
     this.registry = new WorkerRegistry()
     this.WorkerCtor = config.WorkerCtor
     this.assertSerializableMode = config.workers?.assertSerializable
+    this.customBridgeFactory = config.bridgeFactory
     this.pool = new WorkerPool({
       registry: this.registry,
       bridgeFactory: (desc) => this.makeBridge(desc),
@@ -471,7 +485,10 @@ export class WorkerBroker {
    *
    * @internal
    */
-  private makeBridge(desc: WorkerDescriptor): WorkerBridge {
+  private makeBridge(desc: WorkerDescriptor): WorkerBridgeLike {
+    if (this.customBridgeFactory !== undefined) {
+      return this.customBridgeFactory(desc)
+    }
     const deps: WorkerBridgeDeps = {
       ...(this.WorkerCtor !== undefined && { WorkerCtor: this.WorkerCtor }),
       ...(this.assertSerializableMode !== undefined && {

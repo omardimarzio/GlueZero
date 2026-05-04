@@ -23,6 +23,8 @@
 
 import { createWorkerBroker } from '../public-factory'
 import type { WorkerBroker, WorkerBrokerConfig } from '../worker-broker'
+import type { WorkerBridgeLike } from '../worker-pool'
+import type { ProgressPayload, WorkerDescriptor } from '../types'
 import { MockWorker } from './mock-worker'
 import type { BrokerEvent } from '@sembridge/core'
 
@@ -66,6 +68,136 @@ export interface WorkerHarness {
 }
 
 /**
+ * Behavior config per `MockBridge` deterministico — controlla il dispatch
+ * per task name. Il worker id è la chiave Map.
+ */
+export interface MockBridgeBehavior {
+  /**
+   * Per-task behavior. Se manca o `taskName` non matcha → `result: undefined`
+   * (task no-op che resolve immediato).
+   */
+  readonly tasks?: Readonly<Record<string, TaskBehavior>>
+  /** Cooperative cancel grace ms — dispatch onora `signal` (default true). */
+  readonly cooperativeCancel?: boolean
+}
+
+/**
+ * Per-task behavior — controlla risposta async, progress, error injection,
+ * delay deterministic.
+ */
+export interface TaskBehavior {
+  /** Result da ritornare (default `undefined`). Ignored se `error` è settato. */
+  readonly result?: unknown
+  /** Delay ms prima di resolve (default 0). */
+  readonly delayMs?: number
+  /** Error da throware dopo `delayMs` (default undefined). */
+  readonly error?: Error
+  /** Progress da emettere durante il dispatch (default nessuno). */
+  readonly progress?: readonly ProgressPayload[]
+}
+
+/**
+ * `MockBridge` — implementazione `WorkerBridgeLike` deterministica per
+ * integration test Tier-1. Onora `signal` cooperativo (reject su abort).
+ *
+ * Tracking interno per assertion test: `instances` array statico, `dispatchCalls`
+ * counter per worker id.
+ */
+export class MockBridge implements WorkerBridgeLike {
+  static instances: MockBridge[] = []
+  static byWorkerId: Map<string, MockBridge[]> = new Map()
+  static reset(): void {
+    MockBridge.instances = []
+    MockBridge.byWorkerId.clear()
+  }
+
+  terminated = false
+  dispatchCalls = 0
+  lastSignal?: AbortSignal
+  cancelledCount = 0
+
+  constructor(
+    public readonly desc: WorkerDescriptor,
+    private readonly behavior: MockBridgeBehavior = {},
+  ) {
+    MockBridge.instances.push(this)
+    const arr = MockBridge.byWorkerId.get(desc.id) ?? []
+    arr.push(this)
+    MockBridge.byWorkerId.set(desc.id, arr)
+  }
+
+  async dispatch(
+    taskName: string,
+    _payload: unknown,
+    signal: AbortSignal,
+    onProgress?: (p: ProgressPayload) => void,
+    _options?: { readonly transferable?: readonly string[] },
+  ): Promise<unknown> {
+    this.dispatchCalls++
+    this.lastSignal = signal
+
+    const taskBehavior = this.behavior.tasks?.[taskName] ?? {}
+
+    // Emit progress events
+    if (taskBehavior.progress !== undefined && onProgress !== undefined) {
+      for (const p of taskBehavior.progress) {
+        onProgress(p)
+      }
+    }
+
+    // Delay con cooperative cancel
+    const delayMs = taskBehavior.delayMs ?? 0
+    if (delayMs > 0) {
+      await new Promise<void>((resolve, reject) => {
+        const timer = setTimeout(() => resolve(), delayMs)
+        const onAbort = (): void => {
+          clearTimeout(timer)
+          this.cancelledCount++
+          reject(
+            new DOMException(`Aborted: ${String(signal.reason ?? 'aborted')}`, 'AbortError'),
+          )
+        }
+        if (signal.aborted) {
+          onAbort()
+        } else {
+          signal.addEventListener('abort', onAbort, { once: true })
+        }
+      })
+    } else if (signal.aborted) {
+      this.cancelledCount++
+      throw new DOMException(`Aborted: ${String(signal.reason ?? 'aborted')}`, 'AbortError')
+    }
+
+    if (taskBehavior.error !== undefined) {
+      throw taskBehavior.error
+    }
+    return taskBehavior.result
+  }
+
+  terminate(): void {
+    this.terminated = true
+  }
+}
+
+/**
+ * Helper per creare descriptor con factory MockWorker (utility convenience).
+ */
+export function makeMockDescriptor(
+  id: string,
+  tasks: readonly string[] = ['fetch'],
+  options: Partial<Pick<WorkerDescriptor, 'mode' | 'size'>> = {},
+): WorkerDescriptor {
+  const desc: WorkerDescriptor = {
+    id,
+    factory: () => new MockWorker(`about:blank?_worker=${id}`) as unknown as Worker,
+    tasks,
+    mode: options.mode ?? 'dedicated',
+    ...(options.size !== undefined && { size: options.size }),
+  }
+  return desc
+}
+
+/**
  * Crea harness F5 con MockWorker injected come DI WorkerCtor.
  *
  * @example
@@ -86,10 +218,13 @@ export interface WorkerHarness {
  * h.reset()
  * ```
  */
-export function createWorkerHarness(opts: WorkerHarnessOptions = {}): WorkerHarness {
-  // Reset MockWorker static state al boot — assicura test isolation se il
-  // consumer non chiama reset() prima di ri-creare l'harness.
+export function createWorkerHarness(
+  opts: WorkerHarnessOptions = {},
+  mockBridgeBehaviors?: Readonly<Record<string, MockBridgeBehavior>>,
+): WorkerHarness {
+  // Reset static state — assicura test isolation.
   MockWorker.reset()
+  MockBridge.reset()
 
   const events: CollectedEvent[] = []
 
@@ -99,6 +234,15 @@ export function createWorkerHarness(opts: WorkerHarnessOptions = {}): WorkerHarn
     ...brokerConfig,
     // DI MockWorker come WorkerCtor default (test Tier-1 jsdom).
     WorkerCtor: brokerConfig.WorkerCtor ?? (MockWorker as unknown as typeof Worker),
+    // DI MockBridge factory di default per integration test — onora signal
+    // cooperativo + tracking deterministico per assertion. Il consumer può
+    // override passando `bridgeFactory` esplicito in `opts`.
+    bridgeFactory:
+      brokerConfig.bridgeFactory ??
+      ((desc): WorkerBridgeLike => {
+        const behavior = mockBridgeBehaviors?.[desc.id] ?? {}
+        return new MockBridge(desc, behavior)
+      }),
   }
   const broker = createWorkerBroker(config)
 

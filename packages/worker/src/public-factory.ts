@@ -91,6 +91,7 @@ const WorkerBrokerConfigSchema = v.looseObject({
   // DI test (Tier-1 jsdom — D-150). Pass-through `unknown` (constructor
   // typecheck già).
   WorkerCtor: v.optional(v.unknown()),
+  bridgeFactory: v.optional(v.unknown()),
 })
 
 /**
