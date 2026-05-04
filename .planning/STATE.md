@@ -2,14 +2,14 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: executing
-last_updated: "2026-05-04T23:48:00.000Z"
+status: phase_5_complete_ready_for_verifier
+last_updated: "2026-05-05T00:15:00.000Z"
 progress:
   total_phases: 6
-  completed_phases: 4
+  completed_phases: 5
   total_plans: 53
-  completed_plans: 51
-  percent: 96
+  completed_plans: 52
+  percent: 98
 ---
 
 # Project State: SemBridge
@@ -27,10 +27,11 @@ progress:
 
 ## Current Position
 
-Phase: 5 (worker-runtime) — EXECUTING
-Wave: 4 ✅ COMPLETE (05-06) → Wave 5 (05-07 final gate F5) ready
-Plan: 6 of 7 (05-01..05-06 done; 05-07 pending — final gate F5)
-Total Plans: 7 (Phase 5)
+Phase: 5 (worker-runtime) — ✅ COMPLETE (ready for gsd-verifier 5)
+Wave: 5 ✅ COMPLETE (05-07 final gate F5 done)
+Plan: 7 of 7 (05-01..05-07 all done with SUMMARY)
+Total Plans: 7 (Phase 5) — phase_5_complete_ready_for_verifier
+Next phase: Phase 6 — Cache & Tooling avanzato (auto-advance enabled `/gsd-discuss-phase 6`)
 
 **Last completed:** Plan 05-06 (Wave 4 — composition wrapper Opzione B + factory + integration test 3-tier) at 2026-05-04 — 4 commits atomici: `4717a2e` feat WorkerHandler Strategy F3 dispatch + atomic state + sanitized errors (D-152/D-153/D-146 + Pitfall 2C closure) + `e117332` feat WorkerBroker composition wrapper Opzione B + createWorkerBroker factory + harness (D-121/122/126/152) + `6141eba` test 8 integration test Tier-1 jsdom (D-151 #1-#6 + #8 + #9 — TEST-01/02/03 ext F5) + `ff3d694` test Tier-3 Playwright real Worker smoke + D-151 #7 transferable byteLength=0 (D-150 + D-141 Pitfall 7.E verified). 16 file creati + 1 modificato (~2112 LOC totali — 1383 source + 616 integration + 113 browser). **121/121 worker test passing** Tier-1 jsdom (8 handler + 12 broker + 6 factory + 8 integration + 87 W1+W2+W3 precedenti) + **6/6 browser smoke Tier-3 Playwright Chromium reale**; cross-package: core 248/248 + mapper 183/183 + routing 103/103 + gateway 222/225 (3 skip MSW V1.x F4) → zero regression. Build OK ESM-only: dist/index.js 50.85 KB (+18.50 vs 05-04), dts 60.72 KB. Typecheck zero errors su 5 package. **D-83 strict ✓ verified** `git diff main packages/{core,mapper,routing}/src/ packages/gateway/src/{http,sse-ws}/` empty. **Opzione B research §7.2 verified**: `WorkerBroker.publish` intercepta topic matching una worker route registrata PRIMA di delegare a `inner.publish` (RouterBroker F3) — JSDoc cita Opzione B + D-83 in 14 occurrenze + 4 esplicite RESEARCH §7.2. **DI bridgeFactory innovation** (Auto-fix Rule 2): aggiunta opzione `WorkerBrokerConfig.bridgeFactory` per integration test deterministico — sostituisce default `WorkerBridge` (Comlink RPC reale) con `MockBridge` cooperativo (onora signal, tracking instances/byWorkerId/dispatchCalls/cancelledCount). Pattern coerente con `WorkerPool.bridgeFactory` (05-05 disaccoppiamento). **Sanitized error shape** writer-side (T-03-07-01 carryover F3 OutcomeCollector): `{ code, category, message, routeId, topic, eventId, workerId, taskName }` — niente `originalError`/`stack`/`cause`. **ERR-02 ext F5**: ogni failure emette sia `<topic>.failed` che `worker.error` topic ext. **D-151 10 scenari coverage**: #1-#6 + #8 + #9 (8) in Tier-1 + #7 (transferable byteLength=0) in Tier-3 + #10 (assertSerializable PRE-postMessage no spawn) coperto in 05-04 worker-bridge.test Test 4. 11/11 threat enumerate (T-05-06-01..T-05-06-11) tutti `LOW` severity, 10 `mitigate` + 1 `accept` (externalAbortControllers Map cleanup in finally bounded). REQ progress: WK-01..WK-07 subset W4 done (full closure 05-07), ERR-02 ext F5 complete, LIFE-02 ext F5 complete, TEST-01/02/03 ext F5 complete subset W4.
 
@@ -40,11 +41,22 @@ Total Plans: 7 (Phase 5)
 
 **Last completed Phase 4:** Plan 04-09 (Wave 6 — Final gate F4) at 2026-05-04 — RT-01..RT-07 + ERR-02 ext + LIFE-02 ext F4 + TEST-01/02/03 ext F4 closed. **Open issue PRD §39 #9 (RT-07) chiuso** in DOC-04. D-83 strict carryover ✓ verified per tutta F4.
 
-**Next:** Wave 5 (05-07 final gate F5) — Wave 4 ✅ COMPLETE. 05-07 finalizzerà CI gates (lint biome + typecheck + build size + coverage v8 thresholds calibration), DOC-05 README italiano (Worker section ~11 sub-paragrafi analog F4 04-09 W-4), JSDoc TypeDoc-ready public API (`@example`/`@see`/`@throws`/`@param` analog F4 04-09 W-3), REQ matrix flip atomic WK-01..WK-07 → Complete, PRD §39 #11 (WK-07 serialization rationale) closure esplicito, ROADMAP/STATE/TRACKER finalization.
+**Last completed:** Plan 05-07 (Wave 5 — Final gate F5) at 2026-05-05 — 5 commits atomici: `1347d0b` test coverage thresholds calibration post-implementation (91.5/83/90/93.5 measured floor) + size-limit budget @sembridge/worker 32 KB gz + biome auto-format 25 file (zero behavior change) + `33d20a7` docs DOC-05 README italiano @sembridge/worker 11 sezioni 429 LOC (Quick start + Worker source + Pool + Cancellation + Progress + Serialization WK-07 PRD §39 #11 + Scenario meteo F5 + State machine Pitfall 2C + Module loading + Limitazioni V1 + Q&A) + `e3b8770` docs JSDoc API pubblica TypeDoc-ready 5 file (public-factory + worker-handler + task-tracker + worker-pool + worker-registry) — preservation in dts: @example 23 / @see 30 / @throws 21 (sopra target floor 10/15/5 analog F4 12/21/x) + `3f07f7a` docs REQ matrix flip atomic WK-01..WK-07 → Complete + ERR-02/LIFE-02/TEST-01-02-03 ext F5 → Complete + PRD §39 #11 CLOSED 2026-05-05 + final closure docs commit (questo + ROADMAP/STATE/TRACKER + 05-07-SUMMARY.md). Test invariato 121/121 worker (Tier-1 jsdom + Tier-3 Playwright Chromium 6/6) + 877/880 monorepo full (3 skip MSW V1.x F4) zero regression. CI gates: publint ✅, attw ESM-only ✅, size-limit ✅, biome ✅, typecheck ✅, build ✅. **D-83 strict carryover ✓ verified** `git diff main...HEAD packages/{core,mapper,routing}/src/ + packages/gateway/src/{http,sse-ws}/` exit 0 lines per tutta F5.
 
-- **Phase:** 5 EXECUTING (Wave 4 ✅ COMPLETE)
-- **Status:** In progress (6/7 plan done con SUMMARY: 05-01 + 05-02 + 05-03 + 05-04 + 05-05 + 05-06; pending 05-07 final gate)
-- **Progress:** [██████████] 96% globale
+**Phase 5 closure highlights:**
+- WK-01..WK-07 + ERR-02 ext + LIFE-02 ext F5 + TEST-01/02/03 ext F5 → Complete
+- DOC-05 README italiano `packages/worker/README.md` esteso 11 sezioni 429 LOC con scenario report generation pesante PRD §29 esteso a worker
+- Coverage v8 worker subset 91.96% / 83.73% / 90.58% / 94.17% (above floor 85/75/88/87 + above target 90/80/90/90)
+- CI gates publint+attw+lint+typecheck+build+size-limit all ✅
+- D-83 strict carryover ✓ verified zero modifiche runtime a F1-F4 per tutta F5 (composition wrapper Opzione B research §7.2)
+- PRD §39 #11 (WK-07 serializzazione messaggi worker) chiuso ✅ (sezione 6 + sezione 11 Q&A DOC-05)
+- 34 decisioni F5 lockate D-121..D-154 (composition wrapper + Factory worker source + pool bounded + cancellation hybrid + state machine atomico + serialization contract + topic naming + ESM module loading + 3-tier test + final gate)
+
+**Next:** Phase 6 — Cache & Tooling avanzato (ULTIMA fase v1.0). Auto-advance enabled tramite `/gsd-discuss-phase 6` o manual `gsd-verifier 5` prima.
+
+- **Phase:** 5 ✅ COMPLETE (ready for gsd-verifier)
+- **Status:** Complete (7/7 plan done con SUMMARY: 05-01 + 05-02 + 05-03 + 05-04 + 05-05 + 05-06 + 05-07)
+- **Progress:** [██████████] 98% globale
 
 ## Phases Overview
 
@@ -59,7 +71,7 @@ Total Plans: 7 (Phase 5)
 | 2 | Canonical Model & Mapper bidirezionale + Mapping Inspector | **✅ COMPLETE — ready for verifier (12/12 plans)** |
 | 3 | Routing engine + HTTP gateway con retry/timeout/dedupe/auth | **✅ COMPLETE — ready for verifier (14/14 plans, 4 open issues PRD §39 closed)** |
 | 4 | Realtime inbound (SSE prioritario, WS opzionale) | **✅ COMPLETE — ready for verifier (9/9 plans, 1 open issue PRD §39 #9 closed)** |
-| 5 | Worker Runtime (registry, route worker, task tracking) | Not started |
+| 5 | Worker Runtime (registry, route worker, task tracking) | **✅ COMPLETE — ready for verifier (7/7 plans, 1 open issue PRD §39 #11 closed)** |
 | 6 | Cache + Tooling avanzato (Inspector, Metrics, debug API) | Not started |
 
 ## Performance Metrics

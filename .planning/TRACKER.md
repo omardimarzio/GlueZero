@@ -1,11 +1,11 @@
 ---
-last_updated: 2026-05-04
-status: phase_5_wave_4_complete_ready_for_wave_5
+last_updated: 2026-05-05
+status: phase_5_complete_ready_for_verifier
 project: SemBridge
 milestone: v1.0
 current_phase: 5
-current_wave: 4_complete
-current_plan: 05-06_done
+current_wave: 5_complete
+current_plan: 05-07_done_phase_5_closed
 session_active: true
 ---
 
@@ -23,45 +23,55 @@ session_active: true
 
 | Campo | Valore |
 |-------|--------|
-| Fase | **Phase 5 — Worker Runtime — 🟢 EXECUTING** (Wave 4 ✅ COMPLETE — 05-06) |
-| Wave | 4 ✅ COMPLETE → Wave 5 (05-07 final gate) ready |
-| Plan in esecuzione | 05-06 ✅ done (commit `ff3d694` test Tier-3 Playwright real Worker smoke); next: 05-07 |
-| Plan progress F5 | **6 / 7** (05-01..05-06 done; 05-07 pending — final gate F5) |
+| Fase | **Phase 5 — Worker Runtime — ✅ COMPLETE** (7/7 plans done — ready for gsd-verifier 5; auto-advance pronta a Phase 6 Cache & Tooling avanzato — ULTIMA fase v1.0) |
+| Wave | 5 ✅ COMPLETE (05-07 final gate F5 done) |
+| Plan in esecuzione | nessuno — Phase 5 chiusa; next phase: Phase 6 (auto-advance via `/gsd-discuss-phase 6` o manual `gsd-verifier 5` prima) |
+| Plan progress F5 | **7 / 7 (✅ COMPLETE)** — 05-01..05-07 done |
 | Plan progress F4 | **9 / 9 (✅ COMPLETE)** — 04-01..04-09 done |
-| Plan progress globale | 51 / 53 (Phase 5: 1 plan da eseguire ancora — 05-07 final gate) |
+| Plan progress globale | 52 / 53 (Phase 6 ancora da pianificare — 0 plan F6) |
 | Mode GSD | yolo + auto_advance + parallelization (sequential exec, no worktree) |
 | Modello attivo | `claude-opus-4-7-1` (opus) — override esplicito su tutti i sub-agent |
 
-## Ultimo step completato (auto-update 2026-05-04T21:55:40Z)
+## Ultimo step completato (auto-update 2026-05-05 — final gate F5 closure)
 
-- Plan: **05-06** → SUMMARY.md committed
-- Commit: `e432dd7 docs(05-06): SUMMARY Wave 4 composition wrapper Opzione B + integration test 3-tier`
-- Phase progress: **6/7** plan completati con SUMMARY.md
-- Project progress: 51/53 plan (96%)
+- Plan: **05-07** ✅ done — Phase 5 CHIUSA
+- Output: 5 commit atomici (CI gates calibration + DOC-05 README + JSDoc + REQ matrix + final closure)
+  - `1347d0b` test(05-07): coverage thresholds calibration post-implementation + size-limit budget @sembridge/worker
+  - `33d20a7` docs(05-07): DOC-05 README italiano @sembridge/worker — 11 sezioni + WK-07 closure (PRD §39 #11)
+  - `e3b8770` docs(05-07): JSDoc API pubblica TypeDoc-ready su file F5 (@example/@see/@throws preservati in dts)
+  - `3f07f7a` docs(05-07): REQ matrix flip — WK-01..WK-07 + ERR-02/LIFE-02/TEST-01-02-03 ext F5 → Complete + PRD §39 #11 CLOSED
+  - (final closure commit — ROADMAP/STATE/TRACKER + 05-07-SUMMARY.md — questo step)
+- Decisioni lockate: zero nuove (closure di D-121..D-154 esistenti)
+- Plan precedente: 05-06 (composition wrapper Opzione B + factory + 8 integration test Tier-1 + 6 browser smoke Tier-3 Playwright)
+- Phase 5 closure highlights:
+  - WK-01..WK-07 + ERR-02 ext + LIFE-02 ext F5 + TEST-01/02/03 ext F5 → Complete
+  - DOC-05 README italiano `packages/worker/README.md` 11 sezioni 429 LOC
+  - Coverage v8 91.96/83.73/90.58/94.17 (above floor + above target)
+  - CI gates: publint+attw+lint+typecheck+build+size-limit all ✅
+  - D-83 strict carryover ✓ verified zero modifiche runtime a F1-F4 per tutta F5
+  - PRD §39 #11 (WK-07 serializzazione messaggi worker) chiuso ✅
+  - Phase 6 (Cache + Tooling avanzato) pronta a iniziare — è l'ULTIMA fase v1.0
+
+- Phase progress: **7/7** plan completati con SUMMARY.md (Phase 5 closed)
+- Project progress: 52/53 plan (98%)
 
 
 ## Prossimo step
 
-**Wave 5 (05-07 final gate F5)** — Wave 4 ✅ COMPLETE.
-
-05-07 finalizzerà la Phase 5:
-- CI gates (lint biome + typecheck + build size + coverage v8 thresholds calibration post-implementation)
-- DOC-05 README italiano (Worker section ~11 sub-paragrafi analog F4 04-09 W-4: Quick start, Worker descriptor + factory lazy, Pool bounded + cap 8, Cancellation hybrid dedicated/pool, AbortSignal + cancelGraceMs, State machine atomico Pitfall 2C, Progress canonical schema + throttle, Serialization assertSerializable + transferable JSONPath WK-07 closure PRD §39 #11, Topic naming auto-derive D-146, Test 3-tier D-150, Limitazioni V1)
-- JSDoc TypeDoc-ready public API (`@example`/`@see`/`@throws`/`@param` analog F4 04-09 W-3 — WorkerBroker class + createWorkerBroker + createWorkerHandler + WorkerBridge + WorkerPool + WorkerRegistry + helper builders)
-- REQ matrix flip atomic WK-01..WK-07 → Complete + ERR-02 ext F5 + LIFE-02 ext F5 + TEST-01/02/03 ext F5
-- PRD §39 #11 (WK-07 serialization rationale) closure esplicito in DOC-05 + REQUIREMENTS.md
-- ROADMAP/STATE/TRACKER finalization Phase 5 → COMPLETE
+**Phase 5 ✅ COMPLETE — ready for gsd-verifier 5** (poi `/gsd-discuss-phase 6` Cache & Tooling avanzato).
 
 ```
-Skill: gsd-execute-phase 5  (continua da Wave 5 — final gate)
+Skill: gsd-verifier 5  (verifica chiusura Phase 5)
+# OPPURE auto-advance:
+/gsd-discuss-phase 6  (inizia Phase 6 — Cache & Tooling avanzato — ULTIMA fase v1.0)
 ```
 
-Wave struttura globale F5 (RIEPILOGO):
+Wave struttura globale F5 (RIEPILOGO CHIUSURA):
 - ✅ Wave 1: 05-01 (bootstrap) — DONE 2026-05-04
 - ✅ Wave 2: 05-02 + 05-03 (building blocks A + B) — DONE 2026-05-04
 - ✅ Wave 3: 05-04 (worker-bridge) ‖ 05-05 (worker-pool/registry) — DONE 2026-05-04 (parallel file ownership disgiunta)
 - ✅ Wave 4: 05-06 (broker composition Opzione B + harness + 8 integration test Tier-1 + 6 browser smoke Tier-3 Playwright Chromium) — DONE 2026-05-04
-- ⏳ Wave 5: 05-07 (final gate F5: CI gates + DOC-05 README italiano + JSDoc TypeDoc-ready + REQ matrix flip atomic WK-01..WK-07 → Complete + PRD §39 #11 closure)
+- ✅ Wave 5: 05-07 (final gate F5: CI gates + DOC-05 README italiano + JSDoc TypeDoc-ready + REQ matrix flip atomic WK-01..WK-07 → Complete + PRD §39 #11 closure) — DONE 2026-05-05
 
 Phase 5 in entry-point auto (vincoli architetturali confermati):
 - WK-01..WK-07 da REQUIREMENTS.md
@@ -99,6 +109,8 @@ Phase 4 closure highlights:
 - **Auto-advance attivo:** discuss → plan → execute → verify automatico senza chiedere conferma.
 
 ## Decisioni recenti rilevanti
+
+- **Plan 05-07 ESEGUITO ✓ (Wave 5 — Final gate F5 — Phase 5 CHIUSA)** — Final gate F5 completato in 5 commit atomic: `1347d0b` test coverage thresholds calibration post-implementation (worker subset 91.96% statements / 83.73% branches / 90.58% functions / 94.17% lines, supera floor 85/75/88/87 + supera target preliminary 90/80/90/90 — thresholds calibrate al floor measurato 91.5/83/90/93.5 analog F4 04-09 commit 761e4ad pattern) + size-limit budget @sembridge/worker 26.45/32 KB gz (include all deps cross-package Comlink + valibot + nanoid + @sembridge/{core,routing,gateway/http} — bundle effettivo dist/index.js senza deps esterni ~14 KB gz, lesson learned analog F3 routing 19.57/24 KB raised: STACK.md preventivi pre-implementation sotto-stimano sistematicamente per pacchetti compositi) + biome auto-format su 25 file packages/worker/src (organize imports + format whitespace, zero behavior change). `33d20a7` docs DOC-05 README italiano `packages/worker/README.md` 429 LOC 11 sezioni numerate: Quick start (factory createWorkerBroker D-122 + composition wrapper Opzione B D-121 + registerPlugin con workers field D-126), Worker source contract (D-123 factory lazy + D-124 tasks dichiarate fail-fast + D-125 hybrid Comlink expose + D-147 ESM default + D-148 new URL pattern), Pool strategy (D-127 min(hwc,4) + D-128 cap 8 + D-129 lazy first-dispatch + D-130 BackpressureStrategy F3 reuse 1:1 + critical bypass Pitfall 4.C), Cancellation (D-131 hybrid dedicated terminate / pool cooperative grace 2000ms + D-132 AbortSignal proxied via Comlink + D-144 concurrency 'latest-only'), Progress events (D-135 callback proxy + D-136 schema canonical {value, message?, partialResult?} + D-137 throttle 100ms latest-only + D-138 passa per pipeline §28 mapper), Serialization contract WK-07 PRD §39 #11 (D-139 dev-mode auto + D-140 throw PRE-postMessage + D-141 transferable JSONPath + D-142 documentazione completa con tabella structuredClone supported types incl. Date/Map/Set/BigInt/Blob/MessagePort + tabella tipi NON supportati con strategia raccomandata + JSON.stringify NEVER warning + Pitfall 7.E transferable detached byteLength=0), Scenario report generation pesante (esempio end-to-end PRD §29 esteso a worker + correlationId D-134 + cascade unregisterPlugin LIFE-02 ext F5), State machine timeout vs success Pitfall 2C closure (D-133 CAS atomico + counter lateResponses + test deterministic timeout-strict.test.ts), Worker module loading (D-147 ESM default + D-148 bundler-friendly pattern + classic opt-in raro), Limitazioni V1 (pool autoscaling + superjson + custom RPC + SharedWorker + worker.retry + auto-detect transferable + WorkerInspector F6 + IndexedDB queue), Q&A closure PRD §39 #11 (15 domande lockate Phase 5). `e3b8770` docs JSDoc API pubblica TypeDoc-ready: 5 file public arricchiti (public-factory createWorkerBroker 2 @example Quick start + Multi-tenant isolation D-30 + worker-handler 2 @example Strategy dispatch + Topic auto-derive deriveTopic + 4 @throws sanitized error shape + task-tracker 2 @example race timeout/success Pitfall 2C + cooperative cancellation + worker-pool 2 @example Lifecycle + Backpressure F3 reuse Pitfall 4.C critical bypass + 2 @throws + worker-registry 2 @example Register/lookup/cascade + Validate task fail-fast D-124 + 3 @throws); preservation in dist/index.d.ts: @example 23/10 + @see 30/15 + @throws 21/5 (sopra target floor analog F4 12/21/x). `3f07f7a` docs REQ matrix flip atomic in REQUIREMENTS.md: WK-01..WK-07 → Complete con plan reference (es. "Done plan 05-04+05-05+05-06") + ERR-02 ext F5 (worker.error + worker.messageerror sanitized error + ext codes worker.unknown/worker.task.unknown/worker.timeout/worker.cancelled/worker.serialization.failed.<sub>) → Complete + LIFE-02 ext F5 (cascade workers 3-step idempotente) → Complete + TEST-01/02/03 ext F5 (121 worker test Tier-1 jsdom + 6 browser smoke Tier-3 + 8 integration Tier-1 D-151 #1-#6,#8,#9 + Pitfall 2C deterministic) → Complete + DOC-05 → In Progress (worker section delivered F5, full consolidamento F6) + Open Issues PRD §39 #11 (WK-07) → CLOSED 2026-05-05 ✅ con citazione esplicita closure DOC-05 README + plan 05-02 assertSerializable + plan 05-04 transferable. Final docs commit (questo + ROADMAP/STATE/TRACKER + 05-07-SUMMARY.md). REQ flip: WK-01..WK-07 + ERR-02 ext + LIFE-02 ext F5 + TEST-01/02/03 ext F5 → Complete. **PRD §39 #11 (WK-07) chiuso** in DOC-05. Test invariato 121/121 worker Tier-1 jsdom + 6/6 browser smoke Tier-3 Playwright Chromium + 877/880 monorepo full (3 skip MSW V1.x F4 — no regression). D-83 strict carryover ✓ verified `git diff main...HEAD packages/{core,mapper,routing}/src/ + packages/gateway/src/{http,sse-ws}/` exit 0 lines per tutta F5 (composition wrapper Opzione B research §7.2 preserva tutta F1-F4 invariata). Phase 5 ready for gsd-verifier; Phase 6 (Cache & Tooling avanzato — ULTIMA fase v1.0) auto-advance enabled.
 
 - **Plan 05-06 ESEGUITO ✓ (Wave 4 — composition wrapper Opzione B + factory + 8 integration test Tier-1 + 6 browser smoke Tier-3 Playwright)** — `WorkerBroker` class composition wrapper di `RouterBroker` (D-121, D-83 strict carryover F4) — pattern simmetrico a `RealtimeBroker` di F4 (plan 04-08). **Opzione B research §7.2 verified live**: `WorkerBroker.publish(topic)` intercepta topic matching una worker route registrata (Map<topic, RouteWorkerDefinition>) PRIMA di delegare a `inner.publish` (RouterBroker F3). Per topic non-worker → delegate trasparente a inner.publish (pipeline F3 invariata HTTP/local/cache/composite). Per topic worker → costruisce BrokerEvent canonico + AbortController external scope + invoca handler.execute. JSDoc cita Opzione B + D-83 in 14 occurrenze totali + 4 esplicite RESEARCH §7.2. **`createWorkerHandler({ registry, pool, tracker, publishFn })`** Strategy F3 dispatch (D-152 step 9 §28): registry.validateTask fail-fast (D-124) → tracker.register (D-134 correlationId end-to-end) → combined signal (external + timeout default 30s D-145 + concurrency abort) → pool.schedule (D-130 BackpressureStrategy F3 + critical bypass) → bridge.dispatch (Comlink RPC) → atomic CAS via tracker.markDone/markTimeout/markCancelled/markError (D-133 Pitfall 2C closure — late responses scartate silenziosamente) → publishFn outcome event. **Topic auto-derive D-146** via deriveTopic(sourceTopic, suffix) helper esportato — `weather.requested` → `weather.completed`/`.progress`/`.failed`; override esplicito via `route.publishes.{success|progress|error}`. **Sanitized error shape T-03-07-01 carryover**: publishFailure emette `<topic>.failed` (o override) + `worker.error` topic ext (ERR-02 ext F5 — pattern F3 D-81 network.error) con payload `{ code, category, message, routeId, topic, eventId, workerId, taskName }` — niente originalError/stack/cause. **Cascade D-126 LIFE-02 ext F5**: registerPlugin auto-registra desc.workers con ownerId=descriptor.id + system.warn strutturato su register failure (W-5 closure F4 — niente silent catch); unregisterPlugin 3-step cascade `inner.unregisterPlugin + pool.terminateByOwner + registry.unregisterByOwner` con try/catch isolato per idempotency. **`createWorkerBroker(config)`** factory pubblico Valibot WorkerBrokerConfigSchema + safeParse + prefisso `Invalid WorkerBrokerConfig:` + D-30 anti-singleton. **DI bridgeFactory innovation** (Auto-fix Rule 2): aggiunta opzione `WorkerBrokerConfig.bridgeFactory` per integration test deterministico — sostituisce default `WorkerBridge` (Comlink RPC reale) con `MockBridge` cooperativo (onora signal, tracking instances/byWorkerId/dispatchCalls/cancelledCount per assertion). Pattern coerente con `WorkerPool.bridgeFactory` (05-05 disaccoppiamento). **`createWorkerHarness`** fixture analog F4 realtime-harness — collect events via subscribe wildcard multi-depth `'*','*.*','*.*.*','*.*.*.*'` (W-3 closure F4 carryover — niente monkey-patch publish). **D-151 10 scenari coverage**: #1 dedicated.test happy path + correlationId, #2 pool-concurrent.test 4 publish parallel cap rispettato, #3 timeout-strict.test Pitfall 2C closure deterministic (NESSUN .completed dopo timeout + tracker.tasksCompleted===1), #4 cancel-cooperative.test signal abort onorato (cancelledCount>=1), #5 cancel-hard.test unregisterPlugin cascade hard kill (terminated===true + activeBridges===0), #6 serialization-fail.test assertSerializable PRE-postMessage simulata via custom bridgeFactory + worker.serialization.failed.function code, #8 cascade-cleanup.test 5-worker plugin cleanup + worker.unknown post-publish, #9 backpressure-storm.test critical priority bypass (Pitfall 4.C consistency) → 8 integration Tier-1 jsdom; #7 transferable byteLength=0 → 6 browser smoke Tier-3 Playwright Chromium reale (test-worker.ts Comlink.expose API + playwright-worker-smoke.test.ts: structuredClone Date/Map preserved Pitfall 7.B + Comlink.transfer ownership Pitfall 7.E + module worker PRD §31.3 + navigator.hardwareConcurrency); #10 (assertSerializable PRE-postMessage no spawn) coperto in 05-04 worker-bridge.test Test 4. 4 commits atomici: `4717a2e` feat WorkerHandler Strategy + 8 unit + `e117332` feat WorkerBroker composition + factory + harness + 12 broker test + 6 factory test + `6141eba` test 8 integration Tier-1 + `ff3d694` test 6 browser smoke Tier-3. 16 file creati + 1 modificato (~2112 LOC totali — 1383 source + 616 integration + 113 browser). **121/121 worker test passing** Tier-1 jsdom + **6/6 browser smoke** Tier-3 Playwright Chromium reale; cross-package zero regression: core 248 + mapper 183 + routing 103 + gateway 222 (3 skip MSW V1.x F4) + worker 121 = 877/880 monorepo full. Build OK ESM-only: dist/index.js 50.85 KB (+18.50 vs 05-04), dts 60.72 KB. Typecheck zero errors su 5 package. **D-83 strict ✓ verified** `git diff main packages/{core,mapper,routing}/src/ packages/gateway/src/{http,sse-ws}/` empty. 11/11 threat enumerate (T-05-06-01..T-05-06-11) tutti `LOW` severity, 10 `mitigate` + 1 `accept` (externalAbortControllers Map cleanup in finally bounded). REQ progress: WK-01..WK-07 + ERR-02 ext + LIFE-02 ext F5 + TEST-01/02/03 ext F5 → subset W4 done (full closure 05-07 final gate). 3 deviations Auto-fix Rule 1/2 documentate in SUMMARY (resolveTimeoutMs coerce number|TimeoutPolicyConfig + Test 2 worker-broker timeout MockWorker non-rispondente fix + DI bridgeFactory innovation).
 
