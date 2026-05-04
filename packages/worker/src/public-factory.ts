@@ -110,7 +110,7 @@ const WorkerBrokerConfigSchema = v.looseObject({
  * @throws {Error} `Invalid WorkerBrokerConfig: <issues>` se Valibot validation
  *   fallisce.
  *
- * @example
+ * @example Quick start (config-driven workerRoutes + assertSerializable dev)
  * ```ts
  * import { createWorkerBroker } from '@sembridge/worker'
  *
@@ -129,8 +129,20 @@ const WorkerBrokerConfigSchema = v.looseObject({
  * await broker.publish('csv.parse.requested', { rows: '...' })
  * ```
  *
+ * @example Multi-tenant isolation (D-30 anti-singleton)
+ * ```ts
+ * // Two independent broker instances on the same page (no shared state):
+ * const tenantA = createWorkerBroker({ workers: { assertSerializable: 'always' }})
+ * const tenantB = createWorkerBroker({ workers: { assertSerializable: 'off' }})
+ * // tenantA !== tenantB — separate WorkerRegistry, WorkerPool, RouterBroker
+ * ```
+ *
+ * @throws {Error} `Invalid WorkerBrokerConfig: <issues>` se Valibot fallisce.
+ *
  * @see {@link WorkerBroker}
  * @see {@link WorkerBrokerConfig}
+ * @see RESEARCH §7.2 — composition wrapper Opzione B + D-30 no singleton
+ * @see prd.md §27 — public API factory pattern
  */
 export function createWorkerBroker(config: WorkerBrokerConfig = {}): WorkerBroker {
   const parsed = v.safeParse(WorkerBrokerConfigSchema, config)

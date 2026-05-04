@@ -151,14 +151,29 @@ export interface TaskTracker {
  * registrato. Esposto in `getDebugSnapshot()` per audit retroattivo (T-05-03-02
  * mitigation Repudiation).
  *
- * @example
+ * @example Race condition timeout vs success (Pitfall 2C closure)
  * ```ts
  * const tracker = createTaskTracker()
  * tracker.register('t1', 'corr-1')
- * tracker.markTimeout('t1') // true
- * tracker.markDone('t1', { foo: 'bar' }) // false (late response)
+ * tracker.markTimeout('t1') // true → emit '<topic>.failed' (timeout)
+ * tracker.markDone('t1', { foo: 'bar' }) // false → late response, scartata
  * tracker.getDebugSnapshot().lateResponses // 1
+ * // ↑ Audit counter — niente double-publish '<topic>.completed'
  * ```
+ *
+ * @example Cooperative cancellation flow
+ * ```ts
+ * const tracker = createTaskTracker()
+ * tracker.register('t1', 'corr-1')
+ * // user clicca cancel → externalSignal.abort()
+ * tracker.markCancelled('t1') // true
+ * tracker.markDone('t1', result) // false → silently dropped
+ * ```
+ *
+ * @returns `TaskTracker` con shape `{register, markDone, markTimeout, markCancelled, markError, getDebugSnapshot}`.
+ *
+ * @throws {Error} no throw — il tracker non solleva errori. Le transition
+ *   invalid ritornano `false` (CAS mancato) e incrementano `lateResponses`.
  *
  * @see D-133 — state machine atomico Pitfall 2C closure
  * @see D-134 — correlationId end-to-end

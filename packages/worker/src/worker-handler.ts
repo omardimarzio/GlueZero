@@ -146,6 +146,31 @@ const DEFAULT_TIMEOUT_MS = 30_000 // D-145
  * @param deps - Registry + pool + tracker + publishFn DI.
  * @returns `WorkerHandler` con metodo `execute(event, route, externalSignal)`.
  *
+ * @example Strategy dispatch (consumer interno WorkerBroker)
+ * ```ts
+ * const handler = createWorkerHandler({ registry, pool, tracker, publishFn })
+ * await handler.execute(event, route, externalCtrl.signal)
+ * // → publish '<topic>.completed' (success) | '<topic>.failed' (timeout/cancel/error)
+ * //   + 'worker.error' ext F5 ERR-02 con sanitized payload
+ * ```
+ *
+ * @example Topic auto-derive (D-146)
+ * ```ts
+ * deriveTopic('weather.requested', 'completed')  // → 'weather.completed'
+ * deriveTopic('report.generation.requested', 'progress')  // → 'report.generation.progress'
+ * deriveTopic('csv.parse.requested', 'failed')  // → 'csv.parse.failed'
+ * // override esplicito via route.publishes.{success|progress|error}
+ * ```
+ *
+ * @throws {BrokerError} `worker.unknown` (category 'config') se il worker non è
+ *   registrato nel registry — sanitized error shape (no originalError/stack/cause).
+ * @throws {BrokerError} `worker.task.unknown` (category 'config') se il task non
+ *   è dichiarato in `WorkerDescriptor.tasks` (D-124 fail-fast runtime).
+ * @throws {BrokerError} `worker.timeout` (category 'worker') se il task supera
+ *   `route.policies.timeout` (default 30s — D-145).
+ * @throws {BrokerError} `worker.cancelled` (category 'worker') se externalSignal
+ *   abort propagato (D-131 cooperative).
+ *
  * @see ./worker-broker.ts — Opzione B publish intercept consumer
  * @see RESEARCH §7.2 — Opzione B rationale
  * @see D-152 — pipeline §28 step 9 dispatch

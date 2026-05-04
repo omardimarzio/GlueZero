@@ -75,16 +75,31 @@ export interface WorkerRegistrySnapshot {
  * 5. `unregisterByOwner(ownerId)` — cascade analog F3 D-86 / F4 D-112.
  *    Ritorna l'array degli id rimossi (utile per pool cleanup downstream).
  *
- * @example
+ * @example Register + lookup + cascade
  * ```ts
  * const registry = new WorkerRegistry()
  * registry.register({ id: 'parser', factory: () => new Worker(...), tasks: ['parseCsv'] }, 'plugin-A')
  * const entry = registry.get('parser')
- * registry.unregisterByOwner('plugin-A') // cascade cleanup
+ * registry.unregisterByOwner('plugin-A') // cascade cleanup LIFE-02 ext F5
  * ```
  *
- * @see {@link MAX_POOL_SIZE_HARD} — D-128 cap costante
+ * @example Validate task fail-fast (D-124)
+ * ```ts
+ * registry.register({ id: 'csv', factory, tasks: ['parseCsv'] })
+ * registry.validateTask('csv', 'parseCsv')   // → true
+ * registry.validateTask('csv', 'unknownTask') // → false (route handler will throw worker.task.unknown)
+ * ```
+ *
+ * @throws {BrokerError} `worker.id.duplicate` (category 'config') al register
+ *   se `desc.id` già presente (T-05-05-03 — include `existingOwner` in details).
+ * @throws {BrokerError} `worker.descriptor.invalid` (category 'config') se
+ *   descriptor con `id`/`factory`/`tasks` mancanti o malformati (D-124).
+ * @throws {BrokerError} `worker.pool.size.exceeded` (category 'config') se
+ *   `desc.size > MAX_POOL_SIZE_HARD` senza opt-in `allowUnboundedPool: true`.
+ *
+ * @see {@link MAX_POOL_SIZE_HARD} — D-128 cap costante 8
  * @see WorkerDescriptor — types/worker-descriptor.ts
+ * @see D-126 — cascade LIFE-02 ext F5 unregisterByOwner
  */
 export class WorkerRegistry {
   private readonly entries = new Map<string, WorkerEntry>()

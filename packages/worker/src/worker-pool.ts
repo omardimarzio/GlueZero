@@ -144,19 +144,30 @@ const DEFAULT_POOL_BACKPRESSURE_MAX = 1000
  * 7. `schedule(routeId, priority, task)` — delega a F3 BackpressureStrategy
  *    (D-130). `priority === 'critical'` BYPASSA (Pitfall 4.C carryover).
  *
- * @example
+ * @example Lifecycle base — dispatch + cascade cleanup
  * ```ts
  * const pool = new WorkerPool({
  *   registry,
  *   bridgeFactory: (desc) => new WorkerBridge(desc, { WorkerCtor: globalThis.Worker }),
  * })
  * await pool.dispatchOnSlot('parser', 'parseCsv', { data: '...' }, ctrl.signal)
- * pool.terminateByOwner('plugin-a') // cascade cleanup
+ * pool.terminateByOwner('plugin-a') // cascade cleanup LIFE-02 ext F5
  * ```
  *
+ * @example Backpressure F3 reuse + critical bypass (Pitfall 4.C consistency)
+ * ```ts
+ * await pool.schedule('csv-route', 'normal', task)    // queue-bounded F3
+ * await pool.schedule('alert-route', 'critical', task) // BYPASS coda — sempre dispatch
+ * ```
+ *
+ * @throws {BrokerError} `worker.unknown` se workerId non in registry.
+ * @throws {BrokerError} `worker.pool.size.exceeded` se size > MAX_POOL_SIZE_HARD
+ *   senza opt-in `allowUnboundedPool: true` (D-128 cap hard 8).
+ *
  * @see {@link WorkerRegistry} — descriptor lookup + cascade owners
- * @see {@link defaultPoolSize} — D-127 formula
+ * @see {@link defaultPoolSize} — D-127 formula `min(hwc, 4)`
  * @see {@link MAX_POOL_SIZE_HARD} — D-128 cap hard (registry-validato)
+ * @see {@link createBackpressureStrategy} — F3 BackpressureStrategy reuse 1:1 (D-130)
  */
 export class WorkerPool {
   private readonly slotsByWorker = new Map<string, PoolSlot[]>()
