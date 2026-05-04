@@ -1,11 +1,11 @@
 ---
 last_updated: 2026-05-04
-status: phase_4_executing_wave_2_partial_04_02_done
+status: phase_4_executing_wave_2_complete_ready_wave_3
 project: SemBridge
 milestone: v1.0
 current_phase: 4
-current_wave: 2
-current_plan: phase_4_wave_2_continue_04_03_04_04
+current_wave: 3
+current_plan: phase_4_wave_3_04_05_04_06_parallel
 session_active: true
 ---
 
@@ -23,38 +23,40 @@ session_active: true
 
 | Campo | Valore |
 |-------|--------|
-| Fase | **Phase 4 — Realtime inbound (SSE/WS) — 🟢 EXECUTING (Wave 2 partial: 04-02 + 04-03 done)** |
-| Wave | **1 / 6 done + Wave 2 partial** (Wave 2 remaining: 04-04) |
-| Plan in esecuzione | — (04-03 completato; Wave 2 remaining: 04-04) |
-| Plan progress F4 | 3 / 9 plan committed (04-01 + 04-02 + 04-03 done; 04-04..04-09 todo) |
-| Plan progress globale | 40 / 46 (87%) |
+| Fase | **Phase 4 — Realtime inbound (SSE/WS) — 🟢 EXECUTING (Wave 2 ✅ COMPLETE; ready Wave 3)** |
+| Wave | **2 / 6 done** (Wave 3 next: 04-05 SSE adapter ∥ 04-06 WS adapter) |
+| Plan in esecuzione | — (04-04 completato; Wave 2 done) |
+| Plan progress F4 | 4 / 9 plan committed (04-01 + 04-02 + 04-03 + 04-04 done; 04-05..04-09 todo) |
+| Plan progress globale | 41 / 46 (89%) |
 | Mode GSD | yolo + auto_advance + parallelization (sequential exec, no worktree) |
 | Modello attivo | `claude-opus-4-7-1` (opus) — override esplicito su tutti i sub-agent |
 
-## Ultimo step completato (auto-update 2026-05-04T13:03:02Z)
+## Ultimo step completato (auto-update 2026-05-04T13:25:00Z)
 
-- Plan: **04-03** → SUMMARY.md committed
-- Commit: `5d4ee91 docs(04-03): complete plan SUMMARY + STATE/ROADMAP/TRACKER update — Phase 4 Wave 2 reconnect-strategy done`
-- Phase progress: **3/9** plan completati con SUMMARY.md
-- Project progress: 40/46 plan (87%)
+- Plan: **04-04** → SUMMARY.md committed
+- Commits TDD: `a74a9dc test` + `1e1d34b feat`
+- File: `packages/gateway/src/sse-ws/visibility-detector.{ts,test.ts}` (275 LOC totali, 11/11 test PASS)
+- Phase progress: **4/9** plan completati con SUMMARY.md
+- Project progress: 41/46 plan (89%)
 
 
 ## Prossimo step
 
-**Wave 2 — 1 plan rimanente:**
+**Wave 3 — 2 plan paralleli (file ownership disgiunta):**
 
 ```
 Skill: gsd-execute-phase 4
 ```
 
-Plan da eseguire:
-- **04-04** — visibility-detector.ts (D-110 + DI guard Worker/SSR) → scrive `visibility-detector.{ts,test.ts}`
+Plan da eseguire (parallel):
+- **04-05** — sse-adapter.ts (EventSource wrapper + Last-Event-ID + backpressure D-115) → scrive `sse-adapter.{ts,test.ts}`
+- **04-06** — websocket-adapter.ts (envelope JSON + ping/pong D-111 + scheme switch D-107) → consuma `parseFrame` da 04-02
 
 Wave struttura globale F4:
 - ✅ Wave 1: 04-01 (bootstrap) — DONE 2026-05-04
-- 🟡 Wave 2: 04-02 done ∥ 04-03 done ∥ 04-04 todo
-- ⏳ Wave 3: 04-05 ∥ 04-06 (2 parallel — SSE/WS adapters; 04-06 consuma parseFrame da 04-02)
-- ⏳ Wave 4: 04-07 (RealtimeChannelManager + runReconnectLoop)
+- ✅ Wave 2: 04-02 + 04-03 + 04-04 — DONE 2026-05-04 (3 plan TDD building blocks)
+- 🟡 Wave 3: 04-05 ∥ 04-06 (2 parallel — SSE/WS adapters; 04-06 consuma parseFrame da 04-02)
+- ⏳ Wave 4: 04-07 (RealtimeChannelManager + runReconnectLoop, consuma createVisibilityDetector da 04-04 + createReconnectStrategy da 04-03)
 - ⏳ Wave 5: 04-08 (RealtimeBroker + integration tests Tier-1/2/3)
 - ⏳ Wave 6: 04-09 (final gate)
 
@@ -79,6 +81,7 @@ Phase 4 lock highlights:
 
 ## Decisioni recenti rilevanti
 
+- **Plan 04-04 ESEGUITO ✓ (Wave 2 close)** — `createVisibilityDetector({ onChange, document })` factory event-driven. Pattern listener tracking analog `combine-signals.ts:62-86` (memoize listener ref + addEventListener + removeEventListener puntuale). DI guard 3-way: `undefined` → `globalThis.document`, `null` → explicit Worker/SSR disable (no-op + getState 'visible' default sicuro), `Document` mock → test injection. Idempotenza esplicita start/stop (T-04-04-02/03 mitigation). Anti-AP-5 verificato: 0 setInterval/setTimeout (event-driven puro). 11/11 test PASS, **680/680 monorepo full**, tsc clean su 4 package. RT-05 progresso (visibility wrapper done; pending heartbeat 04-05/06 + manager 04-07).
 - **Plan 04-03 ESEGUITO ✓ (Wave 2)** — `createReconnectStrategy` factory state machine: full jitter D-109 + auto-fallback D-107 (threshold 3 + cycle cap 5) + Q3 §6.2 consolidationMs guard anti-flap (default 5000ms — opzione B). Interface 8 metodi, DI random+now per test deterministici. 15/15 test PASS, 669/669 monorepo, anti-AP-3 verificato (no `reconnecting-websocket` import). Pattern factory + closure analog circuit-breaker.ts F3.
 - **Phase 4 CONTEXT.md (D-101..D-120)** — 20 decisioni nuove: auth-agnostic `buildUrl`, envelope JSON `{topic,data,id}`, RealtimeChannelManager N-canali, auto-fallback SSE→WS default abilitato (cap 5 cicli), Visibility API integration, composition wrapper RealtimeBroker, riuso pipeline §28 + mapper F2/F3 + backpressure F3 + cascade cleanup F1.
 - **Plan 03-12 (Wave 7) ESEGUITO ✓** — RouterBroker composition wrapper + RouterEngine + createRouterBroker. 29/29 test deterministici TDD GREEN. D-83 strict verificato. 5 BLOCKER iter1 fix applicati. Cyclic workspace dep routing↔gateway gestito (type-only).

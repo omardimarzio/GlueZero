@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-last_updated: "2026-05-04T15:00:00.000Z"
+last_updated: "2026-05-04T13:25:00.000Z"
 progress:
   total_phases: 6
   completed_phases: 3
   total_plans: 46
-  completed_plans: 40
-  percent: 87
+  completed_plans: 41
+  percent: 89
 ---
 
 # Project State: SemBridge
@@ -28,16 +28,16 @@ progress:
 ## Current Position
 
 Phase: 04 (Realtime inbound (SSE prioritario, WS opzionale)) — EXECUTING
-Plan: 4 of 9 (next)
+Plan: 5 of 9 (next)
 Total Plans: 9 (Phase 4)
 
-**Last completed:** Plan 04-03 (Wave 2 — Reconnect strategy state machine) at 2026-05-04 — 2 commits TDD atomic (cfe6020 RED test + d3b3921 GREEN feat); 2 nuovi file 407 LOC (reconnect-strategy.ts 238 + reconnect-strategy.test.ts 169). `createReconnectStrategy(options)` factory ritorna `ReconnectStrategy` con 8 metodi (nextDelayMs/recordFailure/recordSuccess/shouldFallback/fallback/getMode/isPermanentlyFailed/reset). Combina full jitter backoff (D-109 formula AWS `floor(random * min(cap, base * 2^attempt))`, base 1000ms, cap 30000ms), auto-fallback SSE↔WS (D-107 threshold 3 fail consecutivi → switch + reset counter; cycle cap globale 5), reset criteria con consolidationMs guard anti-flap (Q3 §6.2 default 5000ms — opzione B). DI `random` + `now` per test deterministici. Anti-AP-3 verificato: NO import `reconnecting-websocket` (vincolo PRD §31.3). 15/15 reconnect-strategy test PASS + 135/135 gateway suite + 669/669 monorepo full + tsc clean. D-83 strict ✓ (zero modifiche fuori `gateway/src/sse-ws/`). RT-05/RT-07 building blocks pronti per consumer 04-05/04-06 adapter + 04-07 RealtimeChannelManager.
+**Last completed:** Plan 04-04 (Wave 2 — Visibility detector wrapper) at 2026-05-04 — 2 commits TDD atomic (a74a9dc RED test + 1e1d34b GREEN feat); 2 nuovi file 275 LOC (visibility-detector.ts 125 + visibility-detector.test.ts 150). `createVisibilityDetector({ onChange, document })` factory ritorna `VisibilityDetector` con 4 metodi (start/stop/getState/isActive). Pattern listener tracking analog `combine-signals.ts:62-86` (memoize listener ref + addEventListener + removeEventListener puntuale). DI guard 3-way (`undefined`→globalThis.document, `null`→explicit Worker/SSR disable, `Document` mock→test). Idempotenza esplicita start/stop (T-04-04-02/03 mitigation). Anti-AP-5 verificato: 0 setInterval/setTimeout (event-driven puro). 11/11 visibility-detector test PASS + 146/146 gateway suite + **680/680 monorepo full** + tsc clean su 4 package. D-83 strict ✓ (zero modifiche fuori `gateway/src/sse-ws/`). RT-05 closed. Building block per consumer 04-07 RealtimeChannelManager (single shared instance, freshness check on visible D-110).
 
-**Next:** `/gsd-execute-phase 4` per Wave 2 plan paralleli rimanenti (file ownership disgiunta): 04-04 (visibility-detector.ts D-110 + DI guard Worker/SSR).
+**Next:** `/gsd-execute-phase 4` Wave 3 — 2 plan paralleli (file ownership disgiunta): 04-05 SSE adapter + 04-06 WS adapter (consuma parseFrame da 04-02).
 
 - **Phase:** 3 ✅ COMPLETE
 - **Status:** Ready to execute
-- **Progress:** [█████████░] 85%
+- **Progress:** [█████████░] 89%
 
 ## Phases Overview
 
@@ -51,7 +51,7 @@ Total Plans: 9 (Phase 4)
 | 1 | Core essenziale (broker pub/sub, plugin registry, EventTap pre-instrumentato) | **✅ COMPLETE & VERIFIED (11/11 plans, PASS confidence HIGH)** |
 | 2 | Canonical Model & Mapper bidirezionale + Mapping Inspector | **✅ COMPLETE — ready for verifier (12/12 plans)** |
 | 3 | Routing engine + HTTP gateway con retry/timeout/dedupe/auth | **✅ COMPLETE — ready for verifier (14/14 plans, 4 open issues PRD §39 closed)** |
-| 4 | Realtime inbound (SSE prioritario, WS opzionale) | **In Progress — 3/9 plans (04-01 Wave 1 + 04-02 + 04-03 Wave 2 partial done)** |
+| 4 | Realtime inbound (SSE prioritario, WS opzionale) | **In Progress — 4/9 plans (04-01 Wave 1 + 04-02 + 04-03 + 04-04 Wave 2 done)** |
 | 5 | Worker Runtime (registry, route worker, task tracking) | Not started |
 | 6 | Cache + Tooling avanzato (Inspector, Metrics, debug API) | Not started |
 
@@ -94,6 +94,7 @@ Total Plans: 9 (Phase 4)
 | Phase 04 P01 | ~10min | 2 tasks | 10 files (6 nuovi 503 LOC + 4 modificati build/test config) |
 | Phase 04 P02 | 12min | 1 tasks | 3 files |
 | Phase 04 P03 | 4min | 1 tasks | 2 files (reconnect-strategy.{ts,test.ts} 407 LOC; 15/15 test PASS, 669/669 monorepo) |
+| Phase 04 P04 | ~18min | 1 tasks | 2 files (visibility-detector.{ts,test.ts} 275 LOC; 11/11 test PASS, 680/680 monorepo) |
 
 ## Accumulated Context
 

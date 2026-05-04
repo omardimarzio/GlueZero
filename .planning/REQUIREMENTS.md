@@ -250,7 +250,7 @@ Mappatura definitiva REQ-ID → fase. Ogni requisito è assegnato alla **prima f
 | RT-02 | Phase 4 | Pending | WebSocket opzionale ma in V1 almeno uno disponibile |
 | RT-03 | Phase 4 | Pending | — |
 | RT-04 | Phase 4 | Pending | — |
-| RT-05 | Phase 4 | Pending | Full jitter + cap 30s + heartbeat |
+| RT-05 | Phase 4 | In Progress (04-03 reconnect-strategy ✓ + 04-04 visibility-detector ✓; 04-05/06 heartbeat + 04-07 manager pending) | Full jitter + cap 30s + heartbeat + stale detection (D-110 visibility wrapper done) |
 | RT-06 | Phase 4 | Pending | Mapper server→canonical (riusa F2) |
 | RT-07 | Phase 4 | Pending | **Closes PRD §39 #9**: Last-Event-ID + ping app-level |
 
