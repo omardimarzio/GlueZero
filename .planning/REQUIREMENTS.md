@@ -69,9 +69,9 @@ Tutti i requisiti elencati sono table stakes (vincolanti dalla checklist PRD §4
 
 - [ ] **RT-01**: Adapter SSE (`Server-Sent Events`) per inbound server → browser *(PRD §18.2, §18.3)*
 - [x] **RT-02**: Adapter WebSocket (in V1 almeno uno tra SSE e WS deve essere disponibile e funzionante) *(PRD §18.2)*
-- [ ] **RT-03**: `connectRealtime()` e `disconnectRealtime()` API pubbliche *(PRD §16.2)*
+- [ ] **RT-03**: `connectRealtime()` e `disconnectRealtime()` API pubbliche *(PRD §16.2)* — manager API esposte in 04-07; consumer-facing API verrà esposta dal RealtimeBroker in 04-08
 - [ ] **RT-04**: Messaggi server convertiti in eventi interni con `source: { type: 'server', id: 'realtime-channel', name: 'sse'|'websocket' }` *(PRD §18.5)*
-- [ ] **RT-05**: Reconnection policy configurabile: retry interval, exponential backoff, max retry, heartbeats, stale connection detection, jitter *(PRD §18.6)*
+- [ ] **RT-05**: Reconnection policy configurabile: retry interval, exponential backoff, max retry, heartbeats, stale connection detection, jitter *(PRD §18.6)* — orchestratore runReconnectLoop completato in 04-07; consumer wiring in 04-08
 - [ ] **RT-06**: Normalizzazione payload inbound dal server verso il modello canonico *(PRD §18.1)*
 - [ ] **RT-07**: Regole di riconnessione realtime documentate (Last-Event-ID per SSE, ping app-level per WS) *(PRD §39 — open issue da chiudere)*
 
@@ -246,11 +246,11 @@ Mappatura definitiva REQ-ID → fase. Ogni requisito è assegnato alla **prima f
 
 | Requirement | Phase | Status | Note |
 |-------------|-------|--------|------|
-| RT-01 | Phase 4 | In Progress (04-05 SseAdapter ✓; pending integration 04-07/04-08) | SSE prioritario V1 |
+| RT-01 | Phase 4 | In Progress (04-05 SseAdapter ✓ + 04-07 manager registry+runReconnectLoop ✓; pending consumer API integration 04-08) | SSE prioritario V1 — manager dispatch SseAdapter mode='sse'\|'auto' default, runReconnectLoop orchestra recovery |
 | RT-02 | Phase 4 | Complete (04-06 WebSocketAdapter ✓ — wrapper WebSocket + envelope JSON D-106 + ping/pong D-111 + scheme switch D-107 + close codes RFC 6455 + bufferedAmount cap RESEARCH §4.4 + wsSubprotocols Q4) | WebSocket adapter production-ready 583 LOC source + 341 LOC test + 192 LOC mock; 15/15 test PASS; anti-AP-3/AP-6 0 |
-| RT-03 | Phase 4 | Pending | — |
-| RT-04 | Phase 4 | In Progress (04-05 SSE source descriptor ✓ + 04-06 WS source descriptor ✓; pending integration 04-07/04-08) | source: { type: 'server', id: 'realtime-channel', name: 'sse'\|'websocket' } applicato (Test 4 in 04-06: source.name='websocket') |
-| RT-05 | Phase 4 | In Progress (04-03 reconnect-strategy ✓ + 04-04 visibility-detector ✓ + 04-05 SseAdapter checkFreshness ✓ + 04-06 WS heartbeat ping/pong + stale detection ✓; 04-07 manager pending) | Full jitter + cap 30s + heartbeat 30s/staleTimeout 60s + ping/pong app-level (D-111) + bufferedAmount cap 64KB (RESEARCH §4.4) + close codes routing RFC 6455 §7.4 — manager-orchestrated reconnect loop pending |
+| RT-03 | Phase 4 | In Progress (04-07 manager.connect/disconnect/disconnectByOwner API esposte ✓; pending RealtimeBroker.connectRealtime/disconnectRealtime consumer-facing API 04-08) | Manager API: `connect(def, ownerId='system')` + `disconnect(name?)` + `disconnectByOwner(ownerId, reason?)` + `getDebugInfo()` + `checkFreshnessAll()` — 16/16 test PASS |
+| RT-04 | Phase 4 | In Progress (04-05 SSE source descriptor ✓ + 04-06 WS source descriptor ✓ + 04-07 manager publishSystem helper ✓; pending mapper integration 04-08) | source: { type: 'server', id: 'realtime-channel', name: 'sse'\|'websocket' } applicato (Test 4 in 04-06: source.name='websocket'); manager 04-07 emette system.realtime.* con source.name='manager' per distinguere |
+| RT-05 | Phase 4 | In Progress (04-03 reconnect-strategy ✓ + 04-04 visibility-detector ✓ + 04-05 SseAdapter checkFreshness ✓ + 04-06 WS heartbeat ping/pong + stale detection ✓ + 04-07 manager runReconnectLoop ORCHESTRATOR ✓; pending consumer wiring 04-08) | Full jitter + cap 30s + heartbeat 30s/staleTimeout 60s + ping/pong app-level (D-111) + bufferedAmount cap 64KB (RESEARCH §4.4) + close codes routing RFC 6455 §7.4 — runReconnectLoop B-4 closure: nextDelayMs/clock.sleep/shouldFallback/fallback/recordSuccess/recordFailure orchestrato (Test 13/14/15) + cycle-cap exceeded → publish system.realtime.failed |
 | RT-06 | Phase 4 | In Progress (04-05 SSE topic validation regex F1 ✓ + 04-06 WS envelope JSON D-106 + parseFrame strict ✓; pending mapper integration 04-08) | Mapper server→canonical (riusa F2) — payload tryParseJson done in 04-05; envelope JSON `{topic,data,id?}` strict in 04-06 (Test 5/6/7/15) |
 | RT-07 | Phase 4 | In Progress (04-05 SSE Last-Event-ID via query string ✓ + 04-06 WS ping/pong app-level + stale detection ✓; pending DOC-04 04-09) | **Closes PRD §39 #9**: Last-Event-ID injection manuale via `?lastEventId=` (D-105) per SSE; ping/pong applicativo `{topic:'__ping__\|__pong__'}` envelope JSON D-111 per WS — Test 4/8/9/10 verificano heartbeat send + lastPongAt update + stale watchdog |
 
