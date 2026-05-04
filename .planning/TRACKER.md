@@ -31,15 +31,10 @@ session_active: true
 | Mode GSD | yolo + auto_advance + parallelization (sequential exec, no worktree) |
 | Modello attivo | `claude-opus-4-7-1` (opus) — override esplicito su tutti i sub-agent |
 
-## Ultimo step completato (2026-05-04 — plan 04-02)
+## Ultimo step completato (auto-update 2026-05-04T12:55:21Z)
 
-- Plan: **04-02** → SUMMARY.md committed (frame-parser puro WebSocket envelope JSON)
-- Commits TDD: `26cc3c2` RED test + `edcbf3b` GREEN feat (+ commit metadata SUMMARY/STATE/ROADMAP/TRACKER finale)
-- Files: 3 nuovi (332 LOC: types/frame-envelope.ts 50 + frame-parser.ts 140 + frame-parser.test.ts 142)
-- Tests: 15/15 frame-parser PASS + 120/120 gateway suite + 654/654 monorepo full
-- D-83 strict ✓ (zero modifiche fuori `gateway/src/sse-ws/`)
-- PITFALL §11.7 chiusura Q1 anti-AP-6 verificato (`grep startsWith('__')` = 0)
-- Q2 closure 04-CONTEXT — riuso ERR-02 ext F3 `network.error` per frame parse errors
+- Plan: **04-02** → SUMMARY.md committed
+- Commit: `4f860ba docs(04-02): complete plan SUMMARY + STATE/ROADMAP/TRACKER update — Phase 4 Wave 2 frame-parser done`
 - Phase progress: **2/9** plan completati con SUMMARY.md
 - Project progress: 39/46 plan (85%)
 
