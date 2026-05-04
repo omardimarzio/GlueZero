@@ -26,7 +26,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { isBrokerError, type BrokerError } from '@sembridge/core'
 
 import { MockWorker } from './test-utils/mock-worker'
-import { WorkerBridge } from './worker-bridge'
+import { WorkerBridge, type ComlinkAdapter } from './worker-bridge'
 import type { WorkerDescriptor } from './types/worker-descriptor'
 
 // ============================================================================
@@ -50,40 +50,60 @@ function makeBridge(
   return new WorkerBridge(desc, deps)
 }
 
-/** Auto-reply pattern: stub `Comlink.wrap` per evitare dipendenza da MessageChannel. */
-function stubComlinkWrap<T>(replyFn: (taskName: string, ...args: unknown[]) => Promise<T>): {
-  restore: () => void
-  callArgs: Array<{ taskName: string; args: unknown[] }>
-} {
+/**
+ * Stub `ComlinkAdapter` per DI test: intercetta `wrap` con un Proxy che ritorna
+ * task function callable. `proxy` ritorna value as-is + spy callable. `transfer`
+ * ritorna value as-is. `releaseProxy` symbol di Comlink reale.
+ *
+ * Tracking: `callArgs` raccoglie ogni invocazione di task (nome + args).
+ * `proxyCalls` raccoglie ogni `proxy(value)` invocato (per Test 7/8).
+ */
+interface ComlinkStubs {
+  readonly adapter: ComlinkAdapter
+  readonly callArgs: Array<{ taskName: string; args: unknown[] }>
+  readonly proxyCalls: unknown[]
+  readonly transferCalls: Array<{ value: unknown; transfers: readonly Transferable[] }>
+}
+
+function stubComlinkAdapter(
+  replyFn: (taskName: string, ...args: unknown[]) => Promise<unknown>,
+): ComlinkStubs {
   const callArgs: Array<{ taskName: string; args: unknown[] }> = []
-  const original = Comlink.wrap
-  // biome-ignore lint/suspicious/noExplicitAny: stub di Comlink.wrap richiede any per match signature
-  ;(Comlink as { wrap: typeof Comlink.wrap }).wrap = ((_ep: unknown) => {
-    // Proxy che intercetta property access come task function
-    return new Proxy(
-      {},
-      {
-        get(_t, prop: string | symbol) {
-          if (prop === Comlink.releaseProxy) {
-            return () => {
-              /* noop release */
+  const proxyCalls: unknown[] = []
+  const transferCalls: Array<{ value: unknown; transfers: readonly Transferable[] }> = []
+
+  const adapter: ComlinkAdapter = {
+    wrap: (<T>(_ep: object): Comlink.Remote<T> => {
+      return new Proxy(
+        {},
+        {
+          get(_t, prop: string | symbol) {
+            if (prop === Comlink.releaseProxy) {
+              return () => {
+                /* noop release */
+              }
             }
-          }
-          if (typeof prop !== 'string') return undefined
-          return (...args: unknown[]) => {
-            callArgs.push({ taskName: prop, args })
-            return replyFn(prop, ...args)
-          }
+            if (typeof prop !== 'string') return undefined
+            return (...args: unknown[]) => {
+              callArgs.push({ taskName: prop, args })
+              return replyFn(prop, ...args)
+            }
+          },
         },
-      },
-    )
-  }) as unknown as typeof Comlink.wrap
-  return {
-    callArgs,
-    restore: () => {
-      ;(Comlink as { wrap: typeof Comlink.wrap }).wrap = original
-    },
+      ) as unknown as Comlink.Remote<T>
+    }) as ComlinkAdapter['wrap'],
+    proxy: (<T extends object>(value: T): T => {
+      proxyCalls.push(value)
+      return value
+    }) as ComlinkAdapter['proxy'],
+    transfer: (<T>(value: T, transfers: readonly Transferable[]): T => {
+      transferCalls.push({ value, transfers })
+      return value
+    }) as ComlinkAdapter['transfer'],
+    releaseProxy: Comlink.releaseProxy,
   }
+
+  return { adapter, callArgs, proxyCalls, transferCalls }
 }
 
 // ============================================================================
@@ -106,20 +126,16 @@ describe('WorkerBridge — Comlink wrap + lifecycle (D-124/129/131/132/135/137/1
   // Test 2 — first dispatch spawna + subsequent dispatch riusa
   // --------------------------------------------------------------------------
   it('Test 2 (D-129): first dispatch invoca factory + Comlink.wrap; subsequent riusa stesso worker', async () => {
-    const stub = stubComlinkWrap(async (_task: string, _payload: unknown) => 'ok-result')
-    try {
-      const bridge = makeBridge()
-      await bridge.dispatch('parseCsv', { rows: 10 }, new AbortController().signal)
-      expect(MockWorker.instances).toHaveLength(1)
-      const firstWorker = MockWorker.instances[0]
+    const stubs = stubComlinkAdapter(async (_task: string, _payload: unknown) => 'ok-result')
+    const bridge = makeBridge(makeDescriptor(), { comlinkAdapter: stubs.adapter })
+    await bridge.dispatch('parseCsv', { rows: 10 }, new AbortController().signal)
+    expect(MockWorker.instances).toHaveLength(1)
+    const firstWorker = MockWorker.instances[0]
 
-      await bridge.dispatch('parseCsv', { rows: 20 }, new AbortController().signal)
-      expect(MockWorker.instances).toHaveLength(1) // riuso, no second spawn
-      expect(MockWorker.instances[0]).toBe(firstWorker)
-      expect(stub.callArgs.length).toBe(2)
-    } finally {
-      stub.restore()
-    }
+    await bridge.dispatch('parseCsv', { rows: 20 }, new AbortController().signal)
+    expect(MockWorker.instances).toHaveLength(1) // riuso, no second spawn
+    expect(MockWorker.instances[0]).toBe(firstWorker)
+    expect(stubs.callArgs.length).toBe(2)
   })
 
   // --------------------------------------------------------------------------
@@ -170,94 +186,92 @@ describe('WorkerBridge — Comlink wrap + lifecycle (D-124/129/131/132/135/137/1
   // Test 5 — D-139 mode='off' bypassa validazione
   // --------------------------------------------------------------------------
   it("Test 5 (D-139): assertSerializable mode='off' bypassa validazione (zero overhead)", async () => {
-    const stub = stubComlinkWrap(async () => 'ok')
-    try {
-      const bridge = makeBridge(makeDescriptor(), { assertSerializableMode: 'off' })
-      const ctrl = new AbortController()
-      // Payload con function — normalmente fallirebbe in 'always'/'dev'
-      await bridge.dispatch('parseCsv', { fn: () => 'x' }, ctrl.signal)
-      // No throw — il bridge ha proseguito al dispatch
-      expect(MockWorker.instances).toHaveLength(1)
-      expect(stub.callArgs.length).toBe(1)
-    } finally {
-      stub.restore()
-    }
+    const stubs = stubComlinkAdapter(async () => 'ok')
+    const bridge = makeBridge(makeDescriptor(), {
+      assertSerializableMode: 'off',
+      comlinkAdapter: stubs.adapter,
+    })
+    const ctrl = new AbortController()
+    // Payload con function — normalmente fallirebbe in 'always'/'dev'
+    await bridge.dispatch('parseCsv', { fn: () => 'x' }, ctrl.signal)
+    // No throw — il bridge ha proseguito al dispatch
+    expect(MockWorker.instances).toHaveLength(1)
+    expect(stubs.callArgs.length).toBe(1)
   })
 
   // --------------------------------------------------------------------------
   // Test 6 — D-141 extractTransferables + Comlink.transfer
   // --------------------------------------------------------------------------
   it('Test 6 (D-141): extractTransferables invocato + Comlink.transfer applicato quando paths.length > 0', async () => {
-    const stub = stubComlinkWrap(async () => 'ok')
-    try {
-      const bridge = makeBridge(makeDescriptor(), { assertSerializableMode: 'off' })
-      const ctrl = new AbortController()
-      const buf = new ArrayBuffer(16)
-      await bridge.dispatch('echoBuffer', { audioBuffer: buf, meta: 'x' }, ctrl.signal, undefined, {
-        transferable: ['audioBuffer'],
-      })
-      // Verifica callArgs[0] — Comlink.transfer marca il payload con `Comlink.transfer`
-      // metadata. Il primo arg è il payload, qui controlliamo che sia stato chiamato 1 volta.
-      expect(stub.callArgs.length).toBe(1)
-      expect(stub.callArgs[0]?.taskName).toBe('echoBuffer')
-      // Il payload arrivato al wrap call è marcato da Comlink.transfer (object identity preserved).
-      const firstArg = stub.callArgs[0]?.args[0] as { audioBuffer: ArrayBuffer; meta: string }
-      expect(firstArg.audioBuffer).toBe(buf)
-      expect(firstArg.meta).toBe('x')
-    } finally {
-      stub.restore()
-    }
+    const stubs = stubComlinkAdapter(async () => 'ok')
+    const bridge = makeBridge(makeDescriptor(), {
+      assertSerializableMode: 'off',
+      comlinkAdapter: stubs.adapter,
+    })
+    const ctrl = new AbortController()
+    const buf = new ArrayBuffer(16)
+    await bridge.dispatch('echoBuffer', { audioBuffer: buf, meta: 'x' }, ctrl.signal, undefined, {
+      transferable: ['audioBuffer'],
+    })
+    // Comlink.transfer adapter è stato chiamato 1 volta con buf nella transferList.
+    expect(stubs.transferCalls.length).toBe(1)
+    expect(stubs.transferCalls[0]?.transfers).toContain(buf)
+    // Il payload arrivato al wrap call è la stessa identity (object preservato).
+    expect(stubs.callArgs.length).toBe(1)
+    expect(stubs.callArgs[0]?.taskName).toBe('echoBuffer')
+    const firstArg = stubs.callArgs[0]?.args[0] as { audioBuffer: ArrayBuffer; meta: string }
+    expect(firstArg.audioBuffer).toBe(buf)
+    expect(firstArg.meta).toBe('x')
   })
 
   // --------------------------------------------------------------------------
   // Test 7 — D-132 AbortSignal proxied via Comlink.proxy
   // --------------------------------------------------------------------------
   it('Test 7 (D-132): AbortSignal proxied via Comlink.proxy passato come 2° arg al task', async () => {
-    const stub = stubComlinkWrap(async () => 'ok')
-    const proxySpy = vi.spyOn(Comlink, 'proxy')
-    try {
-      const bridge = makeBridge(makeDescriptor(), { assertSerializableMode: 'off' })
-      const ctrl = new AbortController()
-      await bridge.dispatch('parseCsv', { x: 1 }, ctrl.signal)
-      // Almeno 1 chiamata Comlink.proxy(signal) deve essere avvenuta
-      const calledWithSignal = proxySpy.mock.calls.some((args) => args[0] === ctrl.signal)
-      expect(calledWithSignal).toBe(true)
-      // Il signalProxy è passato come 2° arg al task
-      expect(stub.callArgs.length).toBe(1)
-      expect(stub.callArgs[0]?.args.length).toBeGreaterThanOrEqual(2)
-    } finally {
-      proxySpy.mockRestore()
-      stub.restore()
-    }
+    const stubs = stubComlinkAdapter(async () => 'ok')
+    const bridge = makeBridge(makeDescriptor(), {
+      assertSerializableMode: 'off',
+      comlinkAdapter: stubs.adapter,
+    })
+    const ctrl = new AbortController()
+    await bridge.dispatch('parseCsv', { x: 1 }, ctrl.signal)
+    // Almeno 1 chiamata adapter.proxy(signal) deve essere avvenuta
+    const calledWithSignal = stubs.proxyCalls.some((v) => v === ctrl.signal)
+    expect(calledWithSignal).toBe(true)
+    // Il signalProxy è passato come 2° arg al task
+    expect(stubs.callArgs.length).toBe(1)
+    expect(stubs.callArgs[0]?.args.length).toBeGreaterThanOrEqual(2)
+    // Nel test setup adapter.proxy ritorna il value as-is, quindi args[1] === ctrl.signal
+    expect(stubs.callArgs[0]?.args[1]).toBe(ctrl.signal)
   })
 
   // --------------------------------------------------------------------------
   // Test 8 — D-135 onProgress proxied (quando fornita)
   // --------------------------------------------------------------------------
   it('Test 8 (D-135): onProgress proxied via Comlink.proxy quando fornita; undefined quando assente', async () => {
-    const stub = stubComlinkWrap(async () => 'ok')
-    const proxySpy = vi.spyOn(Comlink, 'proxy')
-    try {
-      const bridge = makeBridge(makeDescriptor(), { assertSerializableMode: 'off' })
-      const ctrl = new AbortController()
+    const stubs = stubComlinkAdapter(async () => 'ok')
+    const bridge = makeBridge(makeDescriptor(), {
+      assertSerializableMode: 'off',
+      comlinkAdapter: stubs.adapter,
+    })
+    const ctrl = new AbortController()
 
-      // Caso 1: onProgress fornita → Comlink.proxy chiamato con la callback
-      const onProgress = vi.fn()
-      await bridge.dispatch('parseCsv', { x: 1 }, ctrl.signal, onProgress)
-      // signal proxied + onProgress proxied
-      expect(proxySpy.mock.calls.length).toBeGreaterThanOrEqual(2)
-      // 3° arg al task non undefined
-      expect(stub.callArgs[0]?.args[2]).not.toBeUndefined()
+    // Caso 1: onProgress fornita → adapter.proxy chiamato con la callback throttled
+    const onProgress = vi.fn()
+    await bridge.dispatch('parseCsv', { x: 1 }, ctrl.signal, onProgress)
+    // proxy chiamato 2x: signal + onProgress (throttled)
+    expect(stubs.proxyCalls.length).toBeGreaterThanOrEqual(2)
+    // 3° arg al task non undefined
+    expect(stubs.callArgs[0]?.args[2]).not.toBeUndefined()
+    expect(typeof stubs.callArgs[0]?.args[2]).toBe('function')
 
-      // Caso 2: onProgress undefined → 3° arg è undefined
-      proxySpy.mockClear()
-      stub.callArgs.length = 0
-      await bridge.dispatch('parseCsv', { x: 2 }, ctrl.signal)
-      expect(stub.callArgs[0]?.args[2]).toBeUndefined()
-    } finally {
-      proxySpy.mockRestore()
-      stub.restore()
-    }
+    // Caso 2: onProgress undefined → 3° arg è undefined
+    stubs.proxyCalls.length = 0
+    stubs.callArgs.length = 0
+    await bridge.dispatch('parseCsv', { x: 2 }, ctrl.signal)
+    expect(stubs.callArgs[0]?.args[2]).toBeUndefined()
+    // Solo signal proxied (1 call)
+    expect(stubs.proxyCalls.length).toBe(1)
   })
 
   // --------------------------------------------------------------------------
@@ -266,7 +280,7 @@ describe('WorkerBridge — Comlink wrap + lifecycle (D-124/129/131/132/135/137/1
   it('Test 9 (D-137): progress throttling latest-only window — N onProgress calls in <window collassano in <=2 emit', async () => {
     vi.useFakeTimers()
     try {
-      const stub = stubComlinkWrap(
+      const stubs = stubComlinkAdapter(
         async (
           _task: string,
           _payload: unknown,
@@ -283,32 +297,31 @@ describe('WorkerBridge — Comlink wrap + lifecycle (D-124/129/131/132/135/137/1
           return 'ok'
         },
       )
-      try {
-        const bridge = makeBridge(makeDescriptor(), { assertSerializableMode: 'off' })
-        const onProgress = vi.fn()
-        await bridge.dispatch(
-          'parseCsv',
-          { x: 1 },
-          new AbortController().signal,
-          onProgress,
-          { progressThrottleMs: 100 },
-        )
-        // Prima chiamata sincrona passa subito (window aperta).
-        // Le 99 successive in <100ms vengono collassate. Trailing flush schedule.
-        const callsBeforeFlush = onProgress.mock.calls.length
-        expect(callsBeforeFlush).toBe(1) // solo la prima leading chiamata
-        // Avanza i timer per il trailing flush
-        await vi.advanceTimersByTimeAsync(150)
-        const callsAfterFlush = onProgress.mock.calls.length
-        // Latest-only: 1 leading + 1 trailing = max 2
-        expect(callsAfterFlush).toBeGreaterThanOrEqual(1)
-        expect(callsAfterFlush).toBeLessThanOrEqual(2)
-        // L'ultima chiamata deve essere il valore finale (latest-only)
-        const lastCall = onProgress.mock.calls[onProgress.mock.calls.length - 1]
-        expect((lastCall?.[0] as { value: number }).value).toBeCloseTo(99 / 100, 5)
-      } finally {
-        stub.restore()
-      }
+      const bridge = makeBridge(makeDescriptor(), {
+        assertSerializableMode: 'off',
+        comlinkAdapter: stubs.adapter,
+      })
+      const onProgress = vi.fn()
+      await bridge.dispatch(
+        'parseCsv',
+        { x: 1 },
+        new AbortController().signal,
+        onProgress,
+        { progressThrottleMs: 100 },
+      )
+      // Prima chiamata sincrona passa subito (window aperta).
+      // Le 99 successive in <100ms vengono collassate. Trailing flush schedule.
+      const callsBeforeFlush = onProgress.mock.calls.length
+      expect(callsBeforeFlush).toBe(1) // solo la prima leading chiamata
+      // Avanza i timer per il trailing flush
+      await vi.advanceTimersByTimeAsync(150)
+      const callsAfterFlush = onProgress.mock.calls.length
+      // Latest-only: 1 leading + 1 trailing = max 2
+      expect(callsAfterFlush).toBeGreaterThanOrEqual(1)
+      expect(callsAfterFlush).toBeLessThanOrEqual(2)
+      // L'ultima chiamata deve essere il valore finale (latest-only)
+      const lastCall = onProgress.mock.calls[onProgress.mock.calls.length - 1]
+      expect((lastCall?.[0] as { value: number }).value).toBeCloseTo(99 / 100, 5)
     } finally {
       vi.useRealTimers()
     }
@@ -318,42 +331,40 @@ describe('WorkerBridge — Comlink wrap + lifecycle (D-124/129/131/132/135/137/1
   // Test 10 — D-131 terminate Comlink.releaseProxy + worker.terminate + re-spawn
   // --------------------------------------------------------------------------
   it('Test 10 (D-131): terminate releases proxy + terminates worker + lazy re-spawn al next dispatch', async () => {
-    const stub = stubComlinkWrap(async () => 'ok')
-    try {
-      const bridge = makeBridge(makeDescriptor(), { assertSerializableMode: 'off' })
-      const ctrl = new AbortController()
-      await bridge.dispatch('parseCsv', { x: 1 }, ctrl.signal)
-      expect(MockWorker.instances).toHaveLength(1)
-      const firstWorker = MockWorker.instances[0]
-      expect(firstWorker?.terminated).toBe(false)
+    const stubs = stubComlinkAdapter(async () => 'ok')
+    const bridge = makeBridge(makeDescriptor(), {
+      assertSerializableMode: 'off',
+      comlinkAdapter: stubs.adapter,
+    })
+    const ctrl = new AbortController()
+    await bridge.dispatch('parseCsv', { x: 1 }, ctrl.signal)
+    expect(MockWorker.instances).toHaveLength(1)
+    const firstWorker = MockWorker.instances[0]
+    expect(firstWorker?.terminated).toBe(false)
 
-      bridge.terminate()
-      expect(firstWorker?.terminated).toBe(true)
+    bridge.terminate()
+    expect(firstWorker?.terminated).toBe(true)
 
-      // Subsequent dispatch deve re-spawnare nuovo worker
-      await bridge.dispatch('parseCsv', { x: 2 }, ctrl.signal)
-      expect(MockWorker.instances).toHaveLength(2)
-      expect(MockWorker.instances[1]).not.toBe(firstWorker)
-    } finally {
-      stub.restore()
-    }
+    // Subsequent dispatch deve re-spawnare nuovo worker
+    await bridge.dispatch('parseCsv', { x: 2 }, ctrl.signal)
+    expect(MockWorker.instances).toHaveLength(2)
+    expect(MockWorker.instances[1]).not.toBe(firstWorker)
   })
 
   // --------------------------------------------------------------------------
   // Test 11 — terminate idempotente
   // --------------------------------------------------------------------------
   it('Test 11: terminate idempotente — chiamato 2x non throw, 2° è no-op', async () => {
-    const stub = stubComlinkWrap(async () => 'ok')
-    try {
-      const bridge = makeBridge(makeDescriptor(), { assertSerializableMode: 'off' })
-      await bridge.dispatch('parseCsv', { x: 1 }, new AbortController().signal)
-      const w = MockWorker.instances[0]
-      expect(() => bridge.terminate()).not.toThrow()
-      expect(() => bridge.terminate()).not.toThrow()
-      expect(w?.terminated).toBe(true)
-    } finally {
-      stub.restore()
-    }
+    const stubs = stubComlinkAdapter(async () => 'ok')
+    const bridge = makeBridge(makeDescriptor(), {
+      assertSerializableMode: 'off',
+      comlinkAdapter: stubs.adapter,
+    })
+    await bridge.dispatch('parseCsv', { x: 1 }, new AbortController().signal)
+    const w = MockWorker.instances[0]
+    expect(() => bridge.terminate()).not.toThrow()
+    expect(() => bridge.terminate()).not.toThrow()
+    expect(w?.terminated).toBe(true)
   })
 
   // --------------------------------------------------------------------------
@@ -383,75 +394,72 @@ describe('WorkerBridge — Comlink wrap + lifecycle (D-124/129/131/132/135/137/1
   // Test 13 — Worker 'error' event → store last error
   // --------------------------------------------------------------------------
   it("Test 13: worker 'error' event memorizzato come last error code=worker.error category=worker", async () => {
-    const stub = stubComlinkWrap(async () => 'ok')
-    try {
-      const bridge = makeBridge(makeDescriptor(), { assertSerializableMode: 'off' })
-      await bridge.dispatch('parseCsv', { x: 1 }, new AbortController().signal)
-      const worker = MockWorker.instances[0]
-      worker?.__error('boom', 'worker.js', 42)
-      const lastErr = bridge.getLastErrorForTesting()
-      expect(lastErr).not.toBeNull()
-      expect(isBrokerError(lastErr)).toBe(true)
-      const err = lastErr as BrokerError
-      expect(err.code).toBe('worker.error')
-      expect(err.category).toBe('worker')
-      expect(err.details?.['filename']).toBe('worker.js')
-      expect(err.details?.['lineno']).toBe(42)
-    } finally {
-      stub.restore()
-    }
+    const stubs = stubComlinkAdapter(async () => 'ok')
+    const bridge = makeBridge(makeDescriptor(), {
+      assertSerializableMode: 'off',
+      comlinkAdapter: stubs.adapter,
+    })
+    await bridge.dispatch('parseCsv', { x: 1 }, new AbortController().signal)
+    const worker = MockWorker.instances[0]
+    worker?.__error('boom', 'worker.js', 42)
+    const lastErr = bridge.getLastErrorForTesting()
+    expect(lastErr).not.toBeNull()
+    expect(isBrokerError(lastErr)).toBe(true)
+    const err = lastErr as BrokerError
+    expect(err.code).toBe('worker.error')
+    expect(err.category).toBe('worker')
+    expect(err.details?.['filename']).toBe('worker.js')
+    expect(err.details?.['lineno']).toBe(42)
   })
 
   // --------------------------------------------------------------------------
   // Test 14 — Worker 'messageerror' event → store last error
   // --------------------------------------------------------------------------
   it("Test 14: worker 'messageerror' event memorizzato come last error code=worker.messageerror", async () => {
-    const stub = stubComlinkWrap(async () => 'ok')
-    try {
-      const bridge = makeBridge(makeDescriptor(), { assertSerializableMode: 'off' })
-      await bridge.dispatch('parseCsv', { x: 1 }, new AbortController().signal)
-      const worker = MockWorker.instances[0]
-      worker?.__messageError({ corrupted: true })
-      const lastErr = bridge.getLastErrorForTesting()
-      expect(lastErr).not.toBeNull()
-      expect(isBrokerError(lastErr)).toBe(true)
-      const err = lastErr as BrokerError
-      expect(err.code).toBe('worker.messageerror')
-      expect(err.category).toBe('worker')
-    } finally {
-      stub.restore()
-    }
+    const stubs = stubComlinkAdapter(async () => 'ok')
+    const bridge = makeBridge(makeDescriptor(), {
+      assertSerializableMode: 'off',
+      comlinkAdapter: stubs.adapter,
+    })
+    await bridge.dispatch('parseCsv', { x: 1 }, new AbortController().signal)
+    const worker = MockWorker.instances[0]
+    worker?.__messageError({ corrupted: true })
+    const lastErr = bridge.getLastErrorForTesting()
+    expect(lastErr).not.toBeNull()
+    expect(isBrokerError(lastErr)).toBe(true)
+    const err = lastErr as BrokerError
+    expect(err.code).toBe('worker.messageerror')
+    expect(err.category).toBe('worker')
   })
 
   // --------------------------------------------------------------------------
   // Test 15 — getDebugSnapshot
   // --------------------------------------------------------------------------
   it('Test 15: getDebugSnapshot ritorna { workerId, spawned, messagesCount, terminated }', async () => {
-    const stub = stubComlinkWrap(async () => 'ok')
-    try {
-      const bridge = makeBridge(makeDescriptor(), { assertSerializableMode: 'off' })
+    const stubs = stubComlinkAdapter(async () => 'ok')
+    const bridge = makeBridge(makeDescriptor(), {
+      assertSerializableMode: 'off',
+      comlinkAdapter: stubs.adapter,
+    })
 
-      // Pre-spawn snapshot
-      const s1 = bridge.getDebugSnapshot()
-      expect(s1.workerId).toBe('test-worker')
-      expect(s1.spawned).toBe(false)
-      expect(s1.messagesCount).toBe(0)
-      expect(s1.terminated).toBe(false)
+    // Pre-spawn snapshot
+    const s1 = bridge.getDebugSnapshot()
+    expect(s1.workerId).toBe('test-worker')
+    expect(s1.spawned).toBe(false)
+    expect(s1.messagesCount).toBe(0)
+    expect(s1.terminated).toBe(false)
 
-      // Post-first dispatch
-      await bridge.dispatch('parseCsv', { x: 1 }, new AbortController().signal)
-      const s2 = bridge.getDebugSnapshot()
-      expect(s2.spawned).toBe(true)
-      expect(s2.messagesCount).toBe(1)
-      expect(s2.terminated).toBe(false)
+    // Post-first dispatch
+    await bridge.dispatch('parseCsv', { x: 1 }, new AbortController().signal)
+    const s2 = bridge.getDebugSnapshot()
+    expect(s2.spawned).toBe(true)
+    expect(s2.messagesCount).toBe(1)
+    expect(s2.terminated).toBe(false)
 
-      // Post-terminate
-      bridge.terminate()
-      const s3 = bridge.getDebugSnapshot()
-      expect(s3.spawned).toBe(false)
-      expect(s3.terminated).toBe(true)
-    } finally {
-      stub.restore()
-    }
+    // Post-terminate
+    bridge.terminate()
+    const s3 = bridge.getDebugSnapshot()
+    expect(s3.spawned).toBe(false)
+    expect(s3.terminated).toBe(true)
   })
 })
