@@ -63,7 +63,16 @@ type RouterPublishOptions = Parameters<RouterBroker['publish']>[2]
 /**
  * `RealtimeBroker` — composition wrapper di `RouterBroker` per F4 SSE/WS (D-101).
  *
- * @example
+ * Espone tutta la surface F1+F2+F3 (publish/subscribe/registerPlugin/registerRoute/
+ * registerCanonicalSchema/...) + due metodi F4 (`connectRealtime`/`disconnectRealtime`).
+ * Vincolo D-83 strict: zero modifiche runtime a F1-F3.
+ *
+ * Pattern composition identico a `RouterBroker` (router-broker-wrapper.ts:105-226):
+ * - `inner: RouterBroker` delegato per pub/sub/lifecycle/routing/http
+ * - `manager: RealtimeChannelManager` registry N-canale (D-102)
+ * - `registerPlugin/unregisterPlugin` override per cascade D-103 + D-112
+ *
+ * @example Quick start (config-driven channels)
  * ```ts
  * import { createRealtimeBroker } from '@sembridge/gateway/sse-ws'
  *
@@ -74,9 +83,25 @@ type RouterPublishOptions = Parameters<RouterBroker['publish']>[2]
  *     ],
  *   },
  * })
- * await broker.connectRealtime({ name: 'notifications', mode: 'sse', url: '/notifications' })
- * broker.subscribe('orders.created', (ev) => { ... })
+ * broker.subscribe('orders.created', (ev) => console.log(ev.payload, ev.source))
  * ```
+ *
+ * @example Imperative connect (post-boot)
+ * ```ts
+ * const broker = createRealtimeBroker({})
+ * await broker.connectRealtime({
+ *   name: 'notifications',
+ *   mode: 'sse',
+ *   buildUrl: () => '/notifications',
+ *   eventTypes: ['notification.new'],  // SSE custom event types W-4
+ * })
+ * // Più tardi:
+ * broker.disconnectRealtime('notifications')
+ * ```
+ *
+ * @see {@link createRealtimeBroker} — public factory (no singleton, D-30)
+ * @see {@link RealtimeChannelManager} — N-channel registry (D-102)
+ * @see {@link RealtimeBrokerConfig} — config superset di RouterBrokerConfig
  */
 export class RealtimeBroker {
   private readonly inner: RouterBroker
@@ -139,10 +164,21 @@ export class RealtimeBroker {
    * Owner di default `'system'` (top-level consumer API). Il `registerPlugin`
    * override di sotto passa invece `descriptor.id` come ownerId per cascade D-112.
    *
+   * @param def - `RealtimeChannelDef` con `name` (chiave registry), `buildUrl`
+   *              (factory async — D-104 auth-agnostic), `mode?: 'sse'|'websocket'|'auto'`
+   *              (default `'auto'` SSE-first), `eventTypes?` (SSE W-4),
+   *              `wsSubprotocols?` (WS Q4), reconnect overrides opzionali.
+   * @returns Promise risolta quando l'adapter ha tentato la prima connect.
+   *          (Il successo effettivo è segnalato da `system.realtime.connected` published event.)
+   * @throws {BrokerError} `realtime.channel.duplicate` (category `'config'`) se `def.name` già registrato.
+   *
    * @example
    * ```ts
-   * await broker.connectRealtime({ name: 'orders', mode: 'auto', url: '/events' })
+   * await broker.connectRealtime({ name: 'orders', mode: 'auto', buildUrl: () => '/events' })
    * ```
+   *
+   * @see {@link RealtimeChannelDef}
+   * @see {@link RealtimeChannelManager.connect}
    */
   async connectRealtime(def: RealtimeChannelDef): Promise<void> {
     return this.manager.connect(def, 'system')
@@ -154,11 +190,18 @@ export class RealtimeBroker {
    * Su disconnect ULTIMO canale → teardown visibility detector (D-110 cascade,
    * gestito dal manager).
    *
+   * @param name - Nome del canale da chiudere (se omesso → chiude tutti i canali
+   *               con `ownerId='system'`, NON propaga ad altri owner — usa `unregisterPlugin`
+   *               per cleanup plugin-scoped via cascade D-112).
+   *
    * @example
    * ```ts
    * broker.disconnectRealtime('orders')  // singolo
-   * broker.disconnectRealtime()           // tutti + visibility teardown
+   * broker.disconnectRealtime()           // tutti i canali system + visibility teardown
    * ```
+   *
+   * @see {@link RealtimeChannelManager.disconnect}
+   * @see {@link RealtimeChannelManager.disconnectByOwner} — usato da `unregisterPlugin` cascade
    */
   disconnectRealtime(name?: string): void {
     this.manager.disconnect(name)

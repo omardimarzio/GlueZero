@@ -107,6 +107,9 @@ const RealtimeBrokerConfigSchema = v.looseObject({
  * await broker.connectRealtime({ name: 'notifications', mode: 'sse', url: '/notifications' })
  * broker.subscribe('orders.created', (ev) => console.log(ev.payload))
  * ```
+ *
+ * @see {@link RealtimeBroker}
+ * @see {@link RealtimeBrokerConfig}
  */
 export function createRealtimeBroker(config: RealtimeBrokerConfig = {}): RealtimeBroker {
   const parsed = v.safeParse(RealtimeBrokerConfigSchema, config)

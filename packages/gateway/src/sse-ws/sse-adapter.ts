@@ -106,6 +106,10 @@ export interface SseAdapterDeps {
  * // ... eventi pubblicati via publishFn
  * adapter.disconnect('teardown')
  * ```
+ *
+ * @see {@link RealtimeChannelManager} — orchestratore N-canale + reconnect loop (plan 04-07)
+ * @see {@link WebSocketAdapter} — adapter parallelo (plan 04-06)
+ * @see {@link RealtimeChannelDef} — config shape (D-102, D-104, D-105)
  */
 export class SseAdapter {
   /** Channel name (D-102) — chiave nel `RealtimeChannelManager` di plan 04-07. */

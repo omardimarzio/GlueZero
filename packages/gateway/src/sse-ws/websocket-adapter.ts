@@ -170,6 +170,11 @@ function shouldReconnectOnCloseCode(code: number): boolean {
  * // ... eventi pubblicati via publishFn
  * adapter.disconnect('teardown')
  * ```
+ *
+ * @see {@link SseAdapter} — adapter parallelo prioritario V1 (plan 04-05)
+ * @see {@link RealtimeChannelManager} — orchestratore N-canale + auto-fallback (plan 04-07)
+ * @see {@link parseFrame} — envelope JSON parser strict (plan 04-02 D-106)
+ * @see {@link shouldReconnectOnCloseCode} — close codes routing RFC 6455 §7.4
  */
 export class WebSocketAdapter {
   /** Channel name (D-102) — chiave nel `RealtimeChannelManager` di plan 04-07. */

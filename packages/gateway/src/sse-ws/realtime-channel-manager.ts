@@ -152,6 +152,12 @@ export interface RealtimeChannelManagerDebugInfo {
  * // ...
  * manager.disconnectByOwner('plugin-A') // chiude entrambi
  * ```
+ *
+ * @see {@link RealtimeBroker} — composition wrapper consumer-facing (plan 04-08)
+ * @see {@link SseAdapter} — adapter prioritario V1 (plan 04-05)
+ * @see {@link WebSocketAdapter} — adapter alternativo + auto-fallback target (plan 04-06)
+ * @see {@link createReconnectStrategy} — full jitter D-109 + auto-fallback D-107 (plan 04-03)
+ * @see {@link createVisibilityDetector} — D-110 freshness check on visible (plan 04-04)
  */
 export class RealtimeChannelManager {
   private readonly channels = new Map<string, ChannelEntry>()
