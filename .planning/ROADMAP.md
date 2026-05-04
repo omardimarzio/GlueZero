@@ -205,7 +205,7 @@ WK-01, WK-02, WK-03, WK-04, WK-05, WK-06, WK-07, ERR-02 (extension: `worker.erro
   4. Worker pool bounded `min(hardwareConcurrency, 4)` con riuso; `MessageChannel` chiusi esplicitamente al termine di ogni task (no leak); cancellazione task via `AbortSignal` propagato fino a `WorkerBridge.cancel(taskId)`; timeout configurabile per task — verificato con `getDebugSnapshot()` post-task: counter `workerTasks` torna a zero.
   5. Eventi `<topic>.progress` opzionali: il worker può emettere progress fraction (0..1) durante l'esecuzione, propagati come BrokerEvent canonici al subscriber.
 
-**Plans**: TBD
+**Plans**: 6/7 complete (05-01 bootstrap + 05-02 assert-serializable + transferable-extractor + 05-03 task-tracker + 05-04 worker-bridge + 05-05 worker-pool + worker-registry + 05-06 worker-broker composition wrapper Opzione B + integration test 3-tier; 05-07 final gate F5 pending)
 **Needs research**: yes
 **UI hint**: no
 
@@ -322,13 +322,15 @@ I 11 punti che il PRD §39 vieta esplicitamente di lasciare impliciti vengono ch
 | 2. Canonical Model & Mapper | 12/12 | ✅ Complete | 2026-04-30 |
 | 3. Routing & Server Gateway HTTP | 14/14 | ✅ Complete | 2026-05-03 |
 | 4. Realtime inbound | 9/9 | ✅ Complete | 2026-05-04 |
-| 5. Worker Runtime | 0/0 | Not started | - |
+| 5. Worker Runtime | 6/7 | 🟢 In Progress (Wave 4 ✅ COMPLETE) | - |
 | 6. Cache & Tooling avanzato | 0/0 | Not started | - |
 
 ---
 
 *Roadmap created: 2026-04-28*
-*Last updated: 2026-05-04 — **Phase 4 COMPLETE 9/9 plan** (04-01..04-08 done + 04-09 final gate). 1 open issue PRD §39 chiuso: #9 RT-07 (reconnection rules realtime — Last-Event-ID via query string per SSE + ping/pong applicativo per WS + DOC-04 README italiano sezione Realtime SSE/WS). CI gates: publint ✅ (4/4), attw ESM-only ✅ (4/4), biome ✅ (zero errors sse-ws), typecheck ✅, build ✅. Coverage v8 sse-ws/ subset 91.80% statements / 86.70% branches / 89.53% functions / 93.75% lines. Test totale: 222/225 gateway (3 skip MSW V1.x deferred), 756/759 monorepo full (248 core + 183 mapper + 103 routing + 222 gateway). D-83 strict ✓ (zero modifiche packages/{core,mapper,routing}/src/ + packages/gateway/src/http/ runtime per tutta F4). RT-01..RT-07 + ERR-02 ext + LIFE-02 ext F4 + TEST-01/02/03 ext F4 closed. **Phase 3 COMPLETE & READY** (14/14). **Phase 2 COMPLETE & READY** (12/12). **Phase 1 COMPLETE & VERIFIED** (PASS HIGH).*
+*Last updated: 2026-05-04 — **Phase 5 In Progress 6/7 plan completi** (Wave 4 ✅ COMPLETE). 05-06 (composition wrapper Opzione B + factory + 8 integration test Tier-1 + 6 browser smoke Tier-3 Playwright Chromium): 16 file creati + 1 modificato (~2112 LOC totali). **121/121 worker test passing** (Tier-1 jsdom) + **6/6 browser smoke** (Tier-3 Playwright); cross-package zero regression: core 248 + mapper 183 + routing 103 + gateway 222 (3 skip MSW V1.x F4) + worker 121 = 877/880 monorepo full. **Opzione B research §7.2 verified**: WorkerBroker.publish intercepta topic worker matching workerRoutes Map PRIMA di delegate inner.publish (RouterBroker F3) — JSDoc cita Opzione B + D-83 in 14 occorrenze + 4 esplicite RESEARCH §7.2. **D-83 strict ✓**: git diff zero output packages/{core,mapper,routing,gateway/http,sse-ws}/. **D-151 10 scenari coverage**: #1 dedicated + #2 pool-concurrent + #3 timeout-strict (Pitfall 2C closure deterministic) + #4 cancel-cooperative + #5 cancel-hard via unregisterPlugin + #6 serialization-fail + #8 cascade-cleanup + #9 backpressure-storm (Pitfall 4.C critical bypass) → 8 integration Tier-1; #7 transferable byteLength=0 → Tier-3 Playwright; #10 assertSerializable PRE-postMessage in 05-04. WK-01..WK-07 + ERR-02 ext + LIFE-02 ext F5 + TEST-01/02/03 ext F5 → subset W4 done (full closure 05-07). Phase 4 COMPLETE 9/9 (precedente).*
+
+*Previous update: 2026-05-04 — **Phase 4 COMPLETE 9/9 plan** (04-01..04-08 done + 04-09 final gate). 1 open issue PRD §39 chiuso: #9 RT-07 (reconnection rules realtime — Last-Event-ID via query string per SSE + ping/pong applicativo per WS + DOC-04 README italiano sezione Realtime SSE/WS). CI gates: publint ✅ (4/4), attw ESM-only ✅ (4/4), biome ✅ (zero errors sse-ws), typecheck ✅, build ✅. Coverage v8 sse-ws/ subset 91.80% statements / 86.70% branches / 89.53% functions / 93.75% lines. Test totale: 222/225 gateway (3 skip MSW V1.x deferred), 756/759 monorepo full (248 core + 183 mapper + 103 routing + 222 gateway). D-83 strict ✓ (zero modifiche packages/{core,mapper,routing}/src/ + packages/gateway/src/http/ runtime per tutta F4). RT-01..RT-07 + ERR-02 ext + LIFE-02 ext F4 + TEST-01/02/03 ext F4 closed. **Phase 3 COMPLETE & READY** (14/14). **Phase 2 COMPLETE & READY** (12/12). **Phase 1 COMPLETE & VERIFIED** (PASS HIGH).*
 
 *Previous update: 2026-05-03 — **Phase 3 COMPLETE 14/14 plan** (03-12 RouterBroker composition wrapper + 03-13 createRouterHarness + 6 integration test scenari F3 + 03-14 final gate F3 — coverage v8 measured + DOC-04 README italiani + publint/attw/size-limit ext). 4 open issues PRD §39 chiusi: #5 ROUTE-16, #6 ROUTE-15, #7 LIFE-02 ext F3, #8 ROUTE-09. CI gates: publint ✅ (4/4), attw ESM-only ✅ (4/4), size-limit ✅ (core 6.17/8 KB, mapper 11.66/12 KB, routing 19.15/24 KB raised, gateway/http 6.4/8 KB). Coverage v8 routing 92.4/84.3/92.6/95.1 + gateway 86.3/77.7/90/88.5. D-83 strict ✓ (zero modifiche packages/core/ né packages/mapper/ runtime). 248 core + 183 mapper invariati.*
 
