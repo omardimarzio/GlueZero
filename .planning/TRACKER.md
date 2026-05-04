@@ -23,37 +23,37 @@ session_active: true
 
 | Campo | Valore |
 |-------|--------|
-| Fase | **Phase 4 — Realtime inbound (SSE/WS) — 🟢 EXECUTING (Wave 2 partial: 04-02 done)** |
-| Wave | **1 / 6 done + Wave 2 partial** (Wave 2 remaining: 04-03 ∥ 04-04) |
-| Plan in esecuzione | — (04-02 completato; Wave 2 remaining: 04-03 + 04-04) |
-| Plan progress F4 | 2 / 9 plan committed (04-01 + 04-02 done; 04-03..04-09 todo) |
-| Plan progress globale | 39 / 46 (85%) |
+| Fase | **Phase 4 — Realtime inbound (SSE/WS) — 🟢 EXECUTING (Wave 2 partial: 04-02 + 04-03 done)** |
+| Wave | **1 / 6 done + Wave 2 partial** (Wave 2 remaining: 04-04) |
+| Plan in esecuzione | — (04-03 completato; Wave 2 remaining: 04-04) |
+| Plan progress F4 | 3 / 9 plan committed (04-01 + 04-02 + 04-03 done; 04-04..04-09 todo) |
+| Plan progress globale | 40 / 46 (87%) |
 | Mode GSD | yolo + auto_advance + parallelization (sequential exec, no worktree) |
 | Modello attivo | `claude-opus-4-7-1` (opus) — override esplicito su tutti i sub-agent |
 
-## Ultimo step completato (auto-update 2026-05-04T12:55:21Z)
+## Ultimo step completato (auto-update 2026-05-04T15:00:00Z)
 
-- Plan: **04-02** → SUMMARY.md committed
-- Commit: `4f860ba docs(04-02): complete plan SUMMARY + STATE/ROADMAP/TRACKER update — Phase 4 Wave 2 frame-parser done`
-- Phase progress: **2/9** plan completati con SUMMARY.md
-- Project progress: 39/46 plan (85%)
+- Plan: **04-03** → SUMMARY.md in attesa di commit
+- Commit RED: `cfe6020 test(04-03): add failing tests for createReconnectStrategy (D-107, D-109, Q3)`
+- Commit GREEN: `d3b3921 feat(04-03): implement createReconnectStrategy state machine (D-107 fallback + D-109 full jitter + Q3 consolidationMs)`
+- Phase progress: **3/9** plan completati con SUMMARY.md
+- Project progress: 40/46 plan (87%)
 
 
 ## Prossimo step
 
-**Wave 2 — 2 plan paralleli rimanenti con file ownership disgiunta (04-02 already done):**
+**Wave 2 — 1 plan rimanente:**
 
 ```
 Skill: gsd-execute-phase 4
 ```
 
-Plan da eseguire (parallel-friendly, no scrittura su file 04-01/04-02):
-- **04-03** — reconnect-strategy.ts (full-jitter D-109 + auto-fallback D-107 + consolidationMs Q3) → scrive `reconnect-strategy.{ts,test.ts}`
+Plan da eseguire:
 - **04-04** — visibility-detector.ts (D-110 + DI guard Worker/SSR) → scrive `visibility-detector.{ts,test.ts}`
 
 Wave struttura globale F4:
 - ✅ Wave 1: 04-01 (bootstrap) — DONE 2026-05-04
-- 🟡 Wave 2: 04-02 done ∥ 04-03 todo ∥ 04-04 todo
+- 🟡 Wave 2: 04-02 done ∥ 04-03 done ∥ 04-04 todo
 - ⏳ Wave 3: 04-05 ∥ 04-06 (2 parallel — SSE/WS adapters; 04-06 consuma parseFrame da 04-02)
 - ⏳ Wave 4: 04-07 (RealtimeChannelManager + runReconnectLoop)
 - ⏳ Wave 5: 04-08 (RealtimeBroker + integration tests Tier-1/2/3)
@@ -80,6 +80,7 @@ Phase 4 lock highlights:
 
 ## Decisioni recenti rilevanti
 
+- **Plan 04-03 ESEGUITO ✓ (Wave 2)** — `createReconnectStrategy` factory state machine: full jitter D-109 + auto-fallback D-107 (threshold 3 + cycle cap 5) + Q3 §6.2 consolidationMs guard anti-flap (default 5000ms — opzione B). Interface 8 metodi, DI random+now per test deterministici. 15/15 test PASS, 669/669 monorepo, anti-AP-3 verificato (no `reconnecting-websocket` import). Pattern factory + closure analog circuit-breaker.ts F3.
 - **Phase 4 CONTEXT.md (D-101..D-120)** — 20 decisioni nuove: auth-agnostic `buildUrl`, envelope JSON `{topic,data,id}`, RealtimeChannelManager N-canali, auto-fallback SSE→WS default abilitato (cap 5 cicli), Visibility API integration, composition wrapper RealtimeBroker, riuso pipeline §28 + mapper F2/F3 + backpressure F3 + cascade cleanup F1.
 - **Plan 03-12 (Wave 7) ESEGUITO ✓** — RouterBroker composition wrapper + RouterEngine + createRouterBroker. 29/29 test deterministici TDD GREEN. D-83 strict verificato. 5 BLOCKER iter1 fix applicati. Cyclic workspace dep routing↔gateway gestito (type-only).
 - **D-100** (NEW da revision plan iter 1): `RouterBroker` isola accesso `CanonicalRegistry` private di F2 via getter `getCanonicalSchemaForTopic` con loud throw + opt-in `requiresRouteTopics` come bypass. Documentata in `.planning/phases/03-routing-server-gateway-http/03-CONTEXT.md`.

@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-last_updated: "2026-05-04T12:52:04.543Z"
+last_updated: "2026-05-04T15:00:00.000Z"
 progress:
   total_phases: 6
   completed_phases: 3
   total_plans: 46
-  completed_plans: 39
-  percent: 85
+  completed_plans: 40
+  percent: 87
 ---
 
 # Project State: SemBridge
@@ -28,12 +28,12 @@ progress:
 ## Current Position
 
 Phase: 04 (Realtime inbound (SSE prioritario, WS opzionale)) — EXECUTING
-Plan: 3 of 9 (next)
+Plan: 4 of 9 (next)
 Total Plans: 9 (Phase 4)
 
-**Last completed:** Plan 04-02 (Wave 2 — Frame parser puro WebSocket envelope JSON) at 2026-05-04 — 2 commits TDD atomic (26cc3c2 RED test + edcbf3b GREEN feat); 3 nuovi file 332 LOC (types/frame-envelope.ts 50 + frame-parser.ts 140 + frame-parser.test.ts 142). `parseFrame(raw: unknown): FrameParseResult` pure function difensiva (input `unknown` per defense-in-depth `MessageEvent.data` `any`), discriminated union 3 reason path (`malformed-json`/`missing-topic`/`invalid-shape`). `INTERNAL_TOPICS` frozen + `isInternalTopic` strict equality match (PITFALL §11.7 chiusura Q1 anti-AP-6 — Test 13 `weather.__ping__` === false blocca regressione). Q2 closure: riuso ERR-02 ext F3 `network.error` con `category: 'protocol'` (NO nuovo event type). 15/15 frame-parser test PASS + 120/120 gateway suite + 654/654 monorepo full + tsc clean + ESM 70ms + DTS 590ms. D-83 strict ✓ (zero modifiche fuori `gateway/src/sse-ws/`). RT-02/RT-04/RT-06/ERR-02 building blocks pronti per consumer 04-06.
+**Last completed:** Plan 04-03 (Wave 2 — Reconnect strategy state machine) at 2026-05-04 — 2 commits TDD atomic (cfe6020 RED test + d3b3921 GREEN feat); 2 nuovi file 407 LOC (reconnect-strategy.ts 238 + reconnect-strategy.test.ts 169). `createReconnectStrategy(options)` factory ritorna `ReconnectStrategy` con 8 metodi (nextDelayMs/recordFailure/recordSuccess/shouldFallback/fallback/getMode/isPermanentlyFailed/reset). Combina full jitter backoff (D-109 formula AWS `floor(random * min(cap, base * 2^attempt))`, base 1000ms, cap 30000ms), auto-fallback SSE↔WS (D-107 threshold 3 fail consecutivi → switch + reset counter; cycle cap globale 5), reset criteria con consolidationMs guard anti-flap (Q3 §6.2 default 5000ms — opzione B). DI `random` + `now` per test deterministici. Anti-AP-3 verificato: NO import `reconnecting-websocket` (vincolo PRD §31.3). 15/15 reconnect-strategy test PASS + 135/135 gateway suite + 669/669 monorepo full + tsc clean. D-83 strict ✓ (zero modifiche fuori `gateway/src/sse-ws/`). RT-05/RT-07 building blocks pronti per consumer 04-05/04-06 adapter + 04-07 RealtimeChannelManager.
 
-**Next:** `/gsd-execute-phase 4` per Wave 2 plan paralleli rimanenti (file ownership disgiunta): 04-03 (reconnect-strategy.ts full-jitter D-109 + auto-fallback D-107 + consolidationMs Q3), 04-04 (visibility-detector.ts D-110 + DI guard Worker/SSR).
+**Next:** `/gsd-execute-phase 4` per Wave 2 plan paralleli rimanenti (file ownership disgiunta): 04-04 (visibility-detector.ts D-110 + DI guard Worker/SSR).
 
 - **Phase:** 3 ✅ COMPLETE
 - **Status:** Ready to execute
@@ -51,7 +51,7 @@ Total Plans: 9 (Phase 4)
 | 1 | Core essenziale (broker pub/sub, plugin registry, EventTap pre-instrumentato) | **✅ COMPLETE & VERIFIED (11/11 plans, PASS confidence HIGH)** |
 | 2 | Canonical Model & Mapper bidirezionale + Mapping Inspector | **✅ COMPLETE — ready for verifier (12/12 plans)** |
 | 3 | Routing engine + HTTP gateway con retry/timeout/dedupe/auth | **✅ COMPLETE — ready for verifier (14/14 plans, 4 open issues PRD §39 closed)** |
-| 4 | Realtime inbound (SSE prioritario, WS opzionale) | **In Progress — 2/9 plans (04-01 Wave 1 + 04-02 Wave 2 frame-parser done)** |
+| 4 | Realtime inbound (SSE prioritario, WS opzionale) | **In Progress — 3/9 plans (04-01 Wave 1 + 04-02 + 04-03 Wave 2 partial done)** |
 | 5 | Worker Runtime (registry, route worker, task tracking) | Not started |
 | 6 | Cache + Tooling avanzato (Inspector, Metrics, debug API) | Not started |
 
@@ -93,6 +93,7 @@ Total Plans: 9 (Phase 4)
 | Phase 03 P14 | ~35min | 5 tasks | 8 files (2 README + 4 vitest/package.json + biome cleanup ~46 file) |
 | Phase 04 P01 | ~10min | 2 tasks | 10 files (6 nuovi 503 LOC + 4 modificati build/test config) |
 | Phase 04 P02 | 12min | 1 tasks | 3 files |
+| Phase 04 P03 | 4min | 1 tasks | 2 files (reconnect-strategy.{ts,test.ts} 407 LOC; 15/15 test PASS, 669/669 monorepo) |
 
 ## Accumulated Context
 
