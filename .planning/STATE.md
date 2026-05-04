@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-last_updated: "2026-05-04T20:40:08.936Z"
+last_updated: "2026-05-04T23:05:00.000Z"
 progress:
   total_phases: 6
   completed_phases: 4
   total_plans: 53
-  completed_plans: 47
-  percent: 89
+  completed_plans: 49
+  percent: 92
 ---
 
 # Project State: SemBridge
@@ -28,23 +28,26 @@ progress:
 ## Current Position
 
 Phase: 5 (worker-runtime) — EXECUTING
-Wave: 1 ✅ COMPLETE → Wave 2 next (05-02 ‖ 05-03 parallel)
-Plan: 2 of 7 (05-01 done; 05-02..05-07 pending)
+Wave: 3-B ✅ 05-05 COMPLETE → Wave 3-A 05-04 in parallel (worker-bridge); Wave 4 (05-06) ready dopo 05-04 close
+Plan: 5 of 7 (05-01..05-03 + 05-05 done; 05-04 parallel; 05-06 + 05-07 pending)
 Total Plans: 7 (Phase 5)
 
-**Last completed:** Plan 05-01 (Wave 1 — Bootstrap @sembridge/worker) at 2026-05-04 — 4 commits atomici TDD-compliant: `7d64592` chore (config bootstrap pkg+tsup+vitest+tsconfig) + `2ec5fcf` feat (7 type files src/types/ con D-123/124/127/128/131/133/136/137/141/143/146/147) + `0d18c36` test RED (failing smoke decl merging) + `77f19e1` feat GREEN (augment.ts decl merging F5 + barrel index.ts). 14 file creati + 2 modificati (1108 LOC totali). 8/8 augment.test.ts passing (Pattern S1 anti tree-shake + Pattern S5 STRICT match + coexistence F2/F3/F4/F5). Cross-package typecheck zero regression: core 248 + mapper 183 + routing 103 + gateway 222 + worker 8 = **764 monorepo passing** (3 skip MSW V1.x F4). Build artifacts `dist/{index,augment}.{js,d.ts}` (index.js 539 B, augment.js 230 B). Pattern S1 audit grep `__augmentWorkerLoaded` in dist/index.js → 2 hits. **D-83 strict ✓ verified** `git diff main...HEAD packages/{core,mapper,routing}/src/ packages/gateway/src/{http,sse-ws}/` empty. REQ progress: WK-01..WK-07 type-level scaffold + PKG-01..PKG-04 done (REQ flip atomic posticipato a W5 plan 05-07 final gate). Decisioni applicate (referenziate JSDoc): D-121, D-122, D-123, D-124, D-126, D-127, D-128, D-130, D-131, D-133, D-134, D-136, D-137, D-141, D-143, D-144, D-145, D-146, D-147, D-150, D-152, D-153.
+**Last completed:** Plan 05-05 (Wave 3-B — WorkerRegistry + WorkerPool) at 2026-05-04 — 5 commits atomici TDD-compliant: `c436c68` test RED registry (10 test) + `af10e3b` feat GREEN registry (cascade D-126 + duplicate guard + size cap D-128) + `e72b4c7` test RED pool (12 test) + `4eb037a` feat GREEN pool (lazy spawn D-129 + bounded D-127/128 + critical bypass D-130 + cascade LIFE-02 ext F5) + `2f1efd9` chore barrel append. 4 file creati + 1 modificato (1283 LOC own). **22/22 test passing** (10 registry + 12 pool); cumulative monorepo 786+ passing. Coverage v8 sui file 05-05: pool 93%/80%/100%/95.74% stmt/br/fn/lines, registry 94.44%/92.3%/100%/94.28% (target ≥90/80/90/90 ✓). Build OK: dist/index.js 22.44 KB, DTS 34.19 KB. **D-83 strict ✓ verified** `git diff main...HEAD packages/{core,mapper,routing}/src/ packages/gateway/src/{http,sse-ws}/` empty per tutta F5 ad oggi. **F3 BackpressureStrategy riusato 1:1** via `import { createBackpressureStrategy } from '@sembridge/gateway/http'` workspace dep — zero ridichiarazione, zero copia (D-130 carryover). **DI pattern WorkerBridgeLike interface** per disaccoppiamento da 05-04 (parallel wave 3) — `WorkerPoolDeps.bridgeFactory: (desc) => WorkerBridgeLike` injectable; consumer Wave 4 (05-06) connetterà `(desc) => new WorkerBridge(desc, deps)`. **MAX_POOL_SIZE_HARD = 8** esportato const literal per consumer consistency. REQ progress: WK-01/WK-02 partial (registry + pool done, pending route handler 05-06), WK-04 partial (cascade base done, bridge cooperative cancel 05-04), WK-06 partial (slot mgmt ready, timeout 05-06), LIFE-02 ext F5 progress, TEST-01/03 unit subset (22 deterministic tests). Decisioni applicate: D-124 fail-fast, D-126 cascade, D-127 defaultPoolSize, D-128 cap hard 8 + warn, D-129 lazy spawn, D-130 F3 BackpressureStrategy 1:1 + critical bypass, D-131 cascade idempotente.
+
+**Phase 5 progress chronologic:** 05-01 (Wave 1 bootstrap, 2026-05-04) → 05-02 + 05-03 (Wave 2 parallel building blocks A+B, 2026-05-04) → 05-05 (Wave 3-B registry + pool, 2026-05-04). 05-04 (Wave 3-A worker-bridge) in parallel — il barrel `packages/worker/src/index.ts` ha sezioni separate append-only per evitare conflitti git index.
 
 **Last completed Phase 4:** Plan 04-09 (Wave 6 — Final gate F4) at 2026-05-04 — RT-01..RT-07 + ERR-02 ext + LIFE-02 ext F4 + TEST-01/02/03 ext F4 closed. **Open issue PRD §39 #9 (RT-07) chiuso** in DOC-04. D-83 strict carryover ✓ verified per tutta F4.
 
-**Next:** Wave 2 parallel (05-02 ‖ 05-03):
-- 05-02 — assert-serializable + transferable-extractor (D-139 dev-mode + D-140 throw + fieldPath + D-141 JSONPath wildcard + WK-07 closure)
-- 05-03 — task-tracker state machine atomico (D-133 Pitfall 2C strict + Map<TaskId,TaskState> CAS-like)
+**Next:** Wave 4 (05-06 worker-handler + worker-broker composition wrapper) — pending close di Wave 3-A 05-04 (worker-bridge owned parallel). 05-06 consumerà `WorkerRegistry` + `WorkerPool` (05-05 ✓) + `WorkerBridge` (05-04) + `TaskTracker` (05-03 ✓) + `assertSerializable`+`extractTransferables` (05-02 ✓) per produrre `WorkerBroker` composition wrapper di `RouterBroker` (D-83 strict carryover) + `createWorkerBroker` factory pubblico.
 
-File ownership disgiunta — eseguibili in parallelo senza conflitti git index.
+File ownership Wave 3 disgiunta:
+- 05-04 owns: worker-bridge.ts + test-utils/mock-worker.ts
+- 05-05 owns: worker-pool.ts + worker-registry.ts (DONE)
+- index.ts barrel: append-only sezioni separate (no overlap)
 
-- **Phase:** 5 EXECUTING (Wave 1 complete)
-- **Status:** In progress (1/7 plan done)
-- **Progress:** [█████████░] 89% globale
+- **Phase:** 5 EXECUTING (Wave 3-B 05-05 complete)
+- **Status:** In progress (4/7 plan done con SUMMARY: 05-01 + 05-02 + 05-03 + 05-05; 05-04 parallel)
+- **Progress:** [█████████░] 91% globale
 
 ## Phases Overview
 
