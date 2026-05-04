@@ -31,14 +31,13 @@ session_active: true
 | Mode GSD | yolo + auto_advance + parallelization (sequential exec, no worktree) |
 | Modello attivo | `claude-opus-4-7-1` (opus) — override esplicito su tutti i sub-agent |
 
-## Ultimo step completato (auto-update 2026-05-04T14:38Z)
+## Ultimo step completato (auto-update 2026-05-04T12:41:52Z)
 
-- Step: **Phase 4 Wave 1 — Plan 04-01 EXECUTED ✓** (Bootstrap @sembridge/gateway/sse-ws subpath)
-- Commit chain: `d090a1b` (feat scaffold: 6 nuovi file 503 LOC types+augment+barrel+test) → `2624c66` (chore build/test config: package.json exports + tsup entries + vitest exclude + umbrella barrel)
-- Risultato: 8 test smoke decl merging passed + 105/105 gateway suite OK + tsc clean + build success ESM 71ms + DTS 577ms (dist/sse-ws/{index,augment}.{js,d.ts} prodotti)
-- D-83 strict ✓ (zero modifiche runtime a packages/{core,mapper,routing}/src/ né packages/gateway/src/http/)
-- RT-01/RT-02/RT-03/RT-05 type-level done; placeholder F1 in core/types/plugin.ts:50 chiuso via decl merging additive
-- File: SUMMARY.md prodotto in `.planning/phases/04-realtime-inbound-sse-prioritario-ws-opzionale/04-01-SUMMARY.md`
+- Plan: **04-01** → SUMMARY.md committed
+- Commit: `a3c3004 docs(04-01): complete plan SUMMARY + STATE/ROADMAP/TRACKER update — Phase 4 Wave 1 done`
+- Phase progress: **1/9** plan completati con SUMMARY.md
+- Project progress: 38/46 plan (83%)
+
 
 ## Prossimo step
 
