@@ -1,10 +1,13 @@
 # @sembridge/gateway
 
-> HTTP Gateway centralizzato per SemBridge — Phase 3 (HTTP). Phase 4 estende con SSE/WebSocket.
+> Gateway centralizzato per SemBridge — Phase 3 (HTTP) + Phase 4 (Realtime SSE/WS).
 
-ESM-only TypeScript library. Browser evergreen target (ES2022). Implementa il **Server Gateway HTTP centralizzato** (PRD §18) con policy uniformi: auth Bearer + token refresh single-flight, retry differenziato 4xx/5xx con full jitter, timeout via `AbortSignal.timeout()`, dedupe via Promise singleton, backpressure (queue/drop/throttle/debounce/latest-only/coalesce), idempotency token auto su POST/PATCH/PUT/DELETE, URL allowlist pre-fetch, circuit breaker per-route opt-in.
+ESM-only TypeScript library. Browser evergreen target (ES2022). Implementa due sub-moduli:
 
-Quattro dipendenze runtime: [`@sembridge/core`](../core/README.md) (BrokerError + tipi base, F1), [`@sembridge/mapper`](../mapper/README.md) (response mapping server→canonical, F2), [`@sembridge/routing`](../routing/README.md) (consumer principale del gateway, F3), [`nanoid`](https://github.com/ai/nanoid) (Idempotency-Key generation), [`valibot`](https://valibot.dev) (config validation).
+- **`/http`** (F3) — **Server Gateway HTTP** centralizzato (PRD §18) con policy uniformi: auth Bearer + token refresh single-flight, retry differenziato 4xx/5xx con full jitter, timeout via `AbortSignal.timeout()`, dedupe via Promise singleton, backpressure (queue/drop/throttle/debounce/latest-only/coalesce), idempotency token auto su POST/PATCH/PUT/DELETE, URL allowlist pre-fetch, circuit breaker per-route opt-in.
+- **`/sse-ws`** (F4) — **Realtime inbound** (SSE prioritario, WebSocket opzionale): `RealtimeBroker` composition wrapper di `RouterBroker` (D-101), `RealtimeChannelManager` (registry N-canale D-102), `SseAdapter` + `WebSocketAdapter` con reconnection policy unificata (full jitter D-109 + auto-fallback SSE→WS D-107), Last-Event-ID injection (D-105 — chiude PRD §39 #9), envelope JSON `{topic, data, id?}` per WS (D-106), ping/pong applicativo D-111, visibility-aware behavior (D-110), cascade cleanup `disconnectByOwner` (D-112).
+
+Cinque dipendenze runtime: [`@sembridge/core`](../core/README.md) (BrokerError + tipi base, F1), [`@sembridge/mapper`](../mapper/README.md) (response mapping server→canonical, F2), [`@sembridge/routing`](../routing/README.md) (consumer principale del gateway, F3), [`nanoid`](https://github.com/ai/nanoid) (Idempotency-Key generation), [`valibot`](https://valibot.dev) (config validation).
 
 ## Indice
 
@@ -22,12 +25,13 @@ Quattro dipendenze runtime: [`@sembridge/core`](../core/README.md) (BrokerError 
 12. [URL allowlist (D-71 / SEC-05)](#url-allowlist-d-71--sec-05)
 13. [Circuit breaker (D-99 — opt-in)](#circuit-breaker-d-99--opt-in)
 14. [Errori standard](#errori-standard)
-15. [Roadmap (deferred F4-F6)](#roadmap-deferred-f4-f6)
-16. [Licenza](#licenza)
+15. [Realtime SSE/WS (Phase 4)](#realtime-ssews-phase-4)
+16. [Roadmap (deferred F5-F6)](#roadmap-deferred-f5-f6)
+17. [Licenza](#licenza)
 
 ## Stato
 
-Phase 3 **complete** sub-modulo HTTP (`/http`). Phase 4 (sub-modulo `/sse-ws` per realtime inbound) successiva, già riservato come placeholder nel `package.json` exports.
+Phase 3 **complete** sub-modulo HTTP (`/http`) + **Phase 4 complete** sub-modulo realtime (`/sse-ws`). Phase 5 (Worker Runtime) e Phase 6 (Cache + Tooling) deferred.
 
 REQ-ID coperti F3 dal sub-modulo HTTP: SEC-01..SEC-05, ROUTE-06, ROUTE-07, ROUTE-09, ROUTE-13, ROUTE-08 (timeout/retry/dedupe/auth), VAL-05, ERR-02 ext (`network.error`).
 
@@ -268,13 +272,307 @@ I codici errore `GatewayErrorCode` esposti:
 
 Oltre a `<topic>.failed`, il gateway publica `network.error` come BrokerEvent CORE separato per consumer sistemici (telemetria, banner offline UI). Pattern: `category: 'network'` → secondario `network.error` (D-81).
 
-## Roadmap (deferred F4-F6)
+## Realtime SSE/WS (Phase 4)
 
-- **Phase 4 — `/sse-ws` sub-modulo** (RT-01..RT-08): adapter SSE prioritario + WebSocket opzionale; reconnection policy (Last-Event-ID per SSE, ping app-level per WS, exponential backoff full-jitter cap 30s, Visibility API integration). Chiude PRD §39 #9 (RT-07).
+Il sub-modulo `/sse-ws` estende il gateway con un **canale realtime inbound** dal server. SSE è l'adapter prioritario V1 (più semplice e robusto per server → browser, PRD §18.4); WebSocket è disponibile come adapter alternativo.
+
+L'API consumer-facing è il `RealtimeBroker` — composition wrapper di `RouterBroker` (D-101 + vincolo D-83 strict) — che espone `connectRealtime(def, ownerId?)` e `disconnectRealtime(name?)` accanto a tutta la surface F1+F2+F3 (publish/subscribe/registerPlugin/registerRoute/registerCanonicalSchema, eccetera).
+
+### Quick start
+
+```ts
+import { createRealtimeBroker } from '@sembridge/gateway/sse-ws'
+
+const broker = createRealtimeBroker({
+  // Tutta la config F3 (RouterBroker) è valida + sezione realtime opzionale
+  routes: [/* ... */],
+  gateway: { /* ... */ },
+  canonicalModel: { schemas: [/* ... */] },
+  realtime: {
+    defaults: { reconnect: { baseMs: 1_000, capMs: 30_000 } },
+  },
+})
+
+// Subscriber locale al topic canonico (NO conoscenza del trasporto SSE/WS)
+broker.subscribe('weather.update', (event) => {
+  console.log(event.payload, event.source) // source.name === 'sse'
+})
+
+// Apri canale SSE inbound (mode default 'auto' → SSE-first con fallback WS)
+broker.connectRealtime({
+  name: 'weather-stream',
+  buildUrl: () => 'https://api.example.com/events/weather',
+  // mode: 'auto', // default
+  // eventTypes: ['weather.update'],  // SSE custom event types (W-4 SC-1)
+})
+
+// Cleanup: chiude tutti i canali, libera resources, teardown VisibilityDetector
+broker.disconnectRealtime()
+```
+
+### Auth patterns (D-104 / D-105)
+
+EventSource standard NON supporta header custom (vincolo PRD §31.3). Quattro strategie auth supportate, tutte agnostiche all'adapter:
+
+| Strategia | Quando usarla | Pattern |
+|-----------|---------------|---------|
+| Cookie HttpOnly **same-origin** | Default raccomandato | Browser invia cookie automaticamente. Nessuna config app-side. |
+| Cookie HttpOnly **cross-origin** | API su dominio dedicato | `withCredentials: true` opt-in nel `def.eventSourceInit?.withCredentials` per SSE. |
+| Token in **query string** | Quando il server non supporta cookie | `buildUrl: () => \`/events?token=${shortLivedJwt}\`` — best practice: ≤5 min, single-use, server invalida al disconnect. |
+| WebSocket **subprotocol** | WS only, server custom handshake | `def.wsSubprotocols: ['sembridge-v1', token]` (Q4 closure). |
+
+**Best practice security:** token in URL ≤5 min, single-use server-side. Cookie HttpOnly è la scelta preferita quando l'origin è controllato.
+
+### Frame envelope contract (D-106)
+
+I messaggi WebSocket inbound rispettano l'envelope JSON `{ topic: string, data: unknown, id?: string }`:
+
+```json
+{ "topic": "weather.update", "data": { "city": "Roma", "temp": 22 }, "id": "evt-123" }
+```
+
+Per SSE l'envelope è il payload `data:` deserializzato da JSON; il `topic` deriva dal field `event:` SSE (o fallback `def.name`).
+
+**Invariante anti-AP-6** (PITFALL §11.7 — Q1 closure): `isInternalTopic` strict equality match (NO prefix). Topic legittimi consumer come `weather.__ping__` NON vengono filtrati come internal — solo `__ping__`/`__pong__` esatti sono riservati al protocollo (D-111).
+
+**Frame parse error → `network.error`** (Q2 closure): un envelope malformato (JSON invalido, topic mancante, struttura non-object) viene pubblicato come `BrokerEvent { topic: 'network.error', payload: { category: 'protocol', code: 'realtime.frame.malformed', channel, reason, raw } }` — riusa ERR-02 ext F3, NIENTE nuovo evento `realtime.protocol.error`. La category 'protocol' viaggia nel **payload** (NON in `BrokerError.category` — l'union F1 NON include `'protocol'` e D-83 vieta modifica core).
+
+### SSE custom event types (W-4 SC-1 closure)
+
+Il field SSE `event:` permette al server di emettere eventi nominati (PRD §29 scenario meteo SC-1). L'adapter supporta topic dinamici via `def.eventTypes`:
+
+```ts
+broker.connectRealtime({
+  name: 'weather',
+  buildUrl: () => '/events',
+  eventTypes: ['weather.update', 'weather.alert'],  // listener per ogni event type
+})
+```
+
+Server emette:
+```
+event: weather.update
+data: {"city":"Roma","temp":22}
+
+event: weather.alert
+data: {"severity":"high"}
+```
+
+→ Subscriber riceve `BrokerEvent` con `topic === 'weather.update'` (NON `def.name`) — il `topic` deriva dal field `event:` SSE.
+
+Default fallback: `eventTypes: ['message']` con `topic = def.name` se omesso.
+
+### SSE heartbeat hook (B-5 + Q5 closure)
+
+Il server può inviare heartbeat per mantenere la freshness senza spam topic:
+
+```ts
+broker.connectRealtime({
+  name: 'orders',
+  buildUrl: () => '/events/orders',
+  sseHeartbeatEventTypes: ['heartbeat'],  // default
+})
+```
+
+Server invia ogni ≤60s:
+```
+event: heartbeat
+data:
+
+```
+
+→ L'adapter aggiorna `lastEventReceivedAt = Date.now()` SENZA pubblicare `BrokerEvent`. `staleTimeoutMs` uniforme con WS = `60_000` (Q5 closure).
+
+### Reconnect contract (RT-05 + D-109 + RT-07 — chiude PRD §39 #9)
+
+**Full jitter** (RESEARCH §3.2 / D-109):
+
+```
+delay = min(capMs, baseMs * 2^attempt) * (0.5 + Math.random() * 0.5)
+```
+
+Default: `baseMs: 1_000`, `capMs: 30_000`, `maxAttempts: Infinity` (mai dare up — il consumer chiama `disconnectRealtime` per fermare).
+
+**Last-Event-ID injection per SSE** (D-105 — chiude PRD §39 #9 / RT-07):
+
+L'adapter memorizza `event.lastEventId` su ogni messaggio e lo inietta come **query string** `?lastEventId=` al re-connect (NO header custom — vincolo EventSource standard):
+
+```ts
+// Server middleware example (Express)
+app.get('/events', (req, res) => {
+  const lastEventId = req.query.lastEventId ?? req.headers['last-event-id']
+  // ...replay events da lastEventId in poi
+})
+```
+
+**Eventi standard `system.realtime.*`** (ERR-02 ext F4):
+
+| Evento | Quando | Payload |
+|--------|--------|---------|
+| `system.realtime.connected` | Connessione stabilita | `{ channel, mode, attempt }` |
+| `system.realtime.disconnected` | Connessione persa | `{ channel, reason, code? }` |
+| `system.realtime.reconnecting` | Tentativo retry in corso | `{ channel, attempt, delayMs }` |
+| `system.realtime.failed` | Cycle-cap superato | `{ channel, reason: 'cycle-cap-exceeded' }` |
+
+**Consolidation anti-flap** (Q3 closure): reconnect events ravvicinati (entro `consolidationMs: 5_000` default) NON triggherano nuovo cycle del strategy — `attempt` resta invariato. Pattern coerente con D-109.
+
+### Ping/pong contract WebSocket (D-111)
+
+Heartbeat applicativo (NON i frame ping/pong WebSocket nativi che il browser non espone):
+
+- Client invia `{topic:'__ping__',data:{ts}}` ogni 30s (default `heartbeatIntervalMs`)
+- Server risponde con `{topic:'__pong__'}` → adapter `lastPongAt = Date.now()`
+- Stale watchdog: se `Date.now() - lastPongAt > staleTimeoutMs` (default `60_000`, **uniforme con SSE Q5**) → close + recordFailure
+
+**Strict-match anti-AP-6** (Q1 closure): solo `__ping__`/`__pong__` esatti sono filtrati. `weather.__ping__` (raro ma legittimo) passa through al subscriber. Verifica grep runtime: `grep -c "startsWith('__')"` ritorna 0 nei file `sse-ws/*.ts`.
+
+**bufferedAmount cap 64 KB** (RESEARCH §4.4): se `ws.bufferedAmount > 64_000` il ping è skipped — il TCP send buffer è saturo (tab background, network slow), inviare ulteriori frame aggraverebbe la pressione memoria.
+
+### Auto-fallback SSE→WS (D-107 + D-108 + B-4 closure)
+
+Mode `'auto'` (default) attiva auto-fallback SSE→WS dopo `fallbackThreshold: 3` fail consecutivi (default), con cap `globalCycleCap: 5` cicli totali. Il `runReconnectLoop` privato del `RealtimeChannelManager` orchestra il rebind effettivo:
+
+| Scheme input | Mode iniziale | Su fail → fallback |
+|--------------|---------------|---------------------|
+| `https://api.example.com/events` | `sse` | `wss://api.example.com/events` (scheme switch automatico via `URL` API) |
+| `http://api.example.com/events` | `sse` | `ws://api.example.com/events` |
+
+**D-108 caveat — path differenti (V1 caveat documentato):**
+
+SSE e WS NON sono necessariamente sullo stesso URL/path. In V1 il consumer ha due opzioni:
+
+1. **Endpoint unificato** che gestisce upgrade (server distingue `Accept: text/event-stream` vs `Upgrade: websocket`):
+   ```ts
+   buildUrl: () => 'https://api.example.com/events'  // gestisce SSE + WS
+   ```
+2. **Endpoint separati** — l'API V1 NON supporta out-of-the-box il rebind a un path diverso. Workaround: il consumer disabilita auto-fallback (`mode: 'sse'` strict) e gestisce manualmente il fallback al `system.realtime.failed` reconnettendo a un canale diverso. Endpoint separati out-of-the-box → V1.x backlog.
+
+**B-4 closure** — il rebind effettivo è verificato in `__integration__/auto-fallback.test.ts` Test 1: `FailingMockEventSource` constructor throw → forza `manager.connect → catch → runReconnectLoop` → dopo `fallbackThreshold:1` rebind a `MockWebSocket` (Test verifica `MockWebSocket.instances.length >= 1` e `entry.mode === 'websocket'`).
+
+### Visibility-aware behavior (D-110)
+
+Tab in background subisce throttling browser su `setTimeout`/`setInterval`. L'adapter integra `Visibility API` via `VisibilityDetector` lazy-init (singleton al primo connect, teardown all'ultimo disconnect):
+
+- Su `visibilitychange → visible`: `manager.checkFreshnessAll()` forza un check di freschezza prima di considerare le connessioni vive.
+- Su `visibilitychange → hidden`: tolleranza ×3 sui timeout heartbeat per evitare reconnect aggressivi quando la tab è in background.
+- **Mobile caveat**: iOS Safari sospende totalmente i timer su tab inattivi — al `visible` si aspetta il prossimo heartbeat invece di assumere stale.
+
+### Cascade cleanup (D-112 + LIFE-02 ext F4)
+
+Lifecycle ownerId-based — `unregisterPlugin(pluginId)` propaga il cleanup ai canali realtime registrati dal plugin:
+
+```ts
+broker.registerPlugin({
+  id: 'weather-widget',
+  realtimeChannels: [
+    { name: 'weather-stream', buildUrl: () => '/events/weather' },
+  ],
+  // ...
+})
+
+// Più tardi:
+broker.unregisterPlugin('weather-widget')
+// → manager.disconnectByOwner('weather-widget', 'plugin.unregistered')
+// → chiude TUTTI i canali con ownerId = 'weather-widget' (NON quelli di altri plugin)
+// → teardown VisibilityDetector se nessun canale resta
+```
+
+Pattern coerente con `HttpGateway.abortInFlightByOwner` di F3 (D-86). Verificato in `__integration__/cascade-cleanup.test.ts`.
+
+### Backpressure adapter-level (D-115)
+
+Riuso 1:1 della `BackpressureStrategy` di F3 — default `queue-bounded` con `maxSize: 1000` (T-04-09-04 mitigation, anti-DoS auto-inflitto). Eventi `priority: 'critical'` (es. `system.realtime.failed`, `system.error`) bypassano la queue (Pitfall 4 fix F3 portato in F4 invariato).
+
+### Mapper + validation invariati (D-114 + D-116 — W-2 closure)
+
+Gli adapter SSE/WS pubblicano i frame ricevuti via `inner.publish(topic, payload, options)` del `RouterBroker` interno. La pipeline §28 step 4 (canonical mapping) e step 5/6 (canonical validation + final mapping) si applicano automaticamente — **NIENTE logica F4 specifica**.
+
+**Esempio scenario meteo:**
+
+```ts
+// Server invia (frame SSE):
+// event: weather.update
+// data: {"city":"Roma","temp":22,"condition":"sunny"}
+
+// CanonicalSchema F2 + RouterEngine F3 inputMap registrato:
+broker.registerCanonicalSchema({
+  id: 'weather.update@1',
+  fields: [
+    { name: 'location', type: 'string', required: true },
+    { name: 'temperature_celsius', type: 'number' },
+    { name: 'weather_condition', type: 'string' },
+  ],
+})
+
+broker.registerPlugin({
+  id: 'widget',
+  inputMap: {
+    'weather.update': {
+      location: 'city',
+      temperature_celsius: 'temp',
+      weather_condition: 'condition',
+    },
+  },
+  // ...
+})
+
+// Subscriber riceve { location: 'Roma', temperature_celsius: 22, weather_condition: 'sunny' }
+broker.subscribe('weather.update', (event) => {
+  console.log(event.payload.location)  // 'Roma'
+  console.log(event.source.name)       // 'sse' (D-113)
+})
+```
+
+**Verificato in `__integration__/mapper-canonicalization.test.ts`** (W-2 closure).
+
+### Test contract D-118 3-tier (B-1 closure)
+
+Strategia testing 3-livelli:
+
+| Tier | Environment | Cosa testa | Comando |
+|------|-------------|------------|---------|
+| **Tier-1 jsdom** | `vitest run` (default) | Unit + integration con `MockEventSource`/`MockWebSocket` DI | `pnpm --filter @sembridge/gateway test` |
+| **Tier-2 MSW V1.x** | jsdom + msw 2.x | Server contract: SSE replay (riconosce header `Last-Event-ID` E query `?lastEventId=`), ws.link compat | `pnpm test:msw` (deferred V1.x — `describe.skip`) |
+| **Tier-3 Playwright Chromium** | Real browser headless | Smoke `EventSource` API non-mocked, real-browser semantics | `pnpm test:browser` (opt-in) |
+
+**Q6 closure**: V1 è **Chromium-only** (CI smoke). Firefox/Safari deferred a release pre-V1 (smoke manuale). `vitest.config.ts` esclude `**/__browser__/**` dal Tier-1 jsdom run (W-NEW-3 fix).
+
+### Limitazioni V1 documentate
+
+| Limitazione | Workaround V1 / Roadmap |
+|-------------|--------------------------|
+| EventSource non supporta header custom | `buildUrl` con query string token (D-105) |
+| Gap recovery oltre Last-Event-ID | Server è responsabile del replay; client invia il last id e rispetta la finestra |
+| Frame binary (Blob/ArrayBuffer) | V1 supporta solo testo JSON (D-106) — frame binary deferred V2 |
+| WS outbound `broker.publish → server` | V1 inbound-only — outbound via HTTP route F3. WS bidirezionale → V1.x |
+| Multiplex N topic su 1 connessione | V1 default è 1 canale = 1 connessione (D-102, anti-AP-11). Multiplex opt-in V1.x |
+| Browser test cross-engine | V1 Chromium-only; FF/WK smoke manuale pre-release (Q6) |
+
+### Open questions risolte (rationale + reference)
+
+| Q | Question | Decision | Where |
+|---|----------|----------|-------|
+| Q1 | Topic prefix interno vs strict-match | **Strict equality** `__ping__`/`__pong__` esatti (NO prefix `__`) | D-111, anti-AP-6 PITFALL §11.7 |
+| Q2 | Frame parse error → nuovo event vs riuso ERR-02 | **Riuso `network.error` con `category: 'protocol'` nel payload** (l'union F1 non include 'protocol'; D-83 vieta modifica core) | D-106, ERR-02 ext F3 |
+| Q3 | Reset `attempt=0` post-success vs guard | `consolidationMs: 5_000` default — reconnect ravvicinati NON triggherano nuovo cycle | D-109, anti-flap |
+| Q4 | WS subprotocols opt-in vs hardcoded | **Opt-in `wsSubprotocols`** (additivo, non breaking) | D-111 |
+| Q5 | SSE staleTimeoutMs uniforme con WS | **60s uniforme** + `sseHeartbeatEventTypes` hook silent (default `['heartbeat']`) | B-5 closure |
+| Q6 | Browser test cross-engine V1 | **Chromium-only CI**, smoke FF/WK manuale pre-release | D-118 Tier-3 |
+
+Vedi `.planning/phases/04-realtime-inbound-sse-prioritario-ws-opzionale/04-RESEARCH.md` §13.1 per il rationale completo.
+
+## Roadmap (deferred F5-F6)
+
+- **Phase 5 — Worker Runtime** (`@sembridge/worker`): Worker registry + WorkerBridge + structuredClone default (chiude PRD §39 #11 / WK-07).
 - **Phase 6 — wiring `DedupeStrategy`/`BackpressureStrategy`** nel `gateway.execute()` flow (V1 verificate in isolation, deferred wiring middleware automatico).
 - **V1.x — circuit breaker avanzato** sliding window stats + success rate + fallback URL.
 - **V1.x — custom serializer/parser** (form-data/multipart/binary, response non-JSON).
+- **V1.x — realtime path differenti SSE vs WS** (D-108 caveat) — V1 richiede endpoint unificato o disable auto-fallback.
+- **V1.x — multiplex N topic su 1 connessione realtime** (D-102 ext, anti-AP-11 baseline V1).
+- **V1.x — WebSocket outbound** (`broker.publish → server` via WS bidirezionale).
+- **V1.x — browser test cross-engine** (Firefox + Safari oltre Chromium V1).
 - **V2 — adapter Zod/Ajv** per response validation (V1 solo Valibot, riusa F2 ValidatorAdapter).
+- **V2 — frame binary realtime** (Blob/ArrayBuffer su WS, binary SSE non standard).
 
 ## Licenza
 
