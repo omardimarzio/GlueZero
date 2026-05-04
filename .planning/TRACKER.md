@@ -1,5 +1,5 @@
 ---
-last_updated: 2026-05-05
+last_updated: 2026-05-04
 status: phase_5_complete_ready_for_verifier
 project: SemBridge
 milestone: v1.0
@@ -32,27 +32,11 @@ session_active: true
 | Mode GSD | yolo + auto_advance + parallelization (sequential exec, no worktree) |
 | Modello attivo | `claude-opus-4-7-1` (opus) — override esplicito su tutti i sub-agent |
 
-## Ultimo step completato (auto-update 2026-05-05 — final gate F5 closure)
+## Ultimo step completato (auto-update 2026-05-04T22:25:29Z)
 
-- Plan: **05-07** ✅ done — Phase 5 CHIUSA
-- Output: 5 commit atomici (CI gates calibration + DOC-05 README + JSDoc + REQ matrix + final closure)
-  - `1347d0b` test(05-07): coverage thresholds calibration post-implementation + size-limit budget @sembridge/worker
-  - `33d20a7` docs(05-07): DOC-05 README italiano @sembridge/worker — 11 sezioni + WK-07 closure (PRD §39 #11)
-  - `e3b8770` docs(05-07): JSDoc API pubblica TypeDoc-ready su file F5 (@example/@see/@throws preservati in dts)
-  - `3f07f7a` docs(05-07): REQ matrix flip — WK-01..WK-07 + ERR-02/LIFE-02/TEST-01-02-03 ext F5 → Complete + PRD §39 #11 CLOSED
-  - (final closure commit — ROADMAP/STATE/TRACKER + 05-07-SUMMARY.md — questo step)
-- Decisioni lockate: zero nuove (closure di D-121..D-154 esistenti)
-- Plan precedente: 05-06 (composition wrapper Opzione B + factory + 8 integration test Tier-1 + 6 browser smoke Tier-3 Playwright)
-- Phase 5 closure highlights:
-  - WK-01..WK-07 + ERR-02 ext + LIFE-02 ext F5 + TEST-01/02/03 ext F5 → Complete
-  - DOC-05 README italiano `packages/worker/README.md` 11 sezioni 429 LOC
-  - Coverage v8 91.96/83.73/90.58/94.17 (above floor + above target)
-  - CI gates: publint+attw+lint+typecheck+build+size-limit all ✅
-  - D-83 strict carryover ✓ verified zero modifiche runtime a F1-F4 per tutta F5
-  - PRD §39 #11 (WK-07 serializzazione messaggi worker) chiuso ✅
-  - Phase 6 (Cache + Tooling avanzato) pronta a iniziare — è l'ULTIMA fase v1.0
-
-- Phase progress: **7/7** plan completati con SUMMARY.md (Phase 5 closed)
+- Plan: **05-07** → SUMMARY.md committed
+- Commit: `411dcdd docs(05): close Phase 5 — WK-01..WK-07 complete + PRD §39 #11 closed + SUMMARY`
+- Phase progress: **7/7** plan completati con SUMMARY.md
 - Project progress: 52/53 plan (98%)
 
 
