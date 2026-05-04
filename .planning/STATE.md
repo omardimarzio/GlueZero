@@ -8,8 +8,8 @@ progress:
   total_phases: 6
   completed_phases: 4
   total_plans: 53
-  completed_plans: 49
-  percent: 92
+  completed_plans: 50
+  percent: 94
 ---
 
 # Project State: SemBridge
@@ -28,26 +28,26 @@ progress:
 ## Current Position
 
 Phase: 5 (worker-runtime) — EXECUTING
-Wave: 3-B ✅ 05-05 COMPLETE → Wave 3-A 05-04 in parallel (worker-bridge); Wave 4 (05-06) ready dopo 05-04 close
-Plan: 5 of 7 (05-01..05-03 + 05-05 done; 05-04 parallel; 05-06 + 05-07 pending)
+Wave: 3 ✅ COMPLETE (05-04 + 05-05) → Wave 4 (05-06) ready
+Plan: 5 of 7 (05-01..05-05 done; 05-06 + 05-07 pending)
 Total Plans: 7 (Phase 5)
 
-**Last completed:** Plan 05-05 (Wave 3-B — WorkerRegistry + WorkerPool) at 2026-05-04 — 5 commits atomici TDD-compliant: `c436c68` test RED registry (10 test) + `af10e3b` feat GREEN registry (cascade D-126 + duplicate guard + size cap D-128) + `e72b4c7` test RED pool (12 test) + `4eb037a` feat GREEN pool (lazy spawn D-129 + bounded D-127/128 + critical bypass D-130 + cascade LIFE-02 ext F5) + `2f1efd9` chore barrel append. 4 file creati + 1 modificato (1283 LOC own). **22/22 test passing** (10 registry + 12 pool); cumulative monorepo 786+ passing. Coverage v8 sui file 05-05: pool 93%/80%/100%/95.74% stmt/br/fn/lines, registry 94.44%/92.3%/100%/94.28% (target ≥90/80/90/90 ✓). Build OK: dist/index.js 22.44 KB, DTS 34.19 KB. **D-83 strict ✓ verified** `git diff main...HEAD packages/{core,mapper,routing}/src/ packages/gateway/src/{http,sse-ws}/` empty per tutta F5 ad oggi. **F3 BackpressureStrategy riusato 1:1** via `import { createBackpressureStrategy } from '@sembridge/gateway/http'` workspace dep — zero ridichiarazione, zero copia (D-130 carryover). **DI pattern WorkerBridgeLike interface** per disaccoppiamento da 05-04 (parallel wave 3) — `WorkerPoolDeps.bridgeFactory: (desc) => WorkerBridgeLike` injectable; consumer Wave 4 (05-06) connetterà `(desc) => new WorkerBridge(desc, deps)`. **MAX_POOL_SIZE_HARD = 8** esportato const literal per consumer consistency. REQ progress: WK-01/WK-02 partial (registry + pool done, pending route handler 05-06), WK-04 partial (cascade base done, bridge cooperative cancel 05-04), WK-06 partial (slot mgmt ready, timeout 05-06), LIFE-02 ext F5 progress, TEST-01/03 unit subset (22 deterministic tests). Decisioni applicate: D-124 fail-fast, D-126 cascade, D-127 defaultPoolSize, D-128 cap hard 8 + warn, D-129 lazy spawn, D-130 F3 BackpressureStrategy 1:1 + critical bypass, D-131 cascade idempotente.
+**Last completed:** Plan 05-04 (Wave 3-A — WorkerBridge Comlink wrapper) at 2026-05-04 — 4 commits atomici TDD: `b3cb23b` test MockWorker test util Tier-1 jsdom + `efc72c1` test RED worker-bridge 15 test + `7461718` feat GREEN WorkerBridge Comlink wrap + lifecycle (D-124/129/131/132/135/137/139/140/141) + `9a52637` chore expose WorkerBridge in barrel + cleanup. 3 file creati + 1 modificato (1302 LOC own). **15/15 test passing** worker-bridge.test.ts (Tier-1 jsdom + DI MockWorker + stubComlinkAdapter); **87/87 full worker package suite** (15 nuovi + 72 W1+W2+W3-B precedenti); core 248/248 + gateway 222/225 (3 skip MSW V1.x F4) → zero regression cross-package. Build OK ESM-only: dist/index.js 32.35 KB con WorkerBridge 24x in dts, augment.js 226 B. Typecheck zero errors su 5 package. **D-83 strict ✓ verified** `git diff main packages/{core,mapper,routing}/src/ packages/gateway/src/{http,sse-ws}/` empty. **DI ComlinkAdapter innovation**: Comlink ESM proprietà non-redefinable in test runtime (`Cannot redefine property: wrap`) → soluzione `WorkerBridgeDeps.comlinkAdapter?: ComlinkAdapter` opt-in con default binding diretto a `Comlink.{wrap,proxy,transfer,releaseProxy}`. Test inietta stub adapter via `Proxy` intercept senza dipendenza da MessageChannel reale. Pattern coerente con F4 `EventSourceCtor` DI carryover. **MockWorker test util** (208 LOC) implements Worker interface con `byWorkerId Map` indexing query string + `__reply / __error / __messageError` helpers (analog F4 mock-event-source.ts D-150). **makeThrottledOnProgress** latest-only window leading+trailing 100ms default (Test 9: 100x in <window collassano in <=2 emit). Acceptance grep counts: Comlink.wrap 9, Comlink.proxy 11, Comlink.transfer 9, Comlink.releaseProxy 12, assertSerializable 15, extractTransferables 6, worker.task.unknown 6, JSON.stringify( runtime invocations 0 (T-05-04-05 mitigation). 10/10 threat enumerate (T-05-04-01..T-05-04-10) tutti `LOW` severity tutti `mitigate`. Decisioni applicate: D-123 factory lazy, D-124 fail-fast, D-125 Comlink expose, D-129 lazy first dispatch, D-131 terminate Comlink.releaseProxy + worker.terminate, D-132 AbortSignal Comlink.proxy, D-135 onProgress Comlink.proxy, D-137 progress throttle latest-only, D-139/D-140 assertSerializable PRE-postMessage modes, D-141 extractTransferables + Comlink.transfer, D-150 Tier-1 jsdom MockWorker. REQ progress: WK-01/WK-03/WK-04/WK-05/WK-07 partial (subset wave 3-A done, full closure 05-06+05-07), ERR-02 ext F5 (worker.error + worker.messageerror category 'worker'), TEST-01 ext (15 unit deterministici Tier-1).
 
-**Phase 5 progress chronologic:** 05-01 (Wave 1 bootstrap, 2026-05-04) → 05-02 + 05-03 (Wave 2 parallel building blocks A+B, 2026-05-04) → 05-05 (Wave 3-B registry + pool, 2026-05-04). 05-04 (Wave 3-A worker-bridge) in parallel — il barrel `packages/worker/src/index.ts` ha sezioni separate append-only per evitare conflitti git index.
+**Phase 5 progress chronologic:** 05-01 (Wave 1 bootstrap, 2026-05-04) → 05-02 + 05-03 (Wave 2 parallel building blocks A+B, 2026-05-04) → 05-05 (Wave 3-B registry + pool, 2026-05-04) → 05-04 (Wave 3-A worker-bridge, 2026-05-04). Wave 3 ✅ COMPLETE (parallel file ownership disgiunta verified: 05-04 owns worker-bridge.ts + worker-bridge.test.ts + test-utils/mock-worker.ts; 05-05 owns worker-pool.ts + worker-registry.ts; index.ts barrel append-only sezioni separate).
 
 **Last completed Phase 4:** Plan 04-09 (Wave 6 — Final gate F4) at 2026-05-04 — RT-01..RT-07 + ERR-02 ext + LIFE-02 ext F4 + TEST-01/02/03 ext F4 closed. **Open issue PRD §39 #9 (RT-07) chiuso** in DOC-04. D-83 strict carryover ✓ verified per tutta F4.
 
-**Next:** Wave 4 (05-06 worker-handler + worker-broker composition wrapper) — pending close di Wave 3-A 05-04 (worker-bridge owned parallel). 05-06 consumerà `WorkerRegistry` + `WorkerPool` (05-05 ✓) + `WorkerBridge` (05-04) + `TaskTracker` (05-03 ✓) + `assertSerializable`+`extractTransferables` (05-02 ✓) per produrre `WorkerBroker` composition wrapper di `RouterBroker` (D-83 strict carryover) + `createWorkerBroker` factory pubblico.
+**Next:** Wave 4 (05-06 worker-handler + worker-broker composition wrapper) — Wave 3 ✅ COMPLETE. 05-06 consumerà `WorkerRegistry` + `WorkerPool` (05-05 ✓) + `WorkerBridge` (05-04 ✓) + `TaskTracker` (05-03 ✓) + `assertSerializable`+`extractTransferables` (05-02 ✓) per produrre `WorkerBroker` composition wrapper di `RouterBroker` (D-83 strict carryover) + `createWorkerBroker` factory pubblico + Strategy F3 dispatch table extension D-152 + 8 integration test 3-tier + 6 browser smoke Playwright.
 
-File ownership Wave 3 disgiunta:
-- 05-04 owns: worker-bridge.ts + test-utils/mock-worker.ts
-- 05-05 owns: worker-pool.ts + worker-registry.ts (DONE)
-- index.ts barrel: append-only sezioni separate (no overlap)
+File ownership Wave 3 disgiunta (verified):
+- 05-04 owns: worker-bridge.ts + worker-bridge.test.ts + test-utils/mock-worker.ts ✓ DONE
+- 05-05 owns: worker-pool.ts + worker-pool.test.ts + worker-registry.ts + worker-registry.test.ts ✓ DONE
+- index.ts barrel: append-only sezioni separate verified (no overlap, no conflict)
 
-- **Phase:** 5 EXECUTING (Wave 3-B 05-05 complete)
-- **Status:** In progress (4/7 plan done con SUMMARY: 05-01 + 05-02 + 05-03 + 05-05; 05-04 parallel)
-- **Progress:** [█████████░] 91% globale
+- **Phase:** 5 EXECUTING (Wave 3 ✅ COMPLETE)
+- **Status:** In progress (5/7 plan done con SUMMARY: 05-01 + 05-02 + 05-03 + 05-04 + 05-05; pending 05-06 + 05-07)
+- **Progress:** [█████████▒] 94% globale
 
 ## Phases Overview
 
