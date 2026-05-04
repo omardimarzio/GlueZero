@@ -144,14 +144,15 @@ describe('WorkerPool — bounded + lazy + queue + respawn (D-127/128/129/130/131
     const barrier = new Promise<void>((res) => {
       resolveBarrier = res
     })
+    let taskRunCount = 0
 
     const slowTask = async (): Promise<{ readonly ok: boolean }> => {
+      taskRunCount += 1
       await barrier
       return { ok: true }
     }
 
     // 4 dispatch concorrenti — 2 partono subito (spawn), 2 in waitForFreeSlot
-    const ctrl = new AbortController()
     const p1 = pool.dispatchOnSlotWithTask('w1', slowTask)
     const p2 = pool.dispatchOnSlotWithTask('w1', slowTask)
     const p3 = pool.dispatchOnSlotWithTask('w1', slowTask)
@@ -159,20 +160,16 @@ describe('WorkerPool — bounded + lazy + queue + respawn (D-127/128/129/130/131
 
     // Yield per microtask — i primi 2 hanno acquisito slot, terzo+quarto in attesa
     await new Promise<void>((r) => setTimeout(r, 10))
-    expect(MockBridge.instances.length).toBe(2) // pool size cap
+    expect(MockBridge.instances.length).toBe(2) // pool size cap rispettato (D-129)
+    expect(taskRunCount).toBe(2) // solo 2 task attivi (gli altri 2 in waitForFreeSlot)
 
     // Risolvi barriera → tutti completano
     resolveBarrier?.()
     await Promise.all([p1, p2, p3, p4])
-    // Verifica che siano stati 4 dispatch totali (2 bridge × 2 task)
-    const total = MockBridge.instances.reduce(
-      (sum, b) => sum + b.dispatchCalls,
-      0,
-    )
-    expect(total).toBe(4)
-
-    // Cleanup
-    void ctrl
+    // Verifica che siano stati 4 task totali eseguiti (2 slot riusati per 4 task)
+    expect(taskRunCount).toBe(4)
+    // Pool ancora bounded: 2 bridge totali (no over-spawn)
+    expect(MockBridge.instances.length).toBe(2)
   })
 
   it('Test 4: releaseSlot libera lo slot; acquireSlot successivo riusa', async () => {
