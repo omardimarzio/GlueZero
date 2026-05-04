@@ -35,7 +35,7 @@ describe('RealtimeBroker (D-101 composition + D-103 + D-112)', () => {
     restoreES()
   })
 
-  it('Test 1 (D-101): constructor compone RouterBroker e accetta config vuota', () => {
+  it('Test 1 (D-101): constructor compone RouterBroker e accetta config vuota', async () => {
     const broker = new RealtimeBroker()
     // BEHAVIOR: il broker espone API publish + subscribe + connectRealtime
     // (delegate al RouterBroker inner + manager). Side-effect verifico via
@@ -44,7 +44,12 @@ describe('RealtimeBroker (D-101 composition + D-103 + D-112)', () => {
     broker.subscribe('test.topic', (ev: { topic: string; payload: unknown }) => {
       received = { topic: ev.topic, payload: ev.payload }
     })
-    broker.publish('test.topic', { value: 42 }, { source: { type: 'plugin', id: 'unit' } })
+    // F1 default deliveryMode='async' → microtask dispatch. Use 'sync' per test
+    // deterministic — pattern coerente con F2/F3 unit test.
+    broker.publish('test.topic', { value: 42 }, {
+      source: { type: 'plugin', id: 'unit' },
+      deliveryMode: 'sync',
+    })
     expect(received).not.toBeNull()
     expect(received!.topic).toBe('test.topic')
     expect(received!.payload).toEqual({ value: 42 })
@@ -117,7 +122,10 @@ describe('RealtimeBroker (D-101 composition + D-103 + D-112)', () => {
     broker.subscribe('test.x', (ev: { payload: unknown }) => {
       received = ev.payload
     })
-    broker.publish('test.x', { value: 1 }, { source: { type: 'plugin', id: 'test' } })
+    broker.publish('test.x', { value: 1 }, {
+      source: { type: 'plugin', id: 'test' },
+      deliveryMode: 'sync',
+    })
     expect(received).toEqual({ value: 1 })
   })
 
@@ -172,6 +180,8 @@ describe('RealtimeBroker (D-101 composition + D-103 + D-112)', () => {
     expect(es).toBeDefined()
     es!.__open()
     es!.__message('{"x":1}', 'evt-1', 'message')
+    // F1 default deliveryMode='async' → flush microtasks per consentire dispatch.
+    await new Promise((r) => setTimeout(r, 10))
     const evt = captured.find((c) => c.topic === 'orders')
     expect(evt).toBeDefined()
     // W-1 closure: source preserved end-to-end (D-113 ingress + Broker.publish options.source).
@@ -197,6 +207,8 @@ describe('RealtimeBroker (D-101 composition + D-103 + D-112)', () => {
         { name: 'dup', mode: 'sse', url: 'http://x/?_channel=dup' },
       ],
     })
+    // Flush microtasks per consentire dispatch async della publish.
+    await new Promise((r) => setTimeout(r, 10))
     // W-5 closure: niente silent catch, system.warn emesso.
     expect(warns.length).toBeGreaterThanOrEqual(1)
     const reasons = warns.map((w) => (w.payload as { reason?: string }).reason)

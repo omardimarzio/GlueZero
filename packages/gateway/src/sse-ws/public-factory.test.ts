@@ -13,7 +13,11 @@ describe('createRealtimeBroker (D-30 + Valibot validation)', () => {
     broker.subscribe('smoke.topic', (ev: { payload: unknown }) => {
       received = ev.payload
     })
-    broker.publish('smoke.topic', { ok: true }, { source: { type: 'plugin', id: 'unit' } })
+    // F1 default deliveryMode='async' → use 'sync' per test deterministic.
+    broker.publish('smoke.topic', { ok: true }, {
+      source: { type: 'plugin', id: 'unit' },
+      deliveryMode: 'sync',
+    })
     expect(received).toEqual({ ok: true })
   })
 
