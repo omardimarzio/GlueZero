@@ -31,18 +31,12 @@ session_active: true
 | Mode GSD | yolo + auto_advance + parallelization (sequential exec, no worktree) |
 | Modello attivo | `claude-opus-4-7-1` (opus) — override esplicito su tutti i sub-agent |
 
-## Ultimo step completato (2026-05-04T15:45:00Z)
+## Ultimo step completato (auto-update 2026-05-04T13:50:30Z)
 
 - Plan: **04-05** → SUMMARY.md committed
-- Commit: `fde59f8 feat(04-05): implement SseAdapter (EventSource wrapper + Last-Event-ID + custom event types + heartbeat hook)` (GREEN gate, dopo `b581aa7` RED test e `ba74ed6` MockEventSource helper)
+- Commit: `bf848a1 docs(04-05): complete plan SUMMARY + STATE/ROADMAP/REQUIREMENTS/TRACKER update — Phase 4 Wave 3 SSE adapter done`
 - Phase progress: **5/9** plan completati con SUMMARY.md
 - Project progress: 42/46 plan (91%)
-- LOC: 876 (sse-adapter.ts 464 + sse-adapter.test.ts 278 + test-utils/mock-event-source.ts 134)
-- Test: 14/14 sse-adapter PASS + 160/160 gateway suite + **694/694 monorepo full** (zero regressioni)
-- Anti-pattern verificati: 0 `Authorization` literal (AP-2 ✓), 0 import `reconnecting-websocket` (AP-3 ✓), `es.close()` esplicito su error (AP-4 implicito ✓)
-- D-83 strict ✓ (zero modifiche fuori `packages/gateway/src/sse-ws/`)
-- Closures: W-4 SC-1 (custom event types `def.eventTypes` → topic da event field), B-5 Q5 (heartbeat eventTypes silent freshness), B-NEW-2 iter 2 (MockEventSource.byChannelName indexing)
-- Bug fix Rule 1: AbortController re-init al re-connect (era bloccato da disconnect)
 
 
 ## Prossimo step
