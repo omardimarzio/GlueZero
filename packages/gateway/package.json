@@ -1,7 +1,7 @@
 {
   "name": "@sembridge/gateway",
   "version": "0.0.0",
-  "description": "HTTP Gateway centralizzato + adapter realtime per SemBridge (Phase 3 + Phase 4)",
+  "description": "HTTP Gateway centralizzato + adapter realtime per SemBridge (Phase 3 HTTP + Phase 4 realtime SSE/WS)",
   "license": "MIT",
   "author": "",
   "type": "module",
@@ -16,6 +16,10 @@
     "./http": {
       "types": "./dist/http/index.d.ts",
       "import": "./dist/http/index.js"
+    },
+    "./sse-ws": {
+      "types": "./dist/sse-ws/index.d.ts",
+      "import": "./dist/sse-ws/index.js"
     },
     "./package.json": "./package.json"
   },

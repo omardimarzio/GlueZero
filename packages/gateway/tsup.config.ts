@@ -11,12 +11,19 @@ export default defineConfig({
   // `package.json` per anti tree-shaking del declaration merging — Pattern S1,
   // T-03-04-01 mitigation, replica F2 T-02-09-01).
   //
-  // Phase 4 aggiungerà `'sse-ws/index': 'src/sse-ws/index.ts'` alla entry list
-  // (placeholder export riservato in `package.json` se/quando attivato).
+  // Phase 4 (plan 04-01) aggiunge:
+  //   - `'sse-ws/index': 'src/sse-ws/index.ts'` (subpath barrel realtime)
+  //   - `'sse-ws/augment': 'src/sse-ws/augment.ts'` (declaration merging
+  //     BrokerConfig.realtime + PluginDescriptor.realtimeChannels — D-103
+  //     declaration merging + D-101 composition wrapper).
+  // Pattern S1 anti tree-shaking: il glob `sideEffects: ["**/augment.ts",
+  // "**/augment.js"]` esistente copre `dist/sse-ws/augment.js` senza modifiche.
   entry: {
     index: 'src/index.ts',
     'http/index': 'src/http/index.ts',
     augment: 'src/augment.ts',
+    'sse-ws/index': 'src/sse-ws/index.ts',
+    'sse-ws/augment': 'src/sse-ws/augment.ts',
   },
   format: ['esm'],
   dts: true,

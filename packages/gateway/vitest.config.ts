@@ -16,6 +16,14 @@ export default defineConfig({
         'src/http/index.ts',
         'src/http/types/**',
         'src/augment.ts',
+        // Phase 4 (plan 04-01) — non-runtime sse-ws files exclusi dalla coverage:
+        // barrel skeleton (re-export only), types-only files, augment (decl merging
+        // compile-time), test-utils helpers. I thresholds rimangono invariati per
+        // ora — verranno calibrati in 04-09 dopo coverage measurement post-implementation.
+        'src/sse-ws/index.ts',
+        'src/sse-ws/types/**',
+        'src/sse-ws/augment.ts',
+        'src/sse-ws/test-utils/**',
       ],
       // F3 V1: branches threshold 75% (realistic post-implementation; defensive
       // try/catch in http-gateway error classification + combine-signals dispose
