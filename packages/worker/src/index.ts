@@ -58,11 +58,13 @@ export {
   type WorkerType,
 } from './types'
 
+// ---------- W2 plan 05-03 — task-tracker (state machine atomico D-133) ----------
+export { createTaskTracker, type TaskTracker, type TaskTrackerSnapshot } from './task-tracker'
+
 // ---------- Wave 2-4 runtime exports (placeholder — implementati nei plan successivi) ----------
-// W2 (plan 05-02 + 05-03):
+// W2 (plan 05-02):
 //   export { assertSerializable } from './assert-serializable'
 //   export { extractTransferables } from './transferable-extractor'
-//   export { createTaskTracker, type TaskTracker } from './task-tracker'
 // W3 (plan 05-04 + 05-05):
 //   export { WorkerBridge, type WorkerBridgeDeps } from './worker-bridge'
 //   export { WorkerPool, type WorkerPoolDeps } from './worker-pool'
