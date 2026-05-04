@@ -65,11 +65,24 @@ export { extractTransferables } from './transferable-extractor'
 // ---------- W2 plan 05-03 — task-tracker (state machine atomico D-133) ----------
 export { createTaskTracker, type TaskTracker, type TaskTrackerSnapshot } from './task-tracker'
 
-// ---------- Wave 3-4 runtime exports (placeholder — implementati nei plan successivi) ----------
-// W3 (plan 05-04 + 05-05):
+// ---------- W3-B plan 05-05 — worker-pool + worker-registry (D-126/127/128/129/130/131) ----------
+export {
+  WorkerRegistry,
+  MAX_POOL_SIZE_HARD,
+  type WorkerEntry,
+  type WorkerRegistrySnapshot,
+} from './worker-registry'
+export {
+  WorkerPool,
+  defaultPoolSize,
+  type WorkerBridgeLike,
+  type WorkerPoolDeps,
+  type WorkerPoolSnapshot,
+} from './worker-pool'
+
+// ---------- Wave 3-A plan 05-04 + Wave 4 plan 05-06 (placeholder — file ownership 05-04/05-06) ----------
+// W3-A (plan 05-04 — owned):
 //   export { WorkerBridge, type WorkerBridgeDeps } from './worker-bridge'
-//   export { WorkerPool, type WorkerPoolDeps } from './worker-pool'
-//   export { WorkerRegistry } from './worker-registry'
 // W4 (plan 05-06):
 //   export { createWorkerBroker } from './public-factory'
 //   export { WorkerBroker, type WorkerBrokerConfig } from './worker-broker'
