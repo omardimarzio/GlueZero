@@ -6,6 +6,12 @@ export default defineConfig({
     environment: 'jsdom',
     globals: false,
     include: ['src/**/*.test.ts'],
+    // W-NEW-3 fix iter 2 (plan 04-08): esclude Tier-3 Playwright dal Tier-1 jsdom
+    // run. I test in `__browser__/**` richiedono real-browser API (EventSource
+    // nativo, WebSocket, ecc.) e vengono caricati da `vitest.browser.config.ts`
+    // (Playwright headless Chromium). Senza questo exclude vitest jsdom fallisce
+    // al carico dei file (es. `EventSource` undefined in Node).
+    exclude: ['node_modules', 'dist', '**/__browser__/**'],
     coverage: {
       provider: 'v8',
       reporter: ['text', 'json', 'html'],

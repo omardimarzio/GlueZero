@@ -1,13 +1,30 @@
 /**
  * `@sembridge/gateway/sse-ws` — Subpath SSE/WebSocket realtime adapter (Phase 4).
  *
- * Plan 04-01: bootstrap types + augment + scaffolding. I runtime export
- * (parseFrame, createReconnectStrategy, SseAdapter, WebSocketAdapter,
- * RealtimeChannelManager, RealtimeBroker, createRealtimeBroker) verranno aggiunti
- * incrementalmente nei plan 04-02..04-08 via Wave-based parallelization.
+ * Espone:
+ * - **`RealtimeBroker`** — composition wrapper di `RouterBroker` (D-101 / D-83 strict)
+ * - **`createRealtimeBroker`** — factory pubblica con Valibot validation (D-30 no singleton)
+ * - **`RealtimeChannelManager`** — N-channel registry + cascade cleanup (D-102 / D-112)
+ * - **adapter primitives** — `SseAdapter`, `WebSocketAdapter` (consumer avanzati)
+ * - **state machines** — `createReconnectStrategy` (D-107 / D-109), `createVisibilityDetector` (D-110)
+ * - **frame parser** — `parseFrame`, `isInternalTopic`, `INTERNAL_TOPICS` (D-106 envelope JSON, PITFALL §11.7)
  *
- * Vincolo D-101: composition wrapper di `RouterBroker` (F3). ZERO modifiche runtime
- * a F1/F2/F3 (D-83 ext F4).
+ * Vincolo D-83 / D-101: zero modifiche a F1-F3 runtime. Composition wrapper invocato dal
+ * factory pubblico `createRealtimeBroker`.
+ *
+ * @example
+ * ```ts
+ * import { createRealtimeBroker } from '@sembridge/gateway/sse-ws'
+ *
+ * const broker = createRealtimeBroker({
+ *   realtime: {
+ *     channels: [{ name: 'orders', mode: 'auto', url: '/events' }],
+ *   },
+ * })
+ *
+ * await broker.connectRealtime({ name: 'feed', mode: 'sse', url: '/feed' })
+ * broker.subscribe('orders.created', (ev) => console.log(ev.payload))
+ * ```
  *
  * @packageDocumentation
  */
@@ -27,7 +44,33 @@ export type {
   RealtimeMode,
   RealtimeReconnectConfig,
 } from './types'
+export type { FrameEnvelope, FrameParseResult } from './types/frame-envelope'
 
-// Plan 04-02..04-08 add: parseFrame, createReconnectStrategy, createVisibilityDetector,
-// SseAdapter, WebSocketAdapter, RealtimeChannelManager, RealtimeBroker,
-// createRealtimeBroker, FrameEnvelope, FrameParseResult.
+// ---------- Runtime export: parser ----------
+export { parseFrame, isInternalTopic, INTERNAL_TOPICS } from './frame-parser'
+
+// ---------- Runtime export: state machines ----------
+export {
+  createReconnectStrategy,
+  type ReconnectStrategy,
+  type ReconnectStrategyOptions,
+} from './reconnect-strategy'
+export {
+  createVisibilityDetector,
+  type VisibilityDetector,
+  type VisibilityDetectorOptions,
+  type VisibilityState,
+} from './visibility-detector'
+
+// ---------- Runtime export: adapters (consumer avanzati) ----------
+export { SseAdapter, type SseAdapterDeps } from './sse-adapter'
+export { WebSocketAdapter, type WebSocketAdapterDeps } from './websocket-adapter'
+
+// ---------- Runtime export: manager + broker + factory ----------
+export {
+  RealtimeChannelManager,
+  type RealtimeChannelManagerDeps,
+  type RealtimeChannelManagerDebugInfo,
+} from './realtime-channel-manager'
+export { RealtimeBroker, type RealtimeBrokerConfig } from './realtime-broker'
+export { createRealtimeBroker } from './public-factory'
