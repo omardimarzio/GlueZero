@@ -1,5 +1,13 @@
 {
   "model_profile": "quality",
+  "models": {
+    "planning": "opus",
+    "discuss": "opus",
+    "research": "opus",
+    "execution": "opus",
+    "verification": "opus",
+    "completion": "opus"
+  },
   "commit_docs": true,
   "parallelization": true,
   "search_gitignored": false,

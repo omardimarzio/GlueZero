@@ -1,11 +1,11 @@
 ---
 last_updated: 2026-05-04
-status: phase_5_context_gathered_ready_for_plan
+status: phase_5_wave_1_complete_ready_for_wave_2
 project: SemBridge
 milestone: v1.0
 current_phase: 5
-current_wave: null
-current_plan: phase_5_plan_pending
+current_wave: 1_complete
+current_plan: 05-01_done
 session_active: true
 ---
 
@@ -23,37 +23,57 @@ session_active: true
 
 | Campo | Valore |
 |-------|--------|
-| Fase | **Phase 5 — Worker Runtime — 🟢 PLANNED** (7 plan in 5 wave + RESEARCH 1539 LOC + PATTERNS 1288 LOC; plan-checker PASS_WITH_CONCERNS 0 BLOCKER 5 WARNING; decision coverage gate 34/34 ✓; ready for execute-phase) |
-| Wave | — |
-| Plan in esecuzione | discuss + plan + checker ✅ done; execute-phase 5 in dispatch |
+| Fase | **Phase 5 — Worker Runtime — 🟢 EXECUTING** (Wave 1 ✅ COMPLETE, Wave 2 ready parallel) |
+| Wave | 1 ✅ → 2 next (05-02 ‖ 05-03) |
+| Plan in esecuzione | 05-01 ✅ done (commit `77f19e1`); next: 05-02 + 05-03 parallel |
+| Plan progress F5 | **1 / 7** (05-01 done; 05-02..05-07 pending) |
 | Plan progress F4 | **9 / 9 (✅ COMPLETE)** — 04-01..04-09 done |
-| Plan progress globale | 45 / 46+ (Phase 5+6 ancora da pianificare; 46 = baseline pre-F5) |
+| Plan progress globale | 46 / 53 (Phase 5: 6 plan da eseguire ancora) |
 | Mode GSD | yolo + auto_advance + parallelization (sequential exec, no worktree) |
 | Modello attivo | `claude-opus-4-7-1` (opus) — override esplicito su tutti i sub-agent |
 
-## Ultimo step completato (auto-update 2026-05-04 — plan-phase 5 + plan-checker)
+## Ultimo step completato (auto-update 2026-05-04 — plan 05-01 W1 bootstrap)
 
-- Step: **gsd-plan-phase 5 --auto --research** completato
+- Step: **gsd-execute-phase 5 / plan 05-01 (Wave 1 bootstrap)** completato
 - Output:
-  - `.planning/phases/05-worker-runtime/05-RESEARCH.md` (1539 LOC, 17 sezioni, 7 plan / 6 wave proposal — commit `3cf54ae`)
-  - `.planning/phases/05-worker-runtime/05-PATTERNS.md` (1288 LOC, 35 file con analog F1-F4 + code excerpt)
-  - 7 PLAN.md (05-01..05-07) per ~1730 LOC source target + 119 nuovi test
-- Plan-checker verdict: **PASS_WITH_CONCERNS** (0 BLOCKER, 5 WARNING cosmetici/architetturali minori)
-- Decision coverage gate: **34/34 ✓** (post-fix: aggiunto sintesi D-121..D-154 in 05-07 must_haves.truths)
-- Wave structure: W1 bootstrap + W2 ‖ (assert-serializable+task-tracker) + W3 ‖ (worker-bridge+pool/registry) + W4 (broker composition + harness + 8 integration test) + W5 (final gate F5 + DOC-05 + REQ flip + PRD §39 #11 closure)
+  - `packages/worker/` popolato con scaffold completo (14 file creati + 2 modificati, 1108 LOC totali)
+  - `.planning/phases/05-worker-runtime/05-01-SUMMARY.md` con metriche, REQ progress, threat coverage
+  - 4 commit atomici TDD-compliant: `7d64592` chore (config) → `2ec5fcf` feat (types) → `0d18c36` test (RED) → `77f19e1` feat (GREEN)
+  - 8/8 smoke decl merging passing (Pattern S1 + S5 + Pick<RoutePolicies,...> enforce)
+- CI gates verificati:
+  - `pnpm -F @sembridge/worker typecheck` ✅
+  - `pnpm -F @sembridge/worker test --run` ✅ 8/8
+  - `pnpm -F @sembridge/worker build` ✅ — `dist/{index,augment}.{js,d.ts}` prodotti
+  - Cross-package typecheck zero regression (core/mapper/routing/gateway tutti OK)
+  - Full monorepo: 248+183+103+222+8 = 764 passing (3 skip MSW V1.x F4)
+  - Pattern S1 audit `__augmentWorkerLoaded` in dist/index.js → 2 hits
+  - **D-83 strict ✓** `git diff main...HEAD packages/{core,mapper,routing}/src/ packages/gateway/src/{http,sse-ws}/` empty
+- REQ progress: WK-01..WK-07 type-level scaffold + PKG-01..PKG-04 done
+- Decisioni applicate (referenziate JSDoc): D-121, D-122, D-123, D-124, D-126, D-127, D-128, D-130, D-131, D-133, D-134, D-136, D-137, D-141, D-143, D-144, D-145, D-146, D-147, D-150, D-152, D-153
 - Plan precedente: 04-09 (Phase 4 chiusa) — `a425501`
-- Project progress: 45/53 plan (Phase 5: 7 plan da eseguire) — Phase 5 in execution
+- Project progress: 46/53 plan (Phase 5: 6 plan rimanenti)
 
 
 ## Prossimo step
 
-**Auto-advance via `--chain` flag attivo:**
+**Wave 2 parallel (05-02 ‖ 05-03):**
+
+File ownership disgiunta — eseguibili in parallelo:
+- `05-02 — assert-serializable + transferable-extractor` su `packages/worker/src/{assert-serializable,transferable-extractor}.{ts,test.ts}` (D-139 dev-mode + D-140 throw + fieldPath + D-141 JSONPath wildcard + WK-07 closure)
+- `05-03 — task-tracker state machine atomico` su `packages/worker/src/{task-tracker}.{ts,test.ts}` (D-133 Pitfall 2C strict + Map<TaskId,TaskState> CAS-like)
 
 ```
-Skill: gsd-execute-phase 5
+Skill: gsd-execute-phase 5  (continua da Wave 2)
 ```
 
-Phase 5 in entry-point auto:
+Wave struttura globale F5 (RIEPILOGO):
+- ✅ Wave 1: 05-01 (bootstrap) — DONE 2026-05-04
+- ⏳ Wave 2: 05-02 ‖ 05-03 (building blocks A + B) — NEXT parallel
+- ⏳ Wave 3: 05-04 ‖ 05-05 (worker-bridge ‖ worker-pool/registry) parallel
+- ⏳ Wave 4: 05-06 (broker composition + harness + 8 integration test 3-tier + 6 browser smoke Playwright)
+- ⏳ Wave 5: 05-07 (final gate F5: CI gates + DOC-05 README italiano + JSDoc TypeDoc-ready + REQ matrix flip atomic WK-01..WK-07 → Complete + PRD §39 #11 closure)
+
+Phase 5 in entry-point auto (vincoli architetturali confermati):
 - WK-01..WK-07 da REQUIREMENTS.md
 - WorkerBroker = composition wrapper di RouterBroker (D-121, D-83 strict carryover)
 - Comlink 4.4.x + structuredClone default + transferable opt-in (WK-07 chiude PRD §39 #11)
@@ -89,6 +109,8 @@ Phase 4 closure highlights:
 - **Auto-advance attivo:** discuss → plan → execute → verify automatico senza chiedere conferma.
 
 ## Decisioni recenti rilevanti
+
+- **Plan 05-01 ESEGUITO ✓ (Wave 1 — Bootstrap @sembridge/worker)** — Pacchetto F5 popolato come scaffold completo type-level: package.json (deps comlink 4.4.2 + @sembridge/{core,mapper,routing,gateway}/nanoid/valibot, sideEffects glob `**/augment.{ts,js}` Pattern S1), tsup.config.ts ESM-only 2 entry (index + augment) target es2022 + dts true, vitest.config.ts Tier-1 jsdom + coverage v8 90/80/90/90 + exclude `__browser__/**`, vitest.browser.config.ts Tier-3 Playwright Chromium factory provider Vitest 4.x. 6 type files in `src/types/` con shape esatte D-123/124/127/128/131/133/136/137/141/143/146/147 (WorkerDescriptor + WorkerMode/Type, WorkerConfig + AssertSerializableMode, RouteWorkerDefinition + RouteWorkerPublishesSpec con `Pick<RoutePolicies,'timeout'|'concurrency'|'backpressure'|'dedupe'>` enforce TS-level D-143, ProgressPayload canonical schema D-136, TaskState union 5 stati + WorkerTaskOutcome D-133/D-152, INTERNAL_TOPICS_WORKER frozen const + `isInternalWorkerTopic` STRICT match Pattern S5 anti AP-6 carryover F4 D-111). augment.ts `declare module '@sembridge/core'` aggiunge `BrokerConfig.workers?: WorkerConfig` (D-122) + `PluginDescriptor.workers?: readonly WorkerDescriptor[]` (D-126 cascade ext F5 LIFE-02) + esporta `F5PipelineStep` literal union 4 valori (D-152 step 9 dispatch §28) + `__augmentWorkerLoaded: true` const literal (Pattern S1 anti tree-shake T-05-01-02). Barrel `src/index.ts` re-esporta side-effect augment + tutti i type pubblici, placeholder commented per Wave 2-4 runtime exports. **8/8 augment.test.ts passing** (smoke decl merging + coexistence F2/F3/F4/F5 + Pattern S5 STRICT match). 4 commits TDD-compliant: `7d64592` chore (config) + `2ec5fcf` feat (types) + `0d18c36` test (RED) + `77f19e1` feat (GREEN). Cross-package typecheck zero regression (core/mapper/routing/gateway tutti OK), full monorepo 248+183+103+222+8 = 764 passing (3 skip MSW V1.x F4). **D-83 strict ✓ verified** `git diff main...HEAD packages/{core,mapper,routing}/src/ packages/gateway/src/{http,sse-ws}/` empty. Pattern S1 audit `__augmentWorkerLoaded` in `dist/index.js` → 2 hits, `F5PipelineStep` + `INTERNAL_TOPICS_WORKER` preserved in dts. Build artifacts `dist/{index,augment}.{js,d.ts}` (index.js 539 B, augment.js 230 B). REQ progress: WK-01..WK-07 type-level scaffold + PKG-01..PKG-04 done. Decisioni minori autonome: aggiunto `lib WebWorker` in tsconfig.json (prerequisito W2-W4 typecheck), omesso `packages/worker/biome.json` (workspace root inherit OK come gateway/mapper/routing/core), `pnpm-workspace.yaml` non modificato (glob `'packages/*'` già copre worker), aggiunto `external: ['comlink']` in tsup.config.ts. Building blocks pronti per Wave 2 parallel (05-02 ‖ 05-03) con file ownership disgiunta: 05-02 → `assert-serializable + transferable-extractor` ‖ 05-03 → `task-tracker`.
 
 - **Phase 5 PLAN-PHASE COMPLETATO ✓ (research + pattern-mapping + planner + plan-checker)** — RESEARCH.md 1539 LOC con 17 sezioni (architettura, Comlink 4.4.2 deep dive, pool strategy, state machine atomico, cancellation, serialization WK-07, pipeline §28 step 9, plan structure 7/6, test 3-tier, pitfalls, threat ASVS L1) — verificate live versioni npm `comlink@4.4.2` `nanoid@5.1.11` `valibot@1.3.1` `vitest@4.1.5` `playwright@1.59.1`. PATTERNS.md 1288 LOC con 35 file classificati + code excerpt analog F1-F4 (88% exact match). 7 PLAN.md (05-01..05-07) prodotti in 5 wave: W1 bootstrap @sembridge/worker (tsup ESM-only + vitest 3-tier + types + augment.ts decl merging + deps comlink/@sembridge/{core,mapper,routing,gateway}); W2 ‖ (05-02 assert-serializable deep-walk + transferable-extractor JSONPath ‖ 05-03 task-tracker state machine atomico Pitfall 2C strict); W3 ‖ (05-04 worker-bridge Comlink + DI WorkerCtor + AbortSignal proxy + MockWorker test util ‖ 05-05 worker-pool lazy spawn + cap 8 + F3 BackpressureStrategy 1:1 + worker-registry); W4 (05-06 worker-broker composition wrapper Opzione B research §7.2 — D-83 strict preserved zero modifiche `packages/routing/` — + createWorkerBroker factory + worker-handler + 8 integration test 3-tier + 6 browser smoke Playwright); W5 (05-07 final gate: CI gates + DOC-05 README italiano 11 sezioni + JSDoc TypeDoc-ready + REQ matrix flip atomic WK-01..WK-07 → Complete + PRD §39 #11 chiuso esplicitamente). Plan-checker verdict PASS_WITH_CONCERNS (0 BLOCKER, 5 WARNING: SC-1 mapping canonical wording / barrel index.ts overlap pattern noto F4 / 05-05 wave dependency cosmetic / 05-06 T3 description sintetica / SC-4 MessageChannel wording). Decision coverage gate 34/34 ✓ (post-fix: aggiunto cumulative D-121..D-154 in 05-07 must_haves.truths). Threat model 57 enumerate F5 distribuiti (T-05-XX-NN), zero HIGH+ severity. Coverage REQ-IDs 12/12 phase + PKG-01..PKG-04 cross-cutting. Estimated speedup wave-based ~30-35% vs sequential.
 

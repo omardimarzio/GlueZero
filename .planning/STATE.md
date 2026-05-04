@@ -2,14 +2,14 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: verifying
-last_updated: "2026-05-04T16:03:33.859Z"
+status: executing
+last_updated: "2026-05-04T20:40:08.936Z"
 progress:
   total_phases: 6
-  completed_phases: 3
-  total_plans: 46
-  completed_plans: 45
-  percent: 98
+  completed_phases: 4
+  total_plans: 53
+  completed_plans: 47
+  percent: 89
 ---
 
 # Project State: SemBridge
@@ -23,21 +23,28 @@ progress:
 - **Authoritative source:** `prd.md` (root del progetto, "l'unica base informativa condivisa con il developer", PRD §1)
 - **Core Value:** I plugin/componenti possono essere sviluppati indipendentemente, con la propria nomenclatura locale, e interoperare correttamente attraverso il vocabolario canonico del broker — senza accordo preventivo sui nomi tra autori
 - **Current Milestone:** v1
-- **Current Focus:** Phase 04 — Realtime inbound (SSE prioritario, WS opzionale)
+- **Current Focus:** Phase 5 — worker-runtime
 
 ## Current Position
 
-Phase: 04 (Realtime inbound (SSE prioritario, WS opzionale)) — ✅ COMPLETE — ready for verification
-Plan: 9 of 9 (last) — 04-09 final gate done
-Total Plans: 9 (Phase 4)
+Phase: 5 (worker-runtime) — EXECUTING
+Wave: 1 ✅ COMPLETE → Wave 2 next (05-02 ‖ 05-03 parallel)
+Plan: 2 of 7 (05-01 done; 05-02..05-07 pending)
+Total Plans: 7 (Phase 5)
 
-**Last completed:** Plan 04-09 (Wave 6 — Final gate F4) at 2026-05-04 — 5 commits atomic: `761e4ad` test coverage thresholds documentation + `3c01b73` style biome cleanup F4 sse-ws (19 files auto-format + 2 lint fixes — useLiteralKeys ignore on Record<string,unknown> bracket access + noVoidTypeReturn) + `7014380` docs README Realtime SSE/WS section (DOC-04 + RT-07 closure PRD §39 #9, +298 LOC italiano) + `e7638f9` docs JSDoc API pubblica (TypeDoc-ready @see/@throws/@param su 5 file public — RealtimeBroker, createRealtimeBroker, SseAdapter, WebSocketAdapter, RealtimeChannelManager) + final docs commit (REQUIREMENTS/ROADMAP/STATE/TRACKER + SUMMARY). Coverage v8 sse-ws/ subset: 91.80% statements / 86.70% branches / 89.53% functions / 93.75% lines (supera target ≥85/75/88/87). CI gates: publint ✅, attw ESM-only ✅, biome ✅ zero errors, typecheck ✅, build ✅ (`dist/sse-ws/{index,augment}.{js,d.ts}` + `createRealtimeBroker` esportato). Test totale invariato 222/225 gateway + 756/759 monorepo (no regression). D-83 strict carryover ✓ verified `git diff packages/{core,mapper,routing}/src/ packages/gateway/src/http/` zero hits per tutta F4. RT-01..RT-07 + ERR-02 ext + LIFE-02 ext F4 + TEST-01/02/03 ext F4 closed. **Open issue PRD §39 #9 (RT-07) chiuso** in DOC-04: Last-Event-ID via query string per SSE + ping/pong applicativo per WS + sezione completa Realtime SSE/WS con 14 sub-paragrafi italiani.
+**Last completed:** Plan 05-01 (Wave 1 — Bootstrap @sembridge/worker) at 2026-05-04 — 4 commits atomici TDD-compliant: `7d64592` chore (config bootstrap pkg+tsup+vitest+tsconfig) + `2ec5fcf` feat (7 type files src/types/ con D-123/124/127/128/131/133/136/137/141/143/146/147) + `0d18c36` test RED (failing smoke decl merging) + `77f19e1` feat GREEN (augment.ts decl merging F5 + barrel index.ts). 14 file creati + 2 modificati (1108 LOC totali). 8/8 augment.test.ts passing (Pattern S1 anti tree-shake + Pattern S5 STRICT match + coexistence F2/F3/F4/F5). Cross-package typecheck zero regression: core 248 + mapper 183 + routing 103 + gateway 222 + worker 8 = **764 monorepo passing** (3 skip MSW V1.x F4). Build artifacts `dist/{index,augment}.{js,d.ts}` (index.js 539 B, augment.js 230 B). Pattern S1 audit grep `__augmentWorkerLoaded` in dist/index.js → 2 hits. **D-83 strict ✓ verified** `git diff main...HEAD packages/{core,mapper,routing}/src/ packages/gateway/src/{http,sse-ws}/` empty. REQ progress: WK-01..WK-07 type-level scaffold + PKG-01..PKG-04 done (REQ flip atomic posticipato a W5 plan 05-07 final gate). Decisioni applicate (referenziate JSDoc): D-121, D-122, D-123, D-124, D-126, D-127, D-128, D-130, D-131, D-133, D-134, D-136, D-137, D-141, D-143, D-144, D-145, D-146, D-147, D-150, D-152, D-153.
 
-**Next:** `/gsd-discuss-phase 5` per avviare Phase 5 (Worker Runtime — WK-01..WK-07). Phase 5 e Phase 6 ancora da fare; Phase 4 è ready per gsd-verifier.
+**Last completed Phase 4:** Plan 04-09 (Wave 6 — Final gate F4) at 2026-05-04 — RT-01..RT-07 + ERR-02 ext + LIFE-02 ext F4 + TEST-01/02/03 ext F4 closed. **Open issue PRD §39 #9 (RT-07) chiuso** in DOC-04. D-83 strict carryover ✓ verified per tutta F4.
 
-- **Phase:** 4 ✅ COMPLETE
-- **Status:** Phase complete — ready for verification
-- **Progress:** [██████████] 98% globale (45/46 plan; Phase 5 + Phase 6 ancora da fare)
+**Next:** Wave 2 parallel (05-02 ‖ 05-03):
+- 05-02 — assert-serializable + transferable-extractor (D-139 dev-mode + D-140 throw + fieldPath + D-141 JSONPath wildcard + WK-07 closure)
+- 05-03 — task-tracker state machine atomico (D-133 Pitfall 2C strict + Map<TaskId,TaskState> CAS-like)
+
+File ownership disgiunta — eseguibili in parallelo senza conflitti git index.
+
+- **Phase:** 5 EXECUTING (Wave 1 complete)
+- **Status:** In progress (1/7 plan done)
+- **Progress:** [█████████░] 89% globale
 
 ## Phases Overview
 
@@ -100,6 +107,8 @@ Total Plans: 9 (Phase 4)
 | Phase 04 P07 | ~25min | 1 task TDD | 2 files (realtime-channel-manager.{ts,test.ts} 1067 LOC; 16/16 test PASS, 191/191 gateway, 725/725 monorepo, anti-AP-3/11 ✓, D-83 strict ✓; B-4 closure D-107 auto-fallback effettivo + cycle-cap; B-NEW-1 fix interface 04-03 strict) |
 | Phase 04 P08 | ~40min | 4 commits TDD | 18 files (realtime-broker.ts 296 + test 220 + public-factory.ts 123 + test 64 + realtime-harness.ts 223 + 11 integration test files + 1 browser smoke; ~1620 LOC; 222/225 gateway 3 skip MSW V1.x; 756/759 monorepo full; vitest 4.x browser provider API + Playwright Chromium binary install; D-83 strict ✓; W-1/W-3/W-5/B-2/B-3/B-4/B-NEW-2/D-118 3-tier closure) |
 | Phase 04 P09 | ~30min | 5 commits | 8 files (vitest.config.ts coverage doc + 19 sse-ws/ biome auto-format + README +298 LOC italiano sezione Realtime SSE/WS + 5 file JSDoc API pubblica + REQUIREMENTS/ROADMAP/STATE/TRACKER closure F4; coverage v8 sse-ws subset 91.80/86.70/89.53/93.75; CI gates publint+attw+lint+typecheck+build all ✅; D-83 strict carryover ✓ verified zero hits; RT-01..RT-07 → Complete; PRD §39 #9 closed) |
+| Phase 05 P01 | ~8min | 4 commits TDD | 14 files creati + 2 modificati (1108 LOC totali — packages/worker/{package.json,tsconfig.json,tsup.config.ts,vitest.config.ts,vitest.browser.config.ts} + src/{augment.ts,augment.test.ts,index.ts} + 7 type files src/types/{worker-descriptor,worker-config,route-worker-definition,progress-payload,task-state,internal-topics,index}.ts; deps comlink 4.4.2 + @sembridge/{core,mapper,routing,gateway} + nanoid + valibot; sideEffects glob Pattern S1; 8/8 augment.test.ts passing; Pattern S1 audit `__augmentWorkerLoaded` in dist/index.js → 2 hits; D-83 strict ✓ zero modifiche F1-F4 runtime; cross-package typecheck zero regression; full monorepo 248+183+103+222+8 = 764 passing (3 skip MSW V1.x F4); REQ progress WK-01..WK-07 type-level scaffold + PKG-01..PKG-04 done) |
+| Phase 5 P01 | 8min | 3 tasks | 14 files |
 
 ## Accumulated Context
 
