@@ -1,11 +1,11 @@
 ---
 last_updated: 2026-05-04
-status: phase_4_complete_ready_for_verifier
+status: phase_5_context_gathered_ready_for_plan
 project: SemBridge
 milestone: v1.0
 current_phase: 5
 current_wave: null
-current_plan: phase_5_discuss_pending
+current_plan: phase_5_plan_pending
 session_active: true
 ---
 
@@ -23,38 +23,42 @@ session_active: true
 
 | Campo | Valore |
 |-------|--------|
-| Fase | **Phase 5 — Worker Runtime — 🟢 NOT STARTED** (Phase 4 ✅ COMPLETE — ready for verifier; Phase 5 da avviare con `/gsd-discuss-phase 5 --research`) |
+| Fase | **Phase 5 — Worker Runtime — 🟢 CONTEXT GATHERED** (CONTEXT.md scritto + DISCUSSION-LOG.md, 34 decisioni D-121..D-154 lockate; ready for plan-phase via `--chain` auto-advance) |
 | Wave | — |
-| Plan in esecuzione | — |
+| Plan in esecuzione | discuss-phase 5 ✅ done; plan-phase 5 in dispatch |
 | Plan progress F4 | **9 / 9 (✅ COMPLETE)** — 04-01..04-09 done |
 | Plan progress globale | 45 / 46+ (Phase 5+6 ancora da pianificare; 46 = baseline pre-F5) |
 | Mode GSD | yolo + auto_advance + parallelization (sequential exec, no worktree) |
 | Modello attivo | `claude-opus-4-7-1` (opus) — override esplicito su tutti i sub-agent |
 
-## Ultimo step completato (auto-update 2026-05-04 fine plan 04-09)
+## Ultimo step completato (auto-update 2026-05-04 — discuss-phase 5)
 
-- Plan: **04-09** → final gate F4 (5 commits + SUMMARY.md)
-- Commit: vedi serie `761e4ad` test coverage doc + `3c01b73` style biome cleanup F4 + `7014380` docs README Realtime SSE/WS section + `e7638f9` docs JSDoc API pubblica + final docs commit closure
-- Phase progress: **9/9** plan completati con SUMMARY.md (✅ Phase 4 COMPLETE)
-- Project progress: 45/46 plan (Phase 4 chiusa, Phase 5+6 ancora da pianificare)
-- Open issue PRD §39 #9 (RT-07) chiuso in DOC-04 README
+- Step: **gsd-discuss-phase 5 --chain** completato
+- Output: `.planning/phases/05-worker-runtime/05-CONTEXT.md` + `05-DISCUSSION-LOG.md`
+- Decisioni lockate: **34 nuove** (D-121..D-154) coprono topology, worker source, pool strategy, cancellation, progress, serialization, route policies, module loading, test strategy, final gate
+- Aree discusse: 7/7 (Worker source contract, Pool strategy default, Cancellation semantics, Progress events API, assertSerializable gating, Route worker policy inheritance, Worker module loading)
+- Plan precedente: 04-09 (Phase 4 chiusa) — `a425501`
+- Phase 4 progress: **9/9** plan completati
+- Project progress: 45/46 plan (98%) — Phase 5 in apertura
+
 
 ## Prossimo step
 
-**Avvio Phase 5 (Worker Runtime):**
+**Auto-advance via `--chain` flag attivo:**
 
 ```
-Skill: gsd-discuss-phase 5 --research
-```
-o
-```
-Skill: gsd-plan-phase 5 --research
+Skill: gsd-plan-phase 5 --auto
 ```
 
-Plan da eseguire (TBD, da pianificare):
+Phase 5 in entry-point auto:
 - WK-01..WK-07 da REQUIREMENTS.md
-- Comlink + WorkerBridge, structuredClone default, WK-07 chiude PRD §39 #11 (serializzazione messaggi worker)
-- F5 e F4 sono ortogonali — F5 può iniziare in qualsiasi momento dopo Phase 3
+- WorkerBroker = composition wrapper di RouterBroker (D-121, D-83 strict carryover)
+- Comlink 4.4.x + structuredClone default + transferable opt-in (WK-07 chiude PRD §39 #11)
+- Pool bounded `min(hardwareConcurrency, 4)` cap 8 default (D-127, D-128)
+- Hybrid cancellation: dedicated→terminate, pool→cooperative AbortSignal proxied via Comlink (D-131, D-132)
+- State machine atomico Pitfall 2C (D-133)
+- Hybrid Comlink expose + dispatcher utility (D-125)
+- F5 ortogonale a F4 (utente sceglie un entry point o compone esplicitamente)
 
 Wave struttura globale F4 (RIEPILOGO CHIUSURA):
 - ✅ Wave 1: 04-01 (bootstrap) — DONE 2026-05-04
@@ -82,6 +86,8 @@ Phase 4 closure highlights:
 - **Auto-advance attivo:** discuss → plan → execute → verify automatico senza chiedere conferma.
 
 ## Decisioni recenti rilevanti
+
+- **Phase 5 CONTEXT.md scritto ✓ (discuss-phase 5 --chain)** — 34 decisioni D-121..D-154 lockate. Topology: composition wrapper `WorkerBroker(RouterBroker)` D-121 (D-83 strict carryover, F5 vive solo in `packages/worker/src/`). F4 e F5 ortogonali — utente sceglie un entry point o compone esplicitamente `createWorkerBroker(createRealtimeBroker(config))` con `RouterBroker` base condivisa. Worker source: Factory `() => Worker` lazy + tasks dichiarate esplicite (fail-fast `worker.task.unknown` al register) + hybrid Comlink expose + `createTaskDispatcher` utility (D-123, D-124, D-125) + top-level `registerWorker` + `PluginDescriptor.workers` declaration merging (D-126). Pool: bounded `min(hwc, 4)` cap hard 8 default (D-127, D-128) + lazy first-dispatch (D-129) + F3 BackpressureStrategy riusata 1:1 (D-130). Cancellation hybrid: dedicated→`worker.terminate()`, pool→cooperative `__cancel__` + `cancelGraceMs=2000ms` + AbortSignal proxied via Comlink (D-131, D-132) + state machine atomico `Map<TaskId, TaskState>` ignora response post-timeout (Pitfall 2C strict, D-133) + `correlationId` end-to-end (D-134). Progress: Comlink callback proxy `task(args, signal, onProgress)` con schema canonical `{ value, message?, partialResult? }` + adapter-level `progressThrottleMs=100` + passa per mapper (D-135..D-138). Serialization: `assertSerializable` dev-mode auto + opt-out via `BrokerConfig.workers.assertSerializable` (D-139) + throw `BrokerError('worker.serialization.failed')` PRE-postMessage con fieldPath (D-140) + transferable JSONPath-like array `['payload.audioBuffer', 'payload.images[*].buffer']` (D-141) + WK-07 closure DOC-04+DOC-05 (D-142). Route policies subset: timeout(30s) + concurrency('latest-only') + backpressure + dedupe; NO retry/auth/circuitBreaker (D-143, D-144, D-145). Topic naming hybrid auto-derive + override (D-146). Module loading: ESM default + classic opt-in via `workerType: 'classic'` (D-147, opt-in extension a PRD §31.3) + `new URL(..., import.meta.url)` pattern (D-148). Test 3-tier (D-149, D-150) + 10 scenari obbligatori (D-151) + final gate F5 simile 04-09 (D-154). Topics reservati `__cancel__`/`__progress__` (analog F4 D-111 `__ping__`/`__pong__`).
 
 - **Plan 04-09 ESEGUITO ✓ (Wave 6 — Final gate F4 — Phase 4 CHIUSA)** — Final gate F4 completato in 5 commits atomic: `761e4ad` test coverage thresholds documentation post-implementation (sse-ws/ subset 91.80% statements / 86.70% branches / 89.53% functions / 93.75% lines, supera target ≥85/75/88/87 — thresholds globali invariati per non rompere CI di sviluppi in corso che potrebbero introdurre defensive try/catch nel sub-modulo /http). `3c01b73` style biome auto-format su 19 file sse-ws/ + 2 lint fix manuali (frame-parser.ts: biome-ignore lint/complexity/useLiteralKeys per `obj['topic']`/`obj['data']`/`obj['id']` su `Record<string,unknown>` — `noPropertyAccessFromIndexSignature` TS strict richiede bracket access; realtime-broker.ts: `disconnectRealtime` rimosso `return` su void chain — lint/correctness/noVoidTypeReturn). `7014380` docs README Realtime SSE/WS section +298 LOC italiano: 14 sub-paragrafi (Quick start, Auth patterns D-104/D-105 4 strategie, Frame envelope D-106 con Q2 closure category 'protocol' nel payload, SSE custom event types W-4 SC-1, SSE heartbeat hook B-5 Q5, Reconnect contract RT-05 + Last-Event-ID query string + system.realtime.* + Q3 consolidationMs, Ping/pong WS D-111 strict-match Q1, Auto-fallback D-107+D-108 caveat path differenti V1, Visibility-aware D-110, Cascade cleanup D-112 LIFE-02 ext F4, Backpressure adapter-level D-115 riuso F3, Mapper+Validation D-114+D-116 W-2 closure scenario meteo, Test 3-tier D-118 B-1 closure, Limitazioni V1 + Q1-Q6 closure rationale). `e7638f9` docs JSDoc API pubblica TypeDoc-ready: 5 file public arricchiti con @see/@throws/@param (RealtimeBroker class header con 3 @example + 3 @see; createRealtimeBroker con @example + @throws + 2 @see; SseAdapter/WebSocketAdapter/RealtimeChannelManager con @example + cross-references; build verifica preservation in dts: 12 @example + 21 @see in `dist/sse-ws/index.d.ts`). Final docs commit (REQUIREMENTS/ROADMAP/STATE/TRACKER + SUMMARY 04-09). REQ flip: RT-01..RT-07 + ERR-02 ext + LIFE-02 ext F4 + TEST-01/02/03 ext F4 → Complete. **PRD §39 #9 (RT-07) chiuso** in DOC-04. Test invariato 222/225 gateway + 756/759 monorepo (no regression). D-83 strict carryover ✓ verified `git diff packages/{core,mapper,routing}/src/ packages/gateway/src/http/` zero hits per tutta F4 (verificato dal first commit Phase 4 `d090a1b` parent). Phase 4 ready for gsd-verifier; Phase 5 (Worker Runtime, parallelizzabile con F4) can start.
 
