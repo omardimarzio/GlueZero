@@ -80,9 +80,16 @@ export {
   type WorkerPoolSnapshot,
 } from './worker-pool'
 
-// ---------- Wave 3-A plan 05-04 + Wave 4 plan 05-06 (placeholder — file ownership 05-04/05-06) ----------
-// W3-A (plan 05-04 — owned):
-//   export { WorkerBridge, type WorkerBridgeDeps } from './worker-bridge'
+// ---------- W3-A plan 05-04 — WorkerBridge Comlink wrap + lifecycle (D-124/129/131/132/135/137/139/140/141) ----------
+export {
+  WorkerBridge,
+  type ComlinkAdapter,
+  type WorkerBridgeDeps,
+  type WorkerBridgeDispatchOptions,
+  type WorkerBridgeSnapshot,
+} from './worker-bridge'
+
+// ---------- Wave 4 plan 05-06 (placeholder — file ownership 05-06) ----------
 // W4 (plan 05-06):
 //   export { createWorkerBroker } from './public-factory'
 //   export { WorkerBroker, type WorkerBrokerConfig } from './worker-broker'

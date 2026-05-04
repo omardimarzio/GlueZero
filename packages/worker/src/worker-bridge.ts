@@ -58,7 +58,7 @@
 //   Idempotente (Test 11).
 
 import * as Comlink from 'comlink'
-import { createBrokerError, isBrokerError, type BrokerError } from '@sembridge/core'
+import { createBrokerError, type BrokerError } from '@sembridge/core'
 
 import { assertSerializable } from './assert-serializable'
 import { extractTransferables } from './transferable-extractor'
@@ -627,6 +627,3 @@ function makeThrottledOnProgress(
   }
 }
 
-// Re-export type narrow per consumer test che vuole isBrokerError check.
-// Evita import circolare: `BrokerError` è già export-ed da `@sembridge/core`.
-export { isBrokerError }
