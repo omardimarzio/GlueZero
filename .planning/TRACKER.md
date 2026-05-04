@@ -32,10 +32,10 @@ session_active: true
 | Mode GSD | yolo + auto_advance + parallelization (sequential exec, no worktree) |
 | Modello attivo | `claude-opus-4-7-1` (opus) — override esplicito su tutti i sub-agent |
 
-## Ultimo step completato (auto-update 2026-05-04T23:48:00Z)
+## Ultimo step completato (auto-update 2026-05-04T21:55:40Z)
 
 - Plan: **05-06** → SUMMARY.md committed
-- Commits: `4717a2e feat WorkerHandler` + `e117332 feat WorkerBroker composition wrapper Opzione B` + `6141eba test 8 integration` + `ff3d694 test Tier-3 Playwright`
+- Commit: `e432dd7 docs(05-06): SUMMARY Wave 4 composition wrapper Opzione B + integration test 3-tier`
 - Phase progress: **6/7** plan completati con SUMMARY.md
 - Project progress: 51/53 plan (96%)
 
