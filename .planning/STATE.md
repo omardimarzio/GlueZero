@@ -2,8 +2,8 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: executing
-last_updated: "2026-05-04T15:39:49.406Z"
+status: verifying
+last_updated: "2026-05-04T16:03:33.859Z"
 progress:
   total_phases: 6
   completed_phases: 3
@@ -27,22 +27,22 @@ progress:
 
 ## Current Position
 
-Phase: 04 (Realtime inbound (SSE prioritario, WS opzionale)) — EXECUTING
-Plan: 9 of 9 (next, Wave 6 — 04-09 final gate publint/attw/size-limit)
+Phase: 04 (Realtime inbound (SSE prioritario, WS opzionale)) — ✅ COMPLETE — ready for verification
+Plan: 9 of 9 (last) — 04-09 final gate done
 Total Plans: 9 (Phase 4)
 
-**Last completed:** Plan 04-08 (Wave 5 — RealtimeBroker composition + integration tests Tier-1/2/3) at 2026-05-04 — 4 commits atomic (`c436293` RED test + `2d3417e` GREEN feat broker+factory + `48acfae` feat harness + `ccedd3a` test integration+barrel); 18 nuovi file ~1620 LOC (realtime-broker.ts 296 + realtime-broker.test.ts 220 + public-factory.ts 123 + public-factory.test.ts 64 + realtime-harness.ts 223 + 11 integration test files + 1 browser smoke). RealtimeBroker composition wrapper di RouterBroker (D-101 + D-83 strict — verified live: RouterBroker.publish accetta options.source/id) + createRealtimeBroker public factory (D-30 + Valibot safeParse, prefix "Invalid RealtimeBrokerConfig") + createRealtimeHarness fixture (subscribe wildcard multi-depth W-3 closure + byChannelName routing B-2/B-NEW-2 closure). 14 integration test 3-tier: Tier-1 jsdom 8 file 13 test passing (B-2/B-3/B-4/D-110/D-112/D-115/W-1/W-5 closure), Tier-2 MSW 3 file describe.skip V1.x deferred (jsdom no native EventSource per RT-07 round-trip), Tier-3 Playwright real Chromium 1 test attivo (W-NEW-1 EventSource API verified). Vitest 4.x browser provider API change: `provider: playwright()` factory + devDeps `@vitest/browser 4.1.5` + `@vitest/browser-playwright 4.1.5` + msw 2.13.6. `vitest.config.ts` exclude `**/__browser__/**` (W-NEW-3 closure). Test totale: 222/225 gateway (3 skip MSW V1.x); 756/759 monorepo (core 248 + mapper 183 + routing 103 + gateway 222). Build OK: `dist/sse-ws/{index,augment}.{js,d.ts}` con `createRealtimeBroker` esportato. D-83 strict ✓ (zero modifiche fuori `gateway/src/sse-ws/` — solo config build/test in `gateway/{vitest.config.ts,vitest.browser.config.ts,package.json}`).
+**Last completed:** Plan 04-09 (Wave 6 — Final gate F4) at 2026-05-04 — 5 commits atomic: `761e4ad` test coverage thresholds documentation + `3c01b73` style biome cleanup F4 sse-ws (19 files auto-format + 2 lint fixes — useLiteralKeys ignore on Record<string,unknown> bracket access + noVoidTypeReturn) + `7014380` docs README Realtime SSE/WS section (DOC-04 + RT-07 closure PRD §39 #9, +298 LOC italiano) + `e7638f9` docs JSDoc API pubblica (TypeDoc-ready @see/@throws/@param su 5 file public — RealtimeBroker, createRealtimeBroker, SseAdapter, WebSocketAdapter, RealtimeChannelManager) + final docs commit (REQUIREMENTS/ROADMAP/STATE/TRACKER + SUMMARY). Coverage v8 sse-ws/ subset: 91.80% statements / 86.70% branches / 89.53% functions / 93.75% lines (supera target ≥85/75/88/87). CI gates: publint ✅, attw ESM-only ✅, biome ✅ zero errors, typecheck ✅, build ✅ (`dist/sse-ws/{index,augment}.{js,d.ts}` + `createRealtimeBroker` esportato). Test totale invariato 222/225 gateway + 756/759 monorepo (no regression). D-83 strict carryover ✓ verified `git diff packages/{core,mapper,routing}/src/ packages/gateway/src/http/` zero hits per tutta F4. RT-01..RT-07 + ERR-02 ext + LIFE-02 ext F4 + TEST-01/02/03 ext F4 closed. **Open issue PRD §39 #9 (RT-07) chiuso** in DOC-04: Last-Event-ID via query string per SSE + ping/pong applicativo per WS + sezione completa Realtime SSE/WS con 14 sub-paragrafi italiani.
 
-**Next:** `/gsd-execute-phase 4` Wave 6 — Plan 04-09 (final gate publint/attw/size-limit + DOC-04 update).
+**Next:** `/gsd-discuss-phase 5` per avviare Phase 5 (Worker Runtime — WK-01..WK-07). Phase 5 e Phase 6 ancora da fare; Phase 4 è ready per gsd-verifier.
 
-- **Phase:** 3 ✅ COMPLETE
-- **Status:** Ready to execute
-- **Progress:** [██████████] 98%
+- **Phase:** 4 ✅ COMPLETE
+- **Status:** Phase complete — ready for verification
+- **Progress:** [██████████] 98% globale (45/46 plan; Phase 5 + Phase 6 ancora da fare)
 
 ## Phases Overview
 
 - **Total phases:** 6 (allineate 1:1 con PRD §32)
-- **Phases complete:** [1 — Core essenziale]
+- **Phases complete:** [1 — Core essenziale; 2 — Canonical Model & Mapper; 3 — Routing & Server Gateway HTTP; 4 — Realtime inbound (SSE prioritario, WS opzionale)]
 - **Granularity:** coarse
 - **Coverage:** 91/91 requisiti v1 mappati
 
@@ -51,7 +51,7 @@ Total Plans: 9 (Phase 4)
 | 1 | Core essenziale (broker pub/sub, plugin registry, EventTap pre-instrumentato) | **✅ COMPLETE & VERIFIED (11/11 plans, PASS confidence HIGH)** |
 | 2 | Canonical Model & Mapper bidirezionale + Mapping Inspector | **✅ COMPLETE — ready for verifier (12/12 plans)** |
 | 3 | Routing engine + HTTP gateway con retry/timeout/dedupe/auth | **✅ COMPLETE — ready for verifier (14/14 plans, 4 open issues PRD §39 closed)** |
-| 4 | Realtime inbound (SSE prioritario, WS opzionale) | **In Progress — 7/9 plans (04-01 Wave 1 + 04-02..04-04 Wave 2 + 04-05+04-06 Wave 3 SSE+WS adapters + 04-07 Wave 4 RealtimeChannelManager done; 04-08 RealtimeBroker next — Wave 5)** |
+| 4 | Realtime inbound (SSE prioritario, WS opzionale) | **✅ COMPLETE — ready for verifier (9/9 plans, 1 open issue PRD §39 #9 closed)** |
 | 5 | Worker Runtime (registry, route worker, task tracking) | Not started |
 | 6 | Cache + Tooling avanzato (Inspector, Metrics, debug API) | Not started |
 
@@ -98,6 +98,8 @@ Total Plans: 9 (Phase 4)
 | Phase 04 P05 | ~15min | 2 tasks | 3 files (sse-adapter.{ts,test.ts} + test-utils/mock-event-source.ts; 876 LOC; 14/14 test PASS, 694/694 monorepo, anti-AP-2/3 ✓, D-83 strict ✓) |
 | Phase 04 P06 | ~15min | 2 tasks | 3 files (websocket-adapter.{ts,test.ts} + test-utils/mock-websocket.ts; 1116 LOC; 15/15 test PASS, 709/709 monorepo, anti-AP-2/3/6 ✓ + AP-4 implicito, D-83 strict ✓) |
 | Phase 04 P07 | ~25min | 1 task TDD | 2 files (realtime-channel-manager.{ts,test.ts} 1067 LOC; 16/16 test PASS, 191/191 gateway, 725/725 monorepo, anti-AP-3/11 ✓, D-83 strict ✓; B-4 closure D-107 auto-fallback effettivo + cycle-cap; B-NEW-1 fix interface 04-03 strict) |
+| Phase 04 P08 | ~40min | 4 commits TDD | 18 files (realtime-broker.ts 296 + test 220 + public-factory.ts 123 + test 64 + realtime-harness.ts 223 + 11 integration test files + 1 browser smoke; ~1620 LOC; 222/225 gateway 3 skip MSW V1.x; 756/759 monorepo full; vitest 4.x browser provider API + Playwright Chromium binary install; D-83 strict ✓; W-1/W-3/W-5/B-2/B-3/B-4/B-NEW-2/D-118 3-tier closure) |
+| Phase 04 P09 | ~30min | 5 commits | 8 files (vitest.config.ts coverage doc + 19 sse-ws/ biome auto-format + README +298 LOC italiano sezione Realtime SSE/WS + 5 file JSDoc API pubblica + REQUIREMENTS/ROADMAP/STATE/TRACKER closure F4; coverage v8 sse-ws subset 91.80/86.70/89.53/93.75; CI gates publint+attw+lint+typecheck+build all ✅; D-83 strict carryover ✓ verified zero hits; RT-01..RT-07 → Complete; PRD §39 #9 closed) |
 
 ## Accumulated Context
 
@@ -206,7 +208,7 @@ Total Plans: 9 (Phase 4)
 | Più route applicabili stesso topic | F3 (ROUTE-15) | **Closed runtime in 03-05** (3 strategy first-match/priority-ordered/all + AmbiguousRouteEvent callback dev-mode; publish 'routing.ambiguous' come BrokerEvent in 03-12 RouterBroker) |
 | Unsubscribe automatico in `unregisterPlugin` | F1 (LIFE-02) | **Closed in 01-08** (cascade D-26 deterministico + createPluginScopedBroker wrapper) |
 | Retry 4xx vs 5xx | F3 (ROUTE-09) | **Closed in 03-09** (ExponentialBackoffWithJitter D-69: 4xx no-retry eccetto 408/429; 5xx + 408 + 429 + network → retry; full jitter formula + Retry-After priority + cap MAX_BACKOFF_MS) |
-| Reconnection rules realtime | F4 (RT-07) | Pending |
+| Reconnection rules realtime | F4 (RT-07) | **Closed in 04-09** ✅ (DOC-04 README documenta Last-Event-ID via query string per SSE + ping/pong applicativo per WS + reconnect contract full jitter + system.realtime.* eventi standard + auto-fallback SSE→WS D-107) |
 | Format metriche | F6 (TOOL-05) | Pending |
 | Serializzazione messaggi worker | F5 (WK-07) | Pending |
 

@@ -67,11 +67,11 @@ Tutti i requisiti elencati sono table stakes (vincolanti dalla checklist PRD §4
 
 ### Realtime Inbound (Fase 4)
 
-- [ ] **RT-01**: Adapter SSE (`Server-Sent Events`) per inbound server → browser *(PRD §18.2, §18.3)*
+- [x] **RT-01**: Adapter SSE (`Server-Sent Events`) per inbound server → browser *(PRD §18.2, §18.3)*
 - [x] **RT-02**: Adapter WebSocket (in V1 almeno uno tra SSE e WS deve essere disponibile e funzionante) *(PRD §18.2)*
-- [ ] **RT-03**: `connectRealtime()` e `disconnectRealtime()` API pubbliche *(PRD §16.2)* — manager API esposte in 04-07; consumer-facing API verrà esposta dal RealtimeBroker in 04-08
-- [ ] **RT-04**: Messaggi server convertiti in eventi interni con `source: { type: 'server', id: 'realtime-channel', name: 'sse'|'websocket' }` *(PRD §18.5)*
-- [ ] **RT-05**: Reconnection policy configurabile: retry interval, exponential backoff, max retry, heartbeats, stale connection detection, jitter *(PRD §18.6)* — orchestratore runReconnectLoop completato in 04-07; consumer wiring in 04-08
+- [x] **RT-03**: `connectRealtime()` e `disconnectRealtime()` API pubbliche *(PRD §16.2)* — esposte da RealtimeBroker (plan 04-08); manager.connect/disconnect/disconnectByOwner (plan 04-07)
+- [x] **RT-04**: Messaggi server convertiti in eventi interni con `source: { type: 'server', id: 'realtime-channel', name: 'sse'|'websocket' }` *(PRD §18.5)*
+- [x] **RT-05**: Reconnection policy configurabile: retry interval, exponential backoff, max retry, heartbeats, stale connection detection, jitter *(PRD §18.6)* — full jitter D-109 (plan 04-03) + heartbeat/stale (plan 04-05/06) + visibility (plan 04-04) + runReconnectLoop orchestrator (plan 04-07)
 - [x] **RT-06**: Normalizzazione payload inbound dal server verso il modello canonico *(PRD §18.1)*
 - [x] **RT-07**: Regole di riconnessione realtime documentate (Last-Event-ID per SSE, ping app-level per WS) *(PRD §39 — open issue da chiudere)*
 
@@ -246,13 +246,13 @@ Mappatura definitiva REQ-ID → fase. Ogni requisito è assegnato alla **prima f
 
 | Requirement | Phase | Status | Note |
 |-------------|-------|--------|------|
-| RT-01 | Phase 4 | In Progress (04-05 SseAdapter ✓ + 04-07 manager registry+runReconnectLoop ✓; pending consumer API integration 04-08) | SSE prioritario V1 — manager dispatch SseAdapter mode='sse'\|'auto' default, runReconnectLoop orchestra recovery |
-| RT-02 | Phase 4 | Complete (04-06 WebSocketAdapter ✓ — wrapper WebSocket + envelope JSON D-106 + ping/pong D-111 + scheme switch D-107 + close codes RFC 6455 + bufferedAmount cap RESEARCH §4.4 + wsSubprotocols Q4) | WebSocket adapter production-ready 583 LOC source + 341 LOC test + 192 LOC mock; 15/15 test PASS; anti-AP-3/AP-6 0 |
-| RT-03 | Phase 4 | In Progress (04-07 manager.connect/disconnect/disconnectByOwner API esposte ✓; pending RealtimeBroker.connectRealtime/disconnectRealtime consumer-facing API 04-08) | Manager API: `connect(def, ownerId='system')` + `disconnect(name?)` + `disconnectByOwner(ownerId, reason?)` + `getDebugInfo()` + `checkFreshnessAll()` — 16/16 test PASS |
-| RT-04 | Phase 4 | In Progress (04-05 SSE source descriptor ✓ + 04-06 WS source descriptor ✓ + 04-07 manager publishSystem helper ✓; pending mapper integration 04-08) | source: { type: 'server', id: 'realtime-channel', name: 'sse'\|'websocket' } applicato (Test 4 in 04-06: source.name='websocket'); manager 04-07 emette system.realtime.* con source.name='manager' per distinguere |
-| RT-05 | Phase 4 | In Progress (04-03 reconnect-strategy ✓ + 04-04 visibility-detector ✓ + 04-05 SseAdapter checkFreshness ✓ + 04-06 WS heartbeat ping/pong + stale detection ✓ + 04-07 manager runReconnectLoop ORCHESTRATOR ✓; pending consumer wiring 04-08) | Full jitter + cap 30s + heartbeat 30s/staleTimeout 60s + ping/pong app-level (D-111) + bufferedAmount cap 64KB (RESEARCH §4.4) + close codes routing RFC 6455 §7.4 — runReconnectLoop B-4 closure: nextDelayMs/clock.sleep/shouldFallback/fallback/recordSuccess/recordFailure orchestrato (Test 13/14/15) + cycle-cap exceeded → publish system.realtime.failed |
-| RT-06 | Phase 4 | In Progress (04-05 SSE topic validation regex F1 ✓ + 04-06 WS envelope JSON D-106 + parseFrame strict ✓; pending mapper integration 04-08) | Mapper server→canonical (riusa F2) — payload tryParseJson done in 04-05; envelope JSON `{topic,data,id?}` strict in 04-06 (Test 5/6/7/15) |
-| RT-07 | Phase 4 | In Progress (04-05 SSE Last-Event-ID via query string ✓ + 04-06 WS ping/pong app-level + stale detection ✓; pending DOC-04 04-09) | **Closes PRD §39 #9**: Last-Event-ID injection manuale via `?lastEventId=` (D-105) per SSE; ping/pong applicativo `{topic:'__ping__\|__pong__'}` envelope JSON D-111 per WS — Test 4/8/9/10 verificano heartbeat send + lastPongAt update + stale watchdog |
+| RT-01 | Phase 4 | Complete (plan 04-09) | SSE prioritario V1 — `SseAdapter` (plan 04-05) + manager dispatch mode='sse'\|'auto' default, runReconnectLoop orchestra recovery (plan 04-07) |
+| RT-02 | Phase 4 | Complete (plan 04-09) | WebSocket adapter production-ready (plan 04-06) — wrapper WebSocket + envelope JSON D-106 + ping/pong D-111 + scheme switch D-107 + close codes RFC 6455 + bufferedAmount cap RESEARCH §4.4 + wsSubprotocols Q4 |
+| RT-03 | Phase 4 | Complete (plan 04-09) | `RealtimeBroker.connectRealtime/disconnectRealtime` consumer-facing API (plan 04-08); manager API `connect(def, ownerId='system')` + `disconnect(name?)` + `disconnectByOwner(ownerId, reason?)` + `getDebugInfo()` + `checkFreshnessAll()` (plan 04-07) |
+| RT-04 | Phase 4 | Complete (plan 04-09) | source: { type: 'server', id: 'realtime-channel', name: 'sse'\|'websocket' } applicato (D-113); SSE source plan 04-05; WS source plan 04-06; pipeline §28 step 1 ingress preserva source end-to-end (W-1 closure plan 04-08) |
+| RT-05 | Phase 4 | Complete (plan 04-09) | Full jitter D-109 (plan 04-03) + cap 30s + heartbeat 30s/staleTimeout 60s + ping/pong app-level D-111 (plan 04-06) + visibility (plan 04-04) + bufferedAmount cap 64KB (RESEARCH §4.4) + close codes routing RFC 6455 §7.4 — runReconnectLoop B-4 closure (plan 04-07): nextDelayMs/clock.sleep/shouldFallback/fallback/recordSuccess/recordFailure orchestrato + cycle-cap exceeded → publish system.realtime.failed |
+| RT-06 | Phase 4 | Complete (plan 04-09) | Mapper server→canonical riuso F2/F3 invariato (D-114, plan 04-08): adapter publishFn → `inner.publish` → pipeline §28 step 4-6 applica MapperEngine F2 senza logica F4 specifica; envelope JSON `{topic,data,id?}` strict in 04-06 (Test 5/6/7/15); validation invariata D-116 (plan 04-09 W-2 closure) |
+| RT-07 | Phase 4 | Complete (plan 04-09) | **Closes PRD §39 #9**: Last-Event-ID injection manuale via `?lastEventId=` (D-105) per SSE — plan 04-05 Test 6; ping/pong applicativo `{topic:'__ping__\|__pong__'}` envelope JSON D-111 per WS — plan 04-06 Test 4/8/9/10. DOC-04 plan 04-09 documenta esplicitamente entrambi pattern + server middleware example |
 
 ### Worker Runtime — Fase 5
 
@@ -293,19 +293,19 @@ Mappatura definitiva REQ-ID → fase. Ogni requisito è assegnato alla **prima f
 | VAL-08 | Phase 2 | Complete | **Closes PRD §39 #3**: `required: true|false` per campo |
 | VAL-09 | Phase 2 | Complete | **Closes PRD §39 #4**: `onFailure: 'block' | 'skip' | 'fallback'` |
 | ERR-01 | Phase 1 | Done (plan 01-04) | `createBrokerError(params)` factory + `isBrokerError(value)` type guard in `core/broker-error.ts` — ES2022 cause, conditional assignment per `exactOptionalPropertyTypes`, 9/9 test passing |
-| ERR-02 | Phase 2 | Complete | F2: `mapping.error`, F3: `<topic>.failed`+`network.error`, F4: `system.realtime.*`, F5: `worker.error` |
+| ERR-02 | Phase 2 | Complete | F2: `mapping.error`, F3: `<topic>.failed`+`network.error`, F4: `system.realtime.connected/disconnected/reconnecting/failed` (closed in plan 04-09), F5: `worker.error` |
 | ERR-03 | Phase 1 | Done (plan 01-07) | Errori isolati nel dispatch loop di `EventBus.deliver()`: ogni handler ha il suo try/catch indipendente; eccezione di un handler NON propaga al loop (gli altri handler ricevono comunque l'evento). 25 test verificano l'invariant. |
 | PIPE-01 | Phase 1 (skeleton) | Complete | Estesa da F2 (step 4-6, 11-12), F3 (step 7-10), F6 (step 14 reale) |
 | LIFE-01 | Phase 1 | Done (plan 01-08) | `Broker.subscribe()` ritorna `Subscription` con `.unsubscribe()` idempotente. Plugin smontabili senza leak via `unregisterPlugin(id)` cascade D-26. F4 estenderà a listener realtime; F5 a MessageChannel worker. |
-| LIFE-02 | Phase 1 | Done (plan 01-08) | **Closes PRD §39 #7**: cascade D-26 deterministico in `unregister(id)` — `bus.unsubscribeByOwner` → `abortController.abort()` → `onUnmount` → `onDestroy`. `createPluginScopedBroker` wrapper auto-tagga subscriptions per garantire enforcement F1. Test `getDebugSnapshot()` post-unregister == baseline pre-registrazione. F3 estenderà a route, F4 a realtime, F5 a worker tasks. |
+| LIFE-02 | Phase 1 | Done (plan 01-08) | **Closes PRD §39 #7**: cascade D-26 deterministico in `unregister(id)` — `bus.unsubscribeByOwner` → `abortController.abort()` → `onUnmount` → `onDestroy`. `createPluginScopedBroker` wrapper auto-tagga subscriptions per garantire enforcement F1. Test `getDebugSnapshot()` post-unregister == baseline pre-registrazione. F3 cascade route via `RouterEngine.unregisterByOwner`; F4 cascade realtime via `RealtimeChannelManager.disconnectByOwner` (D-112, plan 04-07/04-08); F5 estenderà a worker tasks. |
 | SEC-01 | Phase 3 | Complete | — |
 | SEC-02 | Phase 3 | Complete | — |
 | SEC-03 | Phase 3 | Complete | Idempotency token |
 | SEC-04 | Phase 3 | Complete | http-handler emette BrokerError 'gateway.4xx'/'gateway.5xx' uniformi via response.status (D-80 shape) — plan 03-08 |
 | SEC-05 | Phase 3 | Complete | URL allowlist |
-| TEST-01 | Phase 1 (subset) | Done subset (plan 01-09) | PipelineHarness fixture + 8 integration test in `packages/core/src/__integration__/` coprono pub/sub, unsubscribe, wildcard, dedupe (skeleton), lifecycle cleanup deterministico (LIFE-02), event-tap 5 step F1, handler isolation, deep-freeze. 46 nuovi test passing. Estesa progressivamente F2-F6. |
-| TEST-02 | Phase 2 (subset) | Complete | F3 (server), F4 (reconnect), F5 (worker), F6 (cache) |
-| TEST-03 | Phase 1 (subset) | Done subset (plan 01-10) | 4 robustness test in `__integration__/`: storm.test (10000 publish FIFO + pendingAsyncDelivery=0), wildcard-perf.test (10000 sub matched < 50ms), plugin-fault.test (onMount throw → state failed, broker continua), concurrent-unregister.test (AbortSignal vs unregister race). Performance budget rispettati con ampi margini (storm 24ms / wildcard 11ms misurati). F3 estenderà a server malconfigurato, F4 a riconnessione ripetuta, F5 a worker timeout. |
+| TEST-01 | Phase 1 (subset) | Done subset (plan 01-09) + F4 ext (plan 04-08) | PipelineHarness fixture + 8 integration test in `packages/core/src/__integration__/` coprono pub/sub, unsubscribe, wildcard, dedupe (skeleton), lifecycle cleanup deterministico (LIFE-02), event-tap 5 step F1, handler isolation, deep-freeze. 46 nuovi test passing. F4 ext: 14 integration test 3-tier in `gateway/src/sse-ws/__integration__/` (Tier-1 jsdom + Tier-2 MSW V1.x deferred + Tier-3 Playwright Chromium). |
+| TEST-02 | Phase 2 (subset) | Complete | F3 (server), F4 (reconnect via `__integration__/sse-reconnect.test.ts` + `auto-fallback.test.ts` plan 04-08), F5 (worker), F6 (cache) |
+| TEST-03 | Phase 1 (subset) | Done subset (plan 01-10) + F4 ext (plan 04-08) | 4 robustness test in `__integration__/`: storm.test (10000 publish FIFO + pendingAsyncDelivery=0), wildcard-perf.test (10000 sub matched < 50ms), plugin-fault.test (onMount throw → state failed, broker continua), concurrent-unregister.test (AbortSignal vs unregister race). Performance budget rispettati con ampi margini (storm 24ms / wildcard 11ms misurati). F4 ext: riconnessione ripetuta via auto-fallback.test.ts (cycle-cap exceeded test). F5 estenderà a worker timeout. |
 | PKG-01 | Phase 1 (01-01 foundation, 01-02 build, 01-11 verify) | Baseline (tsup ESM-only configurato in 01-02; dist/index.js generato; full verify in 01-11) | tsup ESM-only (no CJS — dual-package hazard) |
 | PKG-02 | Phase 1 (01-01, 01-02) | Baseline (tsconfig.base.json strict + TS 6.0.3 in 01-01; tsconfig package extends in 01-02; tsc --noEmit exit 0) | TypeScript 6.0.3 (super-set di 5.5+) |
 | PKG-03 | Phase 1 (01-01, 01-02) | Baseline (target ES2022 in tsconfig.base.json; tsup target es2022 + platform browser in 01-02) | target ES2022 |
@@ -324,8 +324,9 @@ Mappatura definitiva REQ-ID → fase. Ogni requisito è assegnato alla **prima f
 
 **Open Issues PRD §39 chiusura:**
 - 11/11 mappate a fasi (#1 → F2, #2 → F1+F2+F3+F6, #3 → F2, #4 → F2, #5 → F3, #6 → F3, #7 → F1, #8 → F3, #9 → F4, #10 → F6, #11 → F5)
-- **Closed:** #7 (LIFE-02 — Phase 1 plan 01-08); **#1 (MAP-17 — Phase 2 plan 02-04 AliasRegistry: mapping esplicito vince sempre per costruzione contract; il mapper-engine plan 02-07 valuta livello 1 PRIMA di chiamare AliasRegistry.resolve)**
+- **Closed:** #7 (LIFE-02 — Phase 1 plan 01-08); #1 (MAP-17 — Phase 2 plan 02-04); #3 (VAL-08 — Phase 2 plan 02-07); #4 (VAL-09 — Phase 2 plan 02-05); #5 (ROUTE-16 — Phase 3 plan 03-12); #6 (ROUTE-15 — Phase 3 plan 03-05); #8 (ROUTE-09 — Phase 3 plan 03-09); **#9 (RT-07 — Phase 4 plan 04-09: Last-Event-ID injection via query string per SSE plan 04-05 + ping/pong applicativo per WS plan 04-06 + DOC-04 README sezione Realtime SSE/WS)**
+- **Open:** #2 (cross-fase pipeline ordering, F1+F2+F3+F6); #10 (TOOL-05 metrics format, F6); #11 (WK-07 worker serialization, F5)
 
 ---
 *Requirements defined: 2026-04-28*
-*Last updated: 2026-04-28 after Plan 01-03 completion (CORE-05/06/07/10/13/14, ERR-01, VAL-06 → Type-defined)*
+*Last updated: 2026-05-04 after Phase 4 closure (plan 04-09): RT-01..RT-07 all Complete + chiusura PRD §39 #9 (RT-07 reconnection rules realtime documentate)*
