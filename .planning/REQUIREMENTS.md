@@ -77,13 +77,13 @@ Tutti i requisiti elencati sono table stakes (vincolanti dalla checklist PRD §4
 
 ### Worker Runtime (Fase 5)
 
-- [ ] **WK-01**: Worker Registry con creazione/riuso di worker dedicati o pool *(PRD §19.3)*
-- [ ] **WK-02**: Tipo route `worker` con `worker`, `task`, `publishes.success`, `publishes.error` *(PRD §17.2, §17.5)*
-- [ ] **WK-03**: Task correlation (correlazione task ↔ evento risultante) *(PRD §19.3)*
-- [ ] **WK-04**: Propagazione errori worker → broker tramite eventi *(PRD §19.3, §22.3)*
-- [ ] **WK-05**: Pubblicazione eventi `<topic>.completed`, `<topic>.progress`, `<topic>.failed` *(PRD §12.2, §19.4)*
-- [ ] **WK-06**: Timeout task configurabile e cancellazione task *(PRD §19.3)*
-- [ ] **WK-07**: Serializzazione messaggi worker documentata (formato + contratto, structuredClone vs transferable) *(PRD §39 — open issue da chiudere)*
+- [x] **WK-01**: Worker Registry con creazione/riuso di worker dedicati o pool *(PRD §19.3)*
+- [x] **WK-02**: Tipo route `worker` con `worker`, `task`, `publishes.success`, `publishes.error` *(PRD §17.2, §17.5)*
+- [x] **WK-03**: Task correlation (correlazione task ↔ evento risultante) *(PRD §19.3)*
+- [x] **WK-04**: Propagazione errori worker → broker tramite eventi *(PRD §19.3, §22.3)*
+- [x] **WK-05**: Pubblicazione eventi `<topic>.completed`, `<topic>.progress`, `<topic>.failed` *(PRD §12.2, §19.4)*
+- [x] **WK-06**: Timeout task configurabile e cancellazione task *(PRD §19.3)*
+- [x] **WK-07**: Serializzazione messaggi worker documentata (formato + contratto, structuredClone vs transferable) *(PRD §39 — open issue da chiudere)*
 
 ### Cache + Tooling Avanzato (Fase 6)
 
@@ -140,7 +140,7 @@ Tutti i requisiti elencati sono table stakes (vincolanti dalla checklist PRD §4
 - [ ] **DOC-02**: Guida integrazione plugin *(PRD §41.4)*
 - [x] **DOC-03**: Documentazione canonical model + mapper *(PRD §41.5)* — skeleton README iniziale in 02-01; completamento finale al plan 02-12 (scenario meteo end-to-end, JSDoc API pubblica)
 - [x] **DOC-04**: Documentazione route engine + server gateway *(PRD §41.6)*
-- [ ] **DOC-05**: Esempi end-to-end (incluso scenario meteo PRD §29) *(PRD §41.8)*
+- [ ] **DOC-05**: Esempi end-to-end (incluso scenario meteo PRD §29) *(PRD §41.8)* — *In Progress F5 plan 05-07: worker section delivered (`packages/worker/README.md` italiano 11 sezioni con scenario report generation pesante PRD §29 esteso); full consolidamento F6 (cache + tooling)*
 - [ ] **DOC-06**: Documentazione debug tooling *(PRD §41.9)*
 
 ## v2 Requirements
@@ -258,13 +258,13 @@ Mappatura definitiva REQ-ID → fase. Ogni requisito è assegnato alla **prima f
 
 | Requirement | Phase | Status | Note |
 |-------------|-------|--------|------|
-| WK-01 | Phase 5 | Pending | Pool bounded `min(hardwareConcurrency, 4)` |
-| WK-02 | Phase 5 | Pending | — |
-| WK-03 | Phase 5 | Pending | `correlationId` end-to-end |
-| WK-04 | Phase 5 | Pending | — |
-| WK-05 | Phase 5 | Pending | — |
-| WK-06 | Phase 5 | Pending | State machine atomico timeout vs success |
-| WK-07 | Phase 5 | Pending | **Closes PRD §39 #11**: structuredClone default + transferable opt-in |
+| WK-01 | Phase 5 | Complete (plan 05-04 + 05-05 + 05-06) | `WorkerRegistry` Map<id, WorkerEntry> + `WorkerPool` bounded `min(hardwareConcurrency, 4)` cap hard 8 (D-127, D-128) + lazy first-dispatch (D-129) + cascade `unregisterByOwner` LIFE-02 ext F5 |
+| WK-02 | Phase 5 | Complete (plan 05-01 types + 05-06 broker) | `RouteWorkerDefinition` con `type: 'worker'`, `worker`, `task`, `publishes: { success?, progress?, error? }` (D-146 auto-derive), `transferable?` JSONPath (D-141), `policies` subset F3 (D-143) |
+| WK-03 | Phase 5 | Complete (plan 05-03 + 05-06) | `correlationId` end-to-end via `event.correlationId ?? event.id` propagato register→dispatch→outcome (D-134, nanoid 16-char in `task-tracker.ts`) |
+| WK-04 | Phase 5 | Complete (plan 05-04 + 05-06) | Sanitized error shape `{ code, category, message, routeId, topic, eventId, workerId, taskName }` — niente `originalError`/`stack`/`cause`. `worker.error` topic ext F5 (ERR-02 pattern F3 D-81 network.error) — `worker.unknown`/`worker.task.unknown`/`worker.timeout`/`worker.cancelled`/`worker.serialization.failed.<sub>` |
+| WK-05 | Phase 5 | Complete (plan 05-06) | `<topic>.completed`/`.progress`/`.failed` auto-derive D-146 in `worker-handler.ts` `deriveTopic` helper; override esplicito via `route.publishes.{success\|progress\|error}`. Progress passa per pipeline §28 mapper canonical (D-138) |
+| WK-06 | Phase 5 | Complete (plan 05-03 + 05-06) | State machine atomico CAS `Map<TaskId, TaskState>` 5-stati con `lateResponses` counter audit (D-133 Pitfall 2C closure deterministic via fake timer); cancellation hybrid dedicated `terminate()` / pool cooperative `AbortSignal` proxied via Comlink + grace 2000ms (D-131, D-132); timeout default 30000ms via `route.policies.timeout` (D-145) |
+| WK-07 | Phase 5 | Complete (plan 05-02 + 05-07 DOC-05) — **Closes PRD §39 #11** ✅ | structuredClone (SCA) default + `assertSerializable` deep-walk PRE-postMessage dev-mode auto + transferable opt-in JSONPath (D-139, D-140, D-141, D-142). DOC-05 `packages/worker/README.md` italiano 11 sezioni — Sezione 6 "Serialization contract WK-07" con tabella structuredClone supported types + tabella tipi NON supportati con strategia raccomandata + JSON.stringify NEVER warning + Pitfall 7.E transferable detached byteLength=0; Sezione 11 Q&A 15 domande lockate Phase 5 |
 
 ### Cache + Tooling Avanzato — Fase 6
 
@@ -293,19 +293,19 @@ Mappatura definitiva REQ-ID → fase. Ogni requisito è assegnato alla **prima f
 | VAL-08 | Phase 2 | Complete | **Closes PRD §39 #3**: `required: true|false` per campo |
 | VAL-09 | Phase 2 | Complete | **Closes PRD §39 #4**: `onFailure: 'block' | 'skip' | 'fallback'` |
 | ERR-01 | Phase 1 | Done (plan 01-04) | `createBrokerError(params)` factory + `isBrokerError(value)` type guard in `core/broker-error.ts` — ES2022 cause, conditional assignment per `exactOptionalPropertyTypes`, 9/9 test passing |
-| ERR-02 | Phase 2 | Complete | F2: `mapping.error`, F3: `<topic>.failed`+`network.error`, F4: `system.realtime.connected/disconnected/reconnecting/failed` (closed in plan 04-09), F5: `worker.error` |
+| ERR-02 | Phase 2 | Complete (F5 ext closed plan 05-06 + 05-07) | F2: `mapping.error`, F3: `<topic>.failed`+`network.error`, F4: `system.realtime.connected/disconnected/reconnecting/failed` (closed in plan 04-09), **F5: `worker.error` topic ext + `<topic>.failed` per route — sanitized payload `{ code, category, message, routeId, topic, eventId, workerId, taskName }` — codes: `worker.unknown`/`worker.task.unknown`/`worker.timeout`/`worker.cancelled`/`worker.serialization.failed.{function\|symbol\|dom-node\|custom-class}` (closed in plan 05-06+05-07)** |
 | ERR-03 | Phase 1 | Done (plan 01-07) | Errori isolati nel dispatch loop di `EventBus.deliver()`: ogni handler ha il suo try/catch indipendente; eccezione di un handler NON propaga al loop (gli altri handler ricevono comunque l'evento). 25 test verificano l'invariant. |
 | PIPE-01 | Phase 1 (skeleton) | Complete | Estesa da F2 (step 4-6, 11-12), F3 (step 7-10), F6 (step 14 reale) |
 | LIFE-01 | Phase 1 | Done (plan 01-08) | `Broker.subscribe()` ritorna `Subscription` con `.unsubscribe()` idempotente. Plugin smontabili senza leak via `unregisterPlugin(id)` cascade D-26. F4 estenderà a listener realtime; F5 a MessageChannel worker. |
-| LIFE-02 | Phase 1 | Done (plan 01-08) | **Closes PRD §39 #7**: cascade D-26 deterministico in `unregister(id)` — `bus.unsubscribeByOwner` → `abortController.abort()` → `onUnmount` → `onDestroy`. `createPluginScopedBroker` wrapper auto-tagga subscriptions per garantire enforcement F1. Test `getDebugSnapshot()` post-unregister == baseline pre-registrazione. F3 cascade route via `RouterEngine.unregisterByOwner`; F4 cascade realtime via `RealtimeChannelManager.disconnectByOwner` (D-112, plan 04-07/04-08); F5 estenderà a worker tasks. |
+| LIFE-02 | Phase 1 | Done (plan 01-08) + F5 ext closed (plan 05-05 + 05-06 + 05-07) | **Closes PRD §39 #7**: cascade D-26 deterministico in `unregister(id)` — `bus.unsubscribeByOwner` → `abortController.abort()` → `onUnmount` → `onDestroy`. `createPluginScopedBroker` wrapper auto-tagga subscriptions per garantire enforcement F1. Test `getDebugSnapshot()` post-unregister == baseline pre-registrazione. F3 cascade route via `RouterEngine.unregisterByOwner`; F4 cascade realtime via `RealtimeChannelManager.disconnectByOwner` (D-112, plan 04-07/04-08); **F5 cascade worker via `WorkerRegistry.unregisterByOwner` + `WorkerPool.terminateByOwner` 3-step (inner.unregisterPlugin + pool.terminateByOwner + registry.unregisterByOwner) idempotente con try/catch isolato — D-126 + D-131 (closed plan 05-05 + 05-06 + 05-07)**. |
 | SEC-01 | Phase 3 | Complete | — |
 | SEC-02 | Phase 3 | Complete | — |
 | SEC-03 | Phase 3 | Complete | Idempotency token |
 | SEC-04 | Phase 3 | Complete | http-handler emette BrokerError 'gateway.4xx'/'gateway.5xx' uniformi via response.status (D-80 shape) — plan 03-08 |
 | SEC-05 | Phase 3 | Complete | URL allowlist |
-| TEST-01 | Phase 1 (subset) | Done subset (plan 01-09) + F4 ext (plan 04-08) | PipelineHarness fixture + 8 integration test in `packages/core/src/__integration__/` coprono pub/sub, unsubscribe, wildcard, dedupe (skeleton), lifecycle cleanup deterministico (LIFE-02), event-tap 5 step F1, handler isolation, deep-freeze. 46 nuovi test passing. F4 ext: 14 integration test 3-tier in `gateway/src/sse-ws/__integration__/` (Tier-1 jsdom + Tier-2 MSW V1.x deferred + Tier-3 Playwright Chromium). |
-| TEST-02 | Phase 2 (subset) | Complete | F3 (server), F4 (reconnect via `__integration__/sse-reconnect.test.ts` + `auto-fallback.test.ts` plan 04-08), F5 (worker), F6 (cache) |
-| TEST-03 | Phase 1 (subset) | Done subset (plan 01-10) + F4 ext (plan 04-08) | 4 robustness test in `__integration__/`: storm.test (10000 publish FIFO + pendingAsyncDelivery=0), wildcard-perf.test (10000 sub matched < 50ms), plugin-fault.test (onMount throw → state failed, broker continua), concurrent-unregister.test (AbortSignal vs unregister race). Performance budget rispettati con ampi margini (storm 24ms / wildcard 11ms misurati). F4 ext: riconnessione ripetuta via auto-fallback.test.ts (cycle-cap exceeded test). F5 estenderà a worker timeout. |
+| TEST-01 | Phase 1 (subset) | Done subset (plan 01-09) + F4 ext (plan 04-08) + F5 ext (plan 05-02..05-06) | PipelineHarness fixture + 8 integration test in `packages/core/src/__integration__/` coprono pub/sub, unsubscribe, wildcard, dedupe (skeleton), lifecycle cleanup deterministico (LIFE-02), event-tap 5 step F1, handler isolation, deep-freeze. 46 nuovi test passing. F4 ext: 14 integration test 3-tier in `gateway/src/sse-ws/__integration__/` (Tier-1 jsdom + Tier-2 MSW V1.x deferred + Tier-3 Playwright Chromium). **F5 ext: 121 worker test Tier-1 jsdom (assert-serializable + transferable-extractor + task-tracker + worker-bridge + worker-pool + worker-registry + worker-broker + public-factory + worker-handler) + 6 browser smoke Tier-3 Playwright Chromium reale (D-150 + D-151 #7 transferable byteLength=0)**. |
+| TEST-02 | Phase 2 (subset) | Complete (F5 ext closed plan 05-06) | F3 (server), F4 (reconnect via `__integration__/sse-reconnect.test.ts` + `auto-fallback.test.ts` plan 04-08), **F5 (worker) closed plan 05-06: 8 integration test Tier-1 in `worker/src/__integration__/` (D-151 #1-#6 + #8 + #9: dedicated + pool-concurrent + timeout-strict + cancel-cooperative + cancel-hard + serialization-fail + cascade-cleanup + backpressure-storm) + 6 browser Tier-3 Playwright (D-151 #7)**, F6 (cache pending). |
+| TEST-03 | Phase 1 (subset) | Done subset (plan 01-10) + F4 ext (plan 04-08) + F5 ext (plan 05-06) | 4 robustness test in `__integration__/`: storm.test (10000 publish FIFO + pendingAsyncDelivery=0), wildcard-perf.test (10000 sub matched < 50ms), plugin-fault.test (onMount throw → state failed, broker continua), concurrent-unregister.test (AbortSignal vs unregister race). Performance budget rispettati con ampi margini (storm 24ms / wildcard 11ms misurati). F4 ext: riconnessione ripetuta via auto-fallback.test.ts (cycle-cap exceeded test). **F5 ext closed plan 05-06: timeout-strict.test.ts (D-151 #3 Pitfall 2C closure deterministic via fake timer — NESSUN .completed dopo timeout + tracker.tasksCompleted===1) + cancel-hard.test (cascade unregister hard kill) + serialization-fail.test (assertSerializable PRE-postMessage no spawn) + backpressure-storm.test (critical priority bypass Pitfall 4.C)**. |
 | PKG-01 | Phase 1 (01-01 foundation, 01-02 build, 01-11 verify) | Baseline (tsup ESM-only configurato in 01-02; dist/index.js generato; full verify in 01-11) | tsup ESM-only (no CJS — dual-package hazard) |
 | PKG-02 | Phase 1 (01-01, 01-02) | Baseline (tsconfig.base.json strict + TS 6.0.3 in 01-01; tsconfig package extends in 01-02; tsc --noEmit exit 0) | TypeScript 6.0.3 (super-set di 5.5+) |
 | PKG-03 | Phase 1 (01-01, 01-02) | Baseline (target ES2022 in tsconfig.base.json; tsup target es2022 + platform browser in 01-02) | target ES2022 |
@@ -314,7 +314,7 @@ Mappatura definitiva REQ-ID → fase. Ogni requisito è assegnato alla **prima f
 | DOC-02 | Phase 6 | Pending | Guida integrazione plugin |
 | DOC-03 | Phase 2 (02-01 skeleton, 02-12 final) | In Progress | README skeleton italiano in 02-01 (sezioni Stato/Cosa contiene/Vincolo D-49/Documentazione/Licenza); completamento al plan 02-12 con scenario meteo end-to-end + JSDoc API pubblica + esempi PRD §14.2 |
 | DOC-04 | Phase 3 | Complete | Documentazione route engine + gateway |
-| DOC-05 | Phase 6 | Pending | Esempi end-to-end (scenario meteo §29 con cache + tooling) |
+| DOC-05 | Phase 6 | In Progress (plan 05-07 worker section delivered) | F5 plan 05-07: `packages/worker/README.md` italiano 11 sezioni 429 LOC con scenario report generation pesante (PRD §29 esteso a worker — plugin form + plugin widget + worker CSV/report end-to-end + correlationId D-134 + cascade unregisterPlugin LIFE-02 ext F5). Full consolidamento F6 (cache + tooling integration). Closes WK-07 closure PRD §39 #11 in Sezione 6 + Sezione 11 Q&A. |
 | DOC-06 | Phase 6 | Pending | Documentazione debug tooling |
 
 **Coverage:**
@@ -324,9 +324,9 @@ Mappatura definitiva REQ-ID → fase. Ogni requisito è assegnato alla **prima f
 
 **Open Issues PRD §39 chiusura:**
 - 11/11 mappate a fasi (#1 → F2, #2 → F1+F2+F3+F6, #3 → F2, #4 → F2, #5 → F3, #6 → F3, #7 → F1, #8 → F3, #9 → F4, #10 → F6, #11 → F5)
-- **Closed:** #7 (LIFE-02 — Phase 1 plan 01-08); #1 (MAP-17 — Phase 2 plan 02-04); #3 (VAL-08 — Phase 2 plan 02-07); #4 (VAL-09 — Phase 2 plan 02-05); #5 (ROUTE-16 — Phase 3 plan 03-12); #6 (ROUTE-15 — Phase 3 plan 03-05); #8 (ROUTE-09 — Phase 3 plan 03-09); **#9 (RT-07 — Phase 4 plan 04-09: Last-Event-ID injection via query string per SSE plan 04-05 + ping/pong applicativo per WS plan 04-06 + DOC-04 README sezione Realtime SSE/WS)**
-- **Open:** #2 (cross-fase pipeline ordering, F1+F2+F3+F6); #10 (TOOL-05 metrics format, F6); #11 (WK-07 worker serialization, F5)
+- **Closed:** #7 (LIFE-02 — Phase 1 plan 01-08); #1 (MAP-17 — Phase 2 plan 02-04); #3 (VAL-08 — Phase 2 plan 02-07); #4 (VAL-09 — Phase 2 plan 02-05); #5 (ROUTE-16 — Phase 3 plan 03-12); #6 (ROUTE-15 — Phase 3 plan 03-05); #8 (ROUTE-09 — Phase 3 plan 03-09); #9 (RT-07 — Phase 4 plan 04-09: Last-Event-ID injection via query string per SSE plan 04-05 + ping/pong applicativo per WS plan 04-06 + DOC-04 README sezione Realtime SSE/WS); **#11 (WK-07 — Phase 5 plan 05-07: structuredClone (SCA) default + `assertSerializable` deep-walk PRE-postMessage dev-mode auto + transferable opt-in JSONPath + DOC-05 `packages/worker/README.md` italiano Sezione 6 "Serialization contract WK-07" con tabella structuredClone supported types + tabella tipi NON supportati con strategia raccomandata + JSON.stringify NEVER warning + Pitfall 7.E transferable detached byteLength=0 + Sezione 11 Q&A 15 domande lockate Phase 5)** ✅ CLOSED 2026-05-05
+- **Open:** #2 (cross-fase pipeline ordering, F1+F2+F3+F6); #10 (TOOL-05 metrics format, F6)
 
 ---
 *Requirements defined: 2026-04-28*
-*Last updated: 2026-05-04 after Phase 4 closure (plan 04-09): RT-01..RT-07 all Complete + chiusura PRD §39 #9 (RT-07 reconnection rules realtime documentate)*
+*Last updated: 2026-05-05 after Phase 5 closure (plan 05-07): WK-01..WK-07 all Complete + ERR-02 ext F5 + LIFE-02 ext F5 + TEST-01/02/03 ext F5 + chiusura PRD §39 #11 (WK-07 serializzazione messaggi worker documentata)*
