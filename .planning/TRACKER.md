@@ -23,23 +23,26 @@ session_active: true
 
 | Campo | Valore |
 |-------|--------|
-| Fase | **Phase 5 — Worker Runtime — 🟢 CONTEXT GATHERED** (CONTEXT.md scritto + DISCUSSION-LOG.md, 34 decisioni D-121..D-154 lockate; ready for plan-phase via `--chain` auto-advance) |
+| Fase | **Phase 5 — Worker Runtime — 🟢 PLANNED** (7 plan in 5 wave + RESEARCH 1539 LOC + PATTERNS 1288 LOC; plan-checker PASS_WITH_CONCERNS 0 BLOCKER 5 WARNING; decision coverage gate 34/34 ✓; ready for execute-phase) |
 | Wave | — |
-| Plan in esecuzione | discuss-phase 5 ✅ done; plan-phase 5 in dispatch |
+| Plan in esecuzione | discuss + plan + checker ✅ done; execute-phase 5 in dispatch |
 | Plan progress F4 | **9 / 9 (✅ COMPLETE)** — 04-01..04-09 done |
 | Plan progress globale | 45 / 46+ (Phase 5+6 ancora da pianificare; 46 = baseline pre-F5) |
 | Mode GSD | yolo + auto_advance + parallelization (sequential exec, no worktree) |
 | Modello attivo | `claude-opus-4-7-1` (opus) — override esplicito su tutti i sub-agent |
 
-## Ultimo step completato (auto-update 2026-05-04 — discuss-phase 5)
+## Ultimo step completato (auto-update 2026-05-04 — plan-phase 5 + plan-checker)
 
-- Step: **gsd-discuss-phase 5 --chain** completato
-- Output: `.planning/phases/05-worker-runtime/05-CONTEXT.md` + `05-DISCUSSION-LOG.md`
-- Decisioni lockate: **34 nuove** (D-121..D-154) coprono topology, worker source, pool strategy, cancellation, progress, serialization, route policies, module loading, test strategy, final gate
-- Aree discusse: 7/7 (Worker source contract, Pool strategy default, Cancellation semantics, Progress events API, assertSerializable gating, Route worker policy inheritance, Worker module loading)
+- Step: **gsd-plan-phase 5 --auto --research** completato
+- Output:
+  - `.planning/phases/05-worker-runtime/05-RESEARCH.md` (1539 LOC, 17 sezioni, 7 plan / 6 wave proposal — commit `3cf54ae`)
+  - `.planning/phases/05-worker-runtime/05-PATTERNS.md` (1288 LOC, 35 file con analog F1-F4 + code excerpt)
+  - 7 PLAN.md (05-01..05-07) per ~1730 LOC source target + 119 nuovi test
+- Plan-checker verdict: **PASS_WITH_CONCERNS** (0 BLOCKER, 5 WARNING cosmetici/architetturali minori)
+- Decision coverage gate: **34/34 ✓** (post-fix: aggiunto sintesi D-121..D-154 in 05-07 must_haves.truths)
+- Wave structure: W1 bootstrap + W2 ‖ (assert-serializable+task-tracker) + W3 ‖ (worker-bridge+pool/registry) + W4 (broker composition + harness + 8 integration test) + W5 (final gate F5 + DOC-05 + REQ flip + PRD §39 #11 closure)
 - Plan precedente: 04-09 (Phase 4 chiusa) — `a425501`
-- Phase 4 progress: **9/9** plan completati
-- Project progress: 45/46 plan (98%) — Phase 5 in apertura
+- Project progress: 45/53 plan (Phase 5: 7 plan da eseguire) — Phase 5 in execution
 
 
 ## Prossimo step
@@ -47,7 +50,7 @@ session_active: true
 **Auto-advance via `--chain` flag attivo:**
 
 ```
-Skill: gsd-plan-phase 5 --auto
+Skill: gsd-execute-phase 5
 ```
 
 Phase 5 in entry-point auto:
@@ -86,6 +89,8 @@ Phase 4 closure highlights:
 - **Auto-advance attivo:** discuss → plan → execute → verify automatico senza chiedere conferma.
 
 ## Decisioni recenti rilevanti
+
+- **Phase 5 PLAN-PHASE COMPLETATO ✓ (research + pattern-mapping + planner + plan-checker)** — RESEARCH.md 1539 LOC con 17 sezioni (architettura, Comlink 4.4.2 deep dive, pool strategy, state machine atomico, cancellation, serialization WK-07, pipeline §28 step 9, plan structure 7/6, test 3-tier, pitfalls, threat ASVS L1) — verificate live versioni npm `comlink@4.4.2` `nanoid@5.1.11` `valibot@1.3.1` `vitest@4.1.5` `playwright@1.59.1`. PATTERNS.md 1288 LOC con 35 file classificati + code excerpt analog F1-F4 (88% exact match). 7 PLAN.md (05-01..05-07) prodotti in 5 wave: W1 bootstrap @sembridge/worker (tsup ESM-only + vitest 3-tier + types + augment.ts decl merging + deps comlink/@sembridge/{core,mapper,routing,gateway}); W2 ‖ (05-02 assert-serializable deep-walk + transferable-extractor JSONPath ‖ 05-03 task-tracker state machine atomico Pitfall 2C strict); W3 ‖ (05-04 worker-bridge Comlink + DI WorkerCtor + AbortSignal proxy + MockWorker test util ‖ 05-05 worker-pool lazy spawn + cap 8 + F3 BackpressureStrategy 1:1 + worker-registry); W4 (05-06 worker-broker composition wrapper Opzione B research §7.2 — D-83 strict preserved zero modifiche `packages/routing/` — + createWorkerBroker factory + worker-handler + 8 integration test 3-tier + 6 browser smoke Playwright); W5 (05-07 final gate: CI gates + DOC-05 README italiano 11 sezioni + JSDoc TypeDoc-ready + REQ matrix flip atomic WK-01..WK-07 → Complete + PRD §39 #11 chiuso esplicitamente). Plan-checker verdict PASS_WITH_CONCERNS (0 BLOCKER, 5 WARNING: SC-1 mapping canonical wording / barrel index.ts overlap pattern noto F4 / 05-05 wave dependency cosmetic / 05-06 T3 description sintetica / SC-4 MessageChannel wording). Decision coverage gate 34/34 ✓ (post-fix: aggiunto cumulative D-121..D-154 in 05-07 must_haves.truths). Threat model 57 enumerate F5 distribuiti (T-05-XX-NN), zero HIGH+ severity. Coverage REQ-IDs 12/12 phase + PKG-01..PKG-04 cross-cutting. Estimated speedup wave-based ~30-35% vs sequential.
 
 - **Phase 5 CONTEXT.md scritto ✓ (discuss-phase 5 --chain)** — 34 decisioni D-121..D-154 lockate. Topology: composition wrapper `WorkerBroker(RouterBroker)` D-121 (D-83 strict carryover, F5 vive solo in `packages/worker/src/`). F4 e F5 ortogonali — utente sceglie un entry point o compone esplicitamente `createWorkerBroker(createRealtimeBroker(config))` con `RouterBroker` base condivisa. Worker source: Factory `() => Worker` lazy + tasks dichiarate esplicite (fail-fast `worker.task.unknown` al register) + hybrid Comlink expose + `createTaskDispatcher` utility (D-123, D-124, D-125) + top-level `registerWorker` + `PluginDescriptor.workers` declaration merging (D-126). Pool: bounded `min(hwc, 4)` cap hard 8 default (D-127, D-128) + lazy first-dispatch (D-129) + F3 BackpressureStrategy riusata 1:1 (D-130). Cancellation hybrid: dedicated→`worker.terminate()`, pool→cooperative `__cancel__` + `cancelGraceMs=2000ms` + AbortSignal proxied via Comlink (D-131, D-132) + state machine atomico `Map<TaskId, TaskState>` ignora response post-timeout (Pitfall 2C strict, D-133) + `correlationId` end-to-end (D-134). Progress: Comlink callback proxy `task(args, signal, onProgress)` con schema canonical `{ value, message?, partialResult? }` + adapter-level `progressThrottleMs=100` + passa per mapper (D-135..D-138). Serialization: `assertSerializable` dev-mode auto + opt-out via `BrokerConfig.workers.assertSerializable` (D-139) + throw `BrokerError('worker.serialization.failed')` PRE-postMessage con fieldPath (D-140) + transferable JSONPath-like array `['payload.audioBuffer', 'payload.images[*].buffer']` (D-141) + WK-07 closure DOC-04+DOC-05 (D-142). Route policies subset: timeout(30s) + concurrency('latest-only') + backpressure + dedupe; NO retry/auth/circuitBreaker (D-143, D-144, D-145). Topic naming hybrid auto-derive + override (D-146). Module loading: ESM default + classic opt-in via `workerType: 'classic'` (D-147, opt-in extension a PRD §31.3) + `new URL(..., import.meta.url)` pattern (D-148). Test 3-tier (D-149, D-150) + 10 scenari obbligatori (D-151) + final gate F5 simile 04-09 (D-154). Topics reservati `__cancel__`/`__progress__` (analog F4 D-111 `__ping__`/`__pong__`).
 
