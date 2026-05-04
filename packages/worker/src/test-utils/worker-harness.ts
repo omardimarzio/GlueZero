@@ -21,12 +21,12 @@
 // la factory è scritta dal test per ritornare un MockWorker, il bridge lo wrappa
 // con Comlink (stub adapter). Il WorkerBroker non patch globalThis.Worker.
 
+import type { BrokerEvent } from '@sembridge/core'
 import { createWorkerBroker } from '../public-factory'
+import type { ProgressPayload, WorkerDescriptor } from '../types'
 import type { WorkerBroker, WorkerBrokerConfig } from '../worker-broker'
 import type { WorkerBridgeLike } from '../worker-pool'
-import type { ProgressPayload, WorkerDescriptor } from '../types'
 import { MockWorker } from './mock-worker'
-import type { BrokerEvent } from '@sembridge/core'
 
 /** Pattern subscribe `'*'`, `'*.*'`, `'*.*.*'`, `'*.*.*.*'` per coprire eventi 1-4 segmenti. */
 const COLLECT_PATTERNS: readonly string[] = ['*', '*.*', '*.*.*', '*.*.*.*']
@@ -153,9 +153,7 @@ export class MockBridge implements WorkerBridgeLike {
         const onAbort = (): void => {
           clearTimeout(timer)
           this.cancelledCount++
-          reject(
-            new DOMException(`Aborted: ${String(signal.reason ?? 'aborted')}`, 'AbortError'),
-          )
+          reject(new DOMException(`Aborted: ${String(signal.reason ?? 'aborted')}`, 'AbortError'))
         }
         if (signal.aborted) {
           onAbort()

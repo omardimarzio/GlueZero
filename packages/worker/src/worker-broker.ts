@@ -44,27 +44,24 @@
 // - T-05-06-11 (Information Disclosure — externalAbortControllers Map leak):
 //   accept. Map cleanup in `finally` di publish — entry rimossa post-execute.
 
-import { createBrokerError, type BrokerEvent, type PluginDescriptor, type Subscription } from '@sembridge/core'
+import {
+  type BrokerEvent,
+  createBrokerError,
+  type PluginDescriptor,
+  type Subscription,
+} from '@sembridge/core'
 import { RouterBroker, type RouterBrokerConfig } from '@sembridge/routing'
-
-import { WorkerRegistry, type WorkerEntry, type WorkerRegistrySnapshot } from './worker-registry'
-import { WorkerPool, type WorkerBridgeLike, type WorkerPoolSnapshot } from './worker-pool'
-import {
-  WorkerBridge,
-  type WorkerBridgeDeps,
-} from './worker-bridge'
-import {
-  createTaskTracker,
-  type TaskTracker,
-  type TaskTrackerSnapshot,
-} from './task-tracker'
-import { createWorkerHandler, type WorkerHandler } from './worker-handler'
+import { createTaskTracker, type TaskTracker, type TaskTrackerSnapshot } from './task-tracker'
 import type {
   AssertSerializableMode,
   RouteWorkerDefinition,
   WorkerConfig,
   WorkerDescriptor,
 } from './types'
+import { WorkerBridge, type WorkerBridgeDeps } from './worker-bridge'
+import { createWorkerHandler, type WorkerHandler } from './worker-handler'
+import { type WorkerBridgeLike, WorkerPool, type WorkerPoolSnapshot } from './worker-pool'
+import { type WorkerEntry, WorkerRegistry, type WorkerRegistrySnapshot } from './worker-registry'
 
 /**
  * Type del terzo argomento di `RouterBroker.publish` — riusato per propagare
@@ -247,11 +244,7 @@ export class WorkerBroker {
    * @param payload - Payload dell'evento.
    * @param options - Opzioni publish (source, correlationId, priority, deliveryMode).
    */
-  async publish(
-    topic: string,
-    payload: unknown,
-    options?: RouterPublishOptions,
-  ): Promise<void> {
+  async publish(topic: string, payload: unknown, options?: RouterPublishOptions): Promise<void> {
     const workerRoute = this.workerRoutes.get(topic)
     if (workerRoute === undefined) {
       // Topic non-worker → delegate diretto a inner (pipeline F3 normale).

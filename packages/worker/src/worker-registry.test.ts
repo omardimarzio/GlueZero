@@ -12,16 +12,13 @@
 // Pattern role-match con `realtime-channel-manager.test.ts` di F4
 // (registry + cascade + duplicate guard).
 
-import { beforeEach, describe, expect, it } from 'vitest'
 import type { BrokerError } from '@sembridge/core'
-import { WorkerRegistry } from './worker-registry'
+import { beforeEach, describe, expect, it } from 'vitest'
 import type { WorkerDescriptor } from './types'
+import { WorkerRegistry } from './worker-registry'
 
 /** Builder helper per descriptor minimi — riduce boilerplate nei test. */
-function makeDesc(
-  id: string = 'w1',
-  overrides: Partial<WorkerDescriptor> = {},
-): WorkerDescriptor {
+function makeDesc(id: string = 'w1', overrides: Partial<WorkerDescriptor> = {}): WorkerDescriptor {
   const base: WorkerDescriptor = {
     id,
     factory: () => ({}) as unknown as Worker,

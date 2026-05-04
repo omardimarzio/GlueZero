@@ -28,7 +28,14 @@ export default defineConfig({
   minify: false,
   target: 'es2022',
   platform: 'browser',
-  external: [/^node:/, '@sembridge/core', '@sembridge/mapper', '@sembridge/routing', '@sembridge/gateway', 'comlink'],
+  external: [
+    /^node:/,
+    '@sembridge/core',
+    '@sembridge/mapper',
+    '@sembridge/routing',
+    '@sembridge/gateway',
+    'comlink',
+  ],
   banner: {
     js: '/* @sembridge/worker — MIT — https://github.com/<TBD>/sembridge */',
   },

@@ -21,13 +21,13 @@
 // - Test 14 — Worker 'messageerror' event memorizzato come last error
 // - Test 15 — getDebugSnapshot ritorna shape strutturata
 
+import { type BrokerError, isBrokerError } from '@sembridge/core'
 import * as Comlink from 'comlink'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { isBrokerError, type BrokerError } from '@sembridge/core'
 
 import { MockWorker } from './test-utils/mock-worker'
-import { WorkerBridge, type ComlinkAdapter } from './worker-bridge'
 import type { WorkerDescriptor } from './types/worker-descriptor'
+import { type ComlinkAdapter, WorkerBridge } from './worker-bridge'
 
 // ============================================================================
 // Helpers
@@ -281,12 +281,7 @@ describe('WorkerBridge — Comlink wrap + lifecycle (D-124/129/131/132/135/137/1
     vi.useFakeTimers()
     try {
       const stubs = stubComlinkAdapter(
-        async (
-          _task: string,
-          _payload: unknown,
-          _signal: unknown,
-          onProgressProxy: unknown,
-        ) => {
+        async (_task: string, _payload: unknown, _signal: unknown, onProgressProxy: unknown) => {
           // Il proxy è una function-callable (Comlink.proxy on funzioni). Simuliamo
           // 100 chiamate sincrone in `0ms` — la finestra throttle deve collassare.
           if (typeof onProgressProxy === 'function') {
@@ -302,13 +297,9 @@ describe('WorkerBridge — Comlink wrap + lifecycle (D-124/129/131/132/135/137/1
         comlinkAdapter: stubs.adapter,
       })
       const onProgress = vi.fn()
-      await bridge.dispatch(
-        'parseCsv',
-        { x: 1 },
-        new AbortController().signal,
-        onProgress,
-        { progressThrottleMs: 100 },
-      )
+      await bridge.dispatch('parseCsv', { x: 1 }, new AbortController().signal, onProgress, {
+        progressThrottleMs: 100,
+      })
       // Prima chiamata sincrona passa subito (window aperta).
       // Le 99 successive in <100ms vengono collassate. Trailing flush schedule.
       const callsBeforeFlush = onProgress.mock.calls.length

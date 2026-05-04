@@ -1,10 +1,10 @@
 // public-factory.test.ts — 6 unit test per `createWorkerBroker` factory + Valibot
 // safeParse + D-30 anti-singleton (analog F4 public-factory.test.ts).
 
-import { describe, it, expect } from 'vitest'
+import { describe, expect, it } from 'vitest'
 import { createWorkerBroker } from './public-factory'
-import { WorkerBroker } from './worker-broker'
 import { MockWorker } from './test-utils/mock-worker'
+import { WorkerBroker } from './worker-broker'
 
 describe('createWorkerBroker (D-30 + D-122 Valibot validation)', () => {
   it('Test 1: config vuoto → instance valida WorkerBroker', () => {

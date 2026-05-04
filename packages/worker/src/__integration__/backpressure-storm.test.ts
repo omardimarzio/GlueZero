@@ -6,11 +6,11 @@
 // (priority='critical'). Verify: ≤ 10 task completed normal-priority + critical
 // bypass coda e completa (Pitfall 4.C consistency).
 
-import { describe, it, expect, beforeEach } from 'vitest'
+import { beforeEach, describe, expect, it } from 'vitest'
 import {
   createWorkerHarness,
-  type WorkerHarness,
   makeMockDescriptor,
+  type WorkerHarness,
 } from '../test-utils/worker-harness'
 
 describe('D-151 #9 — Backpressure storm + critical priority bypass (Pitfall 4.C)', () => {

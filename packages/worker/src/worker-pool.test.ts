@@ -15,13 +15,9 @@
 // minimal interface — DI pattern evita dipendenza forte da 05-04.
 
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import {
-  WorkerPool,
-  defaultPoolSize,
-  type WorkerBridgeLike,
-} from './worker-pool'
+import type { ProgressPayload, WorkerDescriptor } from './types'
+import { defaultPoolSize, type WorkerBridgeLike, WorkerPool } from './worker-pool'
 import { WorkerRegistry } from './worker-registry'
-import type { WorkerDescriptor, ProgressPayload } from './types'
 
 /** Mock minimal del bridge — implementa l'interfaccia consumed dal pool. */
 class MockBridge implements WorkerBridgeLike {
@@ -58,10 +54,7 @@ class MockBridge implements WorkerBridgeLike {
   }
 }
 
-function makeDesc(
-  id: string = 'w1',
-  overrides: Partial<WorkerDescriptor> = {},
-): WorkerDescriptor {
+function makeDesc(id: string = 'w1', overrides: Partial<WorkerDescriptor> = {}): WorkerDescriptor {
   return {
     id,
     factory: () => ({}) as unknown as Worker,
@@ -134,10 +127,7 @@ describe('WorkerPool — bounded + lazy + queue + respawn (D-127/128/129/130/131
   })
 
   it('Test 3: 4 acquireSlot concorrenti su pool size=2 → 2 spawn + 2 attendono in queue (FIFO)', async () => {
-    registry.register(
-      makeDesc('w1', { mode: 'pool', size: 2 }),
-      'plugin-a',
-    )
+    registry.register(makeDesc('w1', { mode: 'pool', size: 2 }), 'plugin-a')
 
     // Trattieni i task con barriera manuale
     let resolveBarrier: (() => void) | undefined

@@ -36,17 +36,22 @@
  * @packageDocumentation
  */
 
+// ---------- W2 plan 05-02 — assert-serializable + transferable-extractor (D-139/D-140/D-141) ----------
+export { assertSerializable } from './assert-serializable'
 // Side-effect import — abilita TS declaration merging per BrokerConfig.workers
 // + PluginDescriptor.workers (D-122 + D-126). Pattern S1 anti tree-shaking
 // (riferimento PATTERNS.md §3.2). Wave 4 plan 05-06 estenderà runtime con
 // composition wrapper.
 export { __augmentWorkerLoaded, type F5PipelineStep } from './augment'
-
+export { createWorkerBroker } from './public-factory'
+// ---------- W2 plan 05-03 — task-tracker (state machine atomico D-133) ----------
+export { createTaskTracker, type TaskTracker, type TaskTrackerSnapshot } from './task-tracker'
+export { extractTransferables } from './transferable-extractor'
 // ---------- Public types F5 ----------
 export {
+  type AssertSerializableMode,
   INTERNAL_TOPICS_WORKER,
   isInternalWorkerTopic,
-  type AssertSerializableMode,
   type ProgressPayload,
   type RouteWorkerDefinition,
   type RouteWorkerPublishesSpec,
@@ -57,41 +62,16 @@ export {
   type WorkerTaskOutcome,
   type WorkerType,
 } from './types'
-
-// ---------- W2 plan 05-02 — assert-serializable + transferable-extractor (D-139/D-140/D-141) ----------
-export { assertSerializable } from './assert-serializable'
-export { extractTransferables } from './transferable-extractor'
-
-// ---------- W2 plan 05-03 — task-tracker (state machine atomico D-133) ----------
-export { createTaskTracker, type TaskTracker, type TaskTrackerSnapshot } from './task-tracker'
-
-// ---------- W3-B plan 05-05 — worker-pool + worker-registry (D-126/127/128/129/130/131) ----------
-export {
-  WorkerRegistry,
-  MAX_POOL_SIZE_HARD,
-  type WorkerEntry,
-  type WorkerRegistrySnapshot,
-} from './worker-registry'
-export {
-  WorkerPool,
-  defaultPoolSize,
-  type WorkerBridgeLike,
-  type WorkerPoolDeps,
-  type WorkerPoolSnapshot,
-} from './worker-pool'
-
 // ---------- W3-A plan 05-04 — WorkerBridge Comlink wrap + lifecycle (D-124/129/131/132/135/137/139/140/141) ----------
 export {
-  WorkerBridge,
   type ComlinkAdapter,
+  WorkerBridge,
   type WorkerBridgeDeps,
   type WorkerBridgeDispatchOptions,
   type WorkerBridgeSnapshot,
 } from './worker-bridge'
-
 // ---------- Wave 4 plan 05-06 — composition wrapper Opzione B + factory + harness ----------
 export { WorkerBroker, type WorkerBrokerConfig } from './worker-broker'
-export { createWorkerBroker } from './public-factory'
 export {
   createWorkerHandler,
   deriveTopic,
@@ -99,3 +79,17 @@ export {
   type WorkerHandlerDeps,
   type WorkerPublishFn,
 } from './worker-handler'
+export {
+  defaultPoolSize,
+  type WorkerBridgeLike,
+  WorkerPool,
+  type WorkerPoolDeps,
+  type WorkerPoolSnapshot,
+} from './worker-pool'
+// ---------- W3-B plan 05-05 — worker-pool + worker-registry (D-126/127/128/129/130/131) ----------
+export {
+  MAX_POOL_SIZE_HARD,
+  type WorkerEntry,
+  WorkerRegistry,
+  type WorkerRegistrySnapshot,
+} from './worker-registry'

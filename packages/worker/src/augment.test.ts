@@ -49,7 +49,9 @@ describe('augment.ts (F5 TS declaration merging — plan 05-01)', () => {
 
   it('Test 3: PluginDescriptor.workers field accepts WorkerDescriptor[] (D-126 cascade)', () => {
     expectTypeOf<PluginDescriptor>().toHaveProperty('workers')
-    expectTypeOf<PluginDescriptor['workers']>().toMatchTypeOf<readonly WorkerDescriptor[] | undefined>()
+    expectTypeOf<PluginDescriptor['workers']>().toMatchTypeOf<
+      readonly WorkerDescriptor[] | undefined
+    >()
 
     // factory uses 'about:blank' as a benign URL — safe in jsdom (Worker
     // constructor not invoked in this smoke test, only type-level check).

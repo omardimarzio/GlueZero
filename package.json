@@ -66,6 +66,12 @@
       "path": "packages/gateway/dist/http/index.js",
       "limit": "8 KB",
       "gzip": true
+    },
+    {
+      "name": "@sembridge/worker (gzip)",
+      "path": "packages/worker/dist/index.js",
+      "limit": "32 KB",
+      "gzip": true
     }
   ]
 }

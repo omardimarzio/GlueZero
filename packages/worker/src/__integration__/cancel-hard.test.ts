@@ -4,12 +4,12 @@
 // Scenario: registerPlugin → publish dispatch in volo → unregisterPlugin
 // causa cascade pool.terminateByOwner → bridge.terminate() chiamato (hard).
 
-import { describe, it, expect, beforeEach } from 'vitest'
+import { beforeEach, describe, expect, it } from 'vitest'
 import {
   createWorkerHarness,
-  type WorkerHarness,
   MockBridge,
   makeMockDescriptor,
+  type WorkerHarness,
 } from '../test-utils/worker-harness'
 
 describe('D-151 #5 — Cancellation hard via unregisterPlugin cascade (LIFE-02 ext F5)', () => {

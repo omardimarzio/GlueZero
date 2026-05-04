@@ -114,10 +114,7 @@ describe('extractTransferables — JSONPath-like extractor (D-141)', () => {
     const ab3 = new ArrayBuffer(16)
     const payload = {
       a: {
-        b: [
-          { c: [{ buf: ab1 }, { buf: ab2 }] },
-          { c: [{ buf: ab3 }] },
-        ],
+        b: [{ c: [{ buf: ab1 }, { buf: ab2 }] }, { c: [{ buf: ab3 }] }],
       },
     }
     const result = extractTransferables(payload, ['a.b[*].c[*].buf'])

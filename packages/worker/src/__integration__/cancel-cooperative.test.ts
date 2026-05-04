@@ -10,12 +10,12 @@
 // che simula la stessa semantica (Pitfall 2C closure verifica state machine
 // atomico).
 
-import { describe, it, expect, beforeEach } from 'vitest'
+import { beforeEach, describe, expect, it } from 'vitest'
 import {
   createWorkerHarness,
-  type WorkerHarness,
   MockBridge,
   makeMockDescriptor,
+  type WorkerHarness,
 } from '../test-utils/worker-harness'
 
 describe('D-151 #4 — Cancellation cooperative (signal abort onorato)', () => {

@@ -5,11 +5,11 @@
 // unregisterPlugin → registry.workerCount === 0 + pool.activeBridges === 0;
 // nuovo publish stesso topic → `worker.unknown` failure (no dispatch).
 
-import { describe, it, expect, beforeEach } from 'vitest'
+import { beforeEach, describe, expect, it } from 'vitest'
 import {
   createWorkerHarness,
-  type WorkerHarness,
   makeMockDescriptor,
+  type WorkerHarness,
 } from '../test-utils/worker-harness'
 
 describe('D-151 #8 — Cascade cleanup multi-worker (LIFE-02 ext F5 D-126)', () => {
@@ -17,11 +17,11 @@ describe('D-151 #8 — Cascade cleanup multi-worker (LIFE-02 ext F5 D-126)', () 
 
   beforeEach(() => {
     harness = createWorkerHarness(undefined, {
-      'w1': { tasks: { task1: { result: { id: 1 } } } },
-      'w2': { tasks: { task1: { result: { id: 2 } } } },
-      'w3': { tasks: { task1: { result: { id: 3 } } } },
-      'w4': { tasks: { task1: { result: { id: 4 } } } },
-      'w5': { tasks: { task1: { result: { id: 5 } } } },
+      w1: { tasks: { task1: { result: { id: 1 } } } },
+      w2: { tasks: { task1: { result: { id: 2 } } } },
+      w3: { tasks: { task1: { result: { id: 3 } } } },
+      w4: { tasks: { task1: { result: { id: 4 } } } },
+      w5: { tasks: { task1: { result: { id: 5 } } } },
     })
   })
 

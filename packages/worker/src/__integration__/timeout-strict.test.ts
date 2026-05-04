@@ -6,11 +6,11 @@
 // NESSUN `<topic>.completed`. lateResponses counter incrementato se il bridge
 // risponde late.
 
-import { describe, it, expect, beforeEach } from 'vitest'
+import { beforeEach, describe, expect, it } from 'vitest'
 import {
   createWorkerHarness,
-  type WorkerHarness,
   makeMockDescriptor,
+  type WorkerHarness,
 } from '../test-utils/worker-harness'
 
 describe('D-151 #3 — Timeout strict + Pitfall 2C closure (state atomico)', () => {

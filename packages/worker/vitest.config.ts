@@ -42,15 +42,18 @@ export default defineConfig({
         'src/test-utils/**',
         'src/__browser__/**',
       ],
-      // Wave 1: thresholds documentano target post-implementation. Solo type files
-      // + augment + smoke decl merging — coverage non significativa in W1.
-      // Wave 5 (plan 05-07 final gate) calibra thresholds finali su misura
-      // post-W2/W3/W4 implementation.
+      // Wave 5 calibration (plan 05-07 final gate F5):
+      // Misurato post-implementation W2/W3/W4: 91.96 / 83.73 / 90.58 / 94.17.
+      // Thresholds calibrate al floor measurato arrotondato per difetto al 0.5%
+      // (analog F4 04-09 commit 761e4ad pattern). Hard floor inderogabile:
+      // statements ≥ 85, branches ≥ 75, functions ≥ 88, lines ≥ 87 (above F4 sse-ws
+      // subset target). Setting al floor measurato preserva la deterministica
+      // calibration mentre lascia margine per future iterazioni V1.x.
       thresholds: {
-        statements: 90,
-        branches: 80,
+        statements: 91.5,
+        branches: 83,
         functions: 90,
-        lines: 90,
+        lines: 93.5,
       },
     },
     typecheck: {

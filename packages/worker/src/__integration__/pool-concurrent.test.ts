@@ -3,12 +3,12 @@
 // Scenario: worker mode='pool' size=2 + 4 publish in parallel → cap rispettato
 // (≤ 2 bridge spawned), tutti i 4 task completano (4 event `<topic>.completed`).
 
-import { describe, it, expect, beforeEach } from 'vitest'
+import { beforeEach, describe, expect, it } from 'vitest'
 import {
   createWorkerHarness,
-  type WorkerHarness,
   MockBridge,
   makeMockDescriptor,
+  type WorkerHarness,
 } from '../test-utils/worker-harness'
 
 describe('D-151 #2 — Pool concurrent — cap rispettato + tutti i task completano', () => {

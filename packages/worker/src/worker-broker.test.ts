@@ -6,11 +6,11 @@
 // - Tutti i test asseriscono side-effect osservabili (getDebugSnapshot,
 //   subscribe callback, publishFn invocations), mai presence-only.
 
-import { describe, it, expect, beforeEach } from 'vitest'
-import { WorkerBroker } from './worker-broker'
-import { MockWorker } from './test-utils/mock-worker'
-import type { WorkerDescriptor, RouteWorkerDefinition } from './types'
 import type { BrokerEvent } from '@sembridge/core'
+import { beforeEach, describe, expect, it } from 'vitest'
+import { MockWorker } from './test-utils/mock-worker'
+import type { RouteWorkerDefinition, WorkerDescriptor } from './types'
+import { WorkerBroker } from './worker-broker'
 
 // ============================================================================
 // Test utilities
@@ -196,9 +196,9 @@ describe('WorkerBroker (D-121 composition + D-83 Opzione B + D-126 + LIFE-02 ext
   it('Test 8 (D-124 fail-fast): registerWorkerRoute con task non dichiarato → throw worker.task.unknown', () => {
     const broker = new WorkerBroker({ WorkerCtor: MockWorker as unknown as typeof Worker })
     broker.registerWorker(makeDesc('w1', ['fetch'])) // task 'fetch' only
-    expect(() =>
-      broker.registerWorkerRoute(makeRoute({ task: 'unknownTask' })),
-    ).toThrowError(/worker\.task\.unknown|does not declare/)
+    expect(() => broker.registerWorkerRoute(makeRoute({ task: 'unknownTask' }))).toThrowError(
+      /worker\.task\.unknown|does not declare/,
+    )
   })
 
   it('Test 9 (composition multi-feature smoke): registerRoute HTTP delegate to inner', () => {

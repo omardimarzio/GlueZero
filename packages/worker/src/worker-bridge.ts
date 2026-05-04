@@ -57,8 +57,8 @@
 //   `terminate()` chiama `proxy[Comlink.releaseProxy]?.()` + `worker.terminate()`.
 //   Idempotente (Test 11).
 
+import { type BrokerError, createBrokerError } from '@sembridge/core'
 import * as Comlink from 'comlink'
-import { createBrokerError, type BrokerError } from '@sembridge/core'
 
 import { assertSerializable } from './assert-serializable'
 import { extractTransferables } from './transferable-extractor'
@@ -318,8 +318,7 @@ export class WorkerBridge {
 
     // Step 4: D-141 extractTransferables JSONPath (Wave 2 building block)
     const transferable = options.transferable ?? []
-    const transferList =
-      transferable.length > 0 ? extractTransferables(payload, transferable) : []
+    const transferList = transferable.length > 0 ? extractTransferables(payload, transferable) : []
 
     // Step 5: D-132 AbortSignal proxied via Comlink (RESEARCH §4.2 — gotcha
     // `await signal.aborted` async getter sul worker side gestito dal worker).
@@ -332,8 +331,7 @@ export class WorkerBridge {
     // (Test 8 verifica args[2] === undefined).
     let onProgressProxy: unknown
     if (onProgress !== undefined) {
-      const throttleMs =
-        options.progressThrottleMs ?? this.deps.defaultProgressThrottleMs ?? 100
+      const throttleMs = options.progressThrottleMs ?? this.deps.defaultProgressThrottleMs ?? 100
       const throttled = makeThrottledOnProgress(onProgress, throttleMs)
       onProgressProxy = this.comlink.proxy(throttled as unknown as object)
     }
@@ -626,4 +624,3 @@ function makeThrottledOnProgress(
     }
   }
 }
-

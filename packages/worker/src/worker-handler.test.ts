@@ -2,13 +2,13 @@
 // (D-152 step 9 dispatch + D-146 topic auto-derive + D-133 atomic state machine
 // + D-134 correlationId + ERR-02 ext F5 sanitized + Pitfall 2C closure).
 
-import { describe, it, expect, beforeEach } from 'vitest'
-import { createWorkerHandler, deriveTopic, type WorkerPublishFn } from './worker-handler'
-import { WorkerRegistry } from './worker-registry'
-import { WorkerPool, type WorkerBridgeLike } from './worker-pool'
-import { createTaskTracker } from './task-tracker'
 import type { BrokerEvent } from '@sembridge/core'
+import { beforeEach, describe, expect, it } from 'vitest'
+import { createTaskTracker } from './task-tracker'
 import type { ProgressPayload, RouteWorkerDefinition, WorkerDescriptor } from './types'
+import { createWorkerHandler, deriveTopic, type WorkerPublishFn } from './worker-handler'
+import { type WorkerBridgeLike, WorkerPool } from './worker-pool'
+import { WorkerRegistry } from './worker-registry'
 
 // ============================================================================
 // Test utilities
@@ -96,9 +96,7 @@ class MockBridge implements WorkerBridgeLike {
         }, this.behavior.delayMs)
         signal.addEventListener('abort', () => {
           clearTimeout(timer)
-          reject(
-            new DOMException(`Aborted: ${String(signal.reason ?? 'aborted')}`, 'AbortError'),
-          )
+          reject(new DOMException(`Aborted: ${String(signal.reason ?? 'aborted')}`, 'AbortError'))
         })
       })
     }
@@ -277,9 +275,7 @@ describe('worker-handler — createWorkerHandler (D-152, D-146, D-133, D-134)', 
       dispatch: (_t, _p, signal) =>
         new Promise<unknown>((_resolve, reject) => {
           signal.addEventListener('abort', () => {
-            reject(
-              new DOMException(`Aborted: ${String(signal.reason ?? 'aborted')}`, 'AbortError'),
-            )
+            reject(new DOMException(`Aborted: ${String(signal.reason ?? 'aborted')}`, 'AbortError'))
           })
         }),
       terminate: () => {},

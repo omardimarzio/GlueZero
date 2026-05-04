@@ -36,16 +36,9 @@
 // - T-05-05-09 respawn currentTaskId leak: nuovo PoolSlot { busy: false } —
 //   currentTaskId implicit undefined (object literal fresh).
 
-import {
-  createBackpressureStrategy,
-  type BackpressureStrategy,
-} from '@sembridge/gateway/http'
+import { type BackpressureStrategy, createBackpressureStrategy } from '@sembridge/gateway/http'
+import type { AssertSerializableMode, ProgressPayload, WorkerDescriptor } from './types'
 import { MAX_POOL_SIZE_HARD, type WorkerRegistry } from './worker-registry'
-import type {
-  AssertSerializableMode,
-  ProgressPayload,
-  WorkerDescriptor,
-} from './types'
 
 /**
  * Interfaccia minimal del bridge consumed dal pool — disaccoppiamento da
@@ -95,9 +88,7 @@ interface PoolSlot {
 export interface WorkerPoolSnapshot {
   readonly activeBridges: number
   readonly queuedTasks: number
-  readonly byWorkerId: Readonly<
-    Record<string, { readonly spawned: number; readonly busy: number }>
-  >
+  readonly byWorkerId: Readonly<Record<string, { readonly spawned: number; readonly busy: number }>>
 }
 
 /**

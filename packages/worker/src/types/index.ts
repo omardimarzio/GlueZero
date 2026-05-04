@@ -8,14 +8,14 @@
 //
 // Riferimento: 05-PATTERNS.md §"types/index.ts" (analog `gateway/sse-ws/types/index.ts`).
 
+export { INTERNAL_TOPICS_WORKER, isInternalWorkerTopic } from './internal-topics'
+export type { ProgressPayload } from './progress-payload'
+export type { RouteWorkerDefinition, RouteWorkerPublishesSpec } from './route-worker-definition'
+export type { TaskState, WorkerTaskOutcome } from './task-state'
+export type { AssertSerializableMode, WorkerConfig } from './worker-config'
 /** Barrel types F5 — re-export da `@sembridge/worker`. */
 export type {
   WorkerDescriptor,
   WorkerMode,
   WorkerType,
 } from './worker-descriptor'
-export type { AssertSerializableMode, WorkerConfig } from './worker-config'
-export type { RouteWorkerDefinition, RouteWorkerPublishesSpec } from './route-worker-definition'
-export type { ProgressPayload } from './progress-payload'
-export type { TaskState, WorkerTaskOutcome } from './task-state'
-export { INTERNAL_TOPICS_WORKER, isInternalWorkerTopic } from './internal-topics'

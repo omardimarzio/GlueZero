@@ -9,11 +9,11 @@
 // reale di 05-04 che lo fa PRE-postMessage). Per esercitare lo scenario su
 // MockBridge usiamo un custom bridgeFactory che simula il throw `assertSerializable`.
 
-import { describe, it, expect, beforeEach } from 'vitest'
-import { createWorkerHarness, type WorkerHarness } from '../test-utils/worker-harness'
 import { createBrokerError } from '@sembridge/core'
-import type { WorkerBridgeLike } from '../worker-pool'
+import { beforeEach, describe, expect, it } from 'vitest'
+import { createWorkerHarness, type WorkerHarness } from '../test-utils/worker-harness'
 import type { WorkerDescriptor } from '../types'
+import type { WorkerBridgeLike } from '../worker-pool'
 
 describe('D-151 #6 — Serialization failure throw PRE-postMessage (D-139/D-140)', () => {
   let harness: WorkerHarness

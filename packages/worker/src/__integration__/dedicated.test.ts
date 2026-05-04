@@ -3,12 +3,12 @@
 // Scenario: worker mode='dedicated' + publish 'report.requested' →
 // `<topic>.completed` con correlationId === source event id.
 
-import { describe, it, expect, beforeEach } from 'vitest'
+import { beforeEach, describe, expect, it } from 'vitest'
 import {
   createWorkerHarness,
-  type WorkerHarness,
   MockBridge,
   makeMockDescriptor,
+  type WorkerHarness,
 } from '../test-utils/worker-harness'
 
 describe('D-151 #1 — Dedicated worker happy path', () => {

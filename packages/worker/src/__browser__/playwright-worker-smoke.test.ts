@@ -14,8 +14,8 @@
 // - Transferable byteLength=0 post-transfer (jsdom buffer non transferred)
 // - module type Worker loading (Vite/esbuild dev server resolve)
 
-import { describe, it, expect } from 'vitest'
 import * as Comlink from 'comlink'
+import { describe, expect, it } from 'vitest'
 
 describe('Tier-3 Playwright real Worker — D-151 #7 + smoke (D-150)', () => {
   it('Test 1: structuredClone Date round-trip preservato (Pitfall 7.B)', async () => {
@@ -30,7 +30,9 @@ describe('Tier-3 Playwright real Worker — D-151 #7 + smoke (D-150)', () => {
 
   it('Test 2: structuredClone Map round-trip preservato (Pitfall 7.B)', async () => {
     const w = new Worker(new URL('./test-worker.ts', import.meta.url), { type: 'module' })
-    const api = Comlink.wrap<{ echoMap: (m: Map<string, number>) => Promise<Map<string, number>> }>(w)
+    const api = Comlink.wrap<{ echoMap: (m: Map<string, number>) => Promise<Map<string, number>> }>(
+      w,
+    )
     const original = new Map([
       ['a', 1],
       ['b', 2],
