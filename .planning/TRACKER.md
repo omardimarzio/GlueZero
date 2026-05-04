@@ -1,12 +1,12 @@
 ---
-last_updated: 2026-05-03
-status: phase_3_complete
+last_updated: 2026-05-04
+status: phase_4_context_gathered
 project: SemBridge
 milestone: v1.0
 current_phase: 4
-current_wave: 1
-current_plan: pending_verifier_then_discuss_phase_4
-session_active: false
+current_wave: 0
+current_plan: phase_4_discuss_complete_chain_to_plan
+session_active: true
 ---
 
 # TRACKER — SemBridge
@@ -23,39 +23,38 @@ session_active: false
 
 | Campo | Valore |
 |-------|--------|
-| Fase | **Phase 3 — Routing & Server Gateway HTTP — ✅ COMPLETE** |
-| Wave | **9 / 9** completata (03-14 final gate ✓) |
-| Plan in esecuzione | — (Phase 3 chiusa, ready for verifier) |
-| Plan progress F3 | **14 / 14 completati** (03-01 → 03-14 con SUMMARY.md ✓) |
-| Plan progress globale | 37 / 37 (100%) |
+| Fase | **Phase 4 — Realtime inbound (SSE/WS) — 🟡 DISCUSS COMPLETE** |
+| Wave | — (plan TBD) |
+| Plan in esecuzione | — (CONTEXT.md committed, chain → plan-phase) |
+| Plan progress F4 | 0 / TBD (post planning) |
+| Plan progress globale | 37 / 37+ (Phase 4 plans TBD) |
 | Mode GSD | yolo + auto_advance + parallelization (sequential exec, no worktree) |
 | Modello attivo | `claude-opus-4-7-1` (opus) — override esplicito su tutti i sub-agent |
 
-## Ultimo step completato (auto-update 2026-05-03T23:05Z)
+## Ultimo step completato (auto-update 2026-05-04)
 
-- Plan: **03-14** → final gate F3 + SUMMARY.md committed
-- Commits: `86790f0` (README italiani 600 LOC), `660fec6` (biome cleanup + manual TS bracket fix), `9922a36` (CI gates extension + size budget realistic)
-- Phase progress: **14/14** plan completati
-- Project progress: 37/37 plan (100%)
-- 4 open issues PRD §39 chiusi cumulativamente F3: #5 ROUTE-16, #6 ROUTE-15, #7 LIFE-02 ext F3, #8 ROUTE-09
-- D-83 strict ✓ (zero modifiche packages/core/ né packages/mapper/ runtime per tutta F3 — 14 plan)
-
+- Step: **Phase 4 discuss-phase** → CONTEXT.md + DISCUSSION-LOG.md committed
+- Commit: `3a17b23 docs(04): capture phase context — realtime inbound SSE/WS`
+- Decisioni: 20 lockate (D-101..D-120), 4 gray areas risolte interattivamente, 6 deferred ideas
+- File: `.planning/phases/04-realtime-inbound-sse-prioritario-ws-opzionale/04-CONTEXT.md`
 
 ## Prossimo step
 
-**Phase 3 → verifier → Phase 4 discuss:**
+**Auto-advance via `--chain` → plan-phase 4:**
 
 ```
-/gsd-verifier 3   # goal-backward verification 5 success criteria + 29 REQ-IDs
-/gsd-discuss-phase 4 --auto --research   # Realtime SSE/WS adapter
+Skill: gsd-plan-phase 4 --auto
 ```
 
-Phase 4 prevede:
-- Adapter SSE prioritario (`@sembridge/gateway/sse-ws`)
-- Adapter WebSocket opzionale
-- Reconnection policy (Last-Event-ID per SSE, ping app-level per WS, exponential backoff full-jitter cap 30s, Visibility API integration)
-- Chiude PRD §39 #9 (RT-07)
-- 7 REQ-IDs: RT-01..RT-07
+Phase 4 lock highlights:
+- Auth-agnostic via `buildUrl()` hook (D-104)
+- Envelope JSON `{topic, data, id?}` per WS (D-106)
+- `RealtimeChannelManager` con N canali (D-102)
+- Auto-fallback SSE→WS default abilitato V1 (D-107)
+- Composition wrapper `RealtimeBroker` su `RouterBroker` (D-101 ext D-83)
+- Mapper server→canonical riusato + pipeline §28 step 1 ingress (D-113, D-114)
+- Cascade cleanup `unregisterPlugin` ext F4 (D-112 ext D-86)
+- Test TDD RED→GREEN + coverage v8 ≥90% (D-117 ext D-88/D-92)
 
 ## Vincoli attivi (da CLAUDE.md)
 
@@ -68,6 +67,7 @@ Phase 4 prevede:
 
 ## Decisioni recenti rilevanti
 
+- **Phase 4 CONTEXT.md (D-101..D-120)** — 20 decisioni nuove: auth-agnostic `buildUrl`, envelope JSON `{topic,data,id}`, RealtimeChannelManager N-canali, auto-fallback SSE→WS default abilitato (cap 5 cicli), Visibility API integration, composition wrapper RealtimeBroker, riuso pipeline §28 + mapper F2/F3 + backpressure F3 + cascade cleanup F1.
 - **Plan 03-12 (Wave 7) ESEGUITO ✓** — RouterBroker composition wrapper + RouterEngine + createRouterBroker. 29/29 test deterministici TDD GREEN. D-83 strict verificato. 5 BLOCKER iter1 fix applicati. Cyclic workspace dep routing↔gateway gestito (type-only).
 - **D-100** (NEW da revision plan iter 1): `RouterBroker` isola accesso `CanonicalRegistry` private di F2 via getter `getCanonicalSchemaForTopic` con loud throw + opt-in `requiresRouteTopics` come bypass. Documentata in `.planning/phases/03-routing-server-gateway-http/03-CONTEXT.md`.
 - **Plan 03-12 fix tecnici** (auto-fix Rule 1/3 in execution):
