@@ -89,8 +89,13 @@ export {
   type WorkerBridgeSnapshot,
 } from './worker-bridge'
 
-// ---------- Wave 4 plan 05-06 (placeholder — file ownership 05-06) ----------
-// W4 (plan 05-06):
-//   export { createWorkerBroker } from './public-factory'
-//   export { WorkerBroker, type WorkerBrokerConfig } from './worker-broker'
-//   export { WorkerHandler } from './worker-handler'
+// ---------- Wave 4 plan 05-06 — composition wrapper Opzione B + factory + harness ----------
+export { WorkerBroker, type WorkerBrokerConfig } from './worker-broker'
+export { createWorkerBroker } from './public-factory'
+export {
+  createWorkerHandler,
+  deriveTopic,
+  type WorkerHandler,
+  type WorkerHandlerDeps,
+  type WorkerPublishFn,
+} from './worker-handler'
