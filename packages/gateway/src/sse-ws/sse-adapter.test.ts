@@ -134,7 +134,8 @@ describe('SseAdapter (D-101, D-104, D-109, D-113 — RT-01/04/05/06/07, ERR-02)'
   it('Test 8: backpressure DI — schedule invocato per message events (D-115)', async () => {
     const backpressure = {
       schedule: vi.fn(
-        (_routeId: string, _pri: string, task: (signal?: AbortSignal) => Promise<unknown>) => task(),
+        (_routeId: string, _pri: string, task: (signal?: AbortSignal) => Promise<unknown>) =>
+          task(),
       ),
       queueLength: vi.fn(() => 0),
     }

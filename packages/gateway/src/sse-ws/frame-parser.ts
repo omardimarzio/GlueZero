@@ -100,6 +100,7 @@ export function parseFrame(raw: unknown): FrameParseResult {
   // Bracket access richiesto da `noPropertyAccessFromIndexSignature` (TS strict
   // tsconfig F4) — `Record<string, unknown>` esige `obj['topic']` non `obj.topic`.
   const obj = parsed as Record<string, unknown>
+  // biome-ignore lint/complexity/useLiteralKeys: noPropertyAccessFromIndexSignature TS strict require bracket access on Record<string, unknown>
   const topic = obj['topic']
   if (typeof topic !== 'string' || topic.length === 0) {
     return { ok: false, reason: 'missing-topic', raw }
@@ -108,10 +109,11 @@ export function parseFrame(raw: unknown): FrameParseResult {
   // (Test 10) — il consumer adapter genererà l'id via nanoid se assente.
   // Nota: `data` è unknown raw, NON validato qui — la normalizzazione canonical
   // step 4 §28 e validation step 5/6 sono compito di RouterBroker (D-114, D-116).
+  // biome-ignore lint/complexity/useLiteralKeys: noPropertyAccessFromIndexSignature TS strict require bracket access on Record<string, unknown>
   const data = obj['data']
+  // biome-ignore lint/complexity/useLiteralKeys: noPropertyAccessFromIndexSignature TS strict require bracket access on Record<string, unknown>
   const id = obj['id']
-  const envelope: FrameEnvelope =
-    typeof id === 'string' ? { topic, data, id } : { topic, data }
+  const envelope: FrameEnvelope = typeof id === 'string' ? { topic, data, id } : { topic, data }
   return { ok: true, envelope }
 }
 

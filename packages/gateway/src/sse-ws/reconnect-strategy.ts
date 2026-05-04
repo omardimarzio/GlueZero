@@ -160,17 +160,14 @@ export interface ReconnectStrategy {
  * @param options - Configurazione override (vedi `ReconnectStrategyOptions`).
  * @returns Istanza `ReconnectStrategy` con state isolato in closure.
  */
-export function createReconnectStrategy(
-  options: ReconnectStrategyOptions = {},
-): ReconnectStrategy {
+export function createReconnectStrategy(options: ReconnectStrategyOptions = {}): ReconnectStrategy {
   const baseMs = options.baseMs ?? 1_000
   const capMs = options.capMs ?? 30_000
   const consolidationMs = options.consolidationMs ?? 5_000
   const maxAttempts = options.maxAttempts ?? Number.POSITIVE_INFINITY
   const fallbackThreshold = options.fallbackThreshold ?? 3
   const globalCycleCap = options.globalCycleCap ?? 5
-  const initialMode: 'sse' | 'websocket' =
-    options.initialMode === 'websocket' ? 'websocket' : 'sse'
+  const initialMode: 'sse' | 'websocket' = options.initialMode === 'websocket' ? 'websocket' : 'sse'
   const random = options.random ?? Math.random
   const now = options.now ?? Date.now
 

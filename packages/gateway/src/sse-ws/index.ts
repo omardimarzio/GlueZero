@@ -33,44 +33,40 @@
 // + PluginDescriptor.realtimeChannels (D-103). Pattern S1 anti tree-shaking
 // (riferimento PATTERNS.md §3.2).
 export { __augmentSseWsLoaded, type F4PipelineStep } from './augment'
-
-// ---------- Type re-export: types/* ----------
-export type {
-  RealtimeConfig,
-  ReconnectDefaults,
-  HeartbeatDefaults,
-  VisibilityDefaults,
-  RealtimeChannelDef,
-  RealtimeMode,
-  RealtimeReconnectConfig,
-} from './types'
-export type { FrameEnvelope, FrameParseResult } from './types/frame-envelope'
-
 // ---------- Runtime export: parser ----------
-export { parseFrame, isInternalTopic, INTERNAL_TOPICS } from './frame-parser'
-
+export { INTERNAL_TOPICS, isInternalTopic, parseFrame } from './frame-parser'
+export { createRealtimeBroker } from './public-factory'
+export { RealtimeBroker, type RealtimeBrokerConfig } from './realtime-broker'
+// ---------- Runtime export: manager + broker + factory ----------
+export {
+  RealtimeChannelManager,
+  type RealtimeChannelManagerDebugInfo,
+  type RealtimeChannelManagerDeps,
+} from './realtime-channel-manager'
 // ---------- Runtime export: state machines ----------
 export {
   createReconnectStrategy,
   type ReconnectStrategy,
   type ReconnectStrategyOptions,
 } from './reconnect-strategy'
+
+// ---------- Runtime export: adapters (consumer avanzati) ----------
+export { SseAdapter, type SseAdapterDeps } from './sse-adapter'
+// ---------- Type re-export: types/* ----------
+export type {
+  HeartbeatDefaults,
+  RealtimeChannelDef,
+  RealtimeConfig,
+  RealtimeMode,
+  RealtimeReconnectConfig,
+  ReconnectDefaults,
+  VisibilityDefaults,
+} from './types'
+export type { FrameEnvelope, FrameParseResult } from './types/frame-envelope'
 export {
   createVisibilityDetector,
   type VisibilityDetector,
   type VisibilityDetectorOptions,
   type VisibilityState,
 } from './visibility-detector'
-
-// ---------- Runtime export: adapters (consumer avanzati) ----------
-export { SseAdapter, type SseAdapterDeps } from './sse-adapter'
 export { WebSocketAdapter, type WebSocketAdapterDeps } from './websocket-adapter'
-
-// ---------- Runtime export: manager + broker + factory ----------
-export {
-  RealtimeChannelManager,
-  type RealtimeChannelManagerDeps,
-  type RealtimeChannelManagerDebugInfo,
-} from './realtime-channel-manager'
-export { RealtimeBroker, type RealtimeBrokerConfig } from './realtime-broker'
-export { createRealtimeBroker } from './public-factory'

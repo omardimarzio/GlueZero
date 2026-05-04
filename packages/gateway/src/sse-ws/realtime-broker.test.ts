@@ -46,10 +46,14 @@ describe('RealtimeBroker (D-101 composition + D-103 + D-112)', () => {
     })
     // F1 default deliveryMode='async' → microtask dispatch. Use 'sync' per test
     // deterministic — pattern coerente con F2/F3 unit test.
-    broker.publish('test.topic', { value: 42 }, {
-      source: { type: 'plugin', id: 'unit' },
-      deliveryMode: 'sync',
-    })
+    broker.publish(
+      'test.topic',
+      { value: 42 },
+      {
+        source: { type: 'plugin', id: 'unit' },
+        deliveryMode: 'sync',
+      },
+    )
     expect(received).not.toBeNull()
     expect(received!.topic).toBe('test.topic')
     expect(received!.payload).toEqual({ value: 42 })
@@ -86,15 +90,11 @@ describe('RealtimeBroker (D-101 composition + D-103 + D-112)', () => {
     const broker = new RealtimeBroker()
     await broker.registerPlugin({
       id: 'p1',
-      realtimeChannels: [
-        { name: 'p1.feed', mode: 'sse', url: 'http://x/?_channel=p1.feed' },
-      ],
+      realtimeChannels: [{ name: 'p1.feed', mode: 'sse', url: 'http://x/?_channel=p1.feed' }],
     })
     await broker.registerPlugin({
       id: 'p2',
-      realtimeChannels: [
-        { name: 'p2.feed', mode: 'sse', url: 'http://x/?_channel=p2.feed' },
-      ],
+      realtimeChannels: [{ name: 'p2.feed', mode: 'sse', url: 'http://x/?_channel=p2.feed' }],
     })
     await broker.unregisterPlugin('p1')
     const snap = broker.getDebugSnapshot()
@@ -122,10 +122,14 @@ describe('RealtimeBroker (D-101 composition + D-103 + D-112)', () => {
     broker.subscribe('test.x', (ev: { payload: unknown }) => {
       received = ev.payload
     })
-    broker.publish('test.x', { value: 1 }, {
-      source: { type: 'plugin', id: 'test' },
-      deliveryMode: 'sync',
-    })
+    broker.publish(
+      'test.x',
+      { value: 1 },
+      {
+        source: { type: 'plugin', id: 'test' },
+        deliveryMode: 'sync',
+      },
+    )
     expect(received).toEqual({ value: 1 })
   })
 
@@ -196,16 +200,12 @@ describe('RealtimeBroker (D-101 composition + D-103 + D-112)', () => {
     })
     await broker.registerPlugin({
       id: 'p1',
-      realtimeChannels: [
-        { name: 'dup', mode: 'sse', url: 'http://x/?_channel=dup' },
-      ],
+      realtimeChannels: [{ name: 'dup', mode: 'sse', url: 'http://x/?_channel=dup' }],
     })
     // Stesso `name: 'dup'` → secondo connect throw → system.warn published.
     await broker.registerPlugin({
       id: 'p2',
-      realtimeChannels: [
-        { name: 'dup', mode: 'sse', url: 'http://x/?_channel=dup' },
-      ],
+      realtimeChannels: [{ name: 'dup', mode: 'sse', url: 'http://x/?_channel=dup' }],
     })
     // Flush microtasks per consentire dispatch async della publish.
     await new Promise((r) => setTimeout(r, 10))

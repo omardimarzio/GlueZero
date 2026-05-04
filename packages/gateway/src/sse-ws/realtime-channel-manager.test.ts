@@ -18,10 +18,7 @@
 //   con `reason: 'cycle-cap-exceeded'`.
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import {
-  RealtimeChannelManager,
-  type RealtimeManagerClock,
-} from './realtime-channel-manager'
+import { RealtimeChannelManager, type RealtimeManagerClock } from './realtime-channel-manager'
 import { MockEventSource } from './test-utils/mock-event-source'
 import { MockWebSocket } from './test-utils/mock-websocket'
 import type { RealtimeChannelDef } from './types/realtime-channel-def'

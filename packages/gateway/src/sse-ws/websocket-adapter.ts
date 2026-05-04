@@ -410,9 +410,7 @@ export class WebSocketAdapter {
     }
     if (!this.disconnectedPublished) {
       this.disconnectedPublished = true
-      this.deps.publishFn(
-        this.makeSystemEvent('system.realtime.disconnected', { code, reason }),
-      )
+      this.deps.publishFn(this.makeSystemEvent('system.realtime.disconnected', { code, reason }))
     }
   }
 

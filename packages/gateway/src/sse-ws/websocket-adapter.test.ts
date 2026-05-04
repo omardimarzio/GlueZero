@@ -16,9 +16,9 @@
 // - AbortController cascade (D-112)
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { WebSocketAdapter } from './websocket-adapter'
 import { MockWebSocket } from './test-utils/mock-websocket'
 import type { RealtimeChannelDef } from './types/realtime-channel-def'
+import { WebSocketAdapter } from './websocket-adapter'
 
 describe('WebSocketAdapter (D-101, D-104, D-106, D-107, D-109, D-111 — RT-02/04/05/06, ERR-02)', () => {
   let publishFn: ReturnType<typeof vi.fn>
@@ -96,9 +96,7 @@ describe('WebSocketAdapter (D-101, D-104, D-106, D-107, D-109, D-111 — RT-02/0
     )
     // Verifica heartbeat avviato: dopo intervalMs deve esserci un __ping__ frame inviato
     vi.advanceTimersByTime(1_100)
-    expect(
-      MockWebSocket.lastInstance!.sentFrames.some((f) => f.includes('"__ping__"')),
-    ).toBe(true)
+    expect(MockWebSocket.lastInstance!.sentFrames.some((f) => f.includes('"__ping__"'))).toBe(true)
   })
 
   it('Test 5: __message envelope JSON valido → publishFn BrokerEvent con id/topic/payload', async () => {
@@ -153,9 +151,7 @@ describe('WebSocketAdapter (D-101, D-104, D-106, D-107, D-109, D-111 — RT-02/0
     MockWebSocket.lastInstance!.__open()
     publishFn.mockClear()
     MockWebSocket.lastInstance!.__message('{"topic":"__ping__","data":{}}')
-    const pingPublish = publishFn.mock.calls.find(
-      (c) => c[0]?.topic === '__ping__',
-    )
+    const pingPublish = publishFn.mock.calls.find((c) => c[0]?.topic === '__ping__')
     expect(pingPublish).toBeUndefined()
   })
 
@@ -176,9 +172,7 @@ describe('WebSocketAdapter (D-101, D-104, D-106, D-107, D-109, D-111 — RT-02/0
     publishFn.mockClear()
     MockWebSocket.lastInstance!.__message('{"topic":"__pong__","data":{}}')
     // pong NON deve essere pubblicato come BrokerEvent utente
-    const pongPublish = publishFn.mock.calls.find(
-      (c) => c[0]?.topic === '__pong__',
-    )
+    const pongPublish = publishFn.mock.calls.find((c) => c[0]?.topic === '__pong__')
     expect(pongPublish).toBeUndefined()
     // Avanza per parecchio (oltre staleTimeoutMs originale dal connect, ma dentro
     // staleTimeoutMs dal pong) → adapter NON deve scadere stale
@@ -205,9 +199,7 @@ describe('WebSocketAdapter (D-101, D-104, D-106, D-107, D-109, D-111 — RT-02/0
     await adapter.connect()
     MockWebSocket.lastInstance!.__open()
     vi.advanceTimersByTime(1_100)
-    expect(
-      MockWebSocket.lastInstance!.sentFrames.some((f) => f.includes('"__ping__"')),
-    ).toBe(true)
+    expect(MockWebSocket.lastInstance!.sentFrames.some((f) => f.includes('"__ping__"'))).toBe(true)
     // Secondo tick → secondo ping
     vi.advanceTimersByTime(1_000)
     const pingFrames = MockWebSocket.lastInstance!.sentFrames.filter((f) =>
@@ -325,9 +317,7 @@ describe('WebSocketAdapter (D-101, D-104, D-106, D-107, D-109, D-111 — RT-02/0
     await adapter.connect()
     MockWebSocket.lastInstance!.__open()
     publishFn.mockClear()
-    MockWebSocket.lastInstance!.__message(
-      '{"topic":"weather.__ping__","data":{"city":"Roma"}}',
-    )
+    MockWebSocket.lastInstance!.__message('{"topic":"weather.__ping__","data":{"city":"Roma"}}')
     // `weather.__ping__` NON deve essere filtrato come internal — deve passare
     // through al consumer (è un topic legittimo che casualmente contiene `__ping__`
     // come segmento, ma non è il topic riservato esatto `__ping__`).

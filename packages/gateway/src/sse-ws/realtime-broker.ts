@@ -41,10 +41,7 @@
 
 import type { PluginDescriptor, Subscription } from '@sembridge/core'
 import { RouterBroker, type RouterBrokerConfig } from '@sembridge/routing'
-import {
-  RealtimeChannelManager,
-  type RealtimeChannelManagerDeps,
-} from './realtime-channel-manager'
+import { RealtimeChannelManager, type RealtimeChannelManagerDeps } from './realtime-channel-manager'
 import type { RealtimeChannelDef } from './types/realtime-channel-def'
 import type { RealtimeConfig } from './types/realtime-config'
 
@@ -104,10 +101,14 @@ export class RealtimeBroker {
         // (broker-mapper-wrapper.ts:442) che li passa a `createBrokerEvent`
         // (event-factory.ts:48-67). Il source SSE_SOURCE/WS_SOURCE pubblicato
         // dall'adapter viaggia invariato fino al subscriber finale.
-        this.inner.publish(event.topic, event.payload as never, {
-          source: event.source,
-          id: event.id,
-        } as RouterPublishOptions)
+        this.inner.publish(
+          event.topic,
+          event.payload as never,
+          {
+            source: event.source,
+            id: event.id,
+          } as RouterPublishOptions,
+        )
       },
     }
 
@@ -160,7 +161,7 @@ export class RealtimeBroker {
    * ```
    */
   disconnectRealtime(name?: string): void {
-    return this.manager.disconnect(name)
+    this.manager.disconnect(name)
   }
 
   // ============================================================================

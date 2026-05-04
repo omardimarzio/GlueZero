@@ -26,19 +26,13 @@
 // Pattern Anti-AP-11 (PATTERNS.md §5): NESSUNO multiplex automatico — ogni canale
 // ha la propria connection (D-102). Map by `name`, NON by `url`.
 
-import { createBrokerError, type BrokerEvent } from '@sembridge/core'
+import { type BrokerEvent, createBrokerError } from '@sembridge/core'
 import { nanoid } from 'nanoid'
 import type { BackpressureStrategy } from '../http/types/http-strategies'
-import {
-  createReconnectStrategy,
-  type ReconnectStrategy,
-} from './reconnect-strategy'
+import { createReconnectStrategy, type ReconnectStrategy } from './reconnect-strategy'
 import { SseAdapter, type SseAdapterDeps } from './sse-adapter'
 import type { RealtimeChannelDef } from './types/realtime-channel-def'
-import {
-  createVisibilityDetector,
-  type VisibilityDetector,
-} from './visibility-detector'
+import { createVisibilityDetector, type VisibilityDetector } from './visibility-detector'
 import { WebSocketAdapter, type WebSocketAdapterDeps } from './websocket-adapter'
 
 /** Default `staleTimeoutMs` per `checkFreshnessAll` (D-110 + D-111). 60s uniforme con WS heartbeat. */
@@ -217,8 +211,7 @@ export class RealtimeChannelManager {
 
     // Mode resolution: 'auto' → 'sse' (D-107 SSE-first), 'websocket' → 'websocket',
     // 'sse' → 'sse'.
-    const initialMode: 'sse' | 'websocket' =
-      def.mode === 'websocket' ? 'websocket' : 'sse'
+    const initialMode: 'sse' | 'websocket' = def.mode === 'websocket' ? 'websocket' : 'sse'
 
     // B-4 — istanzia `ReconnectStrategy` per-canale; il `runReconnectLoop` la usa
     // per il ciclo `nextDelayMs/recordSuccess/recordFailure/shouldFallback`.
@@ -460,11 +453,7 @@ export class RealtimeChannelManager {
     if (!entry) return
     const strategy = entry.strategy
 
-    while (
-      !strategy.isPermanentlyFailed() &&
-      !entry.manuallyClosed &&
-      this.channels.has(name)
-    ) {
+    while (!strategy.isPermanentlyFailed() && !entry.manuallyClosed && this.channels.has(name)) {
       const delay = strategy.nextDelayMs()
       const modeBeforeAttempt = strategy.getMode()
       this.publishSystem('system.realtime.reconnecting', {

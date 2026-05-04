@@ -36,9 +36,7 @@ import { RealtimeBroker, type RealtimeBrokerConfig } from './realtime-broker'
 // aggiunti in V1.x non rompono validation).
 const RealtimeChannelDefSchema = v.looseObject({
   name: v.string(),
-  mode: v.optional(
-    v.union([v.literal('sse'), v.literal('websocket'), v.literal('auto')]),
-  ),
+  mode: v.optional(v.union([v.literal('sse'), v.literal('websocket'), v.literal('auto')])),
   buildUrl: v.optional(v.function()),
   url: v.optional(v.string()),
   wsSubprotocols: v.optional(v.union([v.string(), v.array(v.string())])),
@@ -119,5 +117,5 @@ export function createRealtimeBroker(config: RealtimeBrokerConfig = {}): Realtim
   return new RealtimeBroker(config)
 }
 
-export { RealtimeBroker }
 export type { RealtimeBrokerConfig }
+export { RealtimeBroker }

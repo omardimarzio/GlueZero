@@ -217,8 +217,7 @@ export class SseAdapter {
         : baseUrl
 
     const Ctor =
-      this.deps.EventSourceCtor ??
-      (globalThis as { EventSource?: typeof EventSource }).EventSource
+      this.deps.EventSourceCtor ?? (globalThis as { EventSource?: typeof EventSource }).EventSource
     if (!Ctor) {
       throw createBrokerError({
         code: 'realtime.eventsource.unavailable',
@@ -252,8 +251,7 @@ export class SseAdapter {
     // types (default `['heartbeat']`) aggiornano `lastEventReceivedAt` SENZA pubblicare
     // BrokerEvent (silent freshness update). Mantiene staleTimeoutMs uniforme con WS=60s
     // anche se il server non emette messaggi reali sui topic.
-    const heartbeatTypes: readonly string[] =
-      this.def.sseHeartbeatEventTypes ?? ['heartbeat']
+    const heartbeatTypes: readonly string[] = this.def.sseHeartbeatEventTypes ?? ['heartbeat']
     for (const heartbeatType of heartbeatTypes) {
       // Skip se già registrato come eventType pubblicabile (evita doppio listener).
       if (eventTypes.includes(heartbeatType)) continue

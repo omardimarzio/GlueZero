@@ -20,9 +20,9 @@
 // Qui smoke integration verifying l'event arriva al subscriber via inner.publish.
 
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
+import { createRealtimeBroker } from '../public-factory'
 import { MockEventSource } from '../test-utils/mock-event-source'
 import { MockWebSocket } from '../test-utils/mock-websocket'
-import { createRealtimeBroker } from '../public-factory'
 
 type GlobalES = { EventSource?: typeof EventSource }
 type GlobalWS = { WebSocket?: typeof WebSocket }

@@ -75,9 +75,7 @@ export interface VisibilityDetector {
  * v.stop() // cleanup garantito
  * ```
  */
-export function createVisibilityDetector(
-  opts: VisibilityDetectorOptions,
-): VisibilityDetector {
+export function createVisibilityDetector(opts: VisibilityDetectorOptions): VisibilityDetector {
   // RESEARCH §5.3 DI guard:
   // - undefined → use globalThis.document (browser default).
   // - null → explicitly disabled (Worker/SSR/iframe sandbox).

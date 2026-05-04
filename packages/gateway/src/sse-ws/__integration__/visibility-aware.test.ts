@@ -47,7 +47,7 @@ describe('Visibility-aware freshness check (D-110 + RESEARCH §5.2)', () => {
     expect(snap.realtime.channels[0]!.name).toBe('feed')
   })
 
-  it('Scenario D-110 lazy init: visibility detector attivo dopo primo connect, teardown all\'ultimo disconnect', async () => {
+  it("Scenario D-110 lazy init: visibility detector attivo dopo primo connect, teardown all'ultimo disconnect", async () => {
     expect(h.broker.getDebugSnapshot().realtime.visibilityActive).toBe(false)
 
     await h.broker.connectRealtime({

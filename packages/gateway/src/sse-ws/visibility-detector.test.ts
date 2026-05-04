@@ -10,10 +10,7 @@
 // - T-04-04-01 (Tampering Document mock): Test 11 — DI usa mockDoc, non globalThis.document.
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import {
-  createVisibilityDetector,
-  type VisibilityState,
-} from './visibility-detector'
+import { createVisibilityDetector, type VisibilityState } from './visibility-detector'
 
 /**
  * Helper: crea un mock Document con `visibilityState` mutabile + dispatchEvent.
@@ -41,7 +38,9 @@ function createMockDocument(): Document & {
     },
     __dispatch(): void {
       const ev = new Event('visibilitychange')
-      listeners.forEach((fn) => fn(ev))
+      listeners.forEach((fn) => {
+        fn(ev)
+      })
     },
   } as unknown as Document & {
     __setState: (s: VisibilityState) => void
@@ -142,9 +141,6 @@ describe('createVisibilityDetector (D-110, RESEARCH §5)', () => {
     const v = createVisibilityDetector({ onChange, document: mockDoc })
     v.start()
     expect(mockDoc.addEventListener).toHaveBeenCalled()
-    expect(globalSpy).not.toHaveBeenCalledWith(
-      'visibilitychange',
-      expect.anything(),
-    )
+    expect(globalSpy).not.toHaveBeenCalledWith('visibilitychange', expect.anything())
   })
 })

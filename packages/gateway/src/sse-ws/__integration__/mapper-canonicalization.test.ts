@@ -83,12 +83,7 @@ describe('Mapper canonicalization F2 reuse (W-2 D-114 + D-116 closure)', () => {
       captured.push({ payload: ev.payload })
     })
 
-    h.pushSseEvent(
-      'orders',
-      JSON.stringify({ orderId: 'o-1', amount: 100 }),
-      'evt-1',
-      'message',
-    )
+    h.pushSseEvent('orders', JSON.stringify({ orderId: 'o-1', amount: 100 }), 'evt-1', 'message')
     await h.flushAsync(20)
 
     expect(captured.length).toBe(1)

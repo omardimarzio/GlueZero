@@ -4,15 +4,15 @@
 // plan 04-02..04-08 che importano i types senza dipendere dal runtime (parser, manager,
 // broker). Pattern identico a `gateway/http/types/index.ts` di F3.
 
-/** Barrel types F4 — re-export da `@sembridge/gateway/sse-ws`. */
-export type {
-  RealtimeConfig,
-  ReconnectDefaults,
-  HeartbeatDefaults,
-  VisibilityDefaults,
-} from './realtime-config'
 export type {
   RealtimeChannelDef,
   RealtimeMode,
   RealtimeReconnectConfig,
 } from './realtime-channel-def'
+/** Barrel types F4 — re-export da `@sembridge/gateway/sse-ws`. */
+export type {
+  HeartbeatDefaults,
+  RealtimeConfig,
+  ReconnectDefaults,
+  VisibilityDefaults,
+} from './realtime-config'
