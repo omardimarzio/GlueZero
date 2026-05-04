@@ -35,6 +35,15 @@ export default defineConfig({
       // try/catch in http-gateway error classification + combine-signals dispose
       // edge cases produce branches non sempre coperti). Pattern lesson learned
       // F2 plan 02-12 budget calibration.
+      //
+      // Phase 4 plan 04-09 (final gate F4) — coverage v8 measurement post-implementation:
+      // - Globale: 87.27% statements / 80.23% branches / 88.75% functions / 89.32% lines
+      // - sse-ws/ subset: 91.80% statements / 86.70% branches / 89.53% functions / 93.75% lines
+      // sse-ws/ supera i thresholds globali su tutti gli assi (target ≥85/75/88/87
+      // confermato realistic post-implementation). F4 chiusa con calibrazione invariata —
+      // no raise globale per non rompere CI di sviluppi in corso che potrebbero
+      // introdurre nuovi defensive try/catch nel sub-modulo /http (es. wiring
+      // backpressure/dedupe deferred a F6).
       thresholds: {
         statements: 85,
         branches: 75,
