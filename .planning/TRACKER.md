@@ -1,11 +1,11 @@
 ---
 last_updated: 2026-05-04
-status: phase_4_executing_wave_2_complete_ready_wave_3
+status: phase_4_executing_wave_3_04_05_done_pending_04_06
 project: SemBridge
 milestone: v1.0
 current_phase: 4
 current_wave: 3
-current_plan: phase_4_wave_3_04_05_04_06_parallel
+current_plan: phase_4_wave_3_04_06_ws_adapter_next
 session_active: true
 ---
 
@@ -23,41 +23,45 @@ session_active: true
 
 | Campo | Valore |
 |-------|--------|
-| Fase | **Phase 4 — Realtime inbound (SSE/WS) — 🟢 EXECUTING (Wave 2 ✅ COMPLETE; ready Wave 3)** |
-| Wave | **2 / 6 done** (Wave 3 next: 04-05 SSE adapter ∥ 04-06 WS adapter) |
-| Plan in esecuzione | — (04-04 completato; Wave 2 done) |
-| Plan progress F4 | 4 / 9 plan committed (04-01 + 04-02 + 04-03 + 04-04 done; 04-05..04-09 todo) |
-| Plan progress globale | 41 / 46 (89%) |
+| Fase | **Phase 4 — Realtime inbound (SSE/WS) — 🟢 EXECUTING (Wave 3: 04-05 SSE adapter ✅ DONE; pending 04-06 WS adapter)** |
+| Wave | **3 / 6 in progress** (04-05 done; 04-06 next) |
+| Plan in esecuzione | — (04-05 completato; 04-06 next sequential) |
+| Plan progress F4 | 5 / 9 plan committed (04-01 + 04-02 + 04-03 + 04-04 + 04-05 done; 04-06..04-09 todo) |
+| Plan progress globale | 42 / 46 (91%) |
 | Mode GSD | yolo + auto_advance + parallelization (sequential exec, no worktree) |
 | Modello attivo | `claude-opus-4-7-1` (opus) — override esplicito su tutti i sub-agent |
 
-## Ultimo step completato (auto-update 2026-05-04T13:25:00Z)
+## Ultimo step completato (2026-05-04T15:45:00Z)
 
-- Plan: **04-04** → SUMMARY.md committed
-- Commits TDD: `a74a9dc test` + `1e1d34b feat`
-- File: `packages/gateway/src/sse-ws/visibility-detector.{ts,test.ts}` (275 LOC totali, 11/11 test PASS)
-- Phase progress: **4/9** plan completati con SUMMARY.md
-- Project progress: 41/46 plan (89%)
+- Plan: **04-05** → SUMMARY.md committed
+- Commit: `fde59f8 feat(04-05): implement SseAdapter (EventSource wrapper + Last-Event-ID + custom event types + heartbeat hook)` (GREEN gate, dopo `b581aa7` RED test e `ba74ed6` MockEventSource helper)
+- Phase progress: **5/9** plan completati con SUMMARY.md
+- Project progress: 42/46 plan (91%)
+- LOC: 876 (sse-adapter.ts 464 + sse-adapter.test.ts 278 + test-utils/mock-event-source.ts 134)
+- Test: 14/14 sse-adapter PASS + 160/160 gateway suite + **694/694 monorepo full** (zero regressioni)
+- Anti-pattern verificati: 0 `Authorization` literal (AP-2 ✓), 0 import `reconnecting-websocket` (AP-3 ✓), `es.close()` esplicito su error (AP-4 implicito ✓)
+- D-83 strict ✓ (zero modifiche fuori `packages/gateway/src/sse-ws/`)
+- Closures: W-4 SC-1 (custom event types `def.eventTypes` → topic da event field), B-5 Q5 (heartbeat eventTypes silent freshness), B-NEW-2 iter 2 (MockEventSource.byChannelName indexing)
+- Bug fix Rule 1: AbortController re-init al re-connect (era bloccato da disconnect)
 
 
 ## Prossimo step
 
-**Wave 3 — 2 plan paralleli (file ownership disgiunta):**
+**Wave 3 — 04-06 WS adapter (sequential):**
 
 ```
 Skill: gsd-execute-phase 4
 ```
 
-Plan da eseguire (parallel):
-- **04-05** — sse-adapter.ts (EventSource wrapper + Last-Event-ID + backpressure D-115) → scrive `sse-adapter.{ts,test.ts}`
-- **04-06** — websocket-adapter.ts (envelope JSON + ping/pong D-111 + scheme switch D-107) → consuma `parseFrame` da 04-02
+Plan da eseguire:
+- **04-06** — websocket-adapter.ts (envelope JSON D-106 + ping/pong app-level D-111 + scheme switch D-107 http/ws + state machine timing) → consuma `parseFrame` + `INTERNAL_TOPICS` + `isInternalTopic` da 04-02; usa `createReconnectStrategy` da 04-03; pattern adapter analog `sse-adapter.ts` da 04-05
 
 Wave struttura globale F4:
 - ✅ Wave 1: 04-01 (bootstrap) — DONE 2026-05-04
 - ✅ Wave 2: 04-02 + 04-03 + 04-04 — DONE 2026-05-04 (3 plan TDD building blocks)
-- 🟡 Wave 3: 04-05 ∥ 04-06 (2 parallel — SSE/WS adapters; 04-06 consuma parseFrame da 04-02)
-- ⏳ Wave 4: 04-07 (RealtimeChannelManager + runReconnectLoop, consuma createVisibilityDetector da 04-04 + createReconnectStrategy da 04-03)
-- ⏳ Wave 5: 04-08 (RealtimeBroker + integration tests Tier-1/2/3)
+- 🟡 Wave 3: 04-05 ✅ DONE + 04-06 ⏳ pending (SSE/WS adapters)
+- ⏳ Wave 4: 04-07 (RealtimeChannelManager + runReconnectLoop, consuma createVisibilityDetector da 04-04 + createReconnectStrategy da 04-03 + SseAdapter da 04-05 + WSAdapter da 04-06)
+- ⏳ Wave 5: 04-08 (RealtimeBroker + integration tests Tier-1/2/3, usa MockEventSource.byChannelName per harness routing strict B-NEW-2)
 - ⏳ Wave 6: 04-09 (final gate)
 
 Phase 4 lock highlights:
@@ -81,6 +85,7 @@ Phase 4 lock highlights:
 
 ## Decisioni recenti rilevanti
 
+- **Plan 04-05 ESEGUITO ✓ (Wave 3 — SSE adapter)** — `SseAdapter` class production-ready: lifecycle connect/disconnect/checkFreshness, Last-Event-ID via query string `?lastEventId=` (D-105 / RESEARCH §3.2 / chiusura RT-07), W-4 SC-1 closure (def.eventTypes loop addEventListener — topic deriva da event field SSE), B-5 Q5 closure (def.sseHeartbeatEventTypes default ['heartbeat'] silent freshness update senza publish), backpressure DI adapter-level (D-115 riuso F3), AbortController cascade (D-112) con re-init al re-connect (Rule 1 fix), DI EventSourceCtor per test jsdom (RESEARCH §9.1). MockEventSource test util con `byChannelName` Map (B-NEW-2 fix iter 2 owned da 04-05 — abilita harness routing strict 04-08). 14/14 test PASS, 160/160 gateway, **694/694 monorepo full**, tsc clean. Anti-AP-2 verificato (0 `Authorization`); anti-AP-3 (0 import `reconnecting-websocket`); AP-4 implicito (`es.close()` esplicito su error). RT-01/RT-04/RT-06/RT-07 progress (SSE-side closed; pending WS 04-06 + integration 04-07/04-08); RT-05 partial (createReconnectStrategy istanziata, loop reconnect del manager).
 - **Plan 04-04 ESEGUITO ✓ (Wave 2 close)** — `createVisibilityDetector({ onChange, document })` factory event-driven. Pattern listener tracking analog `combine-signals.ts:62-86` (memoize listener ref + addEventListener + removeEventListener puntuale). DI guard 3-way: `undefined` → `globalThis.document`, `null` → explicit Worker/SSR disable (no-op + getState 'visible' default sicuro), `Document` mock → test injection. Idempotenza esplicita start/stop (T-04-04-02/03 mitigation). Anti-AP-5 verificato: 0 setInterval/setTimeout (event-driven puro). 11/11 test PASS, **680/680 monorepo full**, tsc clean su 4 package. RT-05 progresso (visibility wrapper done; pending heartbeat 04-05/06 + manager 04-07).
 - **Plan 04-03 ESEGUITO ✓ (Wave 2)** — `createReconnectStrategy` factory state machine: full jitter D-109 + auto-fallback D-107 (threshold 3 + cycle cap 5) + Q3 §6.2 consolidationMs guard anti-flap (default 5000ms — opzione B). Interface 8 metodi, DI random+now per test deterministici. 15/15 test PASS, 669/669 monorepo, anti-AP-3 verificato (no `reconnecting-websocket` import). Pattern factory + closure analog circuit-breaker.ts F3.
 - **Phase 4 CONTEXT.md (D-101..D-120)** — 20 decisioni nuove: auth-agnostic `buildUrl`, envelope JSON `{topic,data,id}`, RealtimeChannelManager N-canali, auto-fallback SSE→WS default abilitato (cap 5 cicli), Visibility API integration, composition wrapper RealtimeBroker, riuso pipeline §28 + mapper F2/F3 + backpressure F3 + cascade cleanup F1.

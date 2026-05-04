@@ -246,13 +246,13 @@ Mappatura definitiva REQ-ID → fase. Ogni requisito è assegnato alla **prima f
 
 | Requirement | Phase | Status | Note |
 |-------------|-------|--------|------|
-| RT-01 | Phase 4 | Pending | SSE prioritario V1 |
+| RT-01 | Phase 4 | In Progress (04-05 SseAdapter ✓; pending integration 04-07/04-08) | SSE prioritario V1 |
 | RT-02 | Phase 4 | Pending | WebSocket opzionale ma in V1 almeno uno disponibile |
 | RT-03 | Phase 4 | Pending | — |
-| RT-04 | Phase 4 | Pending | — |
-| RT-05 | Phase 4 | In Progress (04-03 reconnect-strategy ✓ + 04-04 visibility-detector ✓; 04-05/06 heartbeat + 04-07 manager pending) | Full jitter + cap 30s + heartbeat + stale detection (D-110 visibility wrapper done) |
-| RT-06 | Phase 4 | Pending | Mapper server→canonical (riusa F2) |
-| RT-07 | Phase 4 | Pending | **Closes PRD §39 #9**: Last-Event-ID + ping app-level |
+| RT-04 | Phase 4 | In Progress (04-05 SSE source descriptor ✓; pending WS adapter 04-06) | source: { type: 'server', id: 'realtime-channel', name: 'sse' } applicato |
+| RT-05 | Phase 4 | In Progress (04-03 reconnect-strategy ✓ + 04-04 visibility-detector ✓ + 04-05 SseAdapter checkFreshness ✓; 04-06 WS heartbeat + 04-07 manager pending) | Full jitter + cap 30s + heartbeat + stale detection (D-110 visibility wrapper done; SSE freshness API done) |
+| RT-06 | Phase 4 | In Progress (04-05 SSE topic validation regex F1 ✓; pending mapper integration 04-08) | Mapper server→canonical (riusa F2) — payload tryParseJson done in 04-05 |
+| RT-07 | Phase 4 | In Progress (04-05 SSE Last-Event-ID via query string ✓; pending WS ping/pong 04-06 + DOC-04 04-09) | **Closes PRD §39 #9**: Last-Event-ID injection manuale via `?lastEventId=` (D-105 / RESEARCH §3.2) — ping app-level WS pendente |
 
 ### Worker Runtime — Fase 5
 

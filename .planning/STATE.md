@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-last_updated: "2026-05-04T13:25:00.000Z"
+last_updated: "2026-05-04T15:45:00.000Z"
 progress:
   total_phases: 6
   completed_phases: 3
   total_plans: 46
-  completed_plans: 41
-  percent: 89
+  completed_plans: 42
+  percent: 91
 ---
 
 # Project State: SemBridge
@@ -28,16 +28,16 @@ progress:
 ## Current Position
 
 Phase: 04 (Realtime inbound (SSE prioritario, WS opzionale)) — EXECUTING
-Plan: 5 of 9 (next)
+Plan: 6 of 9 (next, after Wave 3 — 04-06 WS adapter)
 Total Plans: 9 (Phase 4)
 
-**Last completed:** Plan 04-04 (Wave 2 — Visibility detector wrapper) at 2026-05-04 — 2 commits TDD atomic (a74a9dc RED test + 1e1d34b GREEN feat); 2 nuovi file 275 LOC (visibility-detector.ts 125 + visibility-detector.test.ts 150). `createVisibilityDetector({ onChange, document })` factory ritorna `VisibilityDetector` con 4 metodi (start/stop/getState/isActive). Pattern listener tracking analog `combine-signals.ts:62-86` (memoize listener ref + addEventListener + removeEventListener puntuale). DI guard 3-way (`undefined`→globalThis.document, `null`→explicit Worker/SSR disable, `Document` mock→test). Idempotenza esplicita start/stop (T-04-04-02/03 mitigation). Anti-AP-5 verificato: 0 setInterval/setTimeout (event-driven puro). 11/11 visibility-detector test PASS + 146/146 gateway suite + **680/680 monorepo full** + tsc clean su 4 package. D-83 strict ✓ (zero modifiche fuori `gateway/src/sse-ws/`). RT-05 closed. Building block per consumer 04-07 RealtimeChannelManager (single shared instance, freshness check on visible D-110).
+**Last completed:** Plan 04-05 (Wave 3 — SSE adapter) at 2026-05-04 — 3 commits atomic (ba74ed6 helper test util MockEventSource + b581aa7 RED test + fde59f8 GREEN feat); 3 nuovi file 876 LOC (sse-adapter.ts 464 + sse-adapter.test.ts 278 + test-utils/mock-event-source.ts 134). `SseAdapter` class production-ready con lifecycle connect/disconnect/checkFreshness, Last-Event-ID injection manuale via query string `?lastEventId=` (D-105 / RESEARCH §3.2 / chiusura RT-07), W-4 SC-1 closure (def.eventTypes loop addEventListener — topic deriva da event field SSE), B-5 Q5 closure (def.sseHeartbeatEventTypes default ['heartbeat'] silent freshness update senza publish), backpressure DI adapter-level (D-115 riuso F3 1:1), AbortController cascade (D-112) con re-init al re-connect (Rule 1 fix), DI EventSourceCtor per test jsdom (RESEARCH §9.1). 14/14 sse-adapter test PASS + 160/160 gateway suite + **694/694 monorepo full** + tsc clean su 4 package. D-83 strict ✓ (zero modifiche fuori `gateway/src/sse-ws/`). Anti-AP-2 verificato (0 Authorization literal); anti-AP-3 (0 import reconnecting-websocket); AP-4 implicito (es.close() forzato su error). RT-01/RT-04/RT-06/RT-07 closed; RT-05 partial (createReconnectStrategy istanziata, loop di reconnect è del manager 04-07). MockEventSource.byChannelName Map indicizzata via `?_channel=<name>` query param (B-NEW-2 fix owned da 04-05). Building block pronto per consumer 04-07 RealtimeChannelManager (manager istanzia `new SseAdapter(def, deps)` e gestisce loop reconnect).
 
-**Next:** `/gsd-execute-phase 4` Wave 3 — 2 plan paralleli (file ownership disgiunta): 04-05 SSE adapter + 04-06 WS adapter (consuma parseFrame da 04-02).
+**Next:** `/gsd-execute-phase 4` Wave 3 — Plan 04-06 (WS adapter, consuma parseFrame da 04-02 + envelope JSON D-106 + ping/pong D-111 + scheme switch D-107) per chiudere Wave 3, poi Wave 4 (04-07 RealtimeChannelManager).
 
 - **Phase:** 3 ✅ COMPLETE
 - **Status:** Ready to execute
-- **Progress:** [█████████░] 89%
+- **Progress:** [█████████░] 91%
 
 ## Phases Overview
 
@@ -51,7 +51,7 @@ Total Plans: 9 (Phase 4)
 | 1 | Core essenziale (broker pub/sub, plugin registry, EventTap pre-instrumentato) | **✅ COMPLETE & VERIFIED (11/11 plans, PASS confidence HIGH)** |
 | 2 | Canonical Model & Mapper bidirezionale + Mapping Inspector | **✅ COMPLETE — ready for verifier (12/12 plans)** |
 | 3 | Routing engine + HTTP gateway con retry/timeout/dedupe/auth | **✅ COMPLETE — ready for verifier (14/14 plans, 4 open issues PRD §39 closed)** |
-| 4 | Realtime inbound (SSE prioritario, WS opzionale) | **In Progress — 4/9 plans (04-01 Wave 1 + 04-02 + 04-03 + 04-04 Wave 2 done)** |
+| 4 | Realtime inbound (SSE prioritario, WS opzionale) | **In Progress — 5/9 plans (04-01 Wave 1 + 04-02..04-04 Wave 2 + 04-05 Wave 3 SSE adapter done; 04-06 WS adapter next)** |
 | 5 | Worker Runtime (registry, route worker, task tracking) | Not started |
 | 6 | Cache + Tooling avanzato (Inspector, Metrics, debug API) | Not started |
 
@@ -95,6 +95,7 @@ Total Plans: 9 (Phase 4)
 | Phase 04 P02 | 12min | 1 tasks | 3 files |
 | Phase 04 P03 | 4min | 1 tasks | 2 files (reconnect-strategy.{ts,test.ts} 407 LOC; 15/15 test PASS, 669/669 monorepo) |
 | Phase 04 P04 | ~18min | 1 tasks | 2 files (visibility-detector.{ts,test.ts} 275 LOC; 11/11 test PASS, 680/680 monorepo) |
+| Phase 04 P05 | ~15min | 2 tasks | 3 files (sse-adapter.{ts,test.ts} + test-utils/mock-event-source.ts; 876 LOC; 14/14 test PASS, 694/694 monorepo, anti-AP-2/3 ✓, D-83 strict ✓) |
 
 ## Accumulated Context
 
@@ -170,6 +171,12 @@ Total Plans: 9 (Phase 4)
 | Plan 04-02 D-106 envelope JSON shape locked: `{ topic: string non-vuoto, data: unknown, id?: string }` | Topic vuoto rifiutato come `missing-topic` (Test 4). `id` non-string ignorato graceful (Test 10 — no crash, envelope.id undefined). L'adapter 04-06 genererà via nanoid se mancante. Frame non-conformi → consumer publica `network.error` con `category: 'protocol'` riusando ERR-02 ext F3 (Q2 closure 04-CONTEXT — NIENTE nuovo `realtime.protocol.error` event). | 04-02-SUMMARY.md |
 | Plan 04-02 D-111 + PITFALL §11.7 chiusura Q1: `isInternalTopic` strict equality match (NO prefix) | `topic === '__ping__' \|\| topic === '__pong__'` esatto. NO `startsWith('__')`, NO regex prefix `/^__/`. Topic legittimi consumer come `weather.__ping__` NON sono filtrati (Test 13 esplicito blocca regressione). Verifica: `grep -v "^//" frame-parser.ts \| grep -c "startsWith('__')"` = 0. INTERNAL_TOPICS frozen const (`Readonly<{readonly PING; readonly PONG}>` annotation per --isolatedDeclarations). | 04-02-SUMMARY.md |
 | Plan 04-02 input difensivo `unknown` per parseFrame (defense-in-depth pipeline §28) | `MessageEvent.data` è `any` da DOM lib, può essere ArrayBuffer/Blob/number. V1 supporta solo testo JSON (D-106) → input non-string ritorna `malformed-json` graceful con `raw: String(raw)`. Pattern coerente con principio "trust no one" della pipeline §28. Estende il pattern `parseRetryAfter` F3 (analog parser puro). | 04-02-SUMMARY.md |
+| Plan 04-05 D-105 closure: Last-Event-ID via query string (NO header custom) | EventSource standard non supporta header custom (vincolo PRD §31.3 + D-105). L'adapter memorizza `event.lastEventId` su ogni `__message`/`message` event e lo inietta come `?lastEventId=` via `appendQueryParam(url, 'lastEventId', this.lastEventId)` al re-connect. Test 6 verifica: dopo `__message('{}', 'evt-1')` + `disconnect()` + `connect()`, `MockEventSource.lastInstance.url` contains `lastEventId=evt-1`. Helper `appendQueryParam` usa `URL` API per parsing strict + fallback manuale per URL relativi. Chiusura RT-07 senza modifiche al server contract. | 04-05-SUMMARY.md |
+| Plan 04-05 W-4 SC-1 closure: SSE custom event types via `def.eventTypes` loop | `def.eventTypes` opt-in popolato → adapter registra `addEventListener(eventType, ...)` per ogni elemento; `topic` deriva da `event.type` (NON da `def.name`). Default fallback: `['message']` con `topic = def.name`. Test 13 verifica `def.eventTypes=['weather.update']` + server `event: weather.update\ndata: {"city":"Roma"}` → `BrokerEvent.topic === 'weather.update'`; listener `'message'` NON registrato per quel canale. Chiusura SC-1 ROADMAP scenario meteo. | 04-05-SUMMARY.md |
+| Plan 04-05 B-5 Q5 closure: SSE heartbeat eventTypes silent freshness update | `def.sseHeartbeatEventTypes` default `['heartbeat']` → adapter registra listener che aggiorna `lastEventReceivedAt = Date.now()` SENZA pubblicare `BrokerEvent`. Skip se l'eventType è già in `def.eventTypes` (no doppio listener). Test 14 verifica: `event: heartbeat` → `checkFreshness(60_000) === true` E `publishFn` NOT called. Mantiene `staleTimeoutMs` uniforme con WS=60s anche se il server SSE non emette messaggi reali sui topic. | 04-05-SUMMARY.md |
+| Plan 04-05 Rule 1 fix: AbortController re-init al re-connect (era bloccato da disconnect) | Il pattern originale `private readonly controller = new AbortController()` (single-instance per lifetime) bloccava qualsiasi re-connect dopo `disconnect()` perché `disconnect()` chiama `controller.abort(reason)` e `connect()` aveva guard `if (controller.signal.aborted) return`. Fix: rimosso `readonly`, aggiunto re-init opportunistic in `connect()` se `controller.signal.aborted`. Mantenuta guard sull'`externalSignal` (early return se l'external è abortito). Pattern coerente con http-gateway.ts fetch lifecycle multi-attempt. Test 6 (Last-Event-ID injection) ha rivelato il bug. | 04-05-SUMMARY.md |
+| Plan 04-05 B-NEW-2 fix iter 2: MockEventSource.byChannelName Map indicizzata via `?_channel=<name>` query param (owned da 04-05) | Test util in `test-utils/mock-event-source.ts` espone `static byChannelName: Map<string, MockEventSource>`. Constructor parsa il query param `_channel` e si registra: `MockEventSource.byChannelName.set(channelName, this)`. `__reset()` chiama anche `byChannelName.clear()`. Permette `MockEventSource.byChannelName.get('orders')` lookup deterministico nel harness routing strict per-canale di plan 04-08, evitando il fallback ambiguo a `MockEventSource.lastInstance` (cross-canale pollution pre-fix B-2). Owned da 04-05 invece di retrofittare in 04-08. | 04-05-SUMMARY.md |
+| Plan 04-05 ErrorCategory union F1 → 'protocol' viaggia in payload del network.error event (NOT come BrokerError.category) | L'union `ErrorCategory` di F1 (`packages/core/src/types/error.ts:19-28`) NON include `'protocol'`. Per evitare modifica core (D-83 strict), il topic invalid (regex F1 fail) pubblica un `BrokerEvent` con `topic: 'network.error'` e `payload: { category: 'protocol', code: 'realtime.topic.invalid', channel: def.name, rawTopic }` — la category 'protocol' è una stringa nel payload, NON il `BrokerError.category` field. Coerente con D-106 (frame parse errors → network.error riuso ERR-02 ext F3) e Q2 RESEARCH. Verifica Test 9: `expect(errorCall![0].payload).toMatchObject({ category: 'protocol', code: 'realtime.topic.invalid', ... })`. | 04-05-SUMMARY.md |
 
 ### Open Issues PRD §39 — Phase Assignment
 
