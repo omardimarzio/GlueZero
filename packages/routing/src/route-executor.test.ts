@@ -10,7 +10,7 @@
 // - Test 7: emette tap step `event.route.executed` via callback (verifica via spy)
 // - Test 8: route.type sconosciuto → RouteOutcome.error 'route.type.unknown'
 
-import type { BrokerEvent, EventTap, PipelineSnapshot, PipelineStep } from '@sembridge/core'
+import type { BrokerEvent, EventTap, PipelineSnapshot, PipelineStep } from '@gluezero/core'
 import { describe, expect, it, vi } from 'vitest'
 import { RouteExecutor } from './route-executor'
 import type { CompiledRoute } from './route-resolver'

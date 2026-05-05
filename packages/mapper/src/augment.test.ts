@@ -1,4 +1,4 @@
-// augment.test.ts — verifica TS declaration merging di @sembridge/core (D-49/D-56/D-57).
+// augment.test.ts — verifica TS declaration merging di @gluezero/core (D-49/D-56/D-57).
 //
 // Test prevalentemente compile-time: se `augment.ts` non esegue correttamente il
 // declaration merging, il typecheck di questo file fallisce (TS error 2339 "Property X
@@ -10,7 +10,7 @@
 // Pattern F1 replicato: discriminated test cases con expect statements (vedi
 // validator-adapter.test.ts pattern co-locato).
 
-import type { BrokerConfig, PluginDescriptor } from '@sembridge/core'
+import type { BrokerConfig, PluginDescriptor } from '@gluezero/core'
 import { describe, expect, it } from 'vitest'
 import { __augmentLoaded } from './augment'
 import type { CanonicalSchemaId } from './types/canonical-schema'

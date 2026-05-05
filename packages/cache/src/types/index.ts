@@ -1,6 +1,6 @@
 // types/index.ts — barrel types-only F6 Cache layer.
 //
-// Re-export `import type { ... } from '@sembridge/cache'` per consumer e per i
+// Re-export `import type { ... } from '@gluezero/cache'` per consumer e per i
 // plan 06-02..06-08 che importano i types senza dipendere dal runtime
 // (memory-cache-adapter, cache-handler, cache-broker). Pattern identico a
 // `worker/types/index.ts` di F5.

@@ -1,5 +1,5 @@
 // public-factory.ts — `createWorkerBroker(config)` API pubblica del package
-// `@sembridge/worker` (PRD §27, REQ WK-01..WK-07, decisione D-30 no singleton).
+// `@gluezero/worker` (PRD §27, REQ WK-01..WK-07, decisione D-30 no singleton).
 //
 // Estende il pattern di `createRouterBroker` (F3 plan 03-12) e
 // `createRealtimeBroker` (F4 plan 04-08): factory pure function che valida la
@@ -112,7 +112,7 @@ const WorkerBrokerConfigSchema = v.looseObject({
  *
  * @example Quick start (config-driven workerRoutes + assertSerializable dev)
  * ```ts
- * import { createWorkerBroker } from '@sembridge/worker'
+ * import { createWorkerBroker } from '@gluezero/worker'
  *
  * const broker = createWorkerBroker({
  *   workers: { assertSerializable: 'dev' },

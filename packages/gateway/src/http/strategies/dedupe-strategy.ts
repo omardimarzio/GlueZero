@@ -24,7 +24,7 @@ import type { DedupeStrategy } from '../types/http-strategies'
 /**
  * Opzioni di configurazione per `createDedupeStrategy`.
  *
- * Tutti i campi opzionali con default sensati per V1 SemBridge.
+ * Tutti i campi opzionali con default sensati per V1 GlueZero.
  */
 export interface DedupeStrategyOptions {
   /**

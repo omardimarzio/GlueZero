@@ -2,11 +2,11 @@
  * F6 MetricsSnapshot — schema simil-OpenMetrics ritornato da `getMetrics()`
  * (TOOL-05 closure PRD §39 #10).
  *
- * **Naming convention** (D-163): `sembridge.<package>.<metric>{<labels>}` formato
+ * **Naming convention** (D-163): `gluezero.<package>.<metric>{<labels>}` formato
  * Prometheus-style flatten. Esempi:
- * - Counter: `sembridge.broker.events_published_total{topic="weather.requested"}`
- * - Gauge: `sembridge.cache.entries_count`
- * - Histogram: `sembridge.http.duration_ms{route_id="weather"}`
+ * - Counter: `gluezero.broker.events_published_total{topic="weather.requested"}`
+ * - Gauge: `gluezero.cache.entries_count`
+ * - Histogram: `gluezero.http.duration_ms{route_id="weather"}`
  *
  * **Cumulative-only** (D-164): counters crescono dal boot, mai resettati.
  * Helper opzionale `getMetricsDelta(prev)` calcola differenze lato consumer.

@@ -1,7 +1,7 @@
 {
-  "name": "@sembridge/mapper",
+  "name": "@gluezero/mapper",
   "version": "0.0.0",
-  "description": "Canonical model + bidirectional mapper for SemBridge (Phase 2)",
+  "description": "Canonical model + bidirectional mapper for GlueZero (Phase 2)",
   "license": "MIT",
   "author": "",
   "type": "module",
@@ -42,7 +42,7 @@
     "clean": "rm -rf dist"
   },
   "dependencies": {
-    "@sembridge/core": "workspace:*",
+    "@gluezero/core": "workspace:*",
     "nanoid": "5.1.9",
     "valibot": "1.3.1"
   },
@@ -54,7 +54,7 @@
   },
   "size-limit": [
     {
-      "name": "@sembridge/mapper (gzip)",
+      "name": "@gluezero/mapper (gzip)",
       "path": "dist/index.js",
       "limit": "12 KB",
       "gzip": true

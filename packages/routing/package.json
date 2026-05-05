@@ -1,7 +1,7 @@
 {
-  "name": "@sembridge/routing",
+  "name": "@gluezero/routing",
   "version": "0.0.0",
-  "description": "Declarative routing engine for SemBridge (Phase 3)",
+  "description": "Declarative routing engine for GlueZero (Phase 3)",
   "license": "MIT",
   "author": "",
   "type": "module",
@@ -44,9 +44,9 @@
     "clean": "rm -rf dist"
   },
   "dependencies": {
-    "@sembridge/core": "workspace:*",
-    "@sembridge/gateway": "workspace:*",
-    "@sembridge/mapper": "workspace:*",
+    "@gluezero/core": "workspace:*",
+    "@gluezero/gateway": "workspace:*",
+    "@gluezero/mapper": "workspace:*",
     "nanoid": "5.1.9",
     "valibot": "1.3.1"
   },

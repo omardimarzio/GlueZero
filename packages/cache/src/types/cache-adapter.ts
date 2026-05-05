@@ -5,7 +5,7 @@ import type { CacheEntry } from './cache-entry'
  *
  * Default V1: `MemoryCacheAdapter` (LRU bounded `maxEntries=1000` D-158, plan 06-02).
  *
- * Swap V1.x: `@sembridge/cache-idb` IndexedDB adapter (deferred — CONTEXT.md
+ * Swap V1.x: `@gluezero/cache-idb` IndexedDB adapter (deferred — CONTEXT.md
  * Deferred Ideas).
  *
  * @see RESEARCH §2 architettura cache + LRU implementation deep dive.
@@ -34,7 +34,7 @@ export interface CacheAdapter {
  * Statistiche cumulative dal boot dell'adapter (D-164 cumulative-only).
  *
  * Consumate dal MetricsCollector F6 (plan 06-06) via gauge
- * `sembridge.cache.entries_count` + counter `sembridge.cache.{hits,misses,evictions}_total`.
+ * `gluezero.cache.entries_count` + counter `gluezero.cache.{hits,misses,evictions}_total`.
  */
 export interface CacheStats {
   readonly hits: number

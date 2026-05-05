@@ -15,7 +15,7 @@
 //   `unregisterPlugin` cascade ESTENDE D-26 di F1 con la 4ª voce (route abort).
 //   Pattern try/catch isolato: un fallimento NON blocca gli altri step.
 
-import type { CanonicalSchemaId } from '@sembridge/mapper'
+import type { CanonicalSchemaId } from '@gluezero/mapper'
 import { HttpResponse, http } from 'msw'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { createRouterHarness, type RouterHarness } from '../test-utils/router-harness'

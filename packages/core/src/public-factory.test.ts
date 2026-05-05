@@ -39,7 +39,7 @@ describe('createBroker', () => {
     // sono aggiunte via TS declaration merging dai package downstream (D-56). Senza augment,
     // qui le passiamo come extra-prop che `v.looseObject` accetta (cast esplicito a
     // `unknown as BrokerConfig` per bypass del TS type-check del literal — è esattamente
-    // ciò che fa il consumer F2 dopo aver fatto `import '@sembridge/mapper'`).
+    // ciò che fa il consumer F2 dopo aver fatto `import '@gluezero/mapper'`).
     const cfg = {
       topicSchemas: { x: 1 },
       canonicalModel: { y: 2 },

@@ -34,7 +34,7 @@
 //   - T-06-03-06 (Information Disclosure originalError leak): mitigate via sanitized
 //     error shape D-80 (no originalError/stack/cause).
 
-import { type BrokerEvent, createBrokerError, type EventTap } from '@sembridge/core'
+import { type BrokerEvent, createBrokerError, type EventTap } from '@gluezero/core'
 import { cacheKey } from './stable-hash'
 import type { CacheAdapter } from './types/cache-adapter'
 

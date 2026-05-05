@@ -1,13 +1,13 @@
 // chain-completa-flow.test.ts — Tier-1 jsdom integration test plan 06-08b Wave 4b.
 //
-// Verifica end-to-end createSemBridge default chain F1+F2+F3+F4+F5+F6 attiva:
+// Verifica end-to-end createGlueZero default chain F1+F2+F3+F4+F5+F6 attiva:
 // - publish event → mapper attivo (canonical pass-through) + routing attivo +
 //   devtools tap registra evento (Inspector buffer popolato)
 // - subscribe + publish round-trip funziona con chain completa default
 // - getDebugSnapshot expose snapshot post-publish (devtools OUTERMOST)
 
 import { describe, expect, it } from 'vitest'
-import { createSemBridge } from '../sem-bridge'
+import { createGlueZero } from '../glue-zero'
 
 function flushAsync(): Promise<void> {
   return new Promise((r) => setTimeout(r, 10))
@@ -22,9 +22,9 @@ interface DevtoolsLikeBroker {
   }
 }
 
-describe('chain-completa-flow integration — createSemBridge default F1+F2+F3+F4+F5+F6', () => {
+describe('chain-completa-flow integration — createGlueZero default F1+F2+F3+F4+F5+F6', () => {
   it('Test 1: default features → publish + subscribe round-trip funziona', async () => {
-    const broker = createSemBridge({}) as DevtoolsLikeBroker
+    const broker = createGlueZero({}) as DevtoolsLikeBroker
     const received: unknown[] = []
     broker.subscribe('e2e.topic', (ev) => received.push(ev.payload))
     broker.publish(
@@ -40,7 +40,7 @@ describe('chain-completa-flow integration — createSemBridge default F1+F2+F3+F
   })
 
   it('Test 2: default features → devtools OUTERMOST → getDebugSnapshot popolato', async () => {
-    const broker = createSemBridge({}) as DevtoolsLikeBroker
+    const broker = createGlueZero({}) as DevtoolsLikeBroker
     broker.subscribe('debug.topic', () => {})
     broker.publish(
       'debug.topic',
@@ -59,7 +59,7 @@ describe('chain-completa-flow integration — createSemBridge default F1+F2+F3+F
   })
 
   it('Test 3: chain completa — multiple publish in sequence, tutti delivered', async () => {
-    const broker = createSemBridge({}) as DevtoolsLikeBroker
+    const broker = createGlueZero({}) as DevtoolsLikeBroker
     const received: number[] = []
     broker.subscribe('seq.topic', (ev) => {
       received.push((ev.payload as { v: number }).v)

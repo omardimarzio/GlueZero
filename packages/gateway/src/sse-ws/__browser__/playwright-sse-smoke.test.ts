@@ -7,7 +7,7 @@
 // in-process (vitest browser server o test fixture HTTP locale), ed è **deferred V1.x**
 // per priorità di delivery V1.
 //
-// Esecuzione: `pnpm --filter @sembridge/gateway test:browser` carica `vitest.browser.config.ts`
+// Esecuzione: `pnpm --filter @gluezero/gateway test:browser` carica `vitest.browser.config.ts`
 // con provider Playwright headless Chromium. Esclusione da Tier-1 jsdom via
 // `vitest.config.ts` `exclude: ['**/__browser__/**']` (W-NEW-3).
 

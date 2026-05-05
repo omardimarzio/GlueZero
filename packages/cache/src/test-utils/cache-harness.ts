@@ -18,7 +18,7 @@
 // `baseBroker.publish` (che NON è una cache route, quindi delegate plain
 // inner.publish → subscribers via wildcard collect).
 
-import type { BrokerEvent } from '@sembridge/core'
+import type { BrokerEvent } from '@gluezero/core'
 import type { CacheBroker, CacheBrokerConfig } from '../cache-broker'
 import {
   type CacheHttpDelegate,

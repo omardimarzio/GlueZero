@@ -22,7 +22,7 @@
 // - T-03-02-02 (Type confusion): `CanonicalSchemaId` branded da F2 importato; gli `id`
 //   delle route sono plain string ma sempre validati a runtime in plan 03-05.
 
-import type { CanonicalSchemaId, OutputMap } from '@sembridge/mapper'
+import type { CanonicalSchemaId, OutputMap } from '@gluezero/mapper'
 import type { RoutePolicies } from './route-policies'
 
 /**

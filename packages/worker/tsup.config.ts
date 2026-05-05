@@ -30,13 +30,13 @@ export default defineConfig({
   platform: 'browser',
   external: [
     /^node:/,
-    '@sembridge/core',
-    '@sembridge/mapper',
-    '@sembridge/routing',
-    '@sembridge/gateway',
+    '@gluezero/core',
+    '@gluezero/mapper',
+    '@gluezero/routing',
+    '@gluezero/gateway',
     'comlink',
   ],
   banner: {
-    js: '/* @sembridge/worker — MIT — https://github.com/<TBD>/sembridge */',
+    js: '/* @gluezero/worker — MIT — https://github.com/<TBD>/gluezero */',
   },
 })

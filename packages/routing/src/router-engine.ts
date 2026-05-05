@@ -14,12 +14,12 @@
 //
 // Vincolo D-83: ZERO modifiche a packages/core/ + packages/mapper/ runtime. Tutti i
 // sub-componenti vengono costruiti a partire da config locale. Le strategy 6/7 sono
-// invocate via le factory `createXxxStrategy` di `@sembridge/gateway/http/strategies`
+// invocate via le factory `createXxxStrategy` di `@gluezero/gateway/http/strategies`
 // (plan 03-09/10/11). Il http-handler factory (`createHttpHandler`, plan 03-08) lega
 // gateway + mapper + validator + strategies in un unico async handler.
 
-import type { EventTap } from '@sembridge/core'
-import type { GatewayConfig, HttpGatewayStrategies } from '@sembridge/gateway/http'
+import type { EventTap } from '@gluezero/core'
+import type { GatewayConfig, HttpGatewayStrategies } from '@gluezero/gateway/http'
 import {
   createAuthStrategy,
   createBackpressureStrategy,
@@ -29,7 +29,7 @@ import {
   createRetryStrategy,
   createTimeoutStrategy,
   HttpGateway,
-} from '@sembridge/gateway/http'
+} from '@gluezero/gateway/http'
 import { OutcomeCollector, type PublishFn } from './outcome-collector'
 import { RouteExecutor } from './route-executor'
 import { createHttpHandler } from './route-handlers/http-handler'

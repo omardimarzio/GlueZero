@@ -1,4 +1,4 @@
-// Barrel re-export tipi pubblici @sembridge/mapper (Wave 2 — gating per Wave 3 paralleli).
+// Barrel re-export tipi pubblici @gluezero/mapper (Wave 2 — gating per Wave 3 paralleli).
 //
 // Pattern F1 replicato (vedi packages/core/src/types/index.ts:1-41):
 // - `export type { ... }` esplicito per i tipi (verbatimModuleSyntax: true)
@@ -7,7 +7,7 @@
 // - I tipi internal NON sono ri-esportati (es. eventuali helper compile-time del mapper-engine)
 //
 // Plan 02-09 (`augment.ts` + `src/index.ts` mapper) farà `export type * from './types'`
-// per esporre l'API pubblica finale del package `@sembridge/mapper`.
+// per esporre l'API pubblica finale del package `@gluezero/mapper`.
 
 export type {
   /** Canonical schema definition con `id`, `requires?`, `fields` (PRD §13, REQ MAP-01/MAP-02). */

@@ -34,8 +34,8 @@ import {
   type PipelineStep,
   type PluginDescriptor,
   type Subscription,
-} from '@sembridge/core'
-import { MapperBroker } from '@sembridge/mapper'
+} from '@gluezero/core'
+import { MapperBroker } from '@gluezero/mapper'
 import { nanoid } from 'nanoid'
 import type { CompiledRoute, RouteRegistration } from './route-resolver'
 import { RouterEngine } from './router-engine'
@@ -68,7 +68,7 @@ export interface RouterBrokerConfig {
   readonly topicSchemas?: MapperBrokerCtorConfig['topicSchemas']
   // F3-specific
   readonly routes?: readonly RouteDefinition[]
-  readonly gateway?: import('@sembridge/gateway/http').GatewayConfig
+  readonly gateway?: import('@gluezero/gateway/http').GatewayConfig
   readonly routing?: RoutingConfig
 }
 
@@ -76,7 +76,7 @@ export interface RouterBrokerConfig {
  * Shape minimal del CanonicalRegistry isolato dal RouterBroker (D-100, BLOCKER 4 fix).
  *
  * Non importiamo `CanonicalRegistry` direttamente perché è un export di
- * `@sembridge/mapper` ma la sua API surface è interna (private field di MapperBroker).
+ * `@gluezero/mapper` ma la sua API surface è interna (private field di MapperBroker).
  * Il RouterBroker bind UNA volta in constructor con presence check + throw esplicito
  * se non accessibile (NO silent fallback — vedi rationale in `getCanonicalSchemaForTopic`).
  */
@@ -156,7 +156,7 @@ export class RouterBroker {
         code: 'router.canonical-registry.unavailable',
         category: 'config',
         message:
-          'RouterBroker: MapperBroker.canonicalRegistry is not accessible. ROUTE-16 (D-67) requiresRoute opt-in cannot function. Check F2 API stability or upgrade @sembridge/mapper.',
+          'RouterBroker: MapperBroker.canonicalRegistry is not accessible. ROUTE-16 (D-67) requiresRoute opt-in cannot function. Check F2 API stability or upgrade @gluezero/mapper.',
         details: {
           hint: 'Either F2 changed canonicalRegistry visibility, or use RoutingConfig.requiresRouteTopics to bypass canonical lookup.',
         },
@@ -191,7 +191,7 @@ export class RouterBroker {
         })
       },
       onCacheDeferred: (event) => {
-        // BLOCKER 2 fix (revision): TOPIC_REGEX in @sembridge/core/topic-matcher.ts
+        // BLOCKER 2 fix (revision): TOPIC_REGEX in @gluezero/core/topic-matcher.ts
         // NON consente hyphen. Il topic precedente con hyphen fallirebbe
         // validateTopic(). Rinominato a 'routing.composite.deferred' (drop prefix
         // ridondante poiché vive sotto routing.composite.*). L'identifier interno/
@@ -219,7 +219,7 @@ export class RouterBroker {
         // FIXME(F4): wiring dedupe/backpressure deferred — vedi 03-VERIFICATION.md override #1/#2.
         // biome-ignore lint/suspicious/noConsole: dev-mode warning consumer-facing
         console.warn(
-          '[SemBridge F3] gateway.defaults.dedupe/backpressure è configurato ma il wiring runtime nel HttpGateway è deferred a F4 (vedi 03-VERIFICATION.md override #1/#2). Le primitive sono complete e testate in isolation; ROUTE-10/ROUTE-11 end-to-end saranno chiusi in F4.',
+          '[GlueZero F3] gateway.defaults.dedupe/backpressure è configurato ma il wiring runtime nel HttpGateway è deferred a F4 (vedi 03-VERIFICATION.md override #1/#2). Le primitive sono complete e testate in isolation; ROUTE-10/ROUTE-11 end-to-end saranno chiusi in F4.',
         )
       }
     }

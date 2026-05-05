@@ -1,4 +1,4 @@
-// MapperEngine — il "cuore" funzionale di @sembridge/mapper (PRD §13, §14, §28).
+// MapperEngine — il "cuore" funzionale di @gluezero/mapper (PRD §13, §14, §28).
 //
 // Compone i 4 moduli Wave 3 (CanonicalRegistry, AliasRegistry, TransformPipeline,
 // ValidatorAdapter) per implementare la pipeline §28 estesa F2 (passi 4, 5, 6, 11, 12).
@@ -48,8 +48,8 @@
 // `exactOptionalPropertyTypes: true` policy: conditional spread per i field opzionali.
 // `isolatedDeclarations: true` enforcement: ogni metodo pubblico ha return type esplicito.
 
-import type { BrokerLogger, PluginDescriptor } from '@sembridge/core'
-import { createBrokerError } from '@sembridge/core'
+import type { BrokerLogger, PluginDescriptor } from '@gluezero/core'
+import { createBrokerError } from '@gluezero/core'
 import type { AliasRegistry, AliasResolution } from './alias-registry'
 import type { CanonicalRegistry } from './canonical-registry'
 import type { TransformPipeline } from './transform-pipeline'
@@ -112,7 +112,7 @@ const RESERVED_KEYS: ReadonlySet<string> = new Set(['__proto__', 'constructor', 
 /**
  * Plugin descriptor F2 internal — extends F1 PluginDescriptor con i campi mapper.
  *
- * Il plan 02-09 farà declaration merging di `PluginDescriptor` di `@sembridge/core`
+ * Il plan 02-09 farà declaration merging di `PluginDescriptor` di `@gluezero/core`
  * per esporre `inputMap`/`outputMap`/`canonicalSchemaId` come parte del contratto pubblico.
  * Per ora questo tipo locale serve da bridge tra l'API F1 e il MapperEngine.
  */

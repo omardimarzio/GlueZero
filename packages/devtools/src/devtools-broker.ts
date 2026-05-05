@@ -27,14 +27,14 @@
 //
 // Threat coverage:
 // - T-06-08b-01 (Logic flaw composition order): mitigate — Devtools è OUTERMOST
-//   nella chain createSemBridge per catturare TUTTI gli step §28.
+//   nella chain createGlueZero per catturare TUTTI gli step §28.
 // - T-06-08b-02 (Information Disclosure getDebugSnapshot leak): mitigate via
 //   structuredClone (D-162). RESEARCH §15.3 perf budget <50ms su 500 entries.
 // - T-06-08b-03 (DoS publish hot-path overhead debug=on): mitigate via D-160
 //   lazy-mode tap delegate solo quando enabled (Inspector early-return).
 
-import type { EventTap, PluginDescriptor, Subscription } from '@sembridge/core'
-import { RouterBroker, type RouterBrokerConfig } from '@sembridge/routing'
+import type { EventTap, PluginDescriptor, Subscription } from '@gluezero/core'
+import { RouterBroker, type RouterBrokerConfig } from '@gluezero/routing'
 import { createEventInspector, type EventInspector } from './event-inspector'
 import { createMetricsCollector, type MetricsCollector } from './metrics-collector'
 import { createMultiplexTap } from './multiplex-tap'
@@ -142,7 +142,7 @@ function detectDefaultEnabled(): boolean {
  *
  * @example Quick start (debug enabled di default in dev)
  * ```ts
- * import { createDevtoolsBroker } from '@sembridge/devtools'
+ * import { createDevtoolsBroker } from '@gluezero/devtools'
  *
  * const broker = createDevtoolsBroker({
  *   devtools: { enableByDefault: true },
@@ -319,7 +319,7 @@ export class DevtoolsBroker {
 
     // Step 14 attivazione D-161 — emit `event.observed` post inner.publish ai
     // tap registrati. Snapshot minimal pipeline-shape (compat PipelineSnapshot
-    // di @sembridge/core). Try/catch swallow — pattern F1 D-20 carryover.
+    // di @gluezero/core). Try/catch swallow — pattern F1 D-20 carryover.
     try {
       const snapshot = {
         eventId,

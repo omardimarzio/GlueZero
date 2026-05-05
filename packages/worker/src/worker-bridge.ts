@@ -57,7 +57,7 @@
 //   `terminate()` chiama `proxy[Comlink.releaseProxy]?.()` + `worker.terminate()`.
 //   Idempotente (Test 11).
 
-import { type BrokerError, createBrokerError } from '@sembridge/core'
+import { type BrokerError, createBrokerError } from '@gluezero/core'
 import * as Comlink from 'comlink'
 
 import { assertSerializable } from './assert-serializable'

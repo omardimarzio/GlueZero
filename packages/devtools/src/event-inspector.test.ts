@@ -17,7 +17,7 @@
 // - T-06-05-05 (Logic flaw production debug accidentale): mitigated via default
 //   NODE_ENV inline. Test 12 verifica fallback detection.
 
-import type { PipelineSnapshot, PipelineStep } from '@sembridge/core'
+import type { PipelineSnapshot, PipelineStep } from '@gluezero/core'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { createEventInspector } from './event-inspector'
 

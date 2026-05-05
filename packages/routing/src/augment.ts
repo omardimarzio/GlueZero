@@ -1,4 +1,4 @@
-// augment.ts — TS declaration merging per estendere @sembridge/core e @sembridge/mapper con i tipi F3.
+// augment.ts — TS declaration merging per estendere @gluezero/core e @gluezero/mapper con i tipi F3.
 // (D-83, D-93, D-94, D-95 in 03-CONTEXT.md)
 //
 // Vincolo D-83: NESSUNA modifica a packages/core/src/ né packages/mapper/src/ runtime.
@@ -6,23 +6,23 @@
 // routing F3 (PluginDescriptor.routes, BrokerConfig.routes, BrokerConfig.routing).
 //
 // Cosa estende:
-//   - PluginDescriptor (interface, da @sembridge/core) — aggiunge `routes?: RouteDefinition[]`
+//   - PluginDescriptor (interface, da @gluezero/core) — aggiunge `routes?: RouteDefinition[]`
 //     come campo opzionale readonly (D-94, ROUTE-01). Chiude il commento placeholder F1
 //     in `packages/core/src/types/plugin.ts:49` ("F3 will add: routes").
-//   - BrokerConfig (interface, da @sembridge/core) — sostituisce il commento placeholder
+//   - BrokerConfig (interface, da @gluezero/core) — sostituisce il commento placeholder
 //     F1 con tipi specifici per le sezioni `routes` (array di RouteDefinition pre-registrate
 //     al boot — D-93 / D-62) e `routing` (RoutingConfig — multipleRoutesPolicy / D-66).
 //     NB: `BrokerConfig.gateway` (D-93) NON viene augmentato qui per evitare un ciclo
-//     workspace `@sembridge/routing` → `@sembridge/gateway` (gateway già dipende da
+//     workspace `@gluezero/routing` → `@gluezero/gateway` (gateway già dipende da
 //     routing): l'augmentation di `BrokerConfig.gateway?: GatewayConfig` è demandata a
 //     `packages/gateway/src/augment.ts` (plan 03-04 — pattern simmetrico).
-//   - CanonicalSchema (interface, da @sembridge/mapper) — aggiunge `requiresRoute?: boolean`
+//   - CanonicalSchema (interface, da @gluezero/mapper) — aggiunge `requiresRoute?: boolean`
 //     per chiusura PRD §39 #5 / ROUTE-16 (D-95, D-67). Se `true`, topic con questo schema
 //     senza route registrata → BrokerError 'route.required.missing' (plan 03-12 RouterBroker).
 //
 // Cosa NON estende qui:
 //   - PipelineStep (type alias literal): TS NON supporta declaration merging di type alias.
-//     Strategia: il barrel `@sembridge/routing` ri-esporta `F3PipelineStep` come literal
+//     Strategia: il barrel `@gluezero/routing` ri-esporta `F3PipelineStep` come literal
 //     union additive con i 3 nuovi step pipeline §28 di F3 (D-85). Il consumer che usa i
 //     tap F3 dichiara `step: PipelineStep | F2PipelineStep | F3PipelineStep`. Pattern
 //     identico a `F2PipelineStep` di mapper/src/index.ts:176-181.
@@ -59,10 +59,10 @@
 import type { RouteDefinition } from './types/route-definition'
 import type { RoutingConfig } from './types/routing-config'
 
-declare module '@sembridge/core' {
+declare module '@gluezero/core' {
   /**
    * F3 augmentation (D-94, ROUTE-01): aggiunge il campo opzionale `routes` al
-   * PluginDescriptor pubblico di `@sembridge/core`.
+   * PluginDescriptor pubblico di `@gluezero/core`.
    *
    * Chiude il placeholder F1 in `packages/core/src/types/plugin.ts:49` (commento
    * "F3 will add: routes").
@@ -86,7 +86,7 @@ declare module '@sembridge/core' {
    *   emitAmbiguousWarning / requiresRouteTopics — D-66 / D-67 / D-100).
    *
    * NB: `BrokerConfig.gateway` (D-62 / D-93 parte 2) NON è augmentato qui per evitare
-   * un ciclo workspace `@sembridge/routing` → `@sembridge/gateway`. L'augmentation di
+   * un ciclo workspace `@gluezero/routing` → `@gluezero/gateway`. L'augmentation di
    * `BrokerConfig.gateway?: GatewayConfig` è in `packages/gateway/src/augment.ts`
    * (plan 03-04 — declaration merging additive separato).
    */
@@ -98,7 +98,7 @@ declare module '@sembridge/core' {
   }
 }
 
-declare module '@sembridge/mapper' {
+declare module '@gluezero/mapper' {
   /**
    * F3 augmentation (D-95, ROUTE-16, chiusura PRD §39 #5).
    *
@@ -121,14 +121,14 @@ declare module '@sembridge/mapper' {
 /**
  * Step pipeline §28 introdotti da F3 (D-84, D-85).
  *
- * **Limitazione TS**: `PipelineStep` di `@sembridge/core` è un type alias literal union,
+ * **Limitazione TS**: `PipelineStep` di `@gluezero/core` è un type alias literal union,
  * NON un'interface — TS non supporta declaration merging di type alias. Soluzione: il
  * consumer che dichiara tap F3 importa questo super-set:
  *
  * ```ts
- * import type { PipelineStep } from '@sembridge/core'
- * import type { F2PipelineStep } from '@sembridge/mapper'
- * import type { F3PipelineStep } from '@sembridge/routing'
+ * import type { PipelineStep } from '@gluezero/core'
+ * import type { F2PipelineStep } from '@gluezero/mapper'
+ * import type { F3PipelineStep } from '@gluezero/routing'
  *
  * type AllSteps = PipelineStep | F2PipelineStep | F3PipelineStep
  * const tap: EventTap = {
@@ -145,7 +145,7 @@ declare module '@sembridge/mapper' {
  * - `event.outcome.collected` (step 10) — raccoglie `RouteOutcome` → trasforma in
  *   `<topic>.loaded` o `<topic>.failed` BrokerEvent (D-80).
  *
- * F1 step da `@sembridge/core` (subset 5 step) e F2 step da `@sembridge/mapper`
+ * F1 step da `@gluezero/core` (subset 5 step) e F2 step da `@gluezero/mapper`
  * (subset 5 step) restano validi senza modifiche. F6 potrà refactor `PipelineStep` da
  * type alias a interface union per veri declaration merging (T-02-09-05 disposition F2).
  */

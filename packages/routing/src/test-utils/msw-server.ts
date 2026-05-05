@@ -1,7 +1,7 @@
 // msw-server.ts — `setupServer` (msw 2.13.6 Node mode) per integration test F3.
 //
 // Riferimento (03-13-PLAN.md, 03-CONTEXT.md D-89):
-// - msw è hoisted a livello root devDependencies (`/Users/omarmarzio/programming/prova AI/SemBridge/package.json`).
+// - msw è hoisted a livello root devDependencies (`/Users/omarmarzio/programming/prova AI/GlueZero/package.json`).
 // - `defaultHandlers` copre il PRD §29 happy-path (`GET /api/weather` → 200 JSON con
 //   `{city, date, temp, condition}`). Ogni integration test override-a via `server.use(...)`
 //   in beforeEach/it per scenari 5xx/4xx/408/429/network-error/redirect/etc.

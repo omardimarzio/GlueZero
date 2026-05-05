@@ -1,5 +1,5 @@
 // public-factory.ts — `createCacheBroker(config)` API pubblica del package
-// `@sembridge/cache` (PRD §20, REQ CACHE-01..03, decisione D-30 no singleton).
+// `@gluezero/cache` (PRD §20, REQ CACHE-01..03, decisione D-30 no singleton).
 //
 // Estende il pattern di `createRouterBroker` (F3 plan 03-12), `createRealtimeBroker`
 // (F4 plan 04-08) e `createWorkerBroker` (F5 plan 05-06): factory pure function
@@ -102,7 +102,7 @@ const CacheBrokerConfigSchema = v.looseObject({
  *
  * @example Quick start (config-driven cacheRoutes + maxEntries override)
  * ```ts
- * import { createCacheBroker } from '@sembridge/cache'
+ * import { createCacheBroker } from '@gluezero/cache'
  *
  * const broker = createCacheBroker({
  *   cache: { maxEntries: 500 },

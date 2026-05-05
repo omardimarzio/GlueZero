@@ -11,7 +11,7 @@
 // reale tramite `createMapperHarness`. La pubblicazione di `mapping.error` è async
 // (deliveryMode default — D-58 publish via inner.publish con deliveryMode 'async').
 
-import type { BrokerEvent } from '@sembridge/core'
+import type { BrokerEvent } from '@gluezero/core'
 import { describe, expect, it } from 'vitest'
 import { createMapperHarness } from '../test-utils/mapper-harness'
 import type { CanonicalSchemaId } from '../types/canonical-schema'

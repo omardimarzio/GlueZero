@@ -3,7 +3,7 @@
 // D-150 3-tier strategy + Pitfall 7.B + Pitfall 7.E + PRD §31.3 module worker
 // evergreen).
 //
-// Esecuzione: `pnpm -F @sembridge/worker test:browser` con Vitest 4.x browser
+// Esecuzione: `pnpm -F @gluezero/worker test:browser` con Vitest 4.x browser
 // provider Playwright Chromium headless. Verifica che le API browser native
 // (Worker module, structuredClone Date/Map, transferable ownership) funzionino
 // in real-browser (non MockWorker).

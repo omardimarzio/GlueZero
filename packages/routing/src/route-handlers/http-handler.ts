@@ -33,8 +33,8 @@
 // - VAL-05 contract: server response invalid → handler emette outcome.error che il
 //   RouteExecutor mappa a `<topic>.failed` (D-80).
 
-import type { BrokerError, BrokerEvent } from '@sembridge/core'
-import { createBrokerError, isBrokerError } from '@sembridge/core'
+import type { BrokerError, BrokerEvent } from '@gluezero/core'
+import { createBrokerError, isBrokerError } from '@gluezero/core'
 import type { CompiledRoute } from '../route-resolver'
 import type { RouteHttpDefinition } from '../types/route-definition'
 import type { RouteOutcome } from '../types/route-outcome'
@@ -42,8 +42,8 @@ import type { RouteOutcome } from '../types/route-outcome'
 /**
  * Spec HTTP request che il gateway riceve.
  *
- * Definito qui come duplicato strutturale di `HttpRequestSpec` di `@sembridge/gateway/http`
- * per evitare cyclic dependency tra `@sembridge/routing` e `@sembridge/gateway` —
+ * Definito qui come duplicato strutturale di `HttpRequestSpec` di `@gluezero/gateway/http`
+ * per evitare cyclic dependency tra `@gluezero/routing` e `@gluezero/gateway` —
  * entrambi i package dichiarano lo stesso shape ma il routing engine non depende
  * runtime sul gateway runtime (only structural protocol). Il RouterBroker plan 03-12
  * cabla il vero `HttpGateway` come dependency injection.
@@ -58,7 +58,7 @@ export interface HttpHandlerRequestSpec {
 /**
  * Spec HTTP response normalizzata che il gateway ritorna.
  *
- * Stesso pattern strutturale di `HttpResponseSpec` di `@sembridge/gateway/http`.
+ * Stesso pattern strutturale di `HttpResponseSpec` di `@gluezero/gateway/http`.
  */
 export interface HttpHandlerResponseSpec {
   readonly ok: boolean
@@ -69,7 +69,7 @@ export interface HttpHandlerResponseSpec {
 
 /**
  * Strategy bundle iniettato al gateway. Structural-typed: il RouterBroker plan 03-12
- * fornirà il vero `HttpGatewayStrategies` di `@sembridge/gateway/http`.
+ * fornirà il vero `HttpGatewayStrategies` di `@gluezero/gateway/http`.
  */
 export interface HttpHandlerStrategies {
   readonly retry?: unknown

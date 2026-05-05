@@ -47,7 +47,7 @@
 // - T-05-06-02 (Spoofing — source 'worker' override): handler imposta
 //   `source: { type: 'worker', id: route.worker, name: route.task }` writer-side.
 
-import { type BrokerError, type BrokerEvent, createBrokerError } from '@sembridge/core'
+import { type BrokerError, type BrokerEvent, createBrokerError } from '@gluezero/core'
 import { nanoid } from 'nanoid'
 import type { TaskTracker } from './task-tracker'
 import type { ProgressPayload, RouteWorkerDefinition } from './types'

@@ -25,7 +25,7 @@
 //   internal mirror del F1 trie.
 // - T-03-05-05 (Information disclosure): `BrokerError.details` include solo routeId + topic.
 
-import { createBrokerError } from '@sembridge/core'
+import { createBrokerError } from '@gluezero/core'
 import { TopicTrie, validateTopicPattern } from './internal/topic-trie'
 import { allBroadcast } from './strategies/all-broadcast'
 import { priorityOrdered } from './strategies/priority-ordered'

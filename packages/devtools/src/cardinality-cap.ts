@@ -58,14 +58,14 @@ export interface CardinalityTrackerOptions {
    * `broker.publish('system.metrics.cardinality-overflow', info)`.
    *
    * Pattern carryover: F5 worker-registry D-128 console.warn → F6 emette via
-   * broker.publish per uniformità con audit channel sembridge.
+   * broker.publish per uniformità con audit channel gluezero.
    */
   readonly onOverflow?: (info: CardinalityOverflowInfo) => void
 }
 
 export interface CardinalityTracker {
   /**
-   * @param baseName metric name senza labels (es. `sembridge.cache.hits_total`)
+   * @param baseName metric name senza labels (es. `gluezero.cache.hits_total`)
    * @param labelSig output di `flatLabels(labels)` — empty string = no labels
    * @returns `true` accept (combo new aggiunta o esistente), `false` drop (cap raggiunto)
    */

@@ -60,7 +60,7 @@ function isRetriableStatus(
 /**
  * Opzioni di configurazione per `createRetryStrategy`.
  *
- * Tutti i campi opzionali con default sensati per V1 SemBridge.
+ * Tutti i campi opzionali con default sensati per V1 GlueZero.
  */
 export interface RetryStrategyOptions {
   /**

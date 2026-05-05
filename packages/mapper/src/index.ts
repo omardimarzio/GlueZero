@@ -1,7 +1,7 @@
 /**
- * @sembridge/mapper — Canonical model + bidirectional mapper per SemBridge.
+ * @gluezero/mapper — Canonical model + bidirectional mapper per GlueZero.
  *
- * Phase 2 di SemBridge V1. Estende `@sembridge/core` (Phase 1) con:
+ * Phase 2 di GlueZero V1. Estende `@gluezero/core` (Phase 1) con:
  * - **Canonical Vocabulary Registry** — campi tipizzati, alias riconosciuti, schema versioning
  * - **Mapper bidirezionale** — locale → canonico (publisher) e canonico → consumer (subscriber)
  * - **Transform Pipeline** — rename, nested, default, transform, derive, partial, validation
@@ -28,7 +28,7 @@
  *
  * @example Quickstart (scenario meteo PRD §29)
  * ```ts
- * import { createMapperBroker, type CanonicalSchemaId } from '@sembridge/mapper'
+ * import { createMapperBroker, type CanonicalSchemaId } from '@gluezero/mapper'
  *
  * const broker = createMapperBroker({
  *   runtime: { logLevel: 'info' },
@@ -156,13 +156,13 @@ export type {
 /**
  * F2 PipelineStep: i 5 nuovi step della pipeline §28 (D-50).
  *
- * **Limitazione TS**: `PipelineStep` di `@sembridge/core` è un type alias literal
+ * **Limitazione TS**: `PipelineStep` di `@gluezero/core` è un type alias literal
  * union, NON un'interface — TS non supporta declaration merging di type alias.
  * Soluzione: il consumer che dichiara tap F2 importa questo super-set:
  *
  * ```ts
- * import type { PipelineStep } from '@sembridge/core'
- * import type { F2PipelineStep } from '@sembridge/mapper'
+ * import type { PipelineStep } from '@gluezero/core'
+ * import type { F2PipelineStep } from '@gluezero/mapper'
  *
  * type AllSteps = PipelineStep | F2PipelineStep
  * const tap: EventTap = {
@@ -170,7 +170,7 @@ export type {
  * }
  * ```
  *
- * F1 step da `@sembridge/core` (subset) restano validi. F6 potrà refactor `PipelineStep`
+ * F1 step da `@gluezero/core` (subset) restano validi. F6 potrà refactor `PipelineStep`
  * da type alias a interface union per veri declaration merging (T-02-09-05 disposition).
  */
 export type F2PipelineStep =

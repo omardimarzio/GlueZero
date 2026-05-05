@@ -56,7 +56,7 @@ export interface MemoryCacheAdapterOptions {
 }
 
 /**
- * Factory CacheAdapter LRU bounded (D-158 default V1 SemBridge).
+ * Factory CacheAdapter LRU bounded (D-158 default V1 GlueZero).
  *
  * @param opts Opzioni di configurazione (default `maxEntries=1000`)
  * @returns Istanza `CacheAdapter` con stato cumulative isolato

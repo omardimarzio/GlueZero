@@ -1,10 +1,10 @@
-// public-factory.ts — `createBroker(config)` API pubblica del @sembridge/core
+// public-factory.ts — `createBroker(config)` API pubblica del @gluezero/core
 // (PRD §27, REQ CORE-14, decisioni D-18 config validation, D-19 imperative API,
 // D-30 no singleton).
 //
 // Il `BrokerConfigSchema` Valibot usa `v.looseObject` per accettare le sezioni F2-F6
 // aggiunte via TS declaration merging dai package downstream (D-56 — vedi
-// `@sembridge/mapper/src/augment.ts`):
+// `@gluezero/mapper/src/augment.ts`):
 //   - sezione `runtime` (F1 implementata): debug, deepFreezeInDev, logLevel,
 //     logger, tap — validati strutturalmente con tipi specifici dove ha senso
 //     (es. picklist per logLevel) e `unknown` dove l'oggetto è opaque (logger, tap)
@@ -70,14 +70,14 @@ const BrokerConfigSchema = v.looseObject({
  *
  * **WR-07 fix — IMPORTANTE per consumer F2+**: le sezioni F2-F6 sono accettate
  * dallo schema `v.looseObject` MA **non hanno effetto runtime se si usa
- * `createBroker` di `@sembridge/core` direttamente**. Per attivare il wiring
+ * `createBroker` di `@gluezero/core` direttamente**. Per attivare il wiring
  * (canonical schema register, alias bootstrap, transform pipeline, ecc.) il
- * consumer F2 deve usare `createMapperBroker(config)` di `@sembridge/mapper`,
+ * consumer F2 deve usare `createMapperBroker(config)` di `@gluezero/mapper`,
  * che valida strutturalmente le sezioni F2 e le bootstrappa nei registry.
  *
  * In F1-only consumer la presenza di `canonicalModel`, `aliasRegistry`,
  * `transforms` è pass-through silente — il consumer NON riceve nessun warning
- * (no dependency su `@sembridge/mapper` da core, vincolo D-49). Per attivare
+ * (no dependency su `@gluezero/mapper` da core, vincolo D-49). Per attivare
  * la validation strutturale di queste sezioni → switch a `createMapperBroker`.
  *
  * No singleton (D-30): each call returns an independent instance.
@@ -88,7 +88,7 @@ const BrokerConfigSchema = v.looseObject({
  *
  * @example
  * ```ts
- * import { createBroker } from '@sembridge/core'
+ * import { createBroker } from '@gluezero/core'
  *
  * const broker = createBroker({
  *   runtime: { logLevel: 'info', debug: false },

@@ -50,8 +50,8 @@ import type {
   PluginDescriptor,
   SubscribeOptions,
   Subscription,
-} from '@sembridge/core'
-import { Broker, createBrokerError, isBrokerError, silentLogger } from '@sembridge/core'
+} from '@gluezero/core'
+import { Broker, createBrokerError, isBrokerError, silentLogger } from '@gluezero/core'
 import { nanoid } from 'nanoid'
 import { AliasRegistry } from './alias-registry'
 import { CanonicalRegistry } from './canonical-registry'
@@ -64,7 +64,7 @@ import { valibotAdapter } from './valibot-adapter'
 
 /**
  * Local no-op `EventTap` per mapper wrapper — coerente con `noopEventTap` di
- * `@sembridge/core` (event-tap.ts:19). Definito qui perché `noopEventTap` non è
+ * `@gluezero/core` (event-tap.ts:19). Definito qui perché `noopEventTap` non è
  * ri-esportato dal barrel pubblico di core (D-49 — no modifiche a packages/core).
  */
 const noopEventTap: EventTap = {
@@ -73,7 +73,7 @@ const noopEventTap: EventTap = {
 
 /**
  * Configurazione del MapperBroker — accetta tutto BrokerConfig di F1 (con augmentations F2)
- * tramite re-tipo da `@sembridge/core`. Le sezioni F2 (`canonicalModel`, `aliasRegistry`,
+ * tramite re-tipo da `@gluezero/core`. Le sezioni F2 (`canonicalModel`, `aliasRegistry`,
  * `transforms`) sono tipate via TS declaration merging in `augment.ts` (plan 02-09).
  */
 type MapperBrokerConfig = ConstructorParameters<typeof Broker>[0]
@@ -181,7 +181,7 @@ interface ScopedBrokerLike {
  *
  * @example
  * ```ts
- * import { MapperBroker } from '@sembridge/mapper'
+ * import { MapperBroker } from '@gluezero/mapper'
  *
  * const broker = new MapperBroker({ runtime: { logLevel: 'info' } })
  *
@@ -282,7 +282,7 @@ export class MapperBroker {
   /**
    * Costruisce un `PipelineSnapshot` minimo per gli step F2 della pipeline §28
    * (CR-01 fix, WR-C iter2). Compatibile con il pattern F1 `safeTapStep + startStep`
-   * di `@sembridge/core/core/event-tap.ts`.
+   * di `@gluezero/core/core/event-tap.ts`.
    *
    * Note D-48: `payloadBefore`/`payloadAfter` sono full per-event snapshot
    * deferred a F6. F2 V1 emette snapshot leggero.

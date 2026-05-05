@@ -10,8 +10,8 @@
 // Pattern F2 / F3-routing replicato (vedi packages/mapper/src/augment.test.ts e
 // packages/routing/src/augment.test.ts).
 
-import type { BrokerConfig } from '@sembridge/core'
-import type { CanonicalSchemaId } from '@sembridge/mapper'
+import type { BrokerConfig } from '@gluezero/core'
+import type { CanonicalSchemaId } from '@gluezero/mapper'
 import { describe, expect, expectTypeOf, it } from 'vitest'
 import { __augmentGatewayLoaded } from './augment'
 import type { GatewayConfig } from './http/types/gateway-config'

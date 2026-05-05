@@ -1,4 +1,4 @@
-// public-factory.ts — `createRouterBroker(config)` API pubblica del @sembridge/routing
+// public-factory.ts — `createRouterBroker(config)` API pubblica del @gluezero/routing
 // (PRD §27, REQ ROUTE-01, decisioni D-30 no singleton, D-93/D-100 config validation).
 //
 // Estende il pattern di `createMapperBroker` di F2 (D-30) e di `createBroker` di F1
@@ -97,7 +97,7 @@ const RouterBrokerConfigSchema = v.looseObject({
  *
  * @example
  * ```ts
- * import { createRouterBroker } from '@sembridge/routing'
+ * import { createRouterBroker } from '@gluezero/routing'
  *
  * const broker = createRouterBroker({
  *   gateway: { allowlist: ['https://api.example.com'] },

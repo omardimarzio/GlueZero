@@ -1,13 +1,13 @@
 // features-opt-out.test.ts — Tier-1 jsdom integration test plan 06-08b Wave 4b.
 //
-// Verifica end-to-end createSemBridge features opt-out:
+// Verifica end-to-end createGlueZero features opt-out:
 // - features.realtime=false → realtime adapter NON istanziato (broker non ha connectRealtime)
 // - features.worker=false → worker pool NON istanziato (broker non ha registerWorkerRoute)
 // - features.cache=false → cache layer NON istanziato (broker non ha getCacheStats)
 // - features.devtools=false → devtools NON outermost (broker non ha getDebugSnapshot)
 
 import { describe, expect, it } from 'vitest'
-import { createSemBridge } from '../sem-bridge'
+import { createGlueZero } from '../glue-zero'
 
 function flushAsync(): Promise<void> {
   return new Promise((r) => setTimeout(r, 10))
@@ -15,7 +15,7 @@ function flushAsync(): Promise<void> {
 
 describe('features-opt-out integration — opt-out per feature singola e combinata', () => {
   it('Test 1: features.realtime=false (cache+devtools+worker active) — broker funziona', async () => {
-    const broker = createSemBridge({
+    const broker = createGlueZero({
       features: { realtime: false },
     }) as { publish: Function; subscribe: Function; getDebugSnapshot?: Function }
     const received: unknown[] = []
@@ -34,7 +34,7 @@ describe('features-opt-out integration — opt-out per feature singola e combina
   })
 
   it('Test 2: features.worker=false (cache+devtools+realtime active) — broker funziona', async () => {
-    const broker = createSemBridge({
+    const broker = createGlueZero({
       features: { worker: false },
     }) as {
       publish: Function
@@ -60,7 +60,7 @@ describe('features-opt-out integration — opt-out per feature singola e combina
   })
 
   it('Test 3: features.cache=false (devtools+worker+realtime active) — broker funziona', async () => {
-    const broker = createSemBridge({
+    const broker = createGlueZero({
       features: { cache: false },
     }) as { publish: Function; subscribe: Function; getCacheStats?: Function }
     // Cache NON outermost — devtools outermost. getCacheStats NON disponibile
@@ -80,7 +80,7 @@ describe('features-opt-out integration — opt-out per feature singola e combina
   })
 
   it('Test 4: features.devtools=false (cache+worker+realtime active) — cache OUTERMOST', async () => {
-    const broker = createSemBridge({
+    const broker = createGlueZero({
       features: { devtools: false },
     }) as {
       publish: Function
@@ -106,7 +106,7 @@ describe('features-opt-out integration — opt-out per feature singola e combina
   })
 
   it('Test 5: features tutte false — broker minimal F1+F2+F3 (RouterBroker)', async () => {
-    const broker = createSemBridge({
+    const broker = createGlueZero({
       features: { cache: false, devtools: false, worker: false, realtime: false },
     }) as {
       publish: Function

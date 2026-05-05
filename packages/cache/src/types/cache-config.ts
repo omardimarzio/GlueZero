@@ -1,4 +1,4 @@
-import type { BrokerEvent } from '@sembridge/core'
+import type { BrokerEvent } from '@gluezero/core'
 import type { CacheAdapter } from './cache-adapter'
 
 /**
@@ -15,7 +15,7 @@ export interface CacheConfig {
    */
   readonly maxEntries?: number
   /**
-   * D-158: adapter custom (V1.x — `@sembridge/cache-idb` o consumer-defined).
+   * D-158: adapter custom (V1.x — `@gluezero/cache-idb` o consumer-defined).
    * Default: `createMemoryCacheAdapter({ maxEntries })` plan 06-02.
    */
   readonly adapter?: CacheAdapter

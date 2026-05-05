@@ -6,7 +6,7 @@
 // consumer (in V1 il DevtoolsBroker 06-08b wires il MultiplexTap su questo
 // hook).
 
-import type { EventTap, PipelineSnapshot } from '@sembridge/core'
+import type { EventTap, PipelineSnapshot } from '@gluezero/core'
 import { afterEach, describe, expect, it } from 'vitest'
 import { type CacheHarness, createCacheHarness } from '../test-utils/cache-harness'
 

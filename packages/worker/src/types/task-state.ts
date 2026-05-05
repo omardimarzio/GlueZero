@@ -49,7 +49,7 @@ export type TaskState = 'pending' | 'done' | 'timeout' | 'cancelled' | 'error'
  * Outcome del task post-state-transition (D-152, D-153).
  *
  * Letto dal `WorkerHandler` per costruire l'`OutcomeCollector` analog F3
- * (`route-outcome.ts:RouteOutcome` di `@sembridge/routing`). Il publishing del
+ * (`route-outcome.ts:RouteOutcome` di `@gluezero/routing`). Il publishing del
  * topic `success`/`error` fa parte del fan-out finale del WorkerHandler —
  * outcome non-pending → publish + cleanup state.
  *

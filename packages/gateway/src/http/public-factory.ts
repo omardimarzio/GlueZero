@@ -1,4 +1,4 @@
-// public-factory.ts — `createHttpGateway(config)` API pubblica del @sembridge/gateway/http
+// public-factory.ts — `createHttpGateway(config)` API pubblica del @gluezero/gateway/http
 // (PRD §18, §27, REQ SEC-01..SEC-05, decisioni D-71/D-72/D-99).
 //
 // Pattern affine a `createMapperBroker` di F2 (`packages/mapper/src/public-factory.ts`):
@@ -42,7 +42,7 @@ const GatewayConfigSchema = v.looseObject({
   // allowlist: array di string | RegExp (D-71)
   allowlist: v.optional(v.array(v.union([v.string(), v.instance(RegExp)]))),
   // defaults: oggetto generico, valida alla deep level via tipi TS — qui pass-through
-  // strutturale per non duplicare le RoutePolicies definitions (definite in @sembridge/routing).
+  // strutturale per non duplicare le RoutePolicies definitions (definite in @gluezero/routing).
   defaults: v.optional(v.unknown()),
   // circuitBreaker: false | object (D-99)
   circuitBreaker: v.optional(v.union([v.literal(false), CircuitBreakerConfigSchema])),
@@ -62,7 +62,7 @@ const GatewayConfigSchema = v.looseObject({
  *
  * @example
  * ```ts
- * import { createHttpGateway } from '@sembridge/gateway/http'
+ * import { createHttpGateway } from '@gluezero/gateway/http'
  *
  * const gateway = createHttpGateway({
  *   allowlist: ['https://api.example.com', /^https:\/\/cdn-[a-z]+\.example\.com\//],

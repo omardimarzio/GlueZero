@@ -1,5 +1,5 @@
 /**
- * Barrel `@sembridge/gateway/http/strategies`.
+ * Barrel `@gluezero/gateway/http/strategies`.
  *
  * Strategy primitives default per il Server Gateway HTTP F3 (D-68 Strategy Pattern).
  * Il `RouterBroker` (plan 03-12) inietta queste strategy nelle `HttpGatewayStrategies`

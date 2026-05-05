@@ -3,7 +3,7 @@ import { defineConfig } from 'tsup'
 export default defineConfig({
   // Multi-entry: subpath exports separano F3 (HTTP) da F4 (SSE/WS) sia a livello
   // di build (`dist/index.js` umbrella + `dist/http/index.js`) sia a livello di
-  // dependency boundary (consumer importa `@sembridge/gateway/http` per F3-only).
+  // dependency boundary (consumer importa `@gluezero/gateway/http` per F3-only).
   // Vedi RESEARCH §"Subpath Exports Recommendation".
   //
   // Plan 03-04 ha aggiunto `augment: 'src/augment.ts'` alla entry list per emettere
@@ -34,8 +34,8 @@ export default defineConfig({
   minify: false,
   target: 'es2022',
   platform: 'browser',
-  external: [/^node:/, '@sembridge/core', '@sembridge/mapper'],
+  external: [/^node:/, '@gluezero/core', '@gluezero/mapper'],
   banner: {
-    js: '/* @sembridge/gateway — MIT — https://github.com/<TBD>/sembridge */',
+    js: '/* @gluezero/gateway — MIT — https://github.com/<TBD>/gluezero */',
   },
 })

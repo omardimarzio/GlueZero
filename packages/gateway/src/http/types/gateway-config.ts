@@ -24,7 +24,7 @@ import type {
   DedupePolicyConfig,
   IdempotencyPolicyConfig,
   RetryPolicyConfig,
-} from '@sembridge/routing'
+} from '@gluezero/routing'
 
 /**
  * Entry singolo della URL allowlist (D-71, SEC-05).

@@ -10,7 +10,7 @@
 // - D-129 lazy first dispatch — slots spawnati on-demand al primo `acquireSlot`,
 //   espansione fino a `targetSize`.
 // - D-130 F3 BackpressureStrategy riusato 1:1 — import workspace dep da
-//   `@sembridge/gateway/http` (`createBackpressureStrategy` + types). NIENTE
+//   `@gluezero/gateway/http` (`createBackpressureStrategy` + types). NIENTE
 //   ridichiarazione, NIENTE copia. Critical priority bypass (Pitfall 4.C).
 // - D-131 cancellation hybrid — `mode: 'dedicated'` → bridge.terminate immediato
 //   via `terminateByOwner`; `mode: 'pool'` → cooperative via signal proxied
@@ -36,7 +36,7 @@
 // - T-05-05-09 respawn currentTaskId leak: nuovo PoolSlot { busy: false } —
 //   currentTaskId implicit undefined (object literal fresh).
 
-import { type BackpressureStrategy, createBackpressureStrategy } from '@sembridge/gateway/http'
+import { type BackpressureStrategy, createBackpressureStrategy } from '@gluezero/gateway/http'
 import type { AssertSerializableMode, ProgressPayload, WorkerDescriptor } from './types'
 import { MAX_POOL_SIZE_HARD, type WorkerRegistry } from './worker-registry'
 
@@ -443,7 +443,7 @@ export class WorkerPool {
       // Pitfall 7.D — emit warn 1x per worker
       // eslint-disable-next-line no-console
       console.warn(
-        `[SemBridge] WorkerPool '${desc.id}' configured with allowUnboundedPool size=${requested}. Risk of pool storm — monitor RAM usage and worker lifetime.`,
+        `[GlueZero] WorkerPool '${desc.id}' configured with allowUnboundedPool size=${requested}. Risk of pool storm — monitor RAM usage and worker lifetime.`,
       )
       this.warnedUnbounded.add(desc.id)
     }

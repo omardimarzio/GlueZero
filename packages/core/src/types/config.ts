@@ -8,7 +8,7 @@
 //   - `debug`: enabled, snapshotPayloadsFull
 //
 // F2-F6 sezioni: aggiunte via TS declaration merging dai package downstream (D-56):
-//   - F2 `@sembridge/mapper/src/augment.ts` aggiunge `canonicalModel`, `aliasRegistry`, `transforms`
+//   - F2 `@gluezero/mapper/src/augment.ts` aggiunge `canonicalModel`, `aliasRegistry`, `transforms`
 //   - F3 aggiungerà `routes`, `transport`
 //   - F5 aggiungerà `workers`
 //   - F6 aggiungerà `cache`
@@ -29,7 +29,7 @@ import type { EventTap } from './tap'
  * F1 implements the `runtime` and `debug` sections; F2-F6 sections
  * (`canonicalModel`, `aliasRegistry`, `transforms`, `routes`, `transport`,
  * `workers`, `cache`) are added via TypeScript declaration merging by the
- * downstream packages (`@sembridge/mapper` for F2, etc.). They are accepted
+ * downstream packages (`@gluezero/mapper` for F2, etc.). They are accepted
  * but ignored at runtime in F1 — Valibot schema accepts them as `unknown`
  * via index-signature pass-through in `public-factory.ts` (no breaking change).
  *

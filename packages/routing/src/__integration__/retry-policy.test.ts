@@ -22,7 +22,7 @@
 //   essere ~3000ms). Per evitare flake, usiamo retry config esplicita
 //   `baseDelayMs: 1` (compressione del backoff per integration test).
 
-import type { CanonicalSchemaId } from '@sembridge/mapper'
+import type { CanonicalSchemaId } from '@gluezero/mapper'
 import { HttpResponse, http } from 'msw'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { createRouterHarness, type RouterHarness } from '../test-utils/router-harness'

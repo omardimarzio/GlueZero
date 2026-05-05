@@ -5,7 +5,7 @@ export default defineConfig({
   // distinto — necessario perché `sideEffects: ["./dist/augment.js"]` nel package.json
   // referenzia esattamente questo path. Il barrel `src/index.ts` importa il modulo
   // come side-effect (`import './augment'`); l'augmentation TypeScript declaration
-  // merging si attiva al tipo-livello quando il consumer importa da `@sembridge/mapper`.
+  // merging si attiva al tipo-livello quando il consumer importa da `@gluezero/mapper`.
   entry: ['src/index.ts', 'src/augment.ts'],
   format: ['esm'],
   dts: true,
@@ -16,8 +16,8 @@ export default defineConfig({
   minify: false,
   target: 'es2022',
   platform: 'browser',
-  external: [/^node:/, '@sembridge/core'],
+  external: [/^node:/, '@gluezero/core'],
   banner: {
-    js: '/* @sembridge/mapper — MIT — https://github.com/<TBD>/sembridge */',
+    js: '/* @gluezero/mapper — MIT — https://github.com/<TBD>/gluezero */',
   },
 })

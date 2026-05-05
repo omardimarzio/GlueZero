@@ -37,7 +37,7 @@
 // è opzionale; valore default 10 viene risolto nel constructor.
 // `isolatedDeclarations: true` enforcement: ogni metodo pubblico ha return type esplicito.
 
-import type { BrokerError, EventTap, PipelineSnapshot, PipelineStep } from '@sembridge/core'
+import type { BrokerError, EventTap, PipelineSnapshot, PipelineStep } from '@gluezero/core'
 import type { AliasRegistry } from './alias-registry'
 import type { CanonicalRegistry } from './canonical-registry'
 import type { TransformPipeline } from './transform-pipeline'

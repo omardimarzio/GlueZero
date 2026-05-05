@@ -14,7 +14,7 @@
 // **NO mock dei moduli interni F2** (D-49 + plan 02-11 vincolo): usa `createMapperBroker`
 // reale tramite `createMapperHarness`.
 
-import { isBrokerError } from '@sembridge/core'
+import { isBrokerError } from '@gluezero/core'
 import { describe, expect, it } from 'vitest'
 import { createMapperHarness } from '../test-utils/mapper-harness'
 import type { CanonicalSchemaId } from '../types/canonical-schema'

@@ -7,7 +7,7 @@
 //
 // Pattern replicato da packages/core/src/core/bus.test.ts (harness setup, vi.fn handler, expect toEqual / toThrow).
 
-import { isBrokerError, silentLogger } from '@sembridge/core'
+import { isBrokerError, silentLogger } from '@gluezero/core'
 import { describe, expect, it } from 'vitest'
 import { AliasRegistry } from './alias-registry'
 import { CanonicalRegistry } from './canonical-registry'

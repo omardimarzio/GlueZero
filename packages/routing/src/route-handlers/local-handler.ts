@@ -1,7 +1,7 @@
 // local-handler.ts — Handler per route `'local'` (D-60, ROUTE-02). Pura passthrough.
 // Vincolo D-83: ZERO modifiche core/mapper. Threat T-03-06-01 mitigated by readonly literal.
 
-import type { BrokerEvent } from '@sembridge/core'
+import type { BrokerEvent } from '@gluezero/core'
 import type { CompiledRoute } from '../route-resolver'
 import type { RouteOutcome } from '../types/route-outcome'
 

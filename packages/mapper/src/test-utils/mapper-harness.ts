@@ -1,5 +1,5 @@
 // mapper-harness.ts — fixture condivisa per integration test del package
-// `@sembridge/mapper` (PRD §29 D-53 scenario meteo end-to-end, REQ TEST-01/TEST-02).
+// `@gluezero/mapper` (PRD §29 D-53 scenario meteo end-to-end, REQ TEST-01/TEST-02).
 //
 // Razionale (02-PATTERNS.md §2.4 + plan 02-11):
 // I test integration di Phase 2 verificano end-to-end i 5 success criteria del
@@ -27,7 +27,7 @@
 //
 // Ownership: file vive sotto `src/test-utils/` (NON sotto `__integration__/`)
 // perché può essere riusato da future fasi (F3 routing test, F4 realtime test, F5
-// worker test che useranno `@sembridge/mapper`). Esclusione dal bundle pubblico è
+// worker test che useranno `@gluezero/mapper`). Esclusione dal bundle pubblico è
 // garantita dal tsup entry `src/index.ts` (vedi tsup.config.ts) che re-esporta solo
 // i simboli del public surface (NON `test-utils/`).
 //
@@ -36,7 +36,7 @@
 // pipeline §28 estesa F2 attraverso il broker pubblico, non via mock dei moduli
 // interni.
 
-import type { EventTap, PipelineSnapshot, PipelineStep } from '@sembridge/core'
+import type { EventTap, PipelineSnapshot, PipelineStep } from '@gluezero/core'
 import type { MapperBroker } from '../broker-mapper-wrapper'
 import { createMapperBroker } from '../public-factory'
 import type { CanonicalSchema } from '../types/canonical-schema'
@@ -75,7 +75,7 @@ export interface MapperHarness {
 /**
  * Crea un `MapperHarness` per integration test.
  *
- * Pattern F1 replicato (vedi `createPipelineHarness` di `@sembridge/core`).
+ * Pattern F1 replicato (vedi `createPipelineHarness` di `@gluezero/core`).
  *
  * @example
  * ```ts

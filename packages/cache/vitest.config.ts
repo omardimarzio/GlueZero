@@ -19,7 +19,7 @@ import { defineConfig } from 'vitest/config'
 
 export default defineConfig({
   test: {
-    name: '@sembridge/cache',
+    name: '@gluezero/cache',
     environment: 'jsdom',
     globals: false,
     include: ['src/**/*.test.ts', 'src/__integration__/**/*.test.ts'],

@@ -47,7 +47,7 @@ export interface MockWorkerMessage {
  *
  * @example
  * ```ts
- * import { MockWorker } from '@sembridge/worker/test-utils/mock-worker'
+ * import { MockWorker } from '@gluezero/worker/test-utils/mock-worker'
  *
  * beforeEach(() => MockWorker.reset())
  *

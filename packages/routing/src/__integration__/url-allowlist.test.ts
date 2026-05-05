@@ -13,7 +13,7 @@
 //   String prefix match con startsWith; RegExp test pattern.
 //   Default `allowlist: undefined` → tutti URL consentiti (warning dev).
 
-import type { CanonicalSchemaId } from '@sembridge/mapper'
+import type { CanonicalSchemaId } from '@gluezero/mapper'
 import { HttpResponse, http } from 'msw'
 import { afterEach, describe, expect, it } from 'vitest'
 import { createRouterHarness, type RouterHarness } from '../test-utils/router-harness'

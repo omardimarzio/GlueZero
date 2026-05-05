@@ -1,6 +1,6 @@
 // types/index.ts — barrel types-only F5 Worker Runtime.
 //
-// Re-export `import type { ... } from '@sembridge/worker'` per consumer e per i
+// Re-export `import type { ... } from '@gluezero/worker'` per consumer e per i
 // plan 05-02..05-06 che importano i types senza dipendere dal runtime
 // (assert-serializable, transferable-extractor, task-tracker, worker-bridge,
 // worker-pool, worker-registry, worker-handler, worker-broker). Pattern
@@ -13,7 +13,7 @@ export type { ProgressPayload } from './progress-payload'
 export type { RouteWorkerDefinition, RouteWorkerPublishesSpec } from './route-worker-definition'
 export type { TaskState, WorkerTaskOutcome } from './task-state'
 export type { AssertSerializableMode, WorkerConfig } from './worker-config'
-/** Barrel types F5 — re-export da `@sembridge/worker`. */
+/** Barrel types F5 — re-export da `@gluezero/worker`. */
 export type {
   WorkerDescriptor,
   WorkerMode,

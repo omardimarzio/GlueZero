@@ -19,8 +19,8 @@
 //
 // Vincolo D-83: ZERO modifiche packages/core/ + packages/mapper/ runtime.
 
-import type { BrokerEvent } from '@sembridge/core'
-import { createBrokerError } from '@sembridge/core'
+import type { BrokerEvent } from '@gluezero/core'
+import { createBrokerError } from '@gluezero/core'
 import { describe, expect, it, vi } from 'vitest'
 import type { CompiledRoute } from '../route-resolver'
 import type { RouteHttpDefinition } from '../types/route-definition'

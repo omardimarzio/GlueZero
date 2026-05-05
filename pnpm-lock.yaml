@@ -59,16 +59,16 @@ importers:
 
   packages/cache:
     dependencies:
-      '@sembridge/core':
+      '@gluezero/core':
         specifier: workspace:*
         version: link:../core
-      '@sembridge/gateway':
+      '@gluezero/gateway':
         specifier: workspace:*
         version: link:../gateway
-      '@sembridge/mapper':
+      '@gluezero/mapper':
         specifier: workspace:*
         version: link:../mapper
-      '@sembridge/routing':
+      '@gluezero/routing':
         specifier: workspace:*
         version: link:../routing
       nanoid:
@@ -127,13 +127,13 @@ importers:
 
   packages/devtools:
     dependencies:
-      '@sembridge/core':
+      '@gluezero/core':
         specifier: workspace:*
         version: link:../core
-      '@sembridge/mapper':
+      '@gluezero/mapper':
         specifier: workspace:*
         version: link:../mapper
-      '@sembridge/routing':
+      '@gluezero/routing':
         specifier: workspace:*
         version: link:../routing
       nanoid:
@@ -170,13 +170,13 @@ importers:
 
   packages/gateway:
     dependencies:
-      '@sembridge/core':
+      '@gluezero/core':
         specifier: workspace:*
         version: link:../core
-      '@sembridge/mapper':
+      '@gluezero/mapper':
         specifier: workspace:*
         version: link:../mapper
-      '@sembridge/routing':
+      '@gluezero/routing':
         specifier: workspace:*
         version: link:../routing
       nanoid:
@@ -208,9 +208,49 @@ importers:
         specifier: 4.1.5
         version: 4.1.5(@types/node@25.6.0)(@vitest/browser-playwright@4.1.5)(@vitest/coverage-v8@4.1.5)(happy-dom@20.9.0)(jsdom@29.1.0)(msw@2.13.6(@types/node@25.6.0)(typescript@6.0.3))(vite@8.0.10(@types/node@25.6.0)(esbuild@0.28.0)(yaml@2.8.3))
 
+  packages/gluezero:
+    dependencies:
+      '@gluezero/cache':
+        specifier: workspace:*
+        version: link:../cache
+      '@gluezero/core':
+        specifier: workspace:*
+        version: link:../core
+      '@gluezero/devtools':
+        specifier: workspace:*
+        version: link:../devtools
+      '@gluezero/gateway':
+        specifier: workspace:*
+        version: link:../gateway
+      '@gluezero/mapper':
+        specifier: workspace:*
+        version: link:../mapper
+      '@gluezero/routing':
+        specifier: workspace:*
+        version: link:../routing
+      '@gluezero/worker':
+        specifier: workspace:*
+        version: link:../worker
+      valibot:
+        specifier: 1.3.1
+        version: 1.3.1(typescript@6.0.3)
+    devDependencies:
+      '@vitest/coverage-v8':
+        specifier: 4.1.5
+        version: 4.1.5(@vitest/browser@4.1.5)(vitest@4.1.5)
+      tsup:
+        specifier: 8.5.1
+        version: 8.5.1(postcss@8.5.12)(typescript@6.0.3)(yaml@2.8.3)
+      typescript:
+        specifier: 6.0.3
+        version: 6.0.3
+      vitest:
+        specifier: 4.1.5
+        version: 4.1.5(@types/node@25.6.0)(@vitest/browser-playwright@4.1.5)(@vitest/coverage-v8@4.1.5)(happy-dom@20.9.0)(jsdom@29.1.0)(msw@2.13.6(@types/node@25.6.0)(typescript@6.0.3))(vite@8.0.10(@types/node@25.6.0)(esbuild@0.27.7)(yaml@2.8.3))
+
   packages/mapper:
     dependencies:
-      '@sembridge/core':
+      '@gluezero/core':
         specifier: workspace:*
         version: link:../core
       nanoid:
@@ -235,13 +275,13 @@ importers:
 
   packages/routing:
     dependencies:
-      '@sembridge/core':
+      '@gluezero/core':
         specifier: workspace:*
         version: link:../core
-      '@sembridge/gateway':
+      '@gluezero/gateway':
         specifier: workspace:*
         version: link:../gateway
-      '@sembridge/mapper':
+      '@gluezero/mapper':
         specifier: workspace:*
         version: link:../mapper
       nanoid:
@@ -264,58 +304,18 @@ importers:
         specifier: 4.1.5
         version: 4.1.5(@types/node@25.6.0)(@vitest/browser-playwright@4.1.5)(@vitest/coverage-v8@4.1.5)(happy-dom@20.9.0)(jsdom@29.1.0)(msw@2.13.6(@types/node@25.6.0)(typescript@6.0.3))(vite@8.0.10(@types/node@25.6.0)(esbuild@0.28.0)(yaml@2.8.3))
 
-  packages/sembridge:
-    dependencies:
-      '@sembridge/cache':
-        specifier: workspace:*
-        version: link:../cache
-      '@sembridge/core':
-        specifier: workspace:*
-        version: link:../core
-      '@sembridge/devtools':
-        specifier: workspace:*
-        version: link:../devtools
-      '@sembridge/gateway':
-        specifier: workspace:*
-        version: link:../gateway
-      '@sembridge/mapper':
-        specifier: workspace:*
-        version: link:../mapper
-      '@sembridge/routing':
-        specifier: workspace:*
-        version: link:../routing
-      '@sembridge/worker':
-        specifier: workspace:*
-        version: link:../worker
-      valibot:
-        specifier: 1.3.1
-        version: 1.3.1(typescript@6.0.3)
-    devDependencies:
-      '@vitest/coverage-v8':
-        specifier: 4.1.5
-        version: 4.1.5(@vitest/browser@4.1.5)(vitest@4.1.5)
-      tsup:
-        specifier: 8.5.1
-        version: 8.5.1(postcss@8.5.12)(typescript@6.0.3)(yaml@2.8.3)
-      typescript:
-        specifier: 6.0.3
-        version: 6.0.3
-      vitest:
-        specifier: 4.1.5
-        version: 4.1.5(@types/node@25.6.0)(@vitest/browser-playwright@4.1.5)(@vitest/coverage-v8@4.1.5)(happy-dom@20.9.0)(jsdom@29.1.0)(msw@2.13.6(@types/node@25.6.0)(typescript@6.0.3))(vite@8.0.10(@types/node@25.6.0)(esbuild@0.27.7)(yaml@2.8.3))
-
   packages/worker:
     dependencies:
-      '@sembridge/core':
+      '@gluezero/core':
         specifier: workspace:*
         version: link:../core
-      '@sembridge/gateway':
+      '@gluezero/gateway':
         specifier: workspace:*
         version: link:../gateway
-      '@sembridge/mapper':
+      '@gluezero/mapper':
         specifier: workspace:*
         version: link:../mapper
-      '@sembridge/routing':
+      '@gluezero/routing':
         specifier: workspace:*
         version: link:../routing
       comlink:

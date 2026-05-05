@@ -1,9 +1,9 @@
 /**
- * @sembridge/core — Browser-side event broker (pub/sub, plugin registry,
+ * @gluezero/core — Browser-side event broker (pub/sub, plugin registry,
  * lifecycle, BrokerEvent model, EventTap pre-instrumentation).
  *
  * ESM-only library, target ES2022 (browser evergreen).
- * Phase 1 of SemBridge V1.
+ * Phase 1 of GlueZero V1.
  *
  * Architectural constraint (per ARCHITECTURE.md §3.2): `EventTap` is
  * pre-instrumented at the 5 F1 pipeline steps with no-op implementation by

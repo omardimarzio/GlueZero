@@ -1,10 +1,10 @@
 /**
- * `@sembridge/gateway/http` — Subpath HTTP Gateway centralizzato.
+ * `@gluezero/gateway/http` — Subpath HTTP Gateway centralizzato.
  *
- * Phase 3 di SemBridge V1. Espone:
+ * Phase 3 di GlueZero V1. Espone:
  * - **`HttpGateway`** — entry centralizzato che applica una **policy chain** di
  *   middleware uniforme a tutte le richieste fetch generate dalle route HTTP del
- *   `RouteExecutor` di `@sembridge/routing`.
+ *   `RouteExecutor` di `@gluezero/routing`.
  * - **7 Strategy primitives** (Strategy Pattern, D-68):
  *   - `RetryStrategy` — default `ExponentialBackoffWithJitter`, retry 5xx/408/429
  *     + network error, NO retry su altre 4xx (D-69 / ROUTE-09 / chiusura PRD §39 #8)
@@ -24,8 +24,8 @@
  *
  * Bundle budget: 8 KB gzip (subpath dedicato). Vedi `package.json` size-limit root.
  *
- * Vincolo D-83: zero modifiche a `@sembridge/core` runtime e `@sembridge/mapper`
- * runtime. Composition wrapper invocato dal `RouteExecutor` di `@sembridge/routing`.
+ * Vincolo D-83: zero modifiche a `@gluezero/core` runtime e `@gluezero/mapper`
+ * runtime. Composition wrapper invocato dal `RouteExecutor` di `@gluezero/routing`.
  *
  * Documentazione: `prd.md` §18, §23, §26. Vedi anche
  * `.planning/phases/03-routing-server-gateway-http/03-RESEARCH.md` per dettaglio
@@ -118,7 +118,7 @@ export { validateAgainstAllowlist } from './url-allowlist'
 
 // ---------- Runtime export: 7 Strategy factories (plan 03-09/10/11 — barrel aggregato) ----------
 //
-// Plan 03-12 RouterEngine importa queste factory da `@sembridge/gateway/http` per
+// Plan 03-12 RouterEngine importa queste factory da `@gluezero/gateway/http` per
 // instantiate la `HttpGatewayStrategies` bundle config-derived. Mantiene il barrel
 // `./http` come single import path per consumer del routing engine; subpath dedicato
 // `./http/strategies` resta pubblico per consumer avanzati che vogliono override

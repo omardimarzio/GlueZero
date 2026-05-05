@@ -12,7 +12,7 @@
 // Pattern role-match con `packages/gateway/src/sse-ws/augment.test.ts` (analog
 // F4) replicato (vedi 05-PATTERNS.md §"augment.test.ts").
 
-import type { BrokerConfig, PluginDescriptor } from '@sembridge/core'
+import type { BrokerConfig, PluginDescriptor } from '@gluezero/core'
 import { describe, expect, expectTypeOf, it } from 'vitest'
 import { __augmentWorkerLoaded, type F5PipelineStep } from './augment'
 import {

@@ -1,5 +1,5 @@
 /**
- * @sembridge/gateway — HTTP Gateway centralizzato + adapter realtime per SemBridge.
+ * @gluezero/gateway — HTTP Gateway centralizzato + adapter realtime per GlueZero.
  *
  * Phase 3 (HTTP) + Phase 4 (SSE/WebSocket realtime). Il package è organizzato in
  * **subpath exports** (`./http` per F3 HTTP gateway, `./sse-ws` per F4 SSE/WS realtime
@@ -7,12 +7,12 @@
  * boundary. Vedi RESEARCH §"Subpath Exports Recommendation".
  *
  * **Umbrella barrel** (questo file): re-export tipi/runtime aggregati. La maggior
- * parte dei consumer importerà direttamente da `@sembridge/gateway/http` per
+ * parte dei consumer importerà direttamente da `@gluezero/gateway/http` per
  * beneficiare del bundle budget separato (8 KB gzip vs aggregato dopo F4).
  *
  * Vincolo architetturale (D-83): il package NON modifica `bus.ts` di F1 né
  * `broker-mapper-wrapper.ts` di F2. È invocato dal `RouteExecutor` di
- * `@sembridge/routing` (composition).
+ * `@gluezero/routing` (composition).
  *
  * **Side-effect import** (Pattern S1, T-03-04-01 mitigation): la riga
  * `export { __augmentGatewayLoaded } from './augment'` ri-esporta il marker const da
@@ -45,11 +45,11 @@ export { __augmentSseWsLoaded } from './sse-ws/augment'
 
 // Re-export sub-modulo HTTP per consumer che importano dall'umbrella.
 // Consumer ottimizzati per bundle size importeranno direttamente da
-// `@sembridge/gateway/http` (subpath dedicato — RESEARCH §"Subpath Exports").
+// `@gluezero/gateway/http` (subpath dedicato — RESEARCH §"Subpath Exports").
 export * from './http'
 
 // PHASE 4 (plan 04-01) — re-export sub-modulo SSE/WS dall'umbrella. Consumer
-// ottimizzati per bundle size importeranno direttamente da `@sembridge/gateway/sse-ws`
+// ottimizzati per bundle size importeranno direttamente da `@gluezero/gateway/sse-ws`
 // (subpath dedicato). Plan 04-01 espone solo types + augment marker; i runtime
 // (parseFrame, SseAdapter, WebSocketAdapter, RealtimeChannelManager, RealtimeBroker,
 // createRealtimeBroker) verranno aggiunti incrementalmente nei plan 04-02..04-08.

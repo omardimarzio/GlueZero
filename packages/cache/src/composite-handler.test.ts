@@ -17,7 +17,7 @@
 // Pattern role-match: F3 composite-handler.ts:67-130 (factory + closure flag)
 // + F5 worker-handler analog DI.
 
-import type { BrokerEvent } from '@sembridge/core'
+import type { BrokerEvent } from '@gluezero/core'
 import { describe, expect, it, vi } from 'vitest'
 import type { CacheHandlerF6, CacheHandlerOutcome, RouteCacheCompiled } from './cache-handler'
 import {
@@ -252,7 +252,7 @@ describe('Integration con cacheHandler reale', () => {
 })
 
 describe('Barrel export', () => {
-  it('Test 10: createCompositeHandlerF6 esportato dal barrel @sembridge/cache', async () => {
+  it('Test 10: createCompositeHandlerF6 esportato dal barrel @gluezero/cache', async () => {
     const mod = await import('./index')
     expect(typeof (mod as { createCompositeHandlerF6?: unknown }).createCompositeHandlerF6).toBe(
       'function',

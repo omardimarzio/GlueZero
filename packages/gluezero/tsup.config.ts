@@ -1,8 +1,8 @@
-// tsup.config.ts — build config @sembridge/sembridge aggregato pubblico
+// tsup.config.ts — build config @gluezero/gluezero aggregato pubblico
 // (Phase 6 plan 06-01).
 //
 // Single entry `src/index.ts` (no augment proprio — l'aggregato è puro
-// re-export dei 7 sub-package + factory `createSemBridge`). Plan 06-08 popola
+// re-export dei 7 sub-package + factory `createGlueZero`). Plan 06-08 popola
 // runtime exports + factory; 06-09 final gate aggiunge README/EXAMPLES (DOC-02 +
 // DOC-05).
 //
@@ -23,16 +23,16 @@ export default defineConfig({
   splitting: false,
   external: [
     /^node:/,
-    '@sembridge/core',
-    '@sembridge/mapper',
-    '@sembridge/routing',
-    '@sembridge/gateway',
-    '@sembridge/worker',
-    '@sembridge/cache',
-    '@sembridge/devtools',
+    '@gluezero/core',
+    '@gluezero/mapper',
+    '@gluezero/routing',
+    '@gluezero/gateway',
+    '@gluezero/worker',
+    '@gluezero/cache',
+    '@gluezero/devtools',
     'valibot',
   ],
   banner: {
-    js: '/* @sembridge/sembridge — MIT — https://github.com/<TBD>/sembridge */',
+    js: '/* @gluezero/gluezero — MIT — https://github.com/<TBD>/gluezero */',
   },
 })

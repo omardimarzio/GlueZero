@@ -1,5 +1,5 @@
 /**
- * `@sembridge/gateway/sse-ws` — Subpath SSE/WebSocket realtime adapter (Phase 4).
+ * `@gluezero/gateway/sse-ws` — Subpath SSE/WebSocket realtime adapter (Phase 4).
  *
  * Espone:
  * - **`RealtimeBroker`** — composition wrapper di `RouterBroker` (D-101 / D-83 strict)
@@ -14,7 +14,7 @@
  *
  * @example
  * ```ts
- * import { createRealtimeBroker } from '@sembridge/gateway/sse-ws'
+ * import { createRealtimeBroker } from '@gluezero/gateway/sse-ws'
  *
  * const broker = createRealtimeBroker({
  *   realtime: {

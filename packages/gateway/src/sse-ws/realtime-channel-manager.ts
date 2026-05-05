@@ -26,7 +26,7 @@
 // Pattern Anti-AP-11 (PATTERNS.md §5): NESSUNO multiplex automatico — ogni canale
 // ha la propria connection (D-102). Map by `name`, NON by `url`.
 
-import { type BrokerEvent, createBrokerError } from '@sembridge/core'
+import { type BrokerEvent, createBrokerError } from '@gluezero/core'
 import { nanoid } from 'nanoid'
 import type { BackpressureStrategy } from '../http/types/http-strategies'
 import { createReconnectStrategy, type ReconnectStrategy } from './reconnect-strategy'

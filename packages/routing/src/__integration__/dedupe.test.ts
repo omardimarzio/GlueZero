@@ -5,7 +5,7 @@
 //   ricevono lo STESSO payload (Promise singleton).
 //
 // NOTA F3 V1 (deferred wiring):
-//   La `DedupeStrategy` (`createDedupeStrategy` da @sembridge/gateway/http) è
+//   La `DedupeStrategy` (`createDedupeStrategy` da @gluezero/gateway/http) è
 //   instanziata dal RouterEngine ma NON è ancora wired al `HttpGateway.execute()`
 //   come middleware automatico (vedi 03-13-SUMMARY notes / deferred wiring).
 //   La verifica integration-level qui copre 2 livelli:
@@ -20,8 +20,8 @@
 //   - Test 2 (E2E status): 2 publish identiche → comportamento attuale documentato
 //     (verifica almeno la struttura — 2 weather.loaded raccolti).
 
-import { createDedupeStrategy } from '@sembridge/gateway/http'
-import type { CanonicalSchemaId } from '@sembridge/mapper'
+import { createDedupeStrategy } from '@gluezero/gateway/http'
+import type { CanonicalSchemaId } from '@gluezero/mapper'
 import { HttpResponse, http } from 'msw'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { server } from '../test-utils/msw-server'

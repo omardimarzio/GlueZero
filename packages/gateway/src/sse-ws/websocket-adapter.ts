@@ -49,8 +49,8 @@
 // `ReconnectStrategy` (plan 04-03) viene istanziata nel constructor con
 // `initialMode: 'websocket'`.
 
-import type { BrokerEvent, EventSource as BrokerEventSource } from '@sembridge/core'
-import { createBrokerError } from '@sembridge/core'
+import type { BrokerEvent, EventSource as BrokerEventSource } from '@gluezero/core'
+import { createBrokerError } from '@gluezero/core'
 import { nanoid } from 'nanoid'
 import type { BackpressureStrategy } from '../http/types/http-strategies'
 import { INTERNAL_TOPICS, isInternalTopic, parseFrame } from './frame-parser'
@@ -161,7 +161,7 @@ function shouldReconnectOnCloseCode(code: number): boolean {
  *   {
  *     name: 'orders',
  *     buildUrl: async () => `https://api/ws?token=${await getToken()}`,
- *     wsSubprotocols: ['sembridge-v1'],
+ *     wsSubprotocols: ['gluezero-v1'],
  *     heartbeat: { intervalMs: 30_000, staleTimeoutMs: 60_000 },
  *   },
  *   { publishFn: (ev) => broker.publish(ev) },

@@ -1,5 +1,5 @@
 // router-harness.ts — fixture condivisa per integration test del package
-// `@sembridge/routing` (PRD §29 D-89 scenario meteo HTTP, REQ TEST-01/02/03).
+// `@gluezero/routing` (PRD §29 D-89 scenario meteo HTTP, REQ TEST-01/02/03).
 //
 // Razionale (03-13-PLAN.md, 03-PATTERNS.md §G):
 // Estende `createMapperHarness` di F2 (template autoritativo) con:
@@ -31,9 +31,9 @@
 //   sono responsabili di chiamare `vi.useRealTimers()` nel teardown. Il harness NON
 //   forza timer mode.
 
-import type { EventTap, PipelineSnapshot, PipelineStep } from '@sembridge/core'
-import type { GatewayConfig } from '@sembridge/gateway/http'
-import type { CanonicalSchema, TransformFn } from '@sembridge/mapper'
+import type { EventTap, PipelineSnapshot, PipelineStep } from '@gluezero/core'
+import type { GatewayConfig } from '@gluezero/gateway/http'
+import type { CanonicalSchema, TransformFn } from '@gluezero/mapper'
 import type { RequestHandler } from 'msw'
 import { vi } from 'vitest'
 import { createRouterBroker, type RouterBroker } from '../public-factory'

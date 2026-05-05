@@ -6,7 +6,7 @@
 //   al manager che possiede la `ReconnectStrategy` cross-canale).
 // - **Last-Event-ID management manuale** (RESEARCH §3.2 — chiusura RT-07): il browser
 //   invia `Last-Event-ID` header automaticamente SOLO durante il native reconnect
-//   di EventSource. Il custom reconnect di SemBridge crea un NEW `EventSource` quindi
+//   di EventSource. Il custom reconnect di GlueZero crea un NEW `EventSource` quindi
 //   inietta l'ID via query string `?lastEventId=` tramite `buildUrl()` (vincolo D-105
 //   no header custom).
 // - **Auth-agnostic via `buildUrl()` async hook** (D-104) con fallback a `url` statico.
@@ -39,8 +39,8 @@
 // counter `consecutiveFailures` cross-connect; il loop di reconnect è del manager
 // (plan 04-07) che chiama `adapter.connect()` dopo `nextDelayMs()`.
 
-import type { BrokerEvent, EventSource as BrokerEventSource } from '@sembridge/core'
-import { createBrokerError } from '@sembridge/core'
+import type { BrokerEvent, EventSource as BrokerEventSource } from '@gluezero/core'
+import { createBrokerError } from '@gluezero/core'
 import { nanoid } from 'nanoid'
 import type { BackpressureStrategy } from '../http/types/http-strategies'
 import { createReconnectStrategy, type ReconnectStrategy } from './reconnect-strategy'

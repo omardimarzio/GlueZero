@@ -12,7 +12,7 @@
 // Pattern role-match con `packages/worker/src/augment.test.ts` (analog F5)
 // replicato (vedi 06-PATTERNS.md §"augment.test.ts").
 
-import type { BrokerConfig, BrokerEvent } from '@sembridge/core'
+import type { BrokerConfig, BrokerEvent } from '@gluezero/core'
 import { describe, expect, expectTypeOf, it } from 'vitest'
 import { __augmentCacheLoaded, type F6CachePipelineStep } from './augment'
 import type { CacheAdapter, CacheConfig, CacheEntry, CacheStats } from './types'

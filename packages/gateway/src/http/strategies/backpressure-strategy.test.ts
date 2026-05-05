@@ -11,7 +11,7 @@
 // - priority='critical' bypass tutte le policy (Pitfall 4)
 // - queueLength(routeId) per Inspector
 
-import { isBrokerError } from '@sembridge/core'
+import { isBrokerError } from '@gluezero/core'
 import { describe, expect, it, vi } from 'vitest'
 import { createBackpressureStrategy } from './backpressure-strategy'
 

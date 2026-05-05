@@ -1,4 +1,4 @@
-// Barrel type-only del package `@sembridge/routing/types`.
+// Barrel type-only del package `@gluezero/routing/types`.
 //
 // Tutti i type sono `export type *` (no runtime). Pattern identico a
 // `packages/mapper/src/types/index.ts` di F2 ma F2 al momento non ha barrel

@@ -13,6 +13,6 @@ export default defineConfig({
   platform: 'browser',
   external: [/^node:/],
   banner: {
-    js: '/* @sembridge/core — MIT — https://github.com/<TBD>/sembridge */',
+    js: '/* @gluezero/core — MIT — https://github.com/<TBD>/gluezero */',
   },
 })

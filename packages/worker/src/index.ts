@@ -1,5 +1,5 @@
 /**
- * `@sembridge/worker` — Worker Runtime entry point pubblico (Phase 5).
+ * `@gluezero/worker` — Worker Runtime entry point pubblico (Phase 5).
  *
  * Espone la superficie F5 type-level (Wave 1 plan 05-01). Wave 2-4 popolerà
  * runtime exports:
@@ -22,8 +22,8 @@
  * @example
  * ```ts
  * // Wave 1 — type-level scaffold (esempi runtime in W4 plan 05-06):
- * import type { RouteWorkerDefinition, WorkerDescriptor, ProgressPayload } from '@sembridge/worker'
- * import { INTERNAL_TOPICS_WORKER, isInternalWorkerTopic } from '@sembridge/worker'
+ * import type { RouteWorkerDefinition, WorkerDescriptor, ProgressPayload } from '@gluezero/worker'
+ * import { INTERNAL_TOPICS_WORKER, isInternalWorkerTopic } from '@gluezero/worker'
  *
  * const descriptor: WorkerDescriptor = {
  *   id: 'report-worker',

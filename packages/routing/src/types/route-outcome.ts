@@ -10,7 +10,7 @@
 // Vincolo `exactOptionalPropertyTypes: true`: tutti i campi opzionali sono
 // `readonly X?: T` (mai `readonly X: T | undefined`).
 
-import type { BrokerError } from '@sembridge/core'
+import type { BrokerError } from '@gluezero/core'
 
 /**
  * Metadata opzionale popolato dall'esecuzione (success branch).

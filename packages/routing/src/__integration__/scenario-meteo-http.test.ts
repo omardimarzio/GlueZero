@@ -25,7 +25,7 @@
 // Threat coverage:
 // - T-03-13-01 (handler leakage): mitigated da `vitest.setup.ts` resetHandlers.
 
-import type { CanonicalSchemaId } from '@sembridge/mapper'
+import type { CanonicalSchemaId } from '@gluezero/mapper'
 import { HttpResponse, http } from 'msw'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { createRouterHarness, type RouterHarness } from '../test-utils/router-harness'

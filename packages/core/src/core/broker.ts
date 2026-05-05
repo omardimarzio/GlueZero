@@ -1,4 +1,4 @@
-// Broker — composition root del @sembridge/core (PRD §10, §15, §27;
+// Broker — composition root del @gluezero/core (PRD §10, §15, §27;
 // REQ CORE-02, CORE-04, CORE-11, CORE-14, LIFE-01, LIFE-02; D-28, D-29, D-30).
 //
 // Composizione interna:

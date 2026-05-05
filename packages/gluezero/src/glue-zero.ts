@@ -1,5 +1,5 @@
 /**
- * F6 createSemBridge — factory aggregato CHAIN COMPLETA F1+F2+F3+F4+F5+F6
+ * F6 createGlueZero — factory aggregato CHAIN COMPLETA F1+F2+F3+F4+F5+F6
  * (RESEARCH §11.3 Opzione B convenience).
  *
  * **BLOCKER-2 fix critico (revision iter 1)**: la chain include OBBLIGATORIAMENTE
@@ -23,32 +23,32 @@
  * costruisce internamente la propria istanza di `RouterBroker(config)`. I
  * wrapper "intermedi" (realtime/worker/cache) NON sono effettivamente compositi
  * uno sull'altro in V1: sono ortogonali (l'utente sceglie un entry-point in
- * funzione delle feature). `createSemBridge` sceglie il wrapper più adatto in
+ * funzione delle feature). `createGlueZero` sceglie il wrapper più adatto in
  * funzione di `features`, OUTERMOST → INNERMOST.
  *
  * **D-30 no singleton**: ogni call ritorna istanza indipendente.
  *
- * **Vincolo D-83 strict**: createSemBridge importa dai package F1-F5 ma NON
+ * **Vincolo D-83 strict**: createGlueZero importa dai package F1-F5 ma NON
  * modifica il loro src/. Tutta la logica chain vive in
- * `packages/sembridge/src/sem-bridge.ts`.
+ * `packages/gluezero/src/glue-zero.ts`.
  *
  * @see RESEARCH §11 composition wrapper topology
  * @see RESEARCH §11.3 raccomandazione researcher (Opzione B factory aggregato)
  */
 
-import { createCacheBroker } from '@sembridge/cache'
-import type { createBroker } from '@sembridge/core'
-import { createDevtoolsBroker } from '@sembridge/devtools'
-import { createRealtimeBroker } from '@sembridge/gateway/sse-ws'
-import type { createMapperBroker } from '@sembridge/mapper'
-import { createRouterBroker } from '@sembridge/routing'
-import { createWorkerBroker } from '@sembridge/worker'
+import { createCacheBroker } from '@gluezero/cache'
+import type { createBroker } from '@gluezero/core'
+import { createDevtoolsBroker } from '@gluezero/devtools'
+import { createRealtimeBroker } from '@gluezero/gateway/sse-ws'
+import type { createMapperBroker } from '@gluezero/mapper'
+import { createRouterBroker } from '@gluezero/routing'
+import { createWorkerBroker } from '@gluezero/worker'
 import * as v from 'valibot'
 
-import type { SemBridgeConfig } from './types/sembridge-config'
+import type { GlueZeroConfig } from './types/gluezero-config'
 
 /**
- * Type union completa: ogni call a `createSemBridge` può ritornare uno qualsiasi
+ * Type union completa: ogni call a `createGlueZero` può ritornare uno qualsiasi
  * dei 7 wrapper a seconda di `features`. Il consumer riceve l'union — la
  * narrowing avviene tramite type guard runtime (es. `if ('connectRealtime' in
  * broker)`).
@@ -57,7 +57,7 @@ import type { SemBridgeConfig } from './types/sembridge-config'
  * ReturnType<createWorkerBroker> + ReturnType<createRealtimeBroker> (chain F1..F6
  * non è opzionale).
  */
-export type SemBridge =
+export type GlueZero =
   | ReturnType<typeof createBroker>
   | ReturnType<typeof createMapperBroker>
   | ReturnType<typeof createRouterBroker>
@@ -67,11 +67,11 @@ export type SemBridge =
   | ReturnType<typeof createDevtoolsBroker>
 
 /**
- * Schema Valibot per `SemBridgeConfig.features`. Tutti i campi sono boolean
+ * Schema Valibot per `GlueZeroConfig.features`. Tutti i campi sono boolean
  * optional. Il resto del config passa per `looseObject` (delegato downstream
  * ai factory dei sub-package — D-56 validation at boundary).
  */
-const SemBridgeFeaturesSchema = v.optional(
+const GlueZeroFeaturesSchema = v.optional(
   v.looseObject({
     cache: v.optional(v.boolean()),
     devtools: v.optional(v.boolean()),
@@ -80,23 +80,23 @@ const SemBridgeFeaturesSchema = v.optional(
   }),
 )
 
-const SemBridgeConfigSchema = v.looseObject({
-  features: SemBridgeFeaturesSchema,
+const GlueZeroConfigSchema = v.looseObject({
+  features: GlueZeroFeaturesSchema,
 })
 
 /**
- * Crea un SemBridge aggregato con chain composition CHAIN COMPLETA
+ * Crea un GlueZero aggregato con chain composition CHAIN COMPLETA
  * F1+F2+F3+F4+F5+F6 (BLOCKER-2 fix).
  *
  * @param config Optional config (default empty + tutte le feature enabled).
- * @returns Istanza {@link SemBridge} (broker outermost in chain).
- * @throws {Error} `Invalid SemBridgeConfig: <issues>` se Valibot validation fallisce.
+ * @returns Istanza {@link GlueZero} (broker outermost in chain).
+ * @throws {Error} `Invalid GlueZeroConfig: <issues>` se Valibot validation fallisce.
  *
  * @example Quick start (default chain F1+F2+F3+F4+F5+F6 attivi)
  * ```ts
- * import { createSemBridge } from '@sembridge/sembridge'
+ * import { createGlueZero } from '@gluezero/gluezero'
  *
- * const broker = createSemBridge({
+ * const broker = createGlueZero({
  *   cache: { maxEntries: 500 },
  *   devtools: { enableByDefault: true },
  * })
@@ -105,7 +105,7 @@ const SemBridgeConfigSchema = v.looseObject({
  *
  * @example Opt-out features (skip realtime + worker per SPA non realtime)
  * ```ts
- * const broker = createSemBridge({
+ * const broker = createGlueZero({
  *   features: { realtime: false, worker: false },
  *   cache: { maxEntries: 100 },
  * })
@@ -114,7 +114,7 @@ const SemBridgeConfigSchema = v.looseObject({
  * @example Multi-tenant isolation (D-30 anti-singleton)
  * ```ts
  * function brokerForTenant(tenantId: string) {
- *   return createSemBridge({
+ *   return createGlueZero({
  *     cache: {
  *       maxEntries: 200,
  *       scopeProvider: () => tenantId,
@@ -128,24 +128,24 @@ const SemBridgeConfigSchema = v.looseObject({
  *
  * @example Bare minimum F1+F2+F3 (uguale a createRouterBroker direct)
  * ```ts
- * const bare = createSemBridge({
+ * const bare = createGlueZero({
  *   features: { realtime: false, worker: false, cache: false, devtools: false },
  * })
  * // → ritorna RouterBroker con chain implicita F1+F2+F3
  * ```
  *
- * @throws {Error} `Invalid SemBridgeConfig: <issues>` se Valibot validation fallisce.
+ * @throws {Error} `Invalid GlueZeroConfig: <issues>` se Valibot validation fallisce.
  *   Propaga anche `Invalid CacheBrokerConfig:` / `Invalid DevtoolsBrokerConfig:` /
  *   `Invalid WorkerBrokerConfig:` / `Invalid RealtimeBrokerConfig:` / `Invalid
  *   RouterBrokerConfig:` dei factory downstream (D-56 validation at boundary cascade).
  *
  * @see RESEARCH §11.3 Opzione B convenience factory.
  */
-export function createSemBridge(config: SemBridgeConfig = {}): SemBridge {
-  const parsed = v.safeParse(SemBridgeConfigSchema, config)
+export function createGlueZero(config: GlueZeroConfig = {}): GlueZero {
+  const parsed = v.safeParse(GlueZeroConfigSchema, config)
   if (!parsed.success) {
     const messages = parsed.issues.map((i) => i.message).join('; ')
-    throw new Error(`Invalid SemBridgeConfig: ${messages}`)
+    throw new Error(`Invalid GlueZeroConfig: ${messages}`)
   }
 
   // Default features tutte enabled (RESEARCH §11.3 Opzione B convenience).
@@ -166,26 +166,26 @@ export function createSemBridge(config: SemBridgeConfig = {}): SemBridge {
   //
   // **Topology in V1**: i wrapper realtime/worker/cache/devtools sono ortogonali
   // (estendono RouterBroker via composition diretta, non si compongono uno
-  // sull'altro). `createSemBridge` ritorna il wrapper OUTERMOST in funzione di
+  // sull'altro). `createGlueZero` ritorna il wrapper OUTERMOST in funzione di
   // `features`. La researcher §11.3 documenta la roadmap V1.x per chain
   // letterale multi-wrapper (es. Devtools(Cache(Worker(Realtime(Router(...)))))).
   //
   // L'ORDINE OUTERMOST → INNERMOST è devtools > cache > worker > realtime > router.
   // Il branch più esterno attivo determina il wrapper ritornato.
-  let broker: SemBridge
+  let broker: GlueZero
 
   if (f.devtools) {
-    broker = createDevtoolsBroker(config) as SemBridge
+    broker = createDevtoolsBroker(config) as GlueZero
   } else if (f.cache) {
-    broker = createCacheBroker(config) as SemBridge
+    broker = createCacheBroker(config) as GlueZero
   } else if (f.worker) {
-    broker = createWorkerBroker(config) as SemBridge
+    broker = createWorkerBroker(config) as GlueZero
   } else if (f.realtime) {
-    broker = createRealtimeBroker(config) as SemBridge
+    broker = createRealtimeBroker(config) as GlueZero
   } else {
     // Chain minimal F1+F2+F3 — RouterBroker include MapperBroker (F2) +
     // Broker (F1) via composition interna (D-83 chain F1→F2→F3).
-    broker = createRouterBroker(config) as SemBridge
+    broker = createRouterBroker(config) as GlueZero
   }
 
   return broker

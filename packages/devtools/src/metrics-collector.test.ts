@@ -8,12 +8,12 @@
  * - Gauges last-write-wins
  * - Histograms via reservoir Algorithm R + computeSummary
  * - Cardinality cap (D-166) + audit emit hook
- * - Naming Prometheus-friendly `sembridge.<package>.<metric>{<labels>}`
+ * - Naming Prometheus-friendly `gluezero.<package>.<metric>{<labels>}`
  *
  * Pattern primario: F5 worker-pool counter atomic + F5 task-tracker Map<key, state>.
  */
 
-import type { EventTap } from '@sembridge/core'
+import type { EventTap } from '@gluezero/core'
 import { describe, expect, it, vi } from 'vitest'
 import { createMetricsCollector } from './metrics-collector'
 
@@ -117,14 +117,14 @@ describe('metrics-collector — counters/gauges/histograms (D-163/D-164/D-165/D-
     })
   })
 
-  it('Test 11: naming Prometheus-friendly sembridge.<package>.<metric>{<labels>}', () => {
+  it('Test 11: naming Prometheus-friendly gluezero.<package>.<metric>{<labels>}', () => {
     const m = createMetricsCollector()
-    m.increment('sembridge.cache.hits_total', { route_id: 'weather' })
-    m.observe('sembridge.http.duration_ms', 123, { route_id: 'weather', status: '200' })
+    m.increment('gluezero.cache.hits_total', { route_id: 'weather' })
+    m.observe('gluezero.http.duration_ms', 123, { route_id: 'weather', status: '200' })
     const snap = m.getMetrics()
-    expect(snap.counters['sembridge.cache.hits_total{route_id="weather"}']).toBe(1)
+    expect(snap.counters['gluezero.cache.hits_total{route_id="weather"}']).toBe(1)
     expect(
-      snap.histograms['sembridge.http.duration_ms{route_id="weather",status="200"}'],
+      snap.histograms['gluezero.http.duration_ms{route_id="weather",status="200"}'],
     ).toBeDefined()
   })
 

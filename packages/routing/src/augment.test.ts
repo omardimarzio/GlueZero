@@ -9,8 +9,8 @@
 //
 // Pattern F2 replicato (vedi packages/mapper/src/augment.test.ts).
 
-import type { BrokerConfig, PluginDescriptor } from '@sembridge/core'
-import type { CanonicalSchema, CanonicalSchemaId } from '@sembridge/mapper'
+import type { BrokerConfig, PluginDescriptor } from '@gluezero/core'
+import type { CanonicalSchema, CanonicalSchemaId } from '@gluezero/mapper'
 import { describe, expect, expectTypeOf, it } from 'vitest'
 import { __augmentLoaded, type F3PipelineStep } from './augment'
 import type { RouteDefinition } from './types/route-definition'

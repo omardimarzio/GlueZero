@@ -17,7 +17,7 @@
 // e i 4 moduli Wave 3 (CanonicalRegistry, AliasRegistry, TransformPipeline, ValibotAdapter)
 // vengono compose internamente dal broker wrapper.
 
-import type { BrokerEvent, PluginContext, Subscription } from '@sembridge/core'
+import type { BrokerEvent, PluginContext, Subscription } from '@gluezero/core'
 import { describe, expect, it } from 'vitest'
 import { createMapperHarness } from '../test-utils/mapper-harness'
 import type { CanonicalSchemaId } from '../types/canonical-schema'

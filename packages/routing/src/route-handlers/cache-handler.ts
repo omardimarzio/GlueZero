@@ -15,8 +15,8 @@
 // - T-03-06-04 (Information Disclosure): `BrokerError.details` NON include payload —
 //   solo `phase: 'F6-pending'` come metadato sicuro.
 
-import type { BrokerEvent } from '@sembridge/core'
-import { createBrokerError } from '@sembridge/core'
+import type { BrokerEvent } from '@gluezero/core'
+import { createBrokerError } from '@gluezero/core'
 import type { CompiledRoute } from '../route-resolver'
 import type { RouteOutcome } from '../types/route-outcome'
 

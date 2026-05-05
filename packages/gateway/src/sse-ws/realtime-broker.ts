@@ -39,8 +39,8 @@
 //   (verification-gated). Verifica vivo `Broker.publish(topic, payload, options)`
 //   accetta `source` e `id` — confermato.
 
-import type { PluginDescriptor, Subscription } from '@sembridge/core'
-import { RouterBroker, type RouterBrokerConfig } from '@sembridge/routing'
+import type { PluginDescriptor, Subscription } from '@gluezero/core'
+import { RouterBroker, type RouterBrokerConfig } from '@gluezero/routing'
 import { RealtimeChannelManager, type RealtimeChannelManagerDeps } from './realtime-channel-manager'
 import type { RealtimeChannelDef } from './types/realtime-channel-def'
 import type { RealtimeConfig } from './types/realtime-config'
@@ -74,7 +74,7 @@ type RouterPublishOptions = Parameters<RouterBroker['publish']>[2]
  *
  * @example Quick start (config-driven channels)
  * ```ts
- * import { createRealtimeBroker } from '@sembridge/gateway/sse-ws'
+ * import { createRealtimeBroker } from '@gluezero/gateway/sse-ws'
  *
  * const broker = createRealtimeBroker({
  *   realtime: {

@@ -6,7 +6,7 @@
 // - Tutti i test asseriscono side-effect osservabili (getDebugSnapshot,
 //   subscribe callback, publishFn invocations), mai presence-only.
 
-import type { BrokerEvent } from '@sembridge/core'
+import type { BrokerEvent } from '@gluezero/core'
 import { beforeEach, describe, expect, it } from 'vitest'
 import { MockWorker } from './test-utils/mock-worker'
 import type { RouteWorkerDefinition, WorkerDescriptor } from './types'

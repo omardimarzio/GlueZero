@@ -19,7 +19,7 @@
 // - T-06-07-05 (Logic flaw flushQueue topic non-paused): accept silenzioso.
 //   Test 10 verifica no-op.
 
-import type { BrokerEvent } from '@sembridge/core'
+import type { BrokerEvent } from '@gluezero/core'
 import { describe, expect, it, vi } from 'vitest'
 import { createPauseController } from './pause-controller'
 

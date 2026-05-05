@@ -30,7 +30,7 @@
 // passa `{ strict: true }` esplicitamente, default è `false` (no strict mode).
 // `isolatedDeclarations: true` enforcement: ogni metodo pubblico ha return type esplicito.
 
-import { createBrokerError } from '@sembridge/core'
+import { createBrokerError } from '@gluezero/core'
 import type { CanonicalSchema, CanonicalSchemaId } from './types/canonical-schema'
 
 /**
@@ -64,7 +64,7 @@ export type CanonicalRegistryListener = (schema: CanonicalSchema) => void
 /**
  * Registry tipizzato dei canonical schema (REQ MAP-01, MAP-02).
  *
- * Pattern F1 (vedi `TopicRegistry` in `@sembridge/core`) esteso con:
+ * Pattern F1 (vedi `TopicRegistry` in `@gluezero/core`) esteso con:
  * - `requires` resolution check al register (D-36)
  * - `unregister(id)` per cascade plugin (D-26 ext F2)
  *

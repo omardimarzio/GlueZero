@@ -11,7 +11,7 @@
 // Pattern role-match con `packages/cache/src/augment.test.ts` (analog cache F6
 // stesso plan) + `packages/worker/src/augment.test.ts` (analog F5).
 
-import type { BrokerConfig, EventTap } from '@sembridge/core'
+import type { BrokerConfig, EventTap } from '@gluezero/core'
 import { describe, expect, expectTypeOf, it } from 'vitest'
 import { __augmentDevtoolsLoaded, type F6PipelineStep } from './augment'
 import type { DevtoolsConfig, HistogramSummary, MetricsSnapshot, PauseAction } from './types'
@@ -104,13 +104,13 @@ describe('augment.ts (F6 Devtools TS declaration merging — plan 06-01)', () =>
       p99: 95,
     }
     const snapshot: MetricsSnapshot = {
-      counters: { 'sembridge.broker.events_published_total': 42 },
-      gauges: { 'sembridge.cache.entries_count': 17 },
-      histograms: { 'sembridge.http.duration_ms': summary },
+      counters: { 'gluezero.broker.events_published_total': 42 },
+      gauges: { 'gluezero.cache.entries_count': 17 },
+      histograms: { 'gluezero.http.duration_ms': summary },
     }
-    expect(snapshot.counters['sembridge.broker.events_published_total']).toBe(42)
-    expect(snapshot.gauges['sembridge.cache.entries_count']).toBe(17)
-    expect(snapshot.histograms['sembridge.http.duration_ms']?.p99).toBe(95)
+    expect(snapshot.counters['gluezero.broker.events_published_total']).toBe(42)
+    expect(snapshot.gauges['gluezero.cache.entries_count']).toBe(17)
+    expect(snapshot.histograms['gluezero.http.duration_ms']?.p99).toBe(95)
     expectTypeOf<HistogramSummary>().toMatchTypeOf<{
       readonly count: number
       readonly sum: number

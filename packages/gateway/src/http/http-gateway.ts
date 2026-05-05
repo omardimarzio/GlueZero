@@ -17,7 +17,7 @@
 //
 // Pattern composition (D-83):
 // - ZERO modifiche a packages/core/ + packages/mapper/ runtime.
-// - HttpGateway è invocato dal `http-handler.ts` di @sembridge/routing (plan 03-08 Task 3).
+// - HttpGateway è invocato dal `http-handler.ts` di @gluezero/routing (plan 03-08 Task 3).
 // - Le 6+1 Strategy sono fornite come dependency injection — qui agnostico all'impl.
 //
 // Threat coverage (vedi <threat_model> in 03-08-PLAN.md):
@@ -28,8 +28,8 @@
 //   (delegato a IdempotencyStrategy — A2 RESEARCH).
 // - T-03-08-06 (DoS — inFlight Map cresce illimitato): `finally { this.inFlight.delete(eventId) }`.
 
-import type { BrokerEvent } from '@sembridge/core'
-import { createBrokerError } from '@sembridge/core'
+import type { BrokerEvent } from '@gluezero/core'
+import { createBrokerError } from '@gluezero/core'
 import { combineSignals } from './combine-signals'
 import type { GatewayConfig } from './types/gateway-config'
 import type {
@@ -73,7 +73,7 @@ interface InFlightEntry {
 
 /**
  * Subset di route information consumato dal gateway. La signature accetta plain
- * `{ id, ownerId? }` per evitare coupling stretto con `CompiledRoute` di @sembridge/routing
+ * `{ id, ownerId? }` per evitare coupling stretto con `CompiledRoute` di @gluezero/routing
  * (T-03-08-02 — gateway agnostico al routing engine).
  */
 export interface HttpGatewayRouteInfo {

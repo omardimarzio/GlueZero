@@ -1,5 +1,5 @@
 // public-factory.ts — `createRealtimeBroker(config)` API pubblica del subpath
-// `@sembridge/gateway/sse-ws` (PRD §27, REQ RT-01..07, decisione D-30 no singleton).
+// `@gluezero/gateway/sse-ws` (PRD §27, REQ RT-01..07, decisione D-30 no singleton).
 //
 // Estende il pattern di `createRouterBroker` (F3 plan 03-12 — public-factory.ts) e
 // `createMapperBroker` (F2): factory pure function che valida la config via Valibot e
@@ -93,7 +93,7 @@ const RealtimeBrokerConfigSchema = v.looseObject({
  *
  * @example
  * ```ts
- * import { createRealtimeBroker } from '@sembridge/gateway/sse-ws'
+ * import { createRealtimeBroker } from '@gluezero/gateway/sse-ws'
  *
  * const broker = createRealtimeBroker({
  *   realtime: {

@@ -4,8 +4,8 @@
 // fetch deterministico (no network reale). RouterBroker plan 03-12 fornirà strategy
 // concrete (qui usiamo mock minimal — la classe è agnostica all'impl strategy).
 
-import type { BrokerEvent } from '@sembridge/core'
-import { isBrokerError } from '@sembridge/core'
+import type { BrokerEvent } from '@gluezero/core'
+import { isBrokerError } from '@gluezero/core'
 import { HttpResponse, http } from 'msw'
 import { setupServer } from 'msw/node'
 import { afterAll, afterEach, beforeAll, describe, expect, it } from 'vitest'

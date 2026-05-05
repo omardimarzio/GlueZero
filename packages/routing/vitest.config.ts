@@ -2,7 +2,7 @@ import { defineConfig } from 'vitest/config'
 
 export default defineConfig({
   test: {
-    name: '@sembridge/routing',
+    name: '@gluezero/routing',
     environment: 'jsdom',
     globals: false,
     include: ['src/**/*.test.ts'],

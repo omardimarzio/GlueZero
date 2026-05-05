@@ -6,7 +6,7 @@
 // 3. allowlist con string prefix → match URL prefix → pass.
 // 4. URL fuori allowlist → throw BrokerError 'gateway.url.forbidden' con details.
 
-import { isBrokerError } from '@sembridge/core'
+import { isBrokerError } from '@gluezero/core'
 import { describe, expect, it } from 'vitest'
 import { validateAgainstAllowlist } from './url-allowlist'
 

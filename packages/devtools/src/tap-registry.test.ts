@@ -13,7 +13,7 @@
 // Pattern role-match con `multiplex-tap.test.ts` (consumer di createMultiplexTap
 // via registry.getMultiplexed()).
 
-import type { EventTap } from '@sembridge/core'
+import type { EventTap } from '@gluezero/core'
 import { describe, expect, it, vi } from 'vitest'
 import { createTapRegistry, type TapHandle, type TapRegistry, wrapLegacyTap } from './tap-registry'
 

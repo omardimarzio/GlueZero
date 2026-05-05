@@ -1,5 +1,5 @@
 /**
- * `@sembridge/devtools` — Developer tooling entry point pubblico (Phase 6).
+ * `@gluezero/devtools` — Developer tooling entry point pubblico (Phase 6).
  *
  * Espone la superficie F6 type-level + runtime cumulative Wave 1+2+3+4:
  * - W1 (plan 06-01) — types F6 + augment declaration merging.
@@ -9,7 +9,7 @@
  *   buffer 500 eventi default D-167).
  * - W3 (plan 06-06) — `createMetricsCollector`, reservoir Algorithm R Vitter
  *   1985 (D-165) + cardinality cap (D-166) + naming dot.case
- *   `sembridge.<package>.<metric>` (D-163).
+ *   `gluezero.<package>.<metric>` (D-163).
  * - W3 (plan 06-07) — `createPauseController` (queue cap 1000 + critical
  *   bypass D-170).
  * - W4 (plan 06-08b) — `DevtoolsBroker`, `createDevtoolsBroker` composition
@@ -30,7 +30,7 @@
  *
  * @example Quick start (Wave 4 — composition wrapper Opzione B)
  * ```ts
- * import { createDevtoolsBroker } from '@sembridge/devtools'
+ * import { createDevtoolsBroker } from '@gluezero/devtools'
  *
  * const broker = createDevtoolsBroker({
  *   devtools: { enableByDefault: true, eventBufferSize: 500 },

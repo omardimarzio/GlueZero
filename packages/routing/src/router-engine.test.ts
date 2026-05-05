@@ -5,7 +5,7 @@
 // instantiate). Verifica che il glue oggetto sia immutabile e che le strategy siano
 // config-derived (default + opt-in auth/circuitBreaker).
 
-import { HttpGateway } from '@sembridge/gateway/http'
+import { HttpGateway } from '@gluezero/gateway/http'
 import { describe, expect, it, vi } from 'vitest'
 import { OutcomeCollector } from './outcome-collector'
 import { RouteExecutor } from './route-executor'

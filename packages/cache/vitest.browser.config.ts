@@ -21,7 +21,7 @@ import { defineConfig } from 'vitest/config'
 
 export default defineConfig({
   test: {
-    name: '@sembridge/cache:browser',
+    name: '@gluezero/cache:browser',
     include: ['src/__browser__/**/*.test.ts'],
     browser: {
       enabled: true,

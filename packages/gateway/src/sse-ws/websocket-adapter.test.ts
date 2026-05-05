@@ -52,14 +52,14 @@ describe('WebSocketAdapter (D-101, D-104, D-106, D-107, D-109, D-111 — RT-02/0
     const def: RealtimeChannelDef = {
       name: 'feed',
       url: 'wss://x/ws',
-      wsSubprotocols: ['sembridge-v1'],
+      wsSubprotocols: ['gluezero-v1'],
     }
     const adapter = new WebSocketAdapter(def, {
       publishFn,
       WebSocketCtor: MockWebSocket as unknown as typeof WebSocket,
     })
     await adapter.connect()
-    expect(MockWebSocket.lastInstance!.protocol).toBe('sembridge-v1')
+    expect(MockWebSocket.lastInstance!.protocol).toBe('gluezero-v1')
   })
 
   it('Test 3: connect() senza buildUrl né url → throw BrokerError realtime.config.invalid', async () => {

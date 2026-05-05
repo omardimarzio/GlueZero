@@ -35,7 +35,7 @@
  * @see RESEARCH §10 pauseTopic queue impl + §10.2 critical bypass D-170
  */
 
-import type { BrokerEvent } from '@sembridge/core'
+import type { BrokerEvent } from '@gluezero/core'
 import type { FlushQueueResult, PauseAction, PauseControllerSnapshot } from './types/pause-state'
 
 const DEFAULT_MAX_QUEUE_SIZE = 1000 // D-170

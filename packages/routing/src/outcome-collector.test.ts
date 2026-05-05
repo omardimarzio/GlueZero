@@ -10,8 +10,8 @@
 // - Test 7: topic prefix resolution per multi-segmento (es. `weather.alert.requested` → loaded `weather.alert.loaded`)
 // - Test 8: outcome.error con `originalError` → published payload include shape sanitized SENZA stack/originalError ma CON code/category/message/details
 
-import type { BrokerEvent, EventTap, PipelineSnapshot, PipelineStep } from '@sembridge/core'
-import { createBrokerError } from '@sembridge/core'
+import type { BrokerEvent, EventTap, PipelineSnapshot, PipelineStep } from '@gluezero/core'
+import { createBrokerError } from '@gluezero/core'
 import { describe, expect, it, vi } from 'vitest'
 import { OutcomeCollector } from './outcome-collector'
 import type { CompiledRoute } from './route-resolver'

@@ -1,4 +1,4 @@
-// Test RED per createMapperBroker — public factory di @sembridge/mapper.
+// Test RED per createMapperBroker — public factory di @gluezero/mapper.
 // Coverage del PLAN 02-10 Task 2: 6 acceptance criteria.
 
 import { describe, expect, it } from 'vitest'

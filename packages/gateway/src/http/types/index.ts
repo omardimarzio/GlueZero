@@ -1,4 +1,4 @@
-// Barrel del package `@sembridge/gateway/http/types`.
+// Barrel del package `@gluezero/gateway/http/types`.
 //
 // I 3 type-file (`gateway-config`, `http-strategies`, `http-error`) sono type-only.
 // L'unica eccezione runtime è `isGatewayErrorCode` (type guard set-based, pattern

@@ -1,4 +1,4 @@
-// EventBus — il cuore del broker SemBridge (CORE-01, CORE-09, CORE-12, ERR-03).
+// EventBus — il cuore del broker GlueZero (CORE-01, CORE-09, CORE-12, ERR-03).
 //
 // Dispatch pub/sub con:
 //   - tap orchestration sui 5 step F1 della pipeline §28 (CORE-13, D-20)

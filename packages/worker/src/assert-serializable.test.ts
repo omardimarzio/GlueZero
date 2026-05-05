@@ -24,7 +24,7 @@
 //   12. cycle detection (a.self = a) → no throw via WeakSet
 //   15. undefined accepted → no throw (SCA supports)
 
-import type { BrokerError } from '@sembridge/core'
+import type { BrokerError } from '@gluezero/core'
 import { describe, expect, it } from 'vitest'
 import { assertSerializable } from './assert-serializable'
 

@@ -1,5 +1,5 @@
 // PipelineHarness — fixture condivisa per integration test del package
-// `@sembridge/core` (plan 01-09, REQ TEST-01 subset).
+// `@gluezero/core` (plan 01-09, REQ TEST-01 subset).
 //
 // Razionale (RESEARCH "PipelineHarness — fixture condivisa"):
 // I test integration di Phase 1 verificano end-to-end i 5 success criteria del

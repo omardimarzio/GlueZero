@@ -1,4 +1,4 @@
-// augment.ts — TS declaration merging per estendere @sembridge/core con tipi F6
+// augment.ts — TS declaration merging per estendere @gluezero/core con tipi F6
 // Devtools (taps registry chain D-159 + DevtoolsConfig + F6PipelineStep step 14
 // reale).
 //
@@ -10,7 +10,7 @@
 // declaration merging additive disgiunta.
 //
 // Cosa estende:
-//   - BrokerConfig (interface, da @sembridge/core) — aggiunge:
+//   - BrokerConfig (interface, da @gluezero/core) — aggiunge:
 //     * `taps?: readonly EventTap[]` (D-159) — sostituisce semanticamente
 //       `runtime.tap` F1 single-tap con multiplex chain. Il `createDevtoolsBroker`
 //       F6 (plan 06-08) auto-wrappa eventuale `runtime.tap` legacy per
@@ -29,10 +29,10 @@
 // - T-06-01-03 (Logic flaw collision F2-F5): accept — F6 devtools augmenta SOLO
 //   `BrokerConfig.taps` e `BrokerConfig.devtools` — campi DISGIUNTI da F1-F5.
 
-import type { EventTap } from '@sembridge/core'
+import type { EventTap } from '@gluezero/core'
 import type { DevtoolsConfig } from './types/devtools-config'
 
-declare module '@sembridge/core' {
+declare module '@gluezero/core' {
   interface BrokerConfig {
     /**
      * F6 D-159: chain di tap (registry multiplex). Sostituisce `runtime.tap`
@@ -53,25 +53,25 @@ declare module '@sembridge/core' {
  * RealtimeAdapter / RouteExecutor.
  *
  * **Limitazione TS R4 (RESEARCH §17 + F5 augment.ts pattern)**: `PipelineStep` di
- * `@sembridge/core` è type alias literal union — TS non supporta declaration
+ * `@gluezero/core` è type alias literal union — TS non supporta declaration
  * merging di type alias. Soluzione: super-set additive importato dal consumer
  * tap F6:
  *
  * ```ts
- * import type { PipelineStep } from '@sembridge/core'
- * import type { F2PipelineStep } from '@sembridge/mapper'
- * import type { F3PipelineStep } from '@sembridge/routing'
- * import type { F4PipelineStep } from '@sembridge/gateway/sse-ws'
- * import type { F5PipelineStep } from '@sembridge/worker'
- * import type { F6CachePipelineStep } from '@sembridge/cache'
- * import type { F6PipelineStep } from '@sembridge/devtools'
+ * import type { PipelineStep } from '@gluezero/core'
+ * import type { F2PipelineStep } from '@gluezero/mapper'
+ * import type { F3PipelineStep } from '@gluezero/routing'
+ * import type { F4PipelineStep } from '@gluezero/gateway/sse-ws'
+ * import type { F5PipelineStep } from '@gluezero/worker'
+ * import type { F6CachePipelineStep } from '@gluezero/cache'
+ * import type { F6PipelineStep } from '@gluezero/devtools'
  * type AllSteps = PipelineStep | F2PipelineStep | F3PipelineStep | F4PipelineStep
  *                | F5PipelineStep | F6CachePipelineStep | F6PipelineStep
  * ```
  *
  * Lifecycle events (D-161): `route.dispatched`, `cache.{hit,miss,evicted}`,
  * `worker.{spawned,terminated}`, `realtime.{connected,disconnected}` sono già
- * coperti da F4/F5 step + F6CachePipelineStep di `@sembridge/cache/augment`.
+ * coperti da F4/F5 step + F6CachePipelineStep di `@gluezero/cache/augment`.
  * Qui dichiariamo solo lo step 14 reale + system events audit.
  */
 export type F6PipelineStep =
@@ -79,7 +79,7 @@ export type F6PipelineStep =
   | 'system.queue.flushed' // D-169 audit
   | 'system.queue.overflow' // D-170 audit
   | 'system.metrics.cardinality-overflow' // D-166 audit
-  | 'system.cache.scope-missing' // D-157 audit (anche emesso da @sembridge/cache)
+  | 'system.cache.scope-missing' // D-157 audit (anche emesso da @gluezero/cache)
 
 /**
  * Marker const esportato per detection runtime del side-effect import.

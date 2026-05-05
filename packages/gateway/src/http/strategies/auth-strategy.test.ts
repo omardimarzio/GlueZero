@@ -12,7 +12,7 @@
 // - Inflight flag esposto via isInflightRefresh
 // - Failure path: tutti i caller rejected con stesso error + nuovo refresh chiama config
 
-import { isBrokerError } from '@sembridge/core'
+import { isBrokerError } from '@gluezero/core'
 import { describe, expect, it, vi } from 'vitest'
 import { createAuthStrategy } from './auth-strategy'
 

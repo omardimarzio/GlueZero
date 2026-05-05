@@ -28,7 +28,7 @@ declare const __canonicalSchemaIdBrand: unique symbol
  * Branded type per id canonical schema (Pitfall #12 — type confusion prevention).
  * Solo cast esplicito `as CanonicalSchemaId` permette di "instanziare" il tipo.
  *
- * Pattern replicato da `EventId` di `@sembridge/core/types/broker-event.ts:54-61`.
+ * Pattern replicato da `EventId` di `@gluezero/core/types/broker-event.ts:54-61`.
  */
 export type CanonicalSchemaId = string & { readonly [__canonicalSchemaIdBrand]: true }
 

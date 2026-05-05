@@ -1,4 +1,4 @@
-// augment.ts — TS declaration merging per estendere @sembridge/core con i tipi F2.
+// augment.ts — TS declaration merging per estendere @gluezero/core con i tipi F2.
 // (D-49, D-50, D-56, D-57 in 02-CONTEXT.md)
 //
 // Vincolo D-49: NESSUNA modifica a packages/core/src/. Solo TS declaration merging dal
@@ -14,10 +14,10 @@
 //
 // Cosa NON estende qui:
 //   - PipelineStep (type alias literal): TS NON supporta declaration merging di type
-//     alias. Strategia: il barrel `@sembridge/mapper` ri-esporta `F2PipelineStep`
+//     alias. Strategia: il barrel `@gluezero/mapper` ri-esporta `F2PipelineStep`
 //     come literal union additive con i 5 nuovi step (D-50). Il consumer che usa
 //     i tap F2 dichiara `step: PipelineStep | F2PipelineStep`. F1 step da
-//     `@sembridge/core` (subset) restano validi senza modifiche.
+//     `@gluezero/core` (subset) restano validi senza modifiche.
 //
 // Side-effect import: `packages/mapper/src/index.ts` importa questo file per side-effect
 // (`import './augment'` PRIMA degli export). Il package.json ha
@@ -49,10 +49,10 @@ import type { CanonicalSchema, CanonicalSchemaId } from './types/canonical-schem
 import type { InputMap, OutputMap } from './types/input-output-map'
 import type { TransformFn } from './types/transform'
 
-declare module '@sembridge/core' {
+declare module '@gluezero/core' {
   /**
    * F2 augmentation (D-57): aggiunge `inputMap`, `outputMap`, `canonicalSchemaId` al
-   * PluginDescriptor pubblico di `@sembridge/core`.
+   * PluginDescriptor pubblico di `@gluezero/core`.
    *
    * Chiude i placeholder F1 in `packages/core/src/types/plugin.ts:48-51` (commento
    * "F2 will add: inputMap, outputMap, requires, provides").

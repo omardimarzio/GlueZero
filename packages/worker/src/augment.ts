@@ -1,4 +1,4 @@
-// augment.ts — TS declaration merging per estendere @sembridge/core con tipi F5
+// augment.ts — TS declaration merging per estendere @gluezero/core con tipi F5
 // Worker Runtime.
 //
 // (D-122 / D-126 / D-152 in 05-CONTEXT.md — replica simmetrica di
@@ -12,17 +12,17 @@
 // `packages/core/src/types/config.ts` (sezione `workers` placeholder F1 D-29).
 //
 // Cosa estende:
-//   - BrokerConfig (interface, da @sembridge/core) — aggiunge `workers?: WorkerConfig`
+//   - BrokerConfig (interface, da @gluezero/core) — aggiunge `workers?: WorkerConfig`
 //     come campo opzionale (D-122). Sezione complementare a `realtime` (F4 — gateway
 //     sse-ws), `gateway`/`routes`/`routing` (F3), `canonicalModel`/`aliasRegistry`/
 //     `transforms` (F2).
-//   - PluginDescriptor (interface, da @sembridge/core) — aggiunge
+//   - PluginDescriptor (interface, da @gluezero/core) — aggiunge
 //     `readonly workers?: readonly WorkerDescriptor[]` come campo opzionale
 //     (D-126, WK-01). Pattern simmetrico con `realtimeChannels?` di F4 e
 //     `routes?` di F3 routing.
 //
 // Cosa NON estende qui (limitazione TS R4 — RESEARCH §17):
-//   - `RouteDefinition` literal union di `@sembridge/routing` NON è merge-abile
+//   - `RouteDefinition` literal union di `@gluezero/routing` NON è merge-abile
 //     (TS non supporta declaration merging di type alias). Soluzione: il consumer
 //     dichiara localmente `type AllRoutes = RouteDefinition | RouteWorkerDefinition`.
 //     Documentato in D-152 + tipo `RouteWorkerDefinition` esportato a parte.
@@ -45,7 +45,7 @@
 import type { WorkerConfig } from './types/worker-config'
 import type { WorkerDescriptor } from './types/worker-descriptor'
 
-declare module '@sembridge/core' {
+declare module '@gluezero/core' {
   /**
    * F5 augmentation (D-122, PRD §27): aggiunge la sezione `workers` a `BrokerConfig`.
    *
@@ -79,20 +79,20 @@ declare module '@sembridge/core' {
 /**
  * F5 PipelineStep — eventi step §28 emessi dal `WorkerHandler` (D-152 step 9
  * dispatch worker). Pattern carryover F2/F3/F4 (`F2PipelineStep` di
- * `@sembridge/mapper`, `F3PipelineStep` di `@sembridge/routing`,
- * `F4PipelineStep` di `@sembridge/gateway/sse-ws`).
+ * `@gluezero/mapper`, `F3PipelineStep` di `@gluezero/routing`,
+ * `F4PipelineStep` di `@gluezero/gateway/sse-ws`).
  *
- * **Limitazione TS R4 (RESEARCH §17)**: `PipelineStep` di `@sembridge/core` è un
+ * **Limitazione TS R4 (RESEARCH §17)**: `PipelineStep` di `@gluezero/core` è un
  * type alias literal union, NON un'interface — TS non supporta declaration merging
  * di type alias. Soluzione: il consumer che dichiara tap F5 importa questo
  * super-set additive e dichiara localmente:
  *
  * ```ts
- * import type { PipelineStep } from '@sembridge/core'
- * import type { F2PipelineStep } from '@sembridge/mapper'
- * import type { F3PipelineStep } from '@sembridge/routing'
- * import type { F4PipelineStep } from '@sembridge/gateway/sse-ws'
- * import type { F5PipelineStep } from '@sembridge/worker'
+ * import type { PipelineStep } from '@gluezero/core'
+ * import type { F2PipelineStep } from '@gluezero/mapper'
+ * import type { F3PipelineStep } from '@gluezero/routing'
+ * import type { F4PipelineStep } from '@gluezero/gateway/sse-ws'
+ * import type { F5PipelineStep } from '@gluezero/worker'
  *
  * type AllSteps = PipelineStep | F2PipelineStep | F3PipelineStep | F4PipelineStep | F5PipelineStep
  * ```

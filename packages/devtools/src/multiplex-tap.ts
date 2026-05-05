@@ -13,7 +13,7 @@
 // Vincolo D-83 strict (carryover F1-F5 → F6): nessuna modifica a
 // `packages/core/src/core/{bus,event-tap}.ts` né a `packages/core/src/types/tap.ts`.
 // Il pattern `safeTapStep` (D-20) è REPLICATO inline (try/catch swallow), NON
-// importato — `safeTapStep` non è esportato dal barrel `@sembridge/core` e
+// importato — `safeTapStep` non è esportato dal barrel `@gluezero/core` e
 // importarlo via deep path violerebbe il package boundary F1.
 //
 // Threat coverage:
@@ -25,7 +25,7 @@
 // - T-06-04-04 (DoS tap loop infinito ricorsivo) → accept boundary: pattern
 //   responsibility consumer; recursion guard NON V1 (analog F1 carryover).
 
-import type { EventTap, PipelineSnapshot, PipelineStep } from '@sembridge/core'
+import type { EventTap, PipelineSnapshot, PipelineStep } from '@gluezero/core'
 
 /**
  * F6 MultiplexTap — aggregator chain N {@link EventTap} con error isolation
@@ -53,8 +53,8 @@ import type { EventTap, PipelineSnapshot, PipelineStep } from '@sembridge/core'
  *
  * @example
  * ```ts
- * import { createEventInspector } from '@sembridge/devtools'
- * import { createMultiplexTap } from '@sembridge/devtools'
+ * import { createEventInspector } from '@gluezero/devtools'
+ * import { createMultiplexTap } from '@gluezero/devtools'
  *
  * const eventInspector = createEventInspector({ bufferSize: 500 })
  * const aggregated = createMultiplexTap([eventInspector.tap, customAnalyticsTap])

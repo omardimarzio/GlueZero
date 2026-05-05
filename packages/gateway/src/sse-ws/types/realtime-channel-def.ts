@@ -23,7 +23,7 @@
 // - Q4 closure: `wsSubprotocols?: string | readonly string[]` per WS subprotocol auth
 //   handshake (passthrough a `new WebSocket(url, protocols)`).
 
-import type { BackpressurePolicyConfig } from '@sembridge/routing'
+import type { BackpressurePolicyConfig } from '@gluezero/routing'
 
 /**
  * Modalità di connessione realtime (D-107).
@@ -65,7 +65,7 @@ export interface RealtimeReconnectConfig {
  *   name: 'orders',
  *   mode: 'auto',                                    // D-107 SSE-first + WS fallback
  *   buildUrl: async () => `/events?token=${await getToken()}`,  // D-104 auth-agnostic
- *   wsSubprotocols: ['sembridge-v1'],                // Q4 opt-in per auth handshake
+ *   wsSubprotocols: ['gluezero-v1'],                // Q4 opt-in per auth handshake
  *   reconnect: { baseMs: 500, capMs: 15_000 },       // override default
  *   heartbeat: { intervalMs: 20_000 },                // override per-canale
  *   backpressure: { policy: 'queue-bounded', maxSize: 500 }, // D-115 riuso F3

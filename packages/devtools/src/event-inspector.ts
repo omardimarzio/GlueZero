@@ -37,7 +37,7 @@
 //   footprint
 // @see CONTEXT.md D-160 + D-162 + D-167
 
-import type { EventTap, PipelineSnapshot, PipelineStep } from '@sembridge/core'
+import type { EventTap, PipelineSnapshot, PipelineStep } from '@gluezero/core'
 import type { EventInspectorSnapshot } from './types/inspector-entry'
 
 interface EventInspectorState {

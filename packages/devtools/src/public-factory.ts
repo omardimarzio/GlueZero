@@ -1,5 +1,5 @@
 // public-factory.ts — `createDevtoolsBroker(config)` API pubblica del package
-// `@sembridge/devtools` (PRD §28, REQ TOOL-01..05, decisione D-30 no singleton).
+// `@gluezero/devtools` (PRD §28, REQ TOOL-01..05, decisione D-30 no singleton).
 //
 // Estende il pattern di `createCacheBroker` (F6 plan 06-08a) e `createWorkerBroker`
 // (F5 plan 05-06): factory pure function che valida la config via Valibot e ritorna
@@ -88,7 +88,7 @@ const DevtoolsBrokerConfigSchema = v.looseObject({
  *
  * @example Quick start (debug enabled di default in dev)
  * ```ts
- * import { createDevtoolsBroker } from '@sembridge/devtools'
+ * import { createDevtoolsBroker } from '@gluezero/devtools'
  *
  * const broker = createDevtoolsBroker({
  *   devtools: { enableByDefault: true, eventBufferSize: 500 },

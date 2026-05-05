@@ -17,7 +17,7 @@
 // - T-02-02-01 (Tampering — type confusion `CanonicalSchemaId` ↔ `TransformName`): brand symbols
 //   distinti garantiscono che un id schema non venga passato come transform name e viceversa.
 
-import type { BrokerLogger } from '@sembridge/core'
+import type { BrokerLogger } from '@gluezero/core'
 import type { CanonicalSchemaId } from './canonical-schema'
 
 declare const __transformNameBrand: unique symbol

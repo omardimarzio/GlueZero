@@ -5,7 +5,7 @@
 // - D-127 default pool size = min(navigator.hardwareConcurrency, 4)
 // - D-128 cap hard 8 + allowUnboundedPool warn
 // - D-129 lazy first dispatch — spawn on demand
-// - D-130 F3 BackpressureStrategy riusato 1:1 (import @sembridge/gateway/http)
+// - D-130 F3 BackpressureStrategy riusato 1:1 (import @gluezero/gateway/http)
 //   + critical bypass (Pitfall 4.C)
 // - D-131 cancellation hybrid: dedicated terminate vs pool cooperative
 // - LIFE-02 ext F5: terminateByOwner cascade

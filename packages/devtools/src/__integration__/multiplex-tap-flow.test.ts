@@ -5,7 +5,7 @@
 // - error isolation: tap throw NON blocca downstream tap (D-159)
 // - step 14 attivazione D-161: post inner.publish il MultiplexTap riceve event.observed
 
-import type { EventTap, PipelineSnapshot } from '@sembridge/core'
+import type { EventTap, PipelineSnapshot } from '@gluezero/core'
 import { describe, expect, it } from 'vitest'
 import { createDevtoolsBroker } from '../public-factory'
 

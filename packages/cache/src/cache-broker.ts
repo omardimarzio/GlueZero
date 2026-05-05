@@ -49,8 +49,8 @@
 //   mitigate — composition wrapper NON re-ordina; CacheHandlerF6 già preserva
 //   queueMicrotask ordering RESEARCH §15.6 (06-03).
 
-import type { BrokerEvent, PluginDescriptor, Subscription } from '@sembridge/core'
-import { RouterBroker, type RouterBrokerConfig } from '@sembridge/routing'
+import type { BrokerEvent, PluginDescriptor, Subscription } from '@gluezero/core'
+import { RouterBroker, type RouterBrokerConfig } from '@gluezero/routing'
 import {
   type CacheHandlerF6,
   type CacheHttpDelegate,
@@ -71,7 +71,7 @@ type RouterPublishOptions = Parameters<RouterBroker['publish']>[2]
  * Cache route definition — subset di `RouteCacheDefinition` di F3
  * (`packages/routing/src/types/route-definition.ts:145`) richiesto runtime dal
  * `CacheBroker`. Pattern simmetrico a `RouteWorkerDefinition` di F5: il consumer
- * V1.x può importare il super-set type da `@sembridge/routing` se serve unione
+ * V1.x può importare il super-set type da `@gluezero/routing` se serve unione
  * locale.
  */
 export interface CacheBrokerRouteDefinition {
@@ -126,7 +126,7 @@ export interface CacheBrokerConfig extends RouterBrokerConfig {
  *
  * @example Quick start (config-driven cacheRoutes)
  * ```ts
- * import { createCacheBroker } from '@sembridge/cache'
+ * import { createCacheBroker } from '@gluezero/cache'
  *
  * const broker = createCacheBroker({
  *   cache: { maxEntries: 500 },
@@ -177,7 +177,7 @@ export class CacheBroker {
     this.inner = new RouterBroker(config)
 
     // 2. Initialize cache adapter (W2 plan 06-02). DI override via
-    //    config.cache.adapter (V1.x swap @sembridge/cache-idb).
+    //    config.cache.adapter (V1.x swap @gluezero/cache-idb).
     this.adapter =
       config.cache?.adapter ??
       createMemoryCacheAdapter({
@@ -204,7 +204,7 @@ export class CacheBroker {
     // su `runtime?.tap` perché `RouterBrokerConfig.runtime` è un type alias
     // proveniente da `MapperBroker` ConstructorParameters — la risoluzione DTS
     // cross-package può non includere il field; usiamo lookup runtime safe.
-    const runtimeCfg = (config as { runtime?: { tap?: import('@sembridge/core').EventTap } })
+    const runtimeCfg = (config as { runtime?: { tap?: import('@gluezero/core').EventTap } })
       .runtime
     const tapForward = runtimeCfg?.tap
 
@@ -363,8 +363,8 @@ export class CacheBroker {
    * Snapshot statistiche cache cumulative dal boot adapter (D-164 cumulative-only).
    *
    * Consumato da:
-   * - `MetricsCollector` (06-06) — gauge `sembridge.cache.entries_count` +
-   *   counter `sembridge.cache.{hits,misses,evictions}_total`.
+   * - `MetricsCollector` (06-06) — gauge `gluezero.cache.entries_count` +
+   *   counter `gluezero.cache.{hits,misses,evictions}_total`.
    * - `DevtoolsBroker` (06-08b) — debug snapshot aggregato.
    */
   getCacheStats(): CacheStats {

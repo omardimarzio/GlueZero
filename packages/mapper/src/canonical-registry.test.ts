@@ -12,7 +12,7 @@
 //
 // Pattern replicato da packages/core/src/core/topic-registry.test.ts.
 
-import { isBrokerError } from '@sembridge/core'
+import { isBrokerError } from '@gluezero/core'
 import { describe, expect, it, vi } from 'vitest'
 import { CanonicalRegistry } from './canonical-registry'
 import type { CanonicalSchema, CanonicalSchemaId } from './types/canonical-schema'

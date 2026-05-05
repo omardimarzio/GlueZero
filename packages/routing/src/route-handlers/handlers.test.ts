@@ -12,7 +12,7 @@
 //
 // Vincolo D-83: NESSUNA modifica a packages/core/ né packages/mapper/ runtime.
 
-import type { BrokerEvent } from '@sembridge/core'
+import type { BrokerEvent } from '@gluezero/core'
 import { describe, expect, it, vi } from 'vitest'
 import type { CompiledRoute } from '../route-resolver'
 import type {

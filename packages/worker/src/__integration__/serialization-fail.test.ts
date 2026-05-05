@@ -9,7 +9,7 @@
 // reale di 05-04 che lo fa PRE-postMessage). Per esercitare lo scenario su
 // MockBridge usiamo un custom bridgeFactory che simula il throw `assertSerializable`.
 
-import { createBrokerError } from '@sembridge/core'
+import { createBrokerError } from '@gluezero/core'
 import { beforeEach, describe, expect, it } from 'vitest'
 import { createWorkerHarness, type WorkerHarness } from '../test-utils/worker-harness'
 import type { WorkerDescriptor } from '../types'

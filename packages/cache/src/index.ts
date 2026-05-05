@@ -1,5 +1,5 @@
 /**
- * `@sembridge/cache` — Cache layer entry point pubblico (Phase 6).
+ * `@gluezero/cache` — Cache layer entry point pubblico (Phase 6).
  *
  * Espone la superficie F6 type-level (Wave 1 plan 06-01). Wave 2-4 popolerà
  * runtime exports:
@@ -23,7 +23,7 @@
  * @example
  * ```ts
  * // Wave 1 — type-level scaffold (esempi runtime in W2 plan 06-02):
- * import type { CacheAdapter, CacheConfig, CacheEntry } from '@sembridge/cache'
+ * import type { CacheAdapter, CacheConfig, CacheEntry } from '@gluezero/cache'
  *
  * const config: CacheConfig = {
  *   maxEntries: 500,

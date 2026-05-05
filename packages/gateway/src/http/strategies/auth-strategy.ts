@@ -28,7 +28,7 @@
 // - T-03-11-03 (Information Disclosure): createBrokerError NON include token nel
 //   message (solo code+message generico).
 
-import { createBrokerError } from '@sembridge/core'
+import { createBrokerError } from '@gluezero/core'
 import type { AuthStrategyConfig } from '../types/gateway-config'
 import type { AuthStrategy } from '../types/http-strategies'
 

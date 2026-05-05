@@ -21,7 +21,7 @@
 // - T-06-04-03 (Logic flaw auto-wrap perde tap legacy): mitigated — Test 7
 //   verifica `runtime.tap + taps[]` coexist (entrambi chiamati post-wrap).
 
-import type { EventTap } from '@sembridge/core'
+import type { EventTap } from '@gluezero/core'
 import { createMultiplexTap } from './multiplex-tap'
 
 /**

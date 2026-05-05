@@ -24,7 +24,7 @@
 //   `{fieldPath, fieldType, constructorName?}` — NIENTE value. Audit: grep `value:` zero match.
 // - T-05-02-03 (Logic flaw — Pitfall 7.A bypass): throw PRE-postMessage strutturato + path al campo.
 
-import { createBrokerError } from '@sembridge/core'
+import { createBrokerError } from '@gluezero/core'
 
 /**
  * Deep-walk recursive validator: throw `BrokerError` se `value` contiene tipi non

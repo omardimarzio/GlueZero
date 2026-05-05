@@ -17,7 +17,7 @@
 // - T-03-08-02 (Tampering — URL injection bypass): regex/prefix match strict; URL parsing
 //   per redirect via `new URL(location, base)` per resolve relative URL.
 
-import { createBrokerError } from '@sembridge/core'
+import { createBrokerError } from '@gluezero/core'
 import type { AllowlistEntry } from './types/gateway-config'
 
 /**

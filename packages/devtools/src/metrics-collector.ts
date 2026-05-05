@@ -4,13 +4,13 @@
  *
  * **Chiude PRD §39 #10 (TOOL-05 metrics format)** — schema
  * `{ counters, gauges, histograms }` simil-OpenMetrics, naming
- * `sembridge.<package>.<metric>{<labels>}` Prometheus-friendly.
+ * `gluezero.<package>.<metric>{<labels>}` Prometheus-friendly.
  *
  * Pattern primario carryover: F5 `worker-pool.ts:113-160` (counter atomic JS
  * event loop single-threaded) + F5 `task-tracker.ts:140-220` (Map<key, state>).
  *
  * **Decisioni adottate:**
- * - D-163: naming dot.case `sembridge.<package>.<metric>` con suffix `_total`
+ * - D-163: naming dot.case `gluezero.<package>.<metric>` con suffix `_total`
  *   (counter), `_ms` (duration histogram). Labels Prometheus-style flatten.
  * - D-164: cumulative-only counters (mai resettati). Helper opzionale
  *   `getMetricsDelta(prev)` per consumer che vogliono delta.
@@ -27,25 +27,25 @@
  * @example Counter increment + cumulative readback (D-164)
  * ```ts
  * const metrics = createMetricsCollector()
- * metrics.increment('sembridge.cache.hits_total', { routeId: 'weather' })
- * metrics.increment('sembridge.cache.hits_total', { routeId: 'weather' })
+ * metrics.increment('gluezero.cache.hits_total', { routeId: 'weather' })
+ * metrics.increment('gluezero.cache.hits_total', { routeId: 'weather' })
  * const snap = metrics.getMetrics()
- * console.log(snap.counters['sembridge.cache.hits_total{routeId="weather"}']) // → 2
+ * console.log(snap.counters['gluezero.cache.hits_total{routeId="weather"}']) // → 2
  * ```
  *
  * @example Gauge last-write-wins
  * ```ts
- * metrics.setGauge('sembridge.cache.entries_count', 42, { tenant: 'acme' })
- * metrics.setGauge('sembridge.cache.entries_count', 50, { tenant: 'acme' }) // overwrite
- * // → snap.gauges['sembridge.cache.entries_count{tenant="acme"}'] === 50
+ * metrics.setGauge('gluezero.cache.entries_count', 42, { tenant: 'acme' })
+ * metrics.setGauge('gluezero.cache.entries_count', 50, { tenant: 'acme' }) // overwrite
+ * // → snap.gauges['gluezero.cache.entries_count{tenant="acme"}'] === 50
  * ```
  *
  * @example Histogram observe + reservoir summary (D-165)
  * ```ts
  * for (let i = 0; i < 1000; i++) {
- *   metrics.observe('sembridge.routing.dispatch_duration_ms', Math.random() * 100)
+ *   metrics.observe('gluezero.routing.dispatch_duration_ms', Math.random() * 100)
  * }
- * const summary = metrics.getMetrics().histograms['sembridge.routing.dispatch_duration_ms']
+ * const summary = metrics.getMetrics().histograms['gluezero.routing.dispatch_duration_ms']
  * console.log(`p50=${summary.p50}, p90=${summary.p90}, p99=${summary.p99}, n=${summary.count}`)
  * ```
  *
@@ -54,7 +54,7 @@
  * @see types/metrics.ts — `MetricsSnapshot` + `HistogramSummary` + `MetricsDelta`
  */
 
-import type { EventTap } from '@sembridge/core'
+import type { EventTap } from '@gluezero/core'
 import { createCardinalityTracker, flatLabels } from './cardinality-cap'
 import {
   computeSummary,
@@ -76,7 +76,7 @@ export interface MetricsCollector {
   /**
    * Incrementa counter cumulative `name{flatLabels(labels)}`.
    *
-   * @param name nome base (es. `sembridge.cache.hits_total`)
+   * @param name nome base (es. `gluezero.cache.hits_total`)
    * @param labels opzionali — flatten Prometheus-style alphabetical sort
    * @param by default 1; negativo accept (decrement permesso T-06-06-03 pattern accept)
    */

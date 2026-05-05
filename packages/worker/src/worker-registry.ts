@@ -24,7 +24,7 @@
 // - T-05-05-04 Tampering cross-plugin cleanup: `unregisterByOwner` filtra
 //   strict `entry.ownerId === ownerId` — preserve cross-plugin.
 
-import { createBrokerError } from '@sembridge/core'
+import { createBrokerError } from '@gluezero/core'
 import type { WorkerDescriptor } from './types'
 
 /**

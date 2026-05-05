@@ -1,4 +1,4 @@
-import type { PipelineSnapshot } from '@sembridge/core'
+import type { PipelineSnapshot } from '@gluezero/core'
 
 /**
  * F6 RouteInspectorEntry — entry capture da RouteInspector (plan 06-05, D-167).

@@ -15,14 +15,14 @@
 //   `WorkerConfig.defaultProgressThrottleMs`).
 //
 // **Limitazione TS R4 (RESEARCH §17):** TypeScript NON supporta declaration
-// merging di type alias. `RouteDefinition` di `@sembridge/routing` è una literal
+// merging di type alias. `RouteDefinition` di `@gluezero/routing` è una literal
 // union (D-60: `local | http | cache | composite`). F5 NON può estendere
 // `RouteDefinition` con `type: 'worker'` via decl merging — il consumer dichiara
 // localmente il superset:
 //
 // ```ts
-// import type { RouteDefinition } from '@sembridge/routing'
-// import type { RouteWorkerDefinition } from '@sembridge/worker'
+// import type { RouteDefinition } from '@gluezero/routing'
+// import type { RouteWorkerDefinition } from '@gluezero/worker'
 // type AllRoutes = RouteDefinition | RouteWorkerDefinition
 // ```
 //
@@ -33,7 +33,7 @@
 // Pattern role-match con `packages/routing/src/types/route-definition.ts`
 // (`RouteHttpDefinition`): id+topic+priority+policies + sub-spec specifico F5.
 
-import type { RoutePolicies } from '@sembridge/routing'
+import type { RoutePolicies } from '@gluezero/routing'
 
 /**
  * Topic publishing override per `RouteWorkerDefinition` (D-146).

@@ -10,7 +10,7 @@
 // Pattern F3 gateway / F3 routing replicato (vedi packages/gateway/src/augment.test.ts e
 // packages/routing/src/augment.test.ts).
 
-import type { BrokerConfig, PluginDescriptor } from '@sembridge/core'
+import type { BrokerConfig, PluginDescriptor } from '@gluezero/core'
 import { describe, expect, expectTypeOf, it } from 'vitest'
 import { __augmentSseWsLoaded, type F4PipelineStep } from './augment'
 import type { RealtimeChannelDef } from './types/realtime-channel-def'
@@ -85,13 +85,13 @@ describe('sse-ws/augment.ts (F4 TS declaration merging — plan 04-01)', () => {
           name: 'orders-stream',
           mode: 'auto',
           buildUrl: async () => '/events?token=abc',
-          wsSubprotocols: ['sembridge-v1'],
+          wsSubprotocols: ['gluezero-v1'],
         },
       ],
     }
     expect(desc.realtimeChannels).toHaveLength(1)
     expect(desc.realtimeChannels?.[0]?.name).toBe('orders-stream')
-    expect(desc.realtimeChannels?.[0]?.wsSubprotocols).toEqual(['sembridge-v1'])
+    expect(desc.realtimeChannels?.[0]?.wsSubprotocols).toEqual(['gluezero-v1'])
   })
 
   it('Test 6: PluginDescriptor without realtimeChannels still valid (backward-compat F1+F2+F3)', () => {

@@ -1,4 +1,4 @@
-// augment.ts — TS declaration merging per estendere @sembridge/core con tipi F4 SSE/WS.
+// augment.ts — TS declaration merging per estendere @gluezero/core con tipi F4 SSE/WS.
 // (D-103 in 04-CONTEXT.md — replica simmetrica di gateway/augment.ts di F3 + routing/augment.ts)
 //
 // Vincolo D-83 / D-101: NESSUNA modifica a packages/core/src/, packages/mapper/src/,
@@ -7,10 +7,10 @@
 // ("F4 will add: realtimeChannels").
 //
 // Cosa estende:
-//   - BrokerConfig (interface, da @sembridge/core) — aggiunge `realtime?: RealtimeConfig`
+//   - BrokerConfig (interface, da @gluezero/core) — aggiunge `realtime?: RealtimeConfig`
 //     come campo opzionale (D-102). Sezione complementare a `gateway` (F3 — questo stesso
 //     pkg) e `routes`/`routing` (F3 routing).
-//   - PluginDescriptor (interface, da @sembridge/core) — aggiunge
+//   - PluginDescriptor (interface, da @gluezero/core) — aggiunge
 //     `readonly realtimeChannels?: readonly RealtimeChannelDef[]` come campo opzionale
 //     (D-103, RT-01). Pattern simmetrico con `routes?: readonly RouteDefinition[]` di F3
 //     routing/augment.ts:75-78.
@@ -36,7 +36,7 @@
 import type { RealtimeChannelDef } from './types/realtime-channel-def'
 import type { RealtimeConfig } from './types/realtime-config'
 
-declare module '@sembridge/core' {
+declare module '@gluezero/core' {
   /**
    * F4 augmentation (D-102, PRD §27): aggiunge la sezione `realtime` a `BrokerConfig`.
    *
@@ -68,16 +68,16 @@ declare module '@sembridge/core' {
 /**
  * F4 PipelineStep — eventi step §28 emessi dagli adapter SSE/WS (D-113 ingress).
  *
- * **Limitazione TS**: `PipelineStep` di `@sembridge/core` è un type alias literal union, NON
+ * **Limitazione TS**: `PipelineStep` di `@gluezero/core` è un type alias literal union, NON
  * un'interface — TS non supporta declaration merging di type alias. Soluzione: il consumer
  * che dichiara tap F4 importa questo super-set additive (pattern F2 `F2PipelineStep` di
- * `@sembridge/mapper` + F3 `F3PipelineStep` di `@sembridge/routing`):
+ * `@gluezero/mapper` + F3 `F3PipelineStep` di `@gluezero/routing`):
  *
  * ```ts
- * import type { PipelineStep } from '@sembridge/core'
- * import type { F2PipelineStep } from '@sembridge/mapper'
- * import type { F3PipelineStep } from '@sembridge/routing'
- * import type { F4PipelineStep } from '@sembridge/gateway/sse-ws'
+ * import type { PipelineStep } from '@gluezero/core'
+ * import type { F2PipelineStep } from '@gluezero/mapper'
+ * import type { F3PipelineStep } from '@gluezero/routing'
+ * import type { F4PipelineStep } from '@gluezero/gateway/sse-ws'
  *
  * type AllSteps = PipelineStep | F2PipelineStep | F3PipelineStep | F4PipelineStep
  * ```

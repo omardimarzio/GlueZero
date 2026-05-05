@@ -25,7 +25,7 @@
 // - T-02-05-05 (Tampering — non-Error throw value perde info): `err instanceof Error ?
 //   err.message : String(err)` preserva messaggio anche su `throw 'string'`.
 
-import { createBrokerError } from '@sembridge/core'
+import { createBrokerError } from '@gluezero/core'
 import type { FieldFailureMode } from './types/canonical-schema'
 import type { TransformContext, TransformDescriptor, TransformFn } from './types/transform'
 

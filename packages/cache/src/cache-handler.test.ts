@@ -19,7 +19,7 @@
 // Pattern role-match con `packages/worker/src/worker-handler.test.ts` (analog F5
 // Strategy F3 dispatch + DI publishFn + sanitized error).
 
-import type { BrokerEvent, EventTap, PipelineSnapshot } from '@sembridge/core'
+import type { BrokerEvent, EventTap, PipelineSnapshot } from '@gluezero/core'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import {
   type CacheHandlerF6Deps,

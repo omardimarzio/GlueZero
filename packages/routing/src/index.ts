@@ -1,7 +1,7 @@
 /**
- * @sembridge/routing — Routing engine dichiarativo per SemBridge.
+ * @gluezero/routing — Routing engine dichiarativo per GlueZero.
  *
- * Phase 3 di SemBridge V1. Estende `@sembridge/core` (Phase 1) e `@sembridge/mapper`
+ * Phase 3 di GlueZero V1. Estende `@gluezero/core` (Phase 1) e `@gluezero/mapper`
  * (Phase 2) con:
  * - **`RouteDefinition`** discriminata via `type`: `'local' | 'http' | 'cache' | 'composite'`
  *   (worker aggiunto in F5 via declaration merging)
@@ -45,8 +45,8 @@
 // Plan 03-12 aggiungerà il runtime export RouterBroker + createRouterBroker (factory
 //             pubblico + Valibot validation).
 
-// Side-effect import — abilita TS declaration merging per @sembridge/core
-// (PluginDescriptor.routes, BrokerConfig.routes/routing) e @sembridge/mapper
+// Side-effect import — abilita TS declaration merging per @gluezero/core
+// (PluginDescriptor.routes, BrokerConfig.routes/routing) e @gluezero/mapper
 // (CanonicalSchema.requiresRoute). Vedi `packages/routing/src/augment.ts`
 // (D-83/D-93/D-94/D-95). Ri-esportiamo `__augmentLoaded` come simbolo pubblico per
 // evitare il tree-shaking del side-effect import (Pattern S1, T-03-03-01 mitigation).

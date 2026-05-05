@@ -21,7 +21,7 @@
 // la factory è scritta dal test per ritornare un MockWorker, il bridge lo wrappa
 // con Comlink (stub adapter). Il WorkerBroker non patch globalThis.Worker.
 
-import type { BrokerEvent } from '@sembridge/core'
+import type { BrokerEvent } from '@gluezero/core'
 import { createWorkerBroker } from '../public-factory'
 import type { ProgressPayload, WorkerDescriptor } from '../types'
 import type { WorkerBroker, WorkerBrokerConfig } from '../worker-broker'

@@ -11,7 +11,7 @@
 // - T-06-05-02 (Information disclosure leak via mutation): mitigated via D-162
 //   structuredClone in getBuffer(). Test 6.
 
-import type { PipelineSnapshot, PipelineStep } from '@sembridge/core'
+import type { PipelineSnapshot, PipelineStep } from '@gluezero/core'
 import { describe, expect, it } from 'vitest'
 import { createRouteInspector } from './route-inspector'
 import type { RouteInspectorEntry } from './types/inspector-entry'

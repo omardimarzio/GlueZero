@@ -16,7 +16,7 @@
 //   - pauseTopic / resumeTopic / flushQueue API (2)
 //   - cascade unregisterPlugin → inner.unregisterPlugin (1)
 
-import type { EventTap, PipelineSnapshot } from '@sembridge/core'
+import type { EventTap, PipelineSnapshot } from '@gluezero/core'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { DevtoolsBroker } from './devtools-broker'
 

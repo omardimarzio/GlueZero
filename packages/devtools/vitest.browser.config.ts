@@ -16,7 +16,7 @@ import { defineConfig } from 'vitest/config'
 
 export default defineConfig({
   test: {
-    name: '@sembridge/devtools:browser',
+    name: '@gluezero/devtools:browser',
     include: ['src/__browser__/**/*.test.ts'],
     browser: {
       enabled: true,

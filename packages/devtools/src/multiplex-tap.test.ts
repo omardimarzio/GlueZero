@@ -12,7 +12,7 @@
 // - T-06-04-04 (DoS tap loop infinito): accept boundary — Documented anti-pattern
 //   in DOC-06.
 
-import type { EventTap, PipelineSnapshot, PipelineStep } from '@sembridge/core'
+import type { EventTap, PipelineSnapshot, PipelineStep } from '@gluezero/core'
 import { describe, expect, it, vi } from 'vitest'
 import { createMultiplexTap } from './multiplex-tap'
 

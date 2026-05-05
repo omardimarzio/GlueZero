@@ -1,4 +1,4 @@
-// public-factory.ts — `createMapperBroker(config)` API pubblica del @sembridge/mapper
+// public-factory.ts — `createMapperBroker(config)` API pubblica del @gluezero/mapper
 // (PRD §27, REQ MAP-02/MAP-03/MAP-13/MAP-14, decisioni D-18 config validation, D-30 no
 // singleton, D-56 sezioni F2 augmented).
 //
@@ -81,7 +81,7 @@ const MapperBrokerConfigSchema = v.looseObject({
  *
  * **Differenza vs `createBroker`**: questo factory deve essere usato dai consumer F2+ che
  * vogliono il MapperEngine + Inspector wired al Broker. I consumer che usano solo F1
- * (no canonical/mapper) possono continuare con `createBroker` di `@sembridge/core`.
+ * (no canonical/mapper) possono continuare con `createBroker` di `@gluezero/core`.
  *
  * @param config - Optional broker configuration (default: empty object).
  * @returns A fresh {@link MapperBroker} instance.
@@ -89,7 +89,7 @@ const MapperBrokerConfigSchema = v.looseObject({
  *
  * @example
  * ```ts
- * import { createMapperBroker } from '@sembridge/mapper'
+ * import { createMapperBroker } from '@gluezero/mapper'
  *
  * const broker = createMapperBroker({
  *   runtime: { logLevel: 'info' },

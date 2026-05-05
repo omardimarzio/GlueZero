@@ -22,7 +22,7 @@
 // Pattern test deterministic: `deliveryMode: 'sync'` per assicurare ordering. Per D-58
 // publish (mapping.error è sempre async via inner.publish), flush microtask 2x.
 
-import type { BrokerEvent } from '@sembridge/core'
+import type { BrokerEvent } from '@gluezero/core'
 import { describe, expect, it } from 'vitest'
 import { createMapperHarness } from '../test-utils/mapper-harness'
 import type { CanonicalSchemaId } from '../types/canonical-schema'

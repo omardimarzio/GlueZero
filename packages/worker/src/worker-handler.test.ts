@@ -2,7 +2,7 @@
 // (D-152 step 9 dispatch + D-146 topic auto-derive + D-133 atomic state machine
 // + D-134 correlationId + ERR-02 ext F5 sanitized + Pitfall 2C closure).
 
-import type { BrokerEvent } from '@sembridge/core'
+import type { BrokerEvent } from '@gluezero/core'
 import { beforeEach, describe, expect, it } from 'vitest'
 import { createTaskTracker } from './task-tracker'
 import type { ProgressPayload, RouteWorkerDefinition, WorkerDescriptor } from './types'

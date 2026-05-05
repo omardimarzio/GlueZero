@@ -1,7 +1,7 @@
 // BrokerLogger — interfaccia logger del broker (PRD §25.4, REQ CORE-10).
 //
 // Riferimento decisioni (CONTEXT 01):
-// - D-12: ConsoleLogger di default con namespace prefix `[sembridge]`
+// - D-12: ConsoleLogger di default con namespace prefix `[gluezero]`
 // - D-13: adapter slot `setLogger(customLogger)` per swap a pino/winston/telemetry
 // - D-14: surface minima `{error, warn, info, debug, trace}(message, meta?)` —
 //   no structured JSON di default (mantiene DX in browser devtools)

@@ -1,4 +1,4 @@
-// augment.ts — TS declaration merging per estendere @sembridge/core con tipi F6 Cache.
+// augment.ts — TS declaration merging per estendere @gluezero/core con tipi F6 Cache.
 //
 // (D-155/D-156/D-158/D-83 strict carryover in 06-CONTEXT.md — replica simmetrica
 // di worker/augment.ts di F5 + gateway/sse-ws/augment.ts di F4 + gateway/augment.ts
@@ -9,13 +9,13 @@
 // declaration merging additive disgiunta.
 //
 // Cosa estende:
-//   - BrokerConfig (interface, da @sembridge/core) — aggiunge `cache?: CacheConfig`
+//   - BrokerConfig (interface, da @gluezero/core) — aggiunge `cache?: CacheConfig`
 //     come campo opzionale (D-155/D-156/D-158). Sezione complementare a `workers`
 //     (F5), `realtime` (F4), `gateway`/`routes`/`routing` (F3), `canonicalModel`/
 //     `aliasRegistry`/`transforms` (F2).
 //
 // Cosa NON estende qui (limitazione TS R4 — RESEARCH §17):
-//   - `RouteDefinition` literal union di `@sembridge/routing` NON è merge-abile
+//   - `RouteDefinition` literal union di `@gluezero/routing` NON è merge-abile
 //     (TS non supporta declaration merging di type alias). I type cache route
 //     vengono esposti separatamente nei plan 06-02/06-03 come
 //     `RouteCacheDefinition` / `RouteCompositeDefinition` importabili dal consumer
@@ -36,7 +36,7 @@
 
 import type { CacheConfig } from './types/cache-config'
 
-declare module '@sembridge/core' {
+declare module '@gluezero/core' {
   /**
    * F6 augmentation (D-155/D-156/D-158, PRD §20): aggiunge la sezione `cache` a
    * `BrokerConfig`.
@@ -54,18 +54,18 @@ declare module '@sembridge/core' {
 
 /**
  * F6 PipelineStep — eventi lifecycle cache emessi dal CacheHandler (D-161).
- * Pattern carryover F2/F3/F4/F5 (`F2PipelineStep` di @sembridge/mapper,
- * `F3PipelineStep` di @sembridge/routing, `F4PipelineStep` di @sembridge/gateway/sse-ws,
- * `F5PipelineStep` di @sembridge/worker).
+ * Pattern carryover F2/F3/F4/F5 (`F2PipelineStep` di @gluezero/mapper,
+ * `F3PipelineStep` di @gluezero/routing, `F4PipelineStep` di @gluezero/gateway/sse-ws,
+ * `F5PipelineStep` di @gluezero/worker).
  *
- * **Limitazione TS R4 (RESEARCH §17)**: `PipelineStep` di `@sembridge/core` è un
+ * **Limitazione TS R4 (RESEARCH §17)**: `PipelineStep` di `@gluezero/core` è un
  * type alias literal union, NON un'interface — TS non supporta declaration merging
  * di type alias. Soluzione: il consumer che dichiara tap F6 importa questo
  * super-set additive e dichiara localmente:
  *
  * ```ts
- * import type { PipelineStep } from '@sembridge/core'
- * import type { F6CachePipelineStep } from '@sembridge/cache'
+ * import type { PipelineStep } from '@gluezero/core'
+ * import type { F6CachePipelineStep } from '@gluezero/cache'
  * type AllSteps = PipelineStep | F6CachePipelineStep
  * ```
  *

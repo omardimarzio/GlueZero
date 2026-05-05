@@ -1,4 +1,4 @@
-// Public types re-export hub di `@sembridge/core`.
+// Public types re-export hub di `@gluezero/core`.
 //
 // Tutti i tipi pubblici sono ri-esportati qui via `export type` (richiesto da
 // `verbatimModuleSyntax: true` in `tsconfig.base.json`).
@@ -7,7 +7,7 @@
 // NON sono ri-esportati: i plan 07/08 li importano direttamente via path relativo.
 //
 // Plan 08 (`src/index.ts`) farà `export * from './types'` per esporre l'API pubblica
-// finale del package `@sembridge/core`.
+// finale del package `@gluezero/core`.
 
 export type {
   BrokerEvent,

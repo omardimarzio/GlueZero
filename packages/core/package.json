@@ -1,7 +1,7 @@
 {
-  "name": "@sembridge/core",
+  "name": "@gluezero/core",
   "version": "0.0.0",
-  "description": "Core event broker (pub/sub, plugin registry, lifecycle, BrokerEvent) for SemBridge",
+  "description": "Core event broker (pub/sub, plugin registry, lifecycle, BrokerEvent) for GlueZero",
   "license": "MIT",
   "author": "",
   "type": "module",
@@ -48,7 +48,7 @@
   },
   "size-limit": [
     {
-      "name": "@sembridge/core (gzip)",
+      "name": "@gluezero/core (gzip)",
       "path": "dist/index.js",
       "limit": "8 KB",
       "gzip": true

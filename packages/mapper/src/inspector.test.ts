@@ -11,8 +11,8 @@
 // - wrapTap composition: tap originale + recordSnapshot inspector
 // - wrapTap swallow errori del tap originale (T-02-08-03)
 
-import type { EventTap, PipelineSnapshot, PipelineStep } from '@sembridge/core'
-import { createBrokerError } from '@sembridge/core'
+import type { EventTap, PipelineSnapshot, PipelineStep } from '@gluezero/core'
+import { createBrokerError } from '@gluezero/core'
 import { describe, expect, it, vi } from 'vitest'
 import { AliasRegistry } from './alias-registry'
 import { CanonicalRegistry } from './canonical-registry'

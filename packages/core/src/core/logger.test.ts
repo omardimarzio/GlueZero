@@ -68,10 +68,10 @@ describe('createConsoleLogger', () => {
     expect(debugSpy).toHaveBeenCalledTimes(2)
   })
 
-  it('includes [sembridge] namespace prefix as first arg', () => {
+  it('includes [gluezero] namespace prefix as first arg', () => {
     const logger = createConsoleLogger('info')
     logger.info('hello')
-    expect(infoSpy).toHaveBeenCalledWith(expect.stringContaining('[sembridge]'), 'hello')
+    expect(infoSpy).toHaveBeenCalledWith(expect.stringContaining('[gluezero]'), 'hello')
   })
 
   it('passes meta as third arg when provided', () => {

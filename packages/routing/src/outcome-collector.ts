@@ -48,7 +48,7 @@ import type {
   EventTap,
   PipelineSnapshot,
   PipelineStep,
-} from '@sembridge/core'
+} from '@gluezero/core'
 import type { CompiledRoute } from './route-resolver'
 import type { RouteOutcome } from './types/route-outcome'
 

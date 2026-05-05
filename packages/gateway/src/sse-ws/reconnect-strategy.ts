@@ -65,7 +65,7 @@ interface ReconnectState {
 /**
  * Opzioni override-abili per `createReconnectStrategy` (RT-05 + D-107 + D-109).
  *
- * Tutti i campi opzionali con default sensati per V1 SemBridge realtime.
+ * Tutti i campi opzionali con default sensati per V1 GlueZero realtime.
  */
 export interface ReconnectStrategyOptions {
   /** Base delay per full jitter (D-109). Default 1_000ms. */

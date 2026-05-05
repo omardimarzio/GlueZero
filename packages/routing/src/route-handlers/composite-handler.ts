@@ -21,8 +21,8 @@
 // - T-03-06-04 (Information Disclosure): `BrokerError.details` NON include payload —
 //   solo `routeId` come metadato sicuro.
 
-import type { BrokerEvent } from '@sembridge/core'
-import { createBrokerError } from '@sembridge/core'
+import type { BrokerEvent } from '@gluezero/core'
+import { createBrokerError } from '@gluezero/core'
 import type { CompiledRoute } from '../route-resolver'
 import type { RouteCompositeDefinition } from '../types/route-definition'
 import type { RouteOutcome } from '../types/route-outcome'

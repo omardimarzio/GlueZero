@@ -15,8 +15,8 @@
 // - Test 15 (BLOCKER 4 fix): composite topic 'routing.composite.deferred' (no hyphen)
 // - Test 16 (BLOCKER 4 fix): loud failure throw se canonical-registry unreachable
 
-import { type EventTap, isBrokerError, type PipelineStep } from '@sembridge/core'
-import type { CanonicalSchemaId } from '@sembridge/mapper'
+import { type EventTap, isBrokerError, type PipelineStep } from '@gluezero/core'
+import type { CanonicalSchemaId } from '@gluezero/mapper'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { RouterBroker } from './router-broker-wrapper'
 import type { RouteHttpDefinition, RouteLocalDefinition } from './types/route-definition'
@@ -346,7 +346,7 @@ describe('RouterBroker (Plan 03-12 Task 2 — composition wrapper D-83)', () => 
   })
 
   it('Test 16 (BLOCKER 4 fix — loud failure throw): MapperBroker senza canonicalRegistry → BrokerError router.canonical-registry.unavailable', async () => {
-    // Strategia: usiamo vi.doMock per sostituire @sembridge/mapper.MapperBroker con
+    // Strategia: usiamo vi.doMock per sostituire @gluezero/mapper.MapperBroker con
     // uno stub che NON espone canonicalRegistry. Reload del module router-broker-wrapper
     // (vi.resetModules) per re-importare con il mock attivo.
     //
@@ -354,8 +354,8 @@ describe('RouterBroker (Plan 03-12 Task 2 — composition wrapper D-83)', () => 
     // `'canonicalRegistry' in inner && typeof inner.canonicalRegistry.get === 'function'`.
     // Se uno dei due fail → throw 'router.canonical-registry.unavailable'.
     vi.resetModules()
-    vi.doMock('@sembridge/mapper', async () => {
-      const actual = await vi.importActual<typeof import('@sembridge/mapper')>('@sembridge/mapper')
+    vi.doMock('@gluezero/mapper', async () => {
+      const actual = await vi.importActual<typeof import('@gluezero/mapper')>('@gluezero/mapper')
       // Stub MapperBroker class — implementa solo i metodi necessari + NIENTE
       // canonicalRegistry field. Forza il guard a fallire al boot.
       class StubMapperBroker {
@@ -391,7 +391,7 @@ describe('RouterBroker (Plan 03-12 Task 2 — composition wrapper D-83)', () => 
       expect(caught.category).toBe('config')
     }
 
-    vi.doUnmock('@sembridge/mapper')
+    vi.doUnmock('@gluezero/mapper')
     vi.resetModules()
   })
 })

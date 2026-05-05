@@ -32,7 +32,7 @@
 //   error sanitization è responsabilità del cacheHandler / httpHandler delegati
 //   (D-80 carryover).
 
-import type { BrokerEvent } from '@sembridge/core'
+import type { BrokerEvent } from '@gluezero/core'
 import type { CacheHandlerF6, RouteCacheCompiled } from './cache-handler'
 
 /**

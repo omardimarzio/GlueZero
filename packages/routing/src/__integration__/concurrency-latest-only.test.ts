@@ -17,7 +17,7 @@
 //   - Test 2 (status comportamento attuale): 2 publish consecutive → 2 fetch separate
 //     (no latest-only abort) — documenta il gap che il wiring chiuderà in F4.
 
-import type { CanonicalSchemaId } from '@sembridge/mapper'
+import type { CanonicalSchemaId } from '@gluezero/mapper'
 import { HttpResponse, http } from 'msw'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { createRouterHarness, type RouterHarness } from '../test-utils/router-harness'

@@ -27,7 +27,7 @@
 //
 // @see RESEARCH §6.2 RouteInspector focus route-level
 
-import type { EventTap, PipelineSnapshot, PipelineStep } from '@sembridge/core'
+import type { EventTap, PipelineSnapshot, PipelineStep } from '@gluezero/core'
 import type { RouteInspectorEntry } from './types/inspector-entry'
 
 interface RouteInspectorState {

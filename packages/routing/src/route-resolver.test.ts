@@ -3,7 +3,7 @@
 // Coverage: 13 test deterministici per resolver dispatch table + multi-route policy +
 // cascade unregisterByOwner.
 
-import { isBrokerError } from '@sembridge/core'
+import { isBrokerError } from '@gluezero/core'
 import { describe, expect, it, vi } from 'vitest'
 import { type AmbiguousRouteEvent, type CompiledRoute, RouteResolver } from './route-resolver'
 import type {

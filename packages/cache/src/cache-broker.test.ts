@@ -13,7 +13,7 @@
 // Pattern carryover ESATTO da `packages/worker/src/worker-broker.test.ts` (analog F5
 // Strategy F3 dispatch + DI publishFn + cascade D-126).
 
-import type { EventTap, PipelineSnapshot } from '@sembridge/core'
+import type { EventTap, PipelineSnapshot } from '@gluezero/core'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { CacheBroker } from './cache-broker'
 import { createMemoryCacheAdapter } from './memory-cache-adapter'

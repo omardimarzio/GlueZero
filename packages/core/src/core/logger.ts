@@ -11,7 +11,7 @@
 // Filtering: ogni metodo controlla `LEVEL_ORDER[level] >= LEVEL_ORDER[targetMethod]`.
 // Es. logger configurato a `info` → `debug` no-op (info=3, debug=4 → 3<4 → skip).
 //
-// Namespace prefix `[sembridge]` come primo argomento (D-12) — sempre presente,
+// Namespace prefix `[gluezero]` come primo argomento (D-12) — sempre presente,
 // permette filtering nei browser devtools.
 //
 // `silentLogger` esporta i 5 metodi BrokerLogger come no-op — utility comoda per test
@@ -28,7 +28,7 @@ const LEVEL_ORDER: Record<LogLevel, number> = {
   trace: 5,
 }
 
-const PREFIX = '[sembridge]'
+const PREFIX = '[gluezero]'
 
 /**
  * Create a console-based {@link BrokerLogger} (PRD §25.4, REQ CORE-10).
@@ -43,7 +43,7 @@ const PREFIX = '[sembridge]'
  *
  * Filtering: each method checks `LEVEL_ORDER[level] >= LEVEL_ORDER[targetMethod]`.
  *
- * Namespace prefix `[sembridge]` is always present (D-12) — enables filtering
+ * Namespace prefix `[gluezero]` is always present (D-12) — enables filtering
  * in browser devtools.
  *
  * @param level - Minimum log level (default `'info'`).
@@ -53,7 +53,7 @@ const PREFIX = '[sembridge]'
  * ```ts
  * const logger = createConsoleLogger('debug')
  * logger.info('broker started', { id: 'main' })
- * // [sembridge] [INFO] broker started { id: 'main' }
+ * // [gluezero] [INFO] broker started { id: 'main' }
  * ```
  */
 export function createConsoleLogger(level: LogLevel = 'info'): BrokerLogger {

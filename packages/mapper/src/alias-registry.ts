@@ -33,7 +33,7 @@
 // `exactOptionalPropertyTypes: true` policy: non ci sono campi opzionali in questo module.
 // `isolatedDeclarations: true` enforcement: ogni metodo pubblico ha return type esplicito.
 //
-// Niente import da @sembridge/core: il module è auto-contenuto. Gli errori `alias.*.conflict`
+// Niente import da @gluezero/core: il module è auto-contenuto. Gli errori `alias.*.conflict`
 // sono Error nativi (NON BrokerError) — coerente con error handling delegato al consumer
 // mapper-engine, che wrappa in BrokerError quando intercetta. Mantiene il registry agnostico.
 
@@ -85,7 +85,7 @@ export interface AliasResolution {
 /**
  * Registry alias localField → canonicalField (REQ MAP-16, MAP-17).
  *
- * Pattern F1 (vedi `TopicRegistry` in `@sembridge/core`) esteso con due livelli di scope:
+ * Pattern F1 (vedi `TopicRegistry` in `@gluezero/core`) esteso con due livelli di scope:
  * - `globalAliases: Map<localField, canonicalField>` — visibili a tutti i plugin
  * - `pluginScopedAliases: Map<pluginId, Map<localField, canonicalField>>` — visibili solo
  *   al plugin proprietario (scope isolation, T-02-04-02 mitigation)

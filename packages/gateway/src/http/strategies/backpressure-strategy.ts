@@ -24,8 +24,8 @@
 // - T-03-10-03 (DoS via critical): accept — critical events sono trusted (system.* origin),
 //   plan 03-12 enforce non-system topic priority cap.
 
-import { createBrokerError } from '@sembridge/core'
-import type { BackpressurePolicyConfig } from '@sembridge/routing'
+import { createBrokerError } from '@gluezero/core'
+import type { BackpressurePolicyConfig } from '@gluezero/routing'
 import type { BackpressureStrategy } from '../types/http-strategies'
 
 /** Stato per-route mutabile. */

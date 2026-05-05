@@ -21,7 +21,7 @@
 // - Test 14 — Worker 'messageerror' event memorizzato come last error
 // - Test 15 — getDebugSnapshot ritorna shape strutturata
 
-import { type BrokerError, isBrokerError } from '@sembridge/core'
+import { type BrokerError, isBrokerError } from '@gluezero/core'
 import * as Comlink from 'comlink'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 

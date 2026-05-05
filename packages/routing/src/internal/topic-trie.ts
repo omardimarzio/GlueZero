@@ -1,7 +1,7 @@
 // internal/topic-trie.ts — Mirror copy di packages/core/src/core/topic-matcher.ts.
-// RAGIONE: TopicTrie non è esposto pubblicamente da @sembridge/core (internal-only F1).
+// RAGIONE: TopicTrie non è esposto pubblicamente da @gluezero/core (internal-only F1).
 // Per evitare cross-package internal coupling, F3 mantiene una copia interna ≤120 LOC.
-// RIMUOVERE quando F1 esporrà '@sembridge/core/internal' subpath o equivalente.
+// RIMUOVERE quando F1 esporrà '@gluezero/core/internal' subpath o equivalente.
 // Vincolo D-83: ZERO modifiche a packages/core/.
 //
 // Riferimento decisioni F1 (01-CONTEXT.md):
@@ -11,7 +11,7 @@
 // - D-11: `*` può comparire in posizione intermedia.
 // - D-24: regex topic naming = lowercase, dot-separated, alfanumerico.
 
-import { createBrokerError } from '@sembridge/core'
+import { createBrokerError } from '@gluezero/core'
 
 // Topic regex: D-24 — primo char alfabetico minuscolo, segmenti dot-separated.
 const TOPIC_REGEX = /^[a-z][a-z0-9]*(\.[a-z][a-z0-9*]*)*$/

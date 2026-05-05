@@ -25,7 +25,7 @@
 // (broker-mapper-wrapper.ts:325) — `safeTapStep` di core non è esposto al barrel.
 //
 // Vincolo D-83: ZERO modifiche a packages/core/ + packages/mapper/ runtime. Tutti
-// gli step di pipeline §28 estensione F3 sono emessi nel package `@sembridge/routing`.
+// gli step di pipeline §28 estensione F3 sono emessi nel package `@gluezero/routing`.
 //
 // Threat coverage:
 // - T-03-06-01 (Tampering — RouteOutcome mutation): outcome è readonly per costruzione,
@@ -37,8 +37,8 @@
 // - T-03-06-04 (Information Disclosure): `BrokerError.details` NON include payload —
 //   solo routeId+topic+eventId (sanitize a livello createBrokerError).
 
-import type { BrokerEvent, EventTap, PipelineSnapshot, PipelineStep } from '@sembridge/core'
-import { createBrokerError } from '@sembridge/core'
+import type { BrokerEvent, EventTap, PipelineSnapshot, PipelineStep } from '@gluezero/core'
+import { createBrokerError } from '@gluezero/core'
 import { cacheHandler } from './route-handlers/cache-handler'
 import { createCompositeHandler } from './route-handlers/composite-handler'
 import { localHandler } from './route-handlers/local-handler'

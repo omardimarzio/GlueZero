@@ -20,7 +20,7 @@ import { defineConfig } from 'vitest/config'
 
 export default defineConfig({
   test: {
-    name: '@sembridge/worker',
+    name: '@gluezero/worker',
     environment: 'jsdom',
     globals: false,
     include: ['src/**/*.test.ts', 'src/__integration__/**/*.test.ts'],

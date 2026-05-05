@@ -19,8 +19,8 @@
 // Vincolo `exactOptionalPropertyTypes: true`: tutti i campi opzionali sono
 // `readonly X?: T` (mai `readonly X: T | undefined`).
 
-import type { BrokerError, BrokerEvent } from '@sembridge/core'
-import type { RouteDefinition } from '@sembridge/routing'
+import type { BrokerError, BrokerEvent } from '@gluezero/core'
+import type { RouteDefinition } from '@gluezero/routing'
 
 /**
  * Spec di una HTTP request prodotta dal gateway prima del fetch.

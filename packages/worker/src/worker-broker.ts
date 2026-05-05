@@ -49,8 +49,8 @@ import {
   createBrokerError,
   type PluginDescriptor,
   type Subscription,
-} from '@sembridge/core'
-import { RouterBroker, type RouterBrokerConfig } from '@sembridge/routing'
+} from '@gluezero/core'
+import { RouterBroker, type RouterBrokerConfig } from '@gluezero/routing'
 import { createTaskTracker, type TaskTracker, type TaskTrackerSnapshot } from './task-tracker'
 import type {
   AssertSerializableMode,
@@ -132,7 +132,7 @@ export interface WorkerBrokerConfig extends RouterBrokerConfig {
  *
  * @example Quick start (config-driven workers + workerRoutes)
  * ```ts
- * import { createWorkerBroker } from '@sembridge/worker'
+ * import { createWorkerBroker } from '@gluezero/worker'
  *
  * const broker = createWorkerBroker({
  *   workerRoutes: [

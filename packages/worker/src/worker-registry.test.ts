@@ -12,7 +12,7 @@
 // Pattern role-match con `realtime-channel-manager.test.ts` di F4
 // (registry + cascade + duplicate guard).
 
-import type { BrokerError } from '@sembridge/core'
+import type { BrokerError } from '@gluezero/core'
 import { beforeEach, describe, expect, it } from 'vitest'
 import type { WorkerDescriptor } from './types'
 import { WorkerRegistry } from './worker-registry'

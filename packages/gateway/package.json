@@ -1,7 +1,7 @@
 {
-  "name": "@sembridge/gateway",
+  "name": "@gluezero/gateway",
   "version": "0.0.0",
-  "description": "HTTP Gateway centralizzato + adapter realtime per SemBridge (Phase 3 HTTP + Phase 4 realtime SSE/WS)",
+  "description": "HTTP Gateway centralizzato + adapter realtime per GlueZero (Phase 3 HTTP + Phase 4 realtime SSE/WS)",
   "license": "MIT",
   "author": "",
   "type": "module",
@@ -54,9 +54,9 @@
     "clean": "rm -rf dist"
   },
   "dependencies": {
-    "@sembridge/core": "workspace:*",
-    "@sembridge/mapper": "workspace:*",
-    "@sembridge/routing": "workspace:*",
+    "@gluezero/core": "workspace:*",
+    "@gluezero/mapper": "workspace:*",
+    "@gluezero/routing": "workspace:*",
     "nanoid": "5.1.9",
     "valibot": "1.3.1"
   },
