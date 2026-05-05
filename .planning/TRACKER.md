@@ -1,11 +1,11 @@
 ---
 last_updated: 2026-05-05
-status: phase_6_discuss_complete_auto_advance_plan
+status: phase_6_plan_complete_auto_advance_execute
 project: SemBridge
 milestone: v1.0
 current_phase: 6
-current_wave: 6_discuss_done
-current_plan: 06_context_captured_pending_research_plan
+current_wave: 6_plan_done_ready_for_execute
+current_plan: 06_11_plan_created_iter_1_pass
 session_active: true
 ---
 
@@ -23,10 +23,10 @@ session_active: true
 
 | Campo | Valore |
 |-------|--------|
-| Fase | **Phase 6 — Cache & Tooling avanzato — DISCUSS COMPLETE** (CONTEXT.md 06 scritto + 16 decisioni D-155..D-170 lockate; auto-advance to plan-phase via `/gsd-plan-phase 6 --auto`; ULTIMA fase v1.0) |
-| Wave | 6 — discuss done (research + planning pending) |
-| Plan in esecuzione | nessuno — `/gsd-discuss-phase 6 --chain` chiuso; auto-advance a `/gsd-plan-phase 6 --auto` |
-| Plan progress F6 | **0 / TBD** — Phase 6 da pianificare (5-7 plan stimati post-research) |
+| Fase | **Phase 6 — Cache & Tooling avanzato — PLAN COMPLETE** (11 PLAN.md scritti + plan-checker PASS iter 2 — 0 BLOCKER 0 WARNING residui; auto-advance to execute-phase via `/gsd-execute-phase 6 --auto`; ULTIMA fase v1.0) |
+| Wave | 6 — plan done (5 wave / 8 sub-wave: W1, W2 ∥, W2-bis, W3 ∥, W4a, W4b, W5a, W5b) |
+| Plan in esecuzione | nessuno — `/gsd-plan-phase 6 --auto` chiuso; auto-advance a `/gsd-execute-phase 6 --auto --no-transition` |
+| Plan progress F6 | **0 / 11** — Phase 6 da eseguire (06-01..06-07 + 06-08a + 06-08b + 06-09a + 06-09b) |
 | Plan progress F5 | **7 / 7 (✅ COMPLETE)** — 05-01..05-07 done |
 | Plan progress F4 | **9 / 9 (✅ COMPLETE)** — 04-01..04-09 done |
 | Plan progress globale | 52 / TBD (Phase 6 ancora da pianificare) |
@@ -36,21 +36,32 @@ session_active: true
 
 ## Ultimo step completato (2026-05-05)
 
-- Step: **Phase 6 discuss-phase 6 --chain ✓**
-- Commit: `738e0c1 docs(06): capture phase context — Cache & Tooling avanzato (D-155..D-170 lockate)`
-- Output: `.planning/phases/06-cache-tooling-avanzato/06-CONTEXT.md` (16 decisioni) + `06-DISCUSSION-LOG.md` (audit trail)
-- Aree discusse (4/4): Cache key & user-scope, EventTap multiplex pattern, MetricsCollector schema & semantics, Inspector retention + pauseTopic queue
+- Step: **Phase 6 plan-phase 6 --auto ✓ (iter 2 PASS)**
+- Pipeline: research (RESEARCH.md 21 sezioni ~1450 LOC, zero new deps) → pattern-mapper (PATTERNS.md 38 file mappati) → planner iter 1 (9 plan) → plan-checker iter 1 (3 BLOCKER + 5 WARNING) → planner revision iter 1 (split 9→11 plan + chain F1-F6 createSemBridge + barrel ownership fix) → plan-checker iter 2 PASS
+- Commits: `48cd712` (planning iter 1), `57ac7c6` (revision iter 1)
+- Output: 11 PLAN.md (06-01..06-07 + 06-08a + 06-08b + 06-09a + 06-09b) + RESEARCH.md + PATTERNS.md
+- Verifica iter 2: 3/3 BLOCKER risolti + 5/5 WARNING risolti + 16/16 D-155..D-170 coverage + REQ coverage tutti + ZERO threat HIGH+ + D-83 strict gate ogni plan + chain completa F1+F2+F3+F4+F5+F6 in 06-08b createSemBridge
 
 
 ## Prossimo step
 
-**Auto-advance a Phase 6 plan-phase** (`--chain` mode).
+**Auto-advance a Phase 6 execute-phase** (`--chain` mode persiste).
 
 ```
-Skill: gsd-plan-phase 6 --auto  (research + plan + plan-checker)
+Skill: gsd-execute-phase 6 --auto --no-transition
 ```
 
-Dopo plan-phase: auto-execute via `/gsd-execute-phase 6` (mode yolo + auto_advance).
+Wave structure F6 (8 sub-wave):
+- **W1** sequential: 06-01 (bootstrap @sembridge/{cache,devtools,sembridge})
+- **W2** ∥ parallel: 06-02 (MemoryCacheAdapter + stable-hash) ‖ 06-04 (MultiplexTap + tap registry)
+- **W2-bis** sequential: 06-03 (CacheHandler + CompositeHandler concretizza F3 D-77)
+- **W3** ∥ parallel (3-way): 06-05 (Event/RouteInspector) ‖ 06-06 (MetricsCollector + reservoir + cardinality cap) ‖ 06-07 (PauseController)
+- **W4a** sequential gate: 06-08a (CacheBroker composition wrapper + factory + harness + 4 integration test)
+- **W4b** sequential gate: 06-08b (DevtoolsBroker + createSemBridge **CHAIN COMPLETA F1+F2+F3+F4+F5+F6** + 6 integration test)
+- **W5a** sequential gate: 06-09a (CI gates + size-limit + biome cleanup)
+- **W5b** FINAL: 06-09b (DOC-02/05/06 README italiani + JSDoc + REQ matrix flip + PRD §39 #10 closure + CHANGELOG v1.0.0 milestone closure)
+
+**Speedup wave-based:** ~1.3× vs sequential.
 
 Wave struttura globale F5 (RIEPILOGO CHIUSURA):
 - ✅ Wave 1: 05-01 (bootstrap) — DONE 2026-05-04
@@ -95,6 +106,8 @@ Phase 4 closure highlights:
 - **Auto-advance attivo:** discuss → plan → execute → verify automatico senza chiedere conferma.
 
 ## Decisioni recenti rilevanti
+
+- **Phase 6 PLAN-PHASE COMPLETATO ✓ (research + pattern-mapper + planner iter 1 + plan-checker iter 1 → revision + plan-checker iter 2 PASS)** — RESEARCH.md 21 sezioni ~1450 LOC verificato live npm 2026-05-05 (lru-cache@11.3.6, tdigest@0.1.2, json-stable-stringify@1.3.0 **valutati e RIGETTATI** in favore di implementazioni inline: Map insertion order LRU ~80 LOC + reservoir Algorithm R Vitter 1985 ~30 LOC + stableStringify+FNV-1a ~50 LOC, zero new deps philosophy F1-F5 carryover). PATTERNS.md 38 file F6 mappati con analog F1-F5 esatto + 10 lesson learned cross-fase (size-limit pre-impl underestimate 20-30% raise post-impl, augment.ts pattern S1 anti tree-shake replica meccanica, README italiano 11 sezioni 400+ LOC carryover). Plan iter 1 = 9 plan; plan-checker iter 1 ha trovato 3 BLOCKER + 5 WARNING; **revision iter 1** ha applicato fix targettati: BLOCKER-1 barrel ownership devtools/index.ts spostato da Wave 3 ∥ a 06-08b Wave 4b sequential single-writer cumulative; **BLOCKER-2 createSemBridge chain completa F1+F2+F3+F4+F5+F6** (Opzione 1 raccomandata dal checker, decisione autonoma utente coerente con CONTEXT.md sezione "Composition wrapper aggregato" + RESEARCH §11.3 + ROADMAP SC-2 + CHANGELOG v1.0.0 8 package bump promise) — codice TS in 06-08b con import condizionali da @sembridge/{worker,gateway/sse-ws} + chain `if (f.realtime) ... if (f.worker) ... if (f.cache) ... if (f.devtools) ...` + type union 7 ReturnType; BLOCKER-3 split 06-08 → 06-08a/06-08b + split 06-09 → 06-09a/06-09b (9→11 plan totali) per scope sanity (06-08 era 20 file/4 task, 06-09 era 27 file/5 task — eccedevano budget context); WARNING-1 truth consistency post-fix; WARNING-2 7 Q&A enumerate Q1-Q7 in DOC-05 Sezione 6 (PRD §39 #10 closure: dot.case rationale D-163, getMetricsDelta D-164, reservoir vs t-digest D-165, cardinality overflow D-166, Prometheus/OTel exporter map, metriche standard, custom metric V1.x); WARNING-3 frontmatter cleanup; WARNING-4 `pnpm -F @sembridge/sembridge test` aggiunto verify; WARNING-5 NODE_ENV inline default `detectDefaultEnabled()` in createEventInspector + createRouteInspector. Plan-checker iter 2 verdetto **PASS**: 3/3 BLOCKER risolti + 5/5 WARNING risolti + 16/16 D-155..D-170 coverage cumulative + REQ-IDs coverage cross 11-plan tutti + ZERO threat HIGH+ severity ASVS L1 (~25-30 threat enumerated T-06-XX-NN) + D-83 strict acceptance gate ogni plan (`git diff main...HEAD packages/{core,mapper,routing,gateway,worker}/src/` exit 0 lines) + file ownership Wave 3 parallel disgiunta (06-05/06-06/06-07 NON modificano packages/devtools/src/index.ts) + chain completa F1+F2+F3+F4+F5+F6 in 06-08b createSemBridge (35 hits createWorkerBroker|createRealtimeBroker, type union 7 ReturnType) + milestone v1.0 closure deliverables (06-09b CHANGELOG 8 package bump + REQ matrix flip + PRD §39 #10 closure + ROADMAP F6 → ✅ Complete). Estimated speedup wave-based ~1.3× vs sequential. Coverage REQ-IDs F6 distribuiti: CACHE-01..03 (5/4/4 plan), TOOL-01..05 (5/5/5/5/4 plan), ERR-02 ext F6 (2 plan), LIFE-02 ext F6 (3 plan), PIPE-01 ext F6 (7 plan massima trasversalità), TEST-01/02 ext F6 (3/3 plan), DOC-02/05/06 (1/1/1 plan in 06-09b consolidamento finale), PKG-01..04 (2/2/2/2 plan in 06-01 + 06-09a). Pronto per `/gsd-execute-phase 6 --auto --no-transition`.
 
 - **Phase 6 CONTEXT.md scritto ✓ (discuss-phase 6 --chain)** — 16 decisioni D-155..D-170 lockate. **A. Cache** (CACHE-01..03 + SC-5): D-155 cache key default `${topic}::${stableHash(canonicalPayload)}` (riuso F3 D-74 KeyBased) + override callback; D-156 scope hybrid `BrokerConfig.cache.scopeProvider` config-level + `RouteDefinition.cache.scope` route-level override; D-157 missing scope su route auth → skip cache + `system.cache.scope-missing` warn (zero-leakage by default); D-158 MemoryCacheAdapter LRU bounded `maxEntries=1000` default + TTL ortogonale. **B. EventTap** (TOOL-01/02/04): D-159 tap registry chain `BrokerConfig.taps?: readonly EventTap[]` con error isolation try/catch per tap + auto-wrap backward-compat di config.tap singleton; D-160 `enableDebug()/disableDebug()` toggle live-mode (tap sempre registrati, lazy mode quando off; default `NODE_ENV !== 'production'` → debug=on auto dev / auto-off prod, allineato D-139); D-161 tap su tutti 14 step §28 + lifecycle events (`route.dispatched`, `cache.hit/miss/evicted`, `worker.spawned/terminated`, `realtime.connected/disconnected`); D-162 `getDebugSnapshot()` deep clone via structuredClone (zero side-effect, zero race). **C. MetricsCollector** (TOOL-03/05 → PRD §39 #10 closure): D-163 naming `sembridge.<package>.<metric>` dot.case namespaced (Prometheus/OpenMetrics-friendly: `_total` counter, `_ms` duration, mapping 1:1 a OTel exporter V1.x); D-164 cumulative-only counters + helper `getMetricsDelta(prev)` opzionale; D-165 histogram = quantile summary `{ count, sum, p50, p90, p99 }` con ring buffer ~1024 samples (reservoir sampling/t-digest, lasciato al researcher in F6 RESEARCH.md); D-166 labels Prometheus-style flatten in name `metric{label="v"}` + cap 100 distinct combinations per metric (cardinality protection) + `system.metrics.cardinality-overflow` audit. **D. Inspector + pauseTopic** (TOOL-01/02/05): D-167 EventInspector + RouteInspector ring buffer 500 eventi default + config (~5-10MB con payload medio); D-168 `pauseTopic(topic)` block publish + queue events FIFO (subscriber + route NON triggherano, coerente SC-4 wording); D-169 `flushQueue(topic?)` drop silenzioso + emit `system.queue.flushed { topic, droppedCount, droppedEventIds }` (NIENTE re-publish — replay via resumeTopic); D-170 pause queue cap `maxQueueSize: 1000` default + drop-oldest FIFO + `system.queue.overflow` + critical priority bypass (consistency F3 D-75 + F5 D-130). **Carryover D-83 strict**: F6 vive solo in `packages/cache/src/` + `packages/devtools/src/` + augment.ts. Topology composition wrapper Opzione B vs factory aggregato `createSemBridge` lasciata al researcher. **Out of scope V1**: @sembridge/cache-idb (V1.x), OpenTelemetry exporter nativo (V1.x), real-time dashboard UI (V2), distributed tracing W3C (V1.x), bytes-based eviction (V1.x), custom histogram bucketing per route (V1.x), Inspector persistence, SharedWorker cross-tab metrics (V2), Service Worker bridge (V2), WorkerInspector dedicated (V1.x), MappingInspector integrato, user-defined metric registration (V1.x), anti-flap pause/resume (V1.x). **Open issue PRD §39 #10 (TOOL-05) chiusura pianificata in F6** via D-163/D-164/D-165/D-166. Auto-advance attivo a `/gsd-plan-phase 6 --auto` (--chain mode).
 
