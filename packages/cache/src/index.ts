@@ -60,7 +60,15 @@ export {
   type CachePublishFn,
   type RouteCacheCompiled,
 } from './cache-handler'
-// export { createCompositeHandlerF6 } from './composite-handler'
+export {
+  createCompositeHandlerF6,
+  type CompositeHandlerF6,
+  type CompositeHandlerF6Deps,
+  type CompositeHandlerOutcome,
+  type CompositeHttpDelegate,
+  type RouteCompositeCompiled,
+  type RouteCompositeStep,
+} from './composite-handler'
 
 // ---------- Wave 4 plan 06-08 — composition wrapper Opzione B + factory pubblico ----------
 // export { CacheBroker, type CacheBrokerConfig } from './cache-broker'
