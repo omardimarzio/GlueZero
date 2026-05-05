@@ -1,11 +1,11 @@
 ---
 last_updated: 2026-05-05
-status: phase_6_executing_W2_06_02_done
+status: phase_6_executing_W2_done_W2bis_06_03_pending
 project: SemBridge
 milestone: v1.0
 current_phase: 6
-current_wave: 6_W2_06_02_done_06_04_pending
-current_plan: 06_02_done_next_06_04_or_06_03
+current_wave: 6_W2_done_next_W2bis_06_03
+current_plan: 06_04_done_next_06_03
 session_active: true
 ---
 
@@ -23,10 +23,10 @@ session_active: true
 
 | Campo | Valore |
 |-------|--------|
-| Fase | **Phase 6 — Cache & Tooling avanzato — IN ESECUZIONE** (W1 + W2-A done; ULTIMA fase v1.0) |
-| Wave | 6 — W2 in corso: 06-02 done, 06-04 pending (parallel file ownership disgiunta) |
-| Plan in esecuzione | 06-02 ✅ done — next: 06-04 (MultiplexTap + tap registry) o 06-03 (CacheHandler) |
-| Plan progress F6 | **2 / 11** — 06-01 + 06-02 done; pending 06-03..06-07 + 06-08a + 06-08b + 06-09a + 06-09b |
+| Fase | **Phase 6 — Cache & Tooling avanzato — IN ESECUZIONE** (W1 + W2 complete; ULTIMA fase v1.0) |
+| Wave | 6 — W2 ✅ done (06-02 + 06-04 parallel file ownership disgiunta verified) — next W2-bis sequential 06-03 |
+| Plan in esecuzione | 06-04 ✅ done — next: 06-03 (CacheHandler + CompositeHandler concretizza F3 D-77) |
+| Plan progress F6 | **3 / 11** — 06-01 + 06-02 + 06-04 done; pending 06-03 + 06-05..06-07 + 06-08a + 06-08b + 06-09a + 06-09b |
 | Plan progress F5 | **7 / 7 (✅ COMPLETE)** — 05-01..05-07 done |
 | Plan progress F4 | **9 / 9 (✅ COMPLETE)** — 04-01..04-09 done |
 | Plan progress globale | 52 / TBD (Phase 6 ancora da pianificare) |
@@ -34,20 +34,18 @@ session_active: true
 | Modello attivo | `claude-opus-4-7-1` (opus) — override esplicito su tutti i sub-agent |
 | Graphify watch | PID 8702 attivo (debounce 3s, log `graphify-out/.watch.log`) — bootstrap iniziale `/graphify .` ancora pending |
 
-## Ultimo step completato (auto-update 2026-05-05T19:30:00Z)
+## Ultimo step completato (auto-update 2026-05-05T19:35Z)
 
-- Plan: **06-02** → MemoryCacheAdapter LRU bounded + stable-hash utility (Wave 2 building block A)
-- Commit chain TDD RED→GREEN: `be9f8b2` (test stable-hash) → `5ae6c4c` (feat stable-hash) → `c2c3a42` (test memory-cache) → `7935bff` (feat memory-cache + barrel)
-- Output: 4 file creati (616 LOC totali) + 1 modificato (index.ts append) + 06-02-SUMMARY.md
-- Test count: 30 (15 stable-hash + 15 memory-cache-adapter), 38/38 cross-file passing
-- Coverage v8: stable-hash 100/100/100/100 + memory-cache 100/96.29/100/100 (target ≥90/80/90/90 superato)
-- D-83 strict verified: zero diff packages/{core,mapper,routing,gateway,worker}/src/
-- Phase progress: **2/11** plan completati con SUMMARY.md
+- Plan: **06-04** → SUMMARY.md pending commit
+- Commit: `97379d4 feat(06-04): GREEN tap-registry runtime + auto-wrap F1 backward-compat (D-159)`
+- Phase progress: **3/11** plan completati con SUMMARY.md
+- Project progress: 56/64 plan (87%)
+- Wave 2 ✅ done (06-02 + 06-04 parallel file ownership disgiunta)
 
 
 ## Prossimo step
 
-**Continue execute Phase 6 W2** — parallel building block 06-04 (MultiplexTap + tap registry) o sequential 06-03 (CacheHandler).
+**Continue execute Phase 6 W2-bis sequential** — 06-03 (CacheHandler + CompositeHandler concretizza F3 D-77).
 
 ```
 Skill: gsd-execute-phase 6 --auto --no-transition
