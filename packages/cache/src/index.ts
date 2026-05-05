@@ -43,8 +43,11 @@ export { __augmentCacheLoaded, type F6CachePipelineStep } from './augment'
 export type { CacheAdapter, CacheConfig, CacheEntry, CacheStats } from './types'
 
 // ---------- W2 plan 06-02 — memory-cache-adapter + stable-hash (D-155/D-158) ----------
-// export { createMemoryCacheAdapter } from './memory-cache-adapter'
-// export { stableHash, cacheKey } from './stable-hash'
+export {
+  createMemoryCacheAdapter,
+  type MemoryCacheAdapterOptions,
+} from './memory-cache-adapter'
+export { cacheKey, fnv1a32, stableHash, stableStringify } from './stable-hash'
 
 // ---------- W2-bis plan 06-03 — cache-handler + composite-handler (concretizza F3 D-77) ----------
 // export { createCacheHandlerF6 } from './cache-handler'
