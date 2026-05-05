@@ -60,7 +60,13 @@ export type {
 } from './types'
 
 // ---------- W2 plan 06-04 — multiplex-tap + tap-registry (D-159) ----------
-// export { createMultiplexTap, createTapRegistry } from './multiplex-tap'
+export { createMultiplexTap } from './multiplex-tap'
+export {
+  createTapRegistry,
+  type TapHandle,
+  type TapRegistry,
+  wrapLegacyTap,
+} from './tap-registry'
 
 // ---------- W3 plan 06-05 — event-inspector + route-inspector (D-167) ----------
 // export { createEventInspector } from './event-inspector'
