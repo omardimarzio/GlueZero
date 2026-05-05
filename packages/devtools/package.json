@@ -1,17 +1,62 @@
 {
   "name": "@sembridge/devtools",
   "version": "0.0.0",
-  "description": "Event/Mapping/Route Inspector + Metrics for SemBridge (Phase 6 — placeholder in Phase 1)",
+  "description": "Developer tooling per SemBridge (Phase 6 — Tap registry chain D-159 + EventInspector + RouteInspector + MetricsCollector simil-OpenMetrics + pauseTopic queue — D-159..D-170 / chiude PRD §39 #10 TOOL-05)",
   "license": "MIT",
+  "author": "",
   "type": "module",
-  "private": true,
   "main": "./dist/index.js",
+  "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./package.json": "./package.json"
+  },
   "files": [
     "dist",
-    "README.md"
+    "README.md",
+    "LICENSE"
   ],
+  "sideEffects": [
+    "./dist/augment.js",
+    "./src/augment.ts",
+    "**/augment.js",
+    "**/augment.ts"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
   "publishConfig": {
-    "access": "public"
+    "access": "public",
+    "provenance": true
+  },
+  "scripts": {
+    "build": "tsup",
+    "test": "vitest run --passWithNoTests",
+    "test:watch": "vitest",
+    "test:browser": "vitest run --config vitest.browser.config.ts --passWithNoTests",
+    "test:coverage": "vitest run --coverage --passWithNoTests",
+    "typecheck": "tsc --noEmit",
+    "clean": "rm -rf dist"
+  },
+  "dependencies": {
+    "@sembridge/core": "workspace:*",
+    "@sembridge/mapper": "workspace:*",
+    "@sembridge/routing": "workspace:*",
+    "nanoid": "5.1.11",
+    "valibot": "1.3.1"
+  },
+  "devDependencies": {
+    "@vitest/browser": "4.1.5",
+    "@vitest/browser-playwright": "^4.1.5",
+    "@vitest/coverage-v8": "4.1.5",
+    "jsdom": "29.1.0",
+    "playwright": "1.59.1",
+    "tsup": "8.5.1",
+    "typescript": "6.0.3",
+    "vitest": "4.1.5"
   }
 }
