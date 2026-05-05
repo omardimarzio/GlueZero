@@ -36,10 +36,10 @@ verifier_report: .planning/phases/06-cache-tooling-avanzato/06-VERIFICATION.md
 | Modello attivo | `claude-opus-4-7-1` (opus) — override esplicito su tutti i sub-agent |
 | Graphify watch | PID 8702 attivo (debounce 3s, log `graphify-out/.watch.log`) — bootstrap iniziale `/graphify .` ancora pending |
 
-## Ultimo step completato (auto-update 2026-05-05T19:30:19Z)
+## Ultimo step completato (auto-update 2026-05-05T20:45:28Z)
 
-- Plan: **06-09b** → SUMMARY.md committed
-- Commit: `058b2dc docs(06-09b): Phase 6 closure + MILESTONE v1.0 ✅ CHIUSO — 6/6 fasi + 10/11 open issues + 91/91 REQ-IDs`
+- Plan: **03-11** → SUMMARY.md committed
+- Commit: `52a6f14 docs(rename): planning artefacts SemBridge → GlueZero (169 file)`
 - Phase progress: **11/11** plan completati con SUMMARY.md
 - Project progress: 64/64 plan (100%)
 
