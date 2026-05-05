@@ -1,11 +1,11 @@
 ---
 last_updated: 2026-05-05
-status: phase_6_executing_W3_complete_next_06_08a
+status: phase_6_executing_W4a_complete_next_06_08b
 project: SemBridge
 milestone: v1.0
 current_phase: 6
-current_wave: 6_W3_complete_next_W4a_06_08a
-current_plan: 06_07_done_next_06_08a
+current_wave: 6_W4a_complete_next_W4b_06_08b
+current_plan: 06_08a_done_next_06_08b
 session_active: true
 ---
 
@@ -23,32 +23,34 @@ session_active: true
 
 | Campo | Valore |
 |-------|--------|
-| Fase | **Phase 6 — Cache & Tooling avanzato — IN ESECUZIONE** (W1 + W2 + W2-bis + W3 complete) |
-| Wave | 6 — W3 ✅ COMPLETE (06-05 + 06-06 + 06-07 done) — next W4a sequential gate 06-08a (CacheBroker composition) |
-| Plan in esecuzione | 06-07 ✅ done — next: 06-08a (CacheBroker composition wrapper + harness + 4 integration test) |
-| Plan progress F6 | **7 / 11** — 06-01 + 06-02 + 06-04 + 06-03 + 06-05 + 06-06 + 06-07 done; pending 06-08a + 06-08b + 06-09a + 06-09b |
+| Fase | **Phase 6 — Cache & Tooling avanzato — IN ESECUZIONE** (W1 + W2 + W2-bis + W3 + W4a complete) |
+| Wave | 6 — W4a ✅ COMPLETE (06-08a CacheBroker composition wrapper done) — next W4b sequential gate 06-08b (DevtoolsBroker + createSemBridge chain completa) |
+| Plan in esecuzione | 06-08a ✅ done — next: 06-08b (DevtoolsBroker composition wrapper + createSemBridge CHAIN F1+F2+F3+F4+F5+F6 + 6 integration test) |
+| Plan progress F6 | **8 / 11** — 06-01 + 06-02 + 06-04 + 06-03 + 06-05 + 06-06 + 06-07 + 06-08a done; pending 06-08b + 06-09a + 06-09b |
 | Plan progress F5 | **7 / 7 (✅ COMPLETE)** — 05-01..05-07 done |
 | Plan progress F4 | **9 / 9 (✅ COMPLETE)** — 04-01..04-09 done |
-| Plan progress globale | 59 / 64 (92%) |
+| Plan progress globale | 60 / 64 (94%) |
 | Mode GSD | yolo + auto_advance + parallelization (sequential exec, no worktree) |
 | Modello attivo | `claude-opus-4-7-1` (opus) — override esplicito su tutti i sub-agent |
 | Graphify watch | PID 8702 attivo (debounce 3s, log `graphify-out/.watch.log`) — bootstrap iniziale `/graphify .` ancora pending |
 
-## Ultimo step completato (auto-update 2026-05-05T20:13:00Z)
+## Ultimo step completato (auto-update 2026-05-05T20:30:00Z)
 
-- Plan: **06-07** → SUMMARY.md pronto, RED+GREEN committed
-- Commit RED: `1a43290 test(06-07): add RED test for pause-controller (D-168/D-169/D-170 + critical bypass)`
-- Commit GREEN: `d79009b feat(06-07): GREEN pause-controller pauseTopic/resumeTopic/flushQueue (D-168/D-169/D-170)`
-- Coverage v8 sul file: 97.67/83.33/100/100 (≥90/80/90/90 ✓)
-- 16/16 test pause-controller passing (118/118 totali devtools)
-- Phase progress: **7/11** plan completati con SUMMARY.md
-- Project progress: 59/64 plan (92%)
-- Wave 3 ∥ parallel ✅ COMPLETE (06-05 inspector + 06-06 metrics + 06-07 pause)
+- Plan: **06-08a** → SUMMARY.md ready to commit
+- Commit list:
+  - `2221187 test(06-08a): RED CacheBroker + createCacheBroker`
+  - `a69f468 feat(06-08a): GREEN CacheBroker composition wrapper Opzione B + createCacheBroker factory`
+  - `aef7e1a test(06-08a): cache-harness + 4 integration test 3-tier + barrel FINAL append`
+- Phase progress: **8/11** plan completati con SUMMARY.md
+- Project progress: 60/64 plan (94%)
+- Test totali cache package: 108 (39 nuovi nel plan)
+- Coverage v8 cache-broker.ts: 100/90.32/100/100 (target 90/80/90/90 superato +10.32% branches)
+- D-83 strict: zero diff packages/{core,mapper,routing,gateway,worker}/src/
 
 
 ## Prossimo step
 
-**Continue execute Phase 6 W4a** — sequential gate: 06-08a (CacheBroker composition wrapper Opzione B D-83 strict + factory + harness + 4 integration test).
+**Continue execute Phase 6 W4b** — sequential gate: 06-08b (DevtoolsBroker composition wrapper + createSemBridge CHAIN COMPLETA F1+F2+F3+F4+F5+F6 + 6 integration test).
 
 ```
 Skill: gsd-execute-phase 6 --auto --no-transition
