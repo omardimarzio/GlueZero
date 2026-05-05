@@ -36,15 +36,19 @@ verifier_report: .planning/phases/06-cache-tooling-avanzato/06-VERIFICATION.md
 | Modello attivo | `claude-opus-4-7-1` (opus) — override esplicito su tutti i sub-agent |
 | Graphify watch | PID 8702 attivo (debounce 3s, log `graphify-out/.watch.log`) — bootstrap iniziale `/graphify .` ancora pending |
 
-## Ultimo step completato (auto-update 2026-05-05T20:45:28Z)
+## Ultimo step completato (auto-update 2026-05-05T21:03:00Z)
 
 - Plan: **03-11** → SUMMARY.md committed
-- Commit: `52a6f14 docs(rename): planning artefacts SemBridge → GlueZero (169 file)`
+- Commit: `9f948b2 docs(260505-v1e): SUMMARY quick task rename SemBridge → GlueZero done`
 - Phase progress: **11/11** plan completati con SUMMARY.md
 - Project progress: 64/64 plan (100%)
 
 
 ## Prossimo step
+
+> **⚠️ ALLA RIAPERTURA POST-MV ROOT:** leggi PRIMA `.planning/quick/260505-v1e-rinomina-sembridge-to-gluezero/POST-RENAME-CHECKLIST.md` — contiene la checklist completa pre-release v1.0.0 (npm scope reservation, smoke install, repo GitHub rename, dominio, release commands).
+
+**Quick task `260505-v1e` rinomina ✅ COMPLETE** (commit finale `9f948b2 docs(260505-v1e): SUMMARY ...`). 9 commit atomic + CI gates 8/8 verdi + 0 hit grep non-documentati. Operazioni manuali ancora da fare dall'utente esterno alla sessione: `mv` root directory, `cp -r` memory dir, `/graphify .` rigenerazione, repo GitHub rename, npm scope reservation, `pnpm release`.
 
 **Verifier PASS ✅ — milestone v1.0 ready for release:**
 - `gsd-verifier 6` ✅ verdict **PASS** (zero caveat actionable; report `.planning/phases/06-cache-tooling-avanzato/06-VERIFICATION.md`).
