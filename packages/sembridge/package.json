@@ -1,17 +1,57 @@
 {
   "name": "@sembridge/sembridge",
   "version": "0.0.0",
-  "description": "SemBridge aggregate package (re-exports core + mapper + gateway + routing + worker + cache + devtools — placeholder in Phase 1)",
+  "description": "SemBridge aggregato pubblico (Phase 6 — re-exports core + mapper + routing + gateway + worker + cache + devtools + factory createSemBridge milestone v1.0)",
   "license": "MIT",
+  "author": "",
   "type": "module",
-  "private": true,
   "main": "./dist/index.js",
+  "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./package.json": "./package.json"
+  },
   "files": [
     "dist",
-    "README.md"
+    "README.md",
+    "LICENSE"
   ],
+  "sideEffects": [
+    "./dist/augment.js",
+    "**/augment.{js,ts}"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
   "publishConfig": {
-    "access": "public"
+    "access": "public",
+    "provenance": true
+  },
+  "scripts": {
+    "build": "tsup",
+    "test": "vitest run --passWithNoTests",
+    "test:coverage": "vitest run --coverage --passWithNoTests",
+    "typecheck": "tsc --noEmit",
+    "clean": "rm -rf dist"
+  },
+  "dependencies": {
+    "@sembridge/core": "workspace:*",
+    "@sembridge/mapper": "workspace:*",
+    "@sembridge/routing": "workspace:*",
+    "@sembridge/gateway": "workspace:*",
+    "@sembridge/worker": "workspace:*",
+    "@sembridge/cache": "workspace:*",
+    "@sembridge/devtools": "workspace:*",
+    "valibot": "1.3.1"
+  },
+  "devDependencies": {
+    "@vitest/coverage-v8": "4.1.5",
+    "tsup": "8.5.1",
+    "typescript": "6.0.3",
+    "vitest": "4.1.5"
   }
 }
