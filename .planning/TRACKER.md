@@ -34,13 +34,12 @@ session_active: true
 | Modello attivo | `claude-opus-4-7-1` (opus) — override esplicito su tutti i sub-agent |
 | Graphify watch | PID 8702 attivo (debounce 3s, log `graphify-out/.watch.log`) — bootstrap iniziale `/graphify .` ancora pending |
 
-## Ultimo step completato (2026-05-05)
+## Ultimo step completato (auto-update 2026-05-05T17:15:10Z)
 
-- Step: **Phase 6 plan-phase 6 --auto ✓ (iter 2 PASS)**
-- Pipeline: research (RESEARCH.md 21 sezioni ~1450 LOC, zero new deps) → pattern-mapper (PATTERNS.md 38 file mappati) → planner iter 1 (9 plan) → plan-checker iter 1 (3 BLOCKER + 5 WARNING) → planner revision iter 1 (split 9→11 plan + chain F1-F6 createSemBridge + barrel ownership fix) → plan-checker iter 2 PASS
-- Commits: `48cd712` (planning iter 1), `57ac7c6` (revision iter 1)
-- Output: 11 PLAN.md (06-01..06-07 + 06-08a + 06-08b + 06-09a + 06-09b) + RESEARCH.md + PATTERNS.md
-- Verifica iter 2: 3/3 BLOCKER risolti + 5/5 WARNING risolti + 16/16 D-155..D-170 coverage + REQ coverage tutti + ZERO threat HIGH+ + D-83 strict gate ogni plan + chain completa F1+F2+F3+F4+F5+F6 in 06-08b createSemBridge
+- Plan: **06-01** → SUMMARY.md committed
+- Commit: `cf51c97 docs(06-01): complete cache+devtools+aggregate bootstrap plan — 06-01-SUMMARY.md`
+- Phase progress: **1/11** plan completati con SUMMARY.md
+- Project progress: 53/53 plan (100%)
 
 
 ## Prossimo step
