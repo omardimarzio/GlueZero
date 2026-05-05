@@ -1,7 +1,7 @@
 # Phase 1: Core essenziale - Research
 
 **Researched:** 2026-04-28
-**Domain:** Browser-side TypeScript event broker library — monorepo bootstrap + `@sembridge/core` (event bus pub/sub, plugin registry, lifecycle, `BrokerEvent` model, `EventTap` pre-instrumentato)
+**Domain:** Browser-side TypeScript event broker library — monorepo bootstrap + `@gluezero/core` (event bus pub/sub, plugin registry, lifecycle, `BrokerEvent` model, `EventTap` pre-instrumentato)
 **Confidence:** HIGH (rationale architetturale + versioni stack VERIFICATE live via `npm view` 2026-04-28)
 **Tipo research:** *validate & detail* — la ricerca alta è già fatta (`STACK.md`/`ARCHITECTURE.md`/`SUMMARY.md`/`PITFALLS.md`); questo documento entra nei dettagli implementativi che il planner deve avere chiari per generare task atomici.
 
@@ -9,13 +9,13 @@
 
 ## Summary
 
-La fase 1 produce due artefatti principali: (1) lo **scaffold del monorepo `pnpm` workspaces** con i 7 sotto-pacchetti `@sembridge/{core, mapper, gateway, routing, worker, cache, devtools}` + bundle aggregato `@sembridge/sembridge`; (2) il **codice di `@sembridge/core`** — broker pub/sub in-page, plugin registry con lifecycle anti-leak, struttura `BrokerEvent`, `EventTap` pre-instrumentato sui 5 step pipeline implementati in F1. Tutti gli altri sub-package esistono come placeholder con `package.json` + README.
+La fase 1 produce due artefatti principali: (1) lo **scaffold del monorepo `pnpm` workspaces** con i 7 sotto-pacchetti `@gluezero/{core, mapper, gateway, routing, worker, cache, devtools}` + bundle aggregato `@gluezero/gluezero`; (2) il **codice di `@gluezero/core`** — broker pub/sub in-page, plugin registry con lifecycle anti-leak, struttura `BrokerEvent`, `EventTap` pre-instrumentato sui 5 step pipeline implementati in F1. Tutti gli altri sub-package esistono come placeholder con `package.json` + README.
 
 Le decisioni stack sono già lockate da CONTEXT.md (D-01..D-30): default `deliveryMode: 'async'` via `queueMicrotask`, deep-freeze runtime in dev, trie segmentato per wildcard matching, console-based logger con adapter slot, no singleton globale, factory `createBroker(config)` con cascade cleanup obbligatoria su `unregisterPlugin`, `EventTap.onPipelineStep` chiamato sui 5 step F1 (received/enriched/validated/dedupe-checked/delivered). I 28 REQ-ID di Phase 1 (CORE-01..14, VAL-01, VAL-06, ERR-01, ERR-03, LIFE-01..02, TEST-01/03 subset, PKG-01..04, DOC-01) sono mappati in maniera esplicita ai moduli core e ai test.
 
 Versioni stack **verificate live via `npm view`** in data 2026-04-28: TypeScript 6.0.3, tsup 8.5.1, Vitest 4.1.5, Biome 2.4.13, Changesets 2.31.0, nanoid 5.1.9, Valibot 1.3.1, jsdom 29.1.0, happy-dom 20.9.0, msw 2.13.6, Playwright 1.59.1, TypeDoc 0.28.19, publint 0.3.18, attw 0.18.2, size-limit 12.1.0, pnpm 10.33.2, idb 8.0.3, Comlink 4.4.2. Il salto rispetto a STACK.md (TS 5.5 → 6.0, Vitest 2.x → 4.x, Biome 1.9 → 2.x, jsdom 25 → 29) è **non bloccante** ma richiede uso esatto delle nuove versioni: la migration TS 5→6 e Vitest 3→4 hanno breaking minori che il planner deve recepire.
 
-**Primary recommendation:** scaffolding del monorepo come prima cosa (Wave 0), poi codice `@sembridge/core` modulo per modulo seguendo l'ordine `types → topic-matcher → event-factory → broker-error → logger → bus → topic-registry → plugin-registry → lifecycle → event-tap → public-factory`. Test `PipelineHarness` (spy su EventTap) come fixture condivisa. Tutti i moduli pubblici esposti via `src/index.ts` con `package.json#exports` selettivo.
+**Primary recommendation:** scaffolding del monorepo come prima cosa (Wave 0), poi codice `@gluezero/core` modulo per modulo seguendo l'ordine `types → topic-matcher → event-factory → broker-error → logger → bus → topic-registry → plugin-registry → lifecycle → event-tap → public-factory`. Test `PipelineHarness` (spy su EventTap) come fixture condivisa. Tutti i moduli pubblici esposti via `src/index.ts` con `package.json#exports` selettivo.
 
 ---
 
@@ -41,13 +41,13 @@ Versioni stack **verificate live via `npm view`** in data 2026-04-28: TypeScript
 - **D-11:** Edge case: subscribe a `weather.*.failed` con publish `weather.alert.failed` deve matchare. Test esplicito.
 
 **Logging**
-- **D-12:** **Console-based logger di default** con namespace prefix `[sembridge]` e mapping livelli → metodi: `silent` no-op, `error` → `console.error`, `warn` → `console.warn`, `info` → `console.info`, `debug` → `console.debug`, `trace` → `console.debug` (con prefisso TRACE).
+- **D-12:** **Console-based logger di default** con namespace prefix `[gluezero]` e mapping livelli → metodi: `silent` no-op, `error` → `console.error`, `warn` → `console.warn`, `info` → `console.info`, `debug` → `console.debug`, `trace` → `console.debug` (con prefisso TRACE).
 - **D-13:** **Adapter slot tramite `setLogger(customLogger)`** che accetta un'implementazione conforme a `BrokerLogger`.
 - **D-14:** `BrokerLogger.{error, warn, info, debug, trace}(message, meta?)` come surface minima. No structured JSON di default.
 
 ### Claude's Discretion (decisioni da PRD + research)
 
-- **D-15:** Sub-package layout monorepo: 7 sotto-pacchetti `@sembridge/{core, mapper, gateway, routing, worker, cache, devtools}` + aggregato `@sembridge/sembridge`. In F1 viene scaffoldato l'intero workspace ma solo `@sembridge/core` riceve codice.
+- **D-15:** Sub-package layout monorepo: 7 sotto-pacchetti `@gluezero/{core, mapper, gateway, routing, worker, cache, devtools}` + aggregato `@gluezero/gluezero`. In F1 viene scaffoldato l'intero workspace ma solo `@gluezero/core` riceve codice.
 - **D-16:** Plugin handler error isolation: handler sync con eccezione → caught con try/catch e pubblicato come `system.error` con `BrokerError.category: 'plugin'`. Handler async con Promise rejected → `.catch()` automatico con stesso treatment. Nessun timeout di default su handler subscribe.
 - **D-17:** Plugin id collision: `registerPlugin({id: existingId})` throw `BrokerError.code: 'plugin.id.duplicate'`. Nessun overwrite silenzioso.
 - **D-18:** Config validation: `createBroker(config)` valida fail-fast all'init usando schemi Valibot.
@@ -156,14 +156,14 @@ Phase 1 è puramente browser-runtime: niente UI, niente server, niente persisten
 | `nanoid` | **5.1.9** | Generazione `BrokerEvent.id`, `correlationId`, `traceId`, `subscriptionId` | `[VERIFIED: npm registry 2026-04-28]` |
 | `valibot` | **1.3.1** | Schema validation `BrokerConfig` + `BrokerEvent` shape | `[VERIFIED: npm registry 2026-04-28]` |
 
-**Niente altro** è dependency runtime di `@sembridge/core` in F1.
+**Niente altro** è dependency runtime di `@gluezero/core` in F1.
 
 ### DevDependencies (root + per-package)
 
 | Package | Version verificata | Scope |
 |---------|-------------------|-------|
 | `typescript` | **6.0.3** | Root devDep (workspace-wide) |
-| `tsup` | **8.5.1** | Per-package build per `@sembridge/core` |
+| `tsup` | **8.5.1** | Per-package build per `@gluezero/core` |
 | `vitest` | **4.1.5** | Test runner (root + per-package config) |
 | `@vitest/browser` | **4.1.5** | Per future fasi F4/F5; preinstallato come placeholder |
 | `playwright` | **1.59.1** | Provider per `@vitest/browser` (non usato attivamente in F1) |
@@ -206,7 +206,7 @@ Phase 1 è puramente browser-runtime: niente UI, niente server, niente persisten
 
 ## Setup commands (scaffolding monorepo)
 
-Comandi shell esatti da eseguire nell'ordine. Tutti relativi alla root `/Users/omarmarzio/programming/prova AI/SemBridge/` (che già contiene `prd.md`, `CLAUDE.md`, `.planning/`).
+Comandi shell esatti da eseguire nell'ordine. Tutti relativi alla root `/Users/omarmarzio/programming/prova AI/GlueZero/` (che già contiene `prd.md`, `CLAUDE.md`, `.planning/`).
 
 ### 1. Bootstrap del package manager
 
@@ -223,7 +223,7 @@ pnpm --version  # deve stampare 10.33.2
 # Crea package.json root (NON un package pubblicato — solo workspace orchestrator)
 cat > package.json <<'EOF'
 {
-  "name": "sembridge-monorepo",
+  "name": "gluezero-monorepo",
   "private": true,
   "version": "0.0.0",
   "packageManager": "pnpm@10.33.2",
@@ -341,8 +341,8 @@ Per ciascun package, creare `package.json`, `tsconfig.json`, `tsup.config.ts`, `
 # Installa dev deps al root
 pnpm install
 
-# Installa runtime deps su @sembridge/core
-pnpm add -F @sembridge/core nanoid@5.1.9 valibot@1.3.1
+# Installa runtime deps su @gluezero/core
+pnpm add -F @gluezero/core nanoid@5.1.9 valibot@1.3.1
 ```
 
 ### 9. Init Changesets
@@ -432,7 +432,7 @@ pnpm test                   # vitest dice "no test files found" (atteso in fase 
 }
 ```
 
-**Nota:** non usiamo `references` in F1 — i 7 sub-package hanno dipendenze interne via `workspace:*` ma `@sembridge/core` non importa da nessun altro. Se F2 dovesse far importare `@sembridge/mapper` da `@sembridge/core` (improbabile), si valuteranno project references.
+**Nota:** non usiamo `references` in F1 — i 7 sub-package hanno dipendenze interne via `workspace:*` ma `@gluezero/core` non importa da nessun altro. Se F2 dovesse far importare `@gluezero/mapper` da `@gluezero/core` (improbabile), si valuteranno project references.
 
 ### `packages/core/tsup.config.ts`
 
@@ -452,7 +452,7 @@ export default defineConfig({
   platform: 'browser',
   external: [/^node:/],     // niente Node built-in nei bundle
   banner: {
-    js: '/* @sembridge/core — MIT — https://github.com/<TBD>/sembridge */',
+    js: '/* @gluezero/core — MIT — https://github.com/<TBD>/sembridge */',
   },
 })
 ```
@@ -469,9 +469,9 @@ Se un consumer richiede CJS in V1.x, si aggiungerà `format: ['esm', 'cjs']` con
 
 ```json
 {
-  "name": "@sembridge/core",
+  "name": "@gluezero/core",
   "version": "0.0.0",
-  "description": "Core event broker (pub/sub, plugin registry, lifecycle, BrokerEvent) for SemBridge",
+  "description": "Core event broker (pub/sub, plugin registry, lifecycle, BrokerEvent) for GlueZero",
   "license": "MIT",
   "author": "",
   "type": "module",
@@ -514,7 +514,7 @@ Se un consumer richiede CJS in V1.x, si aggiungerà `format: ['esm', 'cjs']` con
   },
   "size-limit": [
     {
-      "name": "@sembridge/core (gzip)",
+      "name": "@gluezero/core (gzip)",
       "path": "dist/index.js",
       "limit": "8 KB",
       "gzip": true
@@ -536,9 +536,9 @@ In F1 questi sono **solo placeholder con README**, nessun codice. Esempio per `p
 
 ```json
 {
-  "name": "@sembridge/mapper",
+  "name": "@gluezero/mapper",
   "version": "0.0.0",
-  "description": "Canonical model + bidirectional mapper for SemBridge (Phase 2 — placeholder in Phase 1)",
+  "description": "Canonical model + bidirectional mapper for GlueZero (Phase 2 — placeholder in Phase 1)",
   "license": "MIT",
   "type": "module",
   "private": true,
@@ -553,7 +553,7 @@ In F1 questi sono **solo placeholder con README**, nessun codice. Esempio per `p
 
 **Importante:** mettere `"private": true` sui placeholder così `pnpm changeset publish` li ignora finché non hanno codice. In F2/F3/F4/F5/F6 si rimuove `"private": true` quando si attiva il publish.
 
-Per `@sembridge/sembridge` (aggregato) idem — placeholder fino a quando F2-F6 non riempiono i sub-package.
+Per `@gluezero/gluezero` (aggregato) idem — placeholder fino a quando F2-F6 non riempiono i sub-package.
 
 ### `.changeset/config.json`
 
@@ -568,19 +568,19 @@ Per `@sembridge/sembridge` (aggregato) idem — placeholder fino a quando F2-F6 
   "baseBranch": "main",
   "updateInternalDependencies": "patch",
   "ignore": [
-    "@sembridge/mapper",
-    "@sembridge/gateway",
-    "@sembridge/routing",
-    "@sembridge/worker",
-    "@sembridge/cache",
-    "@sembridge/devtools",
-    "@sembridge/sembridge"
+    "@gluezero/mapper",
+    "@gluezero/gateway",
+    "@gluezero/routing",
+    "@gluezero/worker",
+    "@gluezero/cache",
+    "@gluezero/devtools",
+    "@gluezero/gluezero"
   ]
 }
 ```
 
 **Rationale:**
-- `fixed: []` e `linked: []` — ogni package ha versioning indipendente (consigliato per monorepo SemBridge dove i package matureranno a velocità diverse).
+- `fixed: []` e `linked: []` — ogni package ha versioning indipendente (consigliato per monorepo GlueZero dove i package matureranno a velocità diverse).
 - `ignore` — finché i 6 placeholder restano `"private": true`, comunque metterli in ignore per chiarezza (rimuovere progressivamente in F2..F6).
 - `access: "public"` — published as scoped public packages.
 
@@ -588,14 +588,14 @@ Per `@sembridge/sembridge` (aggregato) idem — placeholder fino a quando F2-F6 
 - Decisione: **NO publish in F1**. La fase 1 produce codice ma il primo release pubblico avviene a fine F2 (quando il valore differenziante — canonical model — è espresso).
 - Nessun `.changeset/*.md` viene creato in F1; il package resta a `0.0.0` lavorando come monorepo interno.
 
-Se il planner decide di pubblicare un alpha `0.1.0-alpha.0` solo per `@sembridge/core` a fine F1 per testing, il changeset sarebbe:
+Se il planner decide di pubblicare un alpha `0.1.0-alpha.0` solo per `@gluezero/core` a fine F1 per testing, il changeset sarebbe:
 
 ```md
 ---
-"@sembridge/core": minor
+"@gluezero/core": minor
 ---
 
-Initial alpha release of @sembridge/core: event bus, plugin registry, lifecycle hooks, BrokerEvent model, EventTap pre-instrumentation. Full API surface defined; F2-F6 will add canonical model, routing, gateway, worker, cache, devtools.
+Initial alpha release of @gluezero/core: event bus, plugin registry, lifecycle hooks, BrokerEvent model, EventTap pre-instrumentation. Full API surface defined; F2-F6 will add canonical model, routing, gateway, worker, cache, devtools.
 ```
 
 ### `biome.json`
@@ -669,14 +669,14 @@ Initial alpha release of @sembridge/core: event bus, plugin registry, lifecycle 
 
 `[VERIFIED: Biome 2.4.13 schema URL via npm registry 2026-04-28]`
 
-### `vitest.config.ts` per `@sembridge/core`
+### `vitest.config.ts` per `@gluezero/core`
 
 ```ts
 import { defineConfig } from 'vitest/config'
 
 export default defineConfig({
   test: {
-    name: '@sembridge/core',
+    name: '@gluezero/core',
     environment: 'jsdom',           // browser-like DOM per test integration mid-level
     globals: false,                  // import esplicito da 'vitest' — più chiaro per libreria
     include: ['src/**/*.test.ts'],
@@ -1352,7 +1352,7 @@ const LEVEL_ORDER: Record<LogLevel, number> = {
   trace: 5,
 }
 
-const PREFIX = '[sembridge]'
+const PREFIX = '[gluezero]'
 
 export function createConsoleLogger(level: LogLevel = 'info'): BrokerLogger {
   const enabled = (target: LogLevel): boolean => LEVEL_ORDER[level] >= LEVEL_ORDER[target]
@@ -2147,19 +2147,19 @@ export function brokerEvent<T>(overrides: Partial<BrokerEvent<T>> = {}): BrokerE
 
 ```bash
 # Quick run (per task commit, < 30s):
-pnpm -F @sembridge/core test
+pnpm -F @gluezero/core test
 
 # Watch:
-pnpm -F @sembridge/core test:watch
+pnpm -F @gluezero/core test:watch
 
 # Coverage:
-pnpm -F @sembridge/core test:coverage
+pnpm -F @gluezero/core test:coverage
 
 # Typecheck:
-pnpm -F @sembridge/core typecheck
+pnpm -F @gluezero/core typecheck
 
 # Build smoke test:
-pnpm -F @sembridge/core build && node -e "import('@sembridge/core').then(m => console.log(Object.keys(m)))"
+pnpm -F @gluezero/core build && node -e "import('@gluezero/core').then(m => console.log(Object.keys(m)))"
 ```
 
 ---
@@ -2232,45 +2232,45 @@ F1 NON deve toccare/anticipare gli altri 10 punti. Sono fuori scope.
 |----------|-------|
 | Framework | Vitest 4.1.5 |
 | Config file | `packages/core/vitest.config.ts` (creato in Wave 0) |
-| Quick run command | `pnpm -F @sembridge/core test` |
+| Quick run command | `pnpm -F @gluezero/core test` |
 | Full suite command | `pnpm test` (ricorsivo su tutti i workspace package) |
-| Coverage command | `pnpm -F @sembridge/core test:coverage` |
-| Typecheck | `pnpm -F @sembridge/core typecheck` |
+| Coverage command | `pnpm -F @gluezero/core test:coverage` |
+| Typecheck | `pnpm -F @gluezero/core typecheck` |
 
 ### Phase Requirements → Test Map
 
 | Req ID | Behavior | Test Type | Automated Command | File Exists? |
 |--------|----------|-----------|-------------------|-------------|
-| CORE-01 | publish + subscribe end-to-end | integration jsdom | `pnpm -F @sembridge/core test bus.integration.test.ts` | ❌ Wave 0 |
-| CORE-02 | `subscribe` ritorna `Subscription` con `unsubscribe()` idempotente | integration jsdom | `pnpm -F @sembridge/core test bus.integration.test.ts -t "Subscription"` | ❌ Wave 0 |
-| CORE-03 | TopicRegistry traccia topic | unit | `pnpm -F @sembridge/core test topic-registry.test.ts` | ❌ Wave 0 |
-| CORE-04 | registerPlugin / unregisterPlugin | integration jsdom | `pnpm -F @sembridge/core test plugin-lifecycle.integration.test.ts` | ❌ Wave 0 |
-| CORE-05 | Lifecycle hooks chiamati nell'ordine | integration jsdom | `pnpm -F @sembridge/core test plugin-lifecycle.integration.test.ts -t "lifecycle order"` | ❌ Wave 0 |
-| CORE-06 | BrokerEvent shape rispettata | unit | `pnpm -F @sembridge/core test event-factory.test.ts` | ❌ Wave 0 |
-| CORE-07 | id univoco / timestamp / source | unit | `pnpm -F @sembridge/core test event-factory.test.ts -t "defaults"` | ❌ Wave 0 |
-| CORE-08 | Topic naming validation | unit + integration | `pnpm -F @sembridge/core test topic-validation.integration.test.ts` | ❌ Wave 0 |
-| CORE-09 | Wildcard subscribe | integration | `pnpm -F @sembridge/core test wildcard.integration.test.ts` | ❌ Wave 0 |
-| CORE-10 | Logging livelli | unit | `pnpm -F @sembridge/core test logger.test.ts` | ❌ Wave 0 |
-| CORE-11 | Cascade unsubscribe (LIFE-02) | integration | `pnpm -F @sembridge/core test plugin-cleanup.integration.test.ts` | ❌ Wave 0 |
-| CORE-12 | Plugin handler error isolation | integration | `pnpm -F @sembridge/core test handler-isolation.integration.test.ts` | ❌ Wave 0 |
-| CORE-13 | EventTap instrumented sui 5 step | integration | `pnpm -F @sembridge/core test event-tap.integration.test.ts` | ❌ Wave 0 |
-| CORE-14 | createBroker config validation | integration | `pnpm -F @sembridge/core test public-factory.test.ts` | ❌ Wave 0 |
-| VAL-01 | Validazione sintattica BrokerEvent | unit | `pnpm -F @sembridge/core test event-validator.test.ts` | ❌ Wave 0 |
+| CORE-01 | publish + subscribe end-to-end | integration jsdom | `pnpm -F @gluezero/core test bus.integration.test.ts` | ❌ Wave 0 |
+| CORE-02 | `subscribe` ritorna `Subscription` con `unsubscribe()` idempotente | integration jsdom | `pnpm -F @gluezero/core test bus.integration.test.ts -t "Subscription"` | ❌ Wave 0 |
+| CORE-03 | TopicRegistry traccia topic | unit | `pnpm -F @gluezero/core test topic-registry.test.ts` | ❌ Wave 0 |
+| CORE-04 | registerPlugin / unregisterPlugin | integration jsdom | `pnpm -F @gluezero/core test plugin-lifecycle.integration.test.ts` | ❌ Wave 0 |
+| CORE-05 | Lifecycle hooks chiamati nell'ordine | integration jsdom | `pnpm -F @gluezero/core test plugin-lifecycle.integration.test.ts -t "lifecycle order"` | ❌ Wave 0 |
+| CORE-06 | BrokerEvent shape rispettata | unit | `pnpm -F @gluezero/core test event-factory.test.ts` | ❌ Wave 0 |
+| CORE-07 | id univoco / timestamp / source | unit | `pnpm -F @gluezero/core test event-factory.test.ts -t "defaults"` | ❌ Wave 0 |
+| CORE-08 | Topic naming validation | unit + integration | `pnpm -F @gluezero/core test topic-validation.integration.test.ts` | ❌ Wave 0 |
+| CORE-09 | Wildcard subscribe | integration | `pnpm -F @gluezero/core test wildcard.integration.test.ts` | ❌ Wave 0 |
+| CORE-10 | Logging livelli | unit | `pnpm -F @gluezero/core test logger.test.ts` | ❌ Wave 0 |
+| CORE-11 | Cascade unsubscribe (LIFE-02) | integration | `pnpm -F @gluezero/core test plugin-cleanup.integration.test.ts` | ❌ Wave 0 |
+| CORE-12 | Plugin handler error isolation | integration | `pnpm -F @gluezero/core test handler-isolation.integration.test.ts` | ❌ Wave 0 |
+| CORE-13 | EventTap instrumented sui 5 step | integration | `pnpm -F @gluezero/core test event-tap.integration.test.ts` | ❌ Wave 0 |
+| CORE-14 | createBroker config validation | integration | `pnpm -F @gluezero/core test public-factory.test.ts` | ❌ Wave 0 |
+| VAL-01 | Validazione sintattica BrokerEvent | unit | `pnpm -F @gluezero/core test event-validator.test.ts` | ❌ Wave 0 |
 | VAL-06 | Schema definitions | implicit (tipo Valibot) | typecheck | ❌ Wave 0 |
-| ERR-01 | BrokerError factory | unit | `pnpm -F @sembridge/core test broker-error.test.ts` | ❌ Wave 0 |
+| ERR-01 | BrokerError factory | unit | `pnpm -F @gluezero/core test broker-error.test.ts` | ❌ Wave 0 |
 | ERR-03 | Errori isolati | integration | (covered by handler-isolation + plugin-fault) | ❌ Wave 0 |
 | LIFE-01 | Subscribe ritorna handle | covered by CORE-02 | (same) | (same) |
 | LIFE-02 | Unregister cascade | covered by CORE-11 | (same) | (same) |
-| TEST-01 (subset) | Suite core deterministica | (covered by all above) | `pnpm -F @sembridge/core test` | ❌ Wave 0 |
-| TEST-03 (subset) | Storm + plugin malconfigurato | robustness | `pnpm -F @sembridge/core test storm.test.ts plugin-fault.test.ts` | ❌ Wave 0 |
+| TEST-01 (subset) | Suite core deterministica | (covered by all above) | `pnpm -F @gluezero/core test` | ❌ Wave 0 |
+| TEST-03 (subset) | Storm + plugin malconfigurato | robustness | `pnpm -F @gluezero/core test storm.test.ts plugin-fault.test.ts` | ❌ Wave 0 |
 | PKG-01..PKG-04 | Packaging | CI gate | `pnpm ci:publint && pnpm ci:attw && pnpm ci:size` | ❌ Wave 0 |
 | DOC-01 | API skeleton docs | manual review | (typedoc + README presenti) | ❌ Wave 0 |
 
 ### Sampling Rate
 
-- **Per task commit:** `pnpm -F @sembridge/core test` (suite completa core < 30s in jsdom)
+- **Per task commit:** `pnpm -F @gluezero/core test` (suite completa core < 30s in jsdom)
 - **Per wave merge:** `pnpm test` (workspace-wide; in F1 solo core ha test, ma comando funziona)
-- **Phase gate:** `pnpm test && pnpm typecheck && pnpm lint && pnpm ci:publint && pnpm ci:attw && pnpm ci:size && pnpm -F @sembridge/core build` — tutto verde prima di `/gsd-verify-work`.
+- **Phase gate:** `pnpm test && pnpm typecheck && pnpm lint && pnpm ci:publint && pnpm ci:attw && pnpm ci:size && pnpm -F @gluezero/core build` — tutto verde prima di `/gsd-verify-work`.
 
 ### Wave 0 Gaps
 
@@ -2318,7 +2318,7 @@ Tutti i file test e config devono essere creati in Wave 0 (greenfield):
 | V6 Cryptography | no | F1 non genera token, hash, secret. nanoid usa `crypto.getRandomValues` ma è ID non secret |
 | V14 Configuration | partial | `package.json#exports` lock, `sideEffects: false`, `provenance: true` (npm supply chain) |
 
-### Known Threat Patterns for `@sembridge/core`
+### Known Threat Patterns for `@gluezero/core`
 
 | Pattern | STRIDE | Mitigation in F1 |
 |---------|--------|---------------------|
@@ -2395,7 +2395,7 @@ Tutti i file test e config devono essere creati in Wave 0 (greenfield):
 | `system.error` recursion se broker stesso fallisce | BASSA | ALTO | Pattern `queueMicrotask + try/catch + last-resort logger.error` (vedi `bus.ts handleHandlerError`); test `handler-isolation` lo valida. |
 | `PipelineHarness` snapshot include payload reale (memory leak in test) | BASSA | BASSO | Test `reset()` chiamato in `beforeEach`. |
 | `package.json#exports` malformed → import fallisce per consumer | MEDIA | ALTO | CI gates `publint` + `attw` obbligatori prima di `/gsd-verify-work`. |
-| Granularità monorepo 7-package over-engineering per F1 | BASSA | BASSO | F1 popola solo `@sembridge/core`; consolidamento eventuale in F1.x dopo F2 review. |
+| Granularità monorepo 7-package over-engineering per F1 | BASSA | BASSO | F1 popola solo `@gluezero/core`; consolidamento eventuale in F1.x dopo F2 review. |
 | Branded type `EventId` causa friction TS in test | BASSA | BASSO | Helper `brokerEvent()` in pipeline-harness.ts cast as needed; `as EventId` ammesso in test. |
 
 ---
@@ -2407,7 +2407,7 @@ Tutti i file test e config devono essere creati in Wave 0 (greenfield):
 - **npm registry** (queries 2026-04-28) — versioni esatte tutti i package: `[VERIFIED: npm view 2026-04-28]`
   - typescript@6.0.3, tsup@8.5.1, vitest@4.1.5, @biomejs/biome@2.4.13, @changesets/cli@2.31.0, nanoid@5.1.9, valibot@1.3.1, jsdom@29.1.0, happy-dom@20.9.0, msw@2.13.6, playwright@1.59.1, typedoc@0.28.19, publint@0.3.18, @arethetypeswrong/cli@0.18.2, size-limit@12.1.0, comlink@4.4.2, idb@8.0.3, pnpm@10.33.2 (all verified)
 - **Project artifacts:**
-  - `prd.md` — fonte autoritativa SemBridge (§10, §11, §12, §15, §16, §22, §24, §25.4, §27, §28, §31, §33.2, §39, §42)
+  - `prd.md` — fonte autoritativa GlueZero (§10, §11, §12, §15, §16, §22, §24, §25.4, §27, §28, §31, §33.2, §39, §42)
   - `.planning/REQUIREMENTS.md` — 28 REQ-ID di Phase 1
   - `.planning/ROADMAP.md` — Phase 1 goal, scope, success criteria
   - `.planning/research/STACK.md` — stack rationale (rationale verificato; versioni superseded da live npm view 2026-04-28)

@@ -49,7 +49,7 @@ key-decisions:
 patterns-established:
   - "Pattern try/catch wrap con escalation policy `block|skip|fallback` per registry pluggable: applicabile a future estensioni (route policy F3, worker policy F5) — il discriminator literal union è il pattern di policy riusabile"
   - "Pattern Entry { descriptor, ownerId? } con register options separati dal descriptor: applicabile a tutti i registry F2+ con cascade plugin owner tracking"
-  - "Pattern conditional spread per ES2022 cause + exactOptionalPropertyTypes coexistence: replicato dal core broker-error.ts ma applicato cross-package con import esplicito da `@sembridge/core`"
+  - "Pattern conditional spread per ES2022 cause + exactOptionalPropertyTypes coexistence: replicato dal core broker-error.ts ma applicato cross-package con import esplicito da `@gluezero/core`"
   - "Pattern unregisterByOwner(ownerId) cascade per cleanup proprietario: identico a AliasRegistry.unregisterScopedAll plan 02-04. Convergenza pattern F2 cross-modulo per LIFE-02 ext"
 
 requirements-completed:
@@ -87,7 +87,7 @@ completed: 2026-04-29
 - Non-Error throw values wrapped: `err instanceof Error ? err.message : String(err)` preserva info anche su `throw 'string'` (T-02-05-05 mitigation)
 - `list()` ritorna `[...keys()].sort()` per immutability esterna (pattern F1 consistente con TopicRegistry/CanonicalRegistry/AliasRegistry)
 - `Entry { descriptor, ownerId? }` separato per mantenere descrittore immutabile + ownership tracking per cascade
-- Cross-package import `import { createBrokerError } from '@sembridge/core'` + `category: 'mapping'` (già definita in F1 ErrorCategory union)
+- Cross-package import `import { createBrokerError } from '@gluezero/core'` + `category: 'mapping'` (già definita in F1 ErrorCategory union)
 - Header italiano + JSDoc IntelliSense in italiano + reference D-XX/REQ-ID/Threat-ID coerente con pattern F1 e plan 02-03/02-04
 - Auto-fix Biome `organizeImports` applicato post-implementazione (riordino alfabetico import) — coerente con repo standard
 
@@ -102,7 +102,7 @@ Il PLAN dichiara 1 task con `tdd="true"`. Il task è stato eseguito come 2 commi
 2. **Task 1 GREEN — `bf57216`** `feat(02-05): implementa TransformPipeline (REQ MAP-12, VAL-09 — chiude PRD §39 #4)`
    - `transform-pipeline.ts` (183 LOC) — implementazione completa
    - Test passing 14/14 al primo run dopo creazione del modulo (`Test Files 1 passed (1) | Tests 14 passed (14)`)
-   - Auto-fix Biome `organizeImports` applicato pre-commit a `transform-pipeline.test.ts` (riordino alfabetico import: `@sembridge/core` prima di `vitest`, runtime prima di type-only)
+   - Auto-fix Biome `organizeImports` applicato pre-commit a `transform-pipeline.test.ts` (riordino alfabetico import: `@gluezero/core` prima di `vitest`, runtime prima di type-only)
 
 **Plan metadata commit:** TBD (eseguito alla fine del workflow tramite `gsd-sdk query commit` insieme a STATE/ROADMAP/REQUIREMENTS).
 
@@ -150,11 +150,11 @@ Test cases organizzati in 3 `describe` block:
 
 | Comando | Risultato |
 |---------|-----------|
-| `pnpm --filter @sembridge/mapper test transform-pipeline` (RED, post Task 1.1) | FAIL atteso: `Failed to resolve import "./transform-pipeline"` |
-| `pnpm --filter @sembridge/mapper test transform-pipeline` (GREEN, post Task 1.2) | Exit 0: **`Test Files 1 passed (1) \| Tests 14 passed (14)`** Duration 536ms |
-| `pnpm --filter @sembridge/mapper test` (full mapper) | Exit 0: **`Test Files 3 passed (3) \| Tests 41 passed (41)`** (14 transform-pipeline + 16 alias-registry + 11 canonical-registry) |
-| `pnpm --filter @sembridge/mapper typecheck` | Exit 0 (isolatedDeclarations enforcement OK) |
-| `pnpm --filter @sembridge/core test` (regression F1) | Exit 0: **24 file/248 test passing** (no regression Phase 1) |
+| `pnpm --filter @gluezero/mapper test transform-pipeline` (RED, post Task 1.1) | FAIL atteso: `Failed to resolve import "./transform-pipeline"` |
+| `pnpm --filter @gluezero/mapper test transform-pipeline` (GREEN, post Task 1.2) | Exit 0: **`Test Files 1 passed (1) \| Tests 14 passed (14)`** Duration 536ms |
+| `pnpm --filter @gluezero/mapper test` (full mapper) | Exit 0: **`Test Files 3 passed (3) \| Tests 41 passed (41)`** (14 transform-pipeline + 16 alias-registry + 11 canonical-registry) |
+| `pnpm --filter @gluezero/mapper typecheck` | Exit 0 (isolatedDeclarations enforcement OK) |
+| `pnpm --filter @gluezero/core test` (regression F1) | Exit 0: **24 file/248 test passing** (no regression Phase 1) |
 | `pnpm biome check packages/mapper/src/transform-pipeline*.ts` | Exit 0 dopo auto-fix `organizeImports` (riordino alfabetico import) |
 | Grep verifica acceptance | 8/8 PASSED (`export class TransformPipeline`, `transform.id.duplicate`, `transform.not-found`, `mapping.transform.failed`, `originalError`, `unregisterByOwner`, file source + file test esistenti) |
 | Audit `any` literal | 0 occorrenze come tipo |
@@ -177,7 +177,7 @@ Test cases organizzati in 3 `describe` block:
 
 **Note tecniche minori (non deviazioni):**
 
-1. **Auto-fix Biome `organizeImports`** — Lo snippet del PLAN aveva ordine import: `vitest` → `@sembridge/core` → `type` interno → runtime interno. Biome ha riordinato in alfabetico: `@sembridge/core` → `vitest` → runtime interno → type interno. Cambio cosmetico, semantica identica. Re-run test post-fix: 14/14 passing.
+1. **Auto-fix Biome `organizeImports`** — Lo snippet del PLAN aveva ordine import: `vitest` → `@gluezero/core` → `type` interno → runtime interno. Biome ha riordinato in alfabetico: `@gluezero/core` → `vitest` → runtime interno → type interno. Cambio cosmetico, semantica identica. Re-run test post-fix: 14/14 passing.
 2. **Header file italiano + JSDoc inglese-misto** — Coerente con `02-PATTERNS.md §1.1`. Identico al pattern usato in plan 02-02/02-03/02-04.
 3. **Nessun `eslint-disable` per `throw 'string error'` letterale** — Il PLAN aveva un commento `// eslint-disable-next-line @typescript-eslint/no-throw-literal` che però è specifico per ESLint. Il progetto usa Biome (non ESLint) e Biome non ha lint rule equivalente attivata, quindi il commento è superfluo e l'ho omesso. Test passa identicamente: `throw 'string error'` è valido JS e produce `String(err) === 'string error'`.
 

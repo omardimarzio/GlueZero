@@ -1,7 +1,7 @@
 ---
 phase: 05-worker-runtime
 plan: 02
-subsystem: "@sembridge/worker — building blocks W2-A"
+subsystem: "@gluezero/worker — building blocks W2-A"
 tags:
   - tdd
   - red-green
@@ -20,7 +20,7 @@ requirements_completed:
 dependency_graph:
   requires:
     - "05-01 (W1) — types F5 + augment.ts decl merging + barrel index.ts skeleton"
-    - "@sembridge/core — createBrokerError + ErrorCategory.worker (F1 ERR-01)"
+    - "@gluezero/core — createBrokerError + ErrorCategory.worker (F1 ERR-01)"
   provides:
     - "assertSerializable(value, path?, visited?) — pure deep-walk SCA validator"
     - "extractTransferables(payload, paths) — pure JSONPath-like extractor"
@@ -124,9 +124,9 @@ Plan threshold target ≥90/80/90/90 → **soddisfatto** (branch 84.21% > 80% ta
 
 ## CI gates
 
-- `pnpm -F @sembridge/worker test --run` → 50/50 passing (8 augment + 12 task-tracker [05-03] + 30 di questo plan)
-- `pnpm -F @sembridge/worker typecheck` → exit 0
-- `pnpm -F @sembridge/worker build` → ESM dist 7.93 KB; DTS 19.49 KB
+- `pnpm -F @gluezero/worker test --run` → 50/50 passing (8 augment + 12 task-tracker [05-03] + 30 di questo plan)
+- `pnpm -F @gluezero/worker typecheck` → exit 0
+- `pnpm -F @gluezero/worker build` → ESM dist 7.93 KB; DTS 19.49 KB
 - `pnpm -r typecheck` cross-package → exit 0 (no regression core/mapper/routing/gateway/worker)
 - `grep -c "createBrokerError" assert-serializable.ts` → 5 ✓ (4 sub-codes + 1 import)
 - `grep -c "category: 'worker'" assert-serializable.ts` → 4 ✓
@@ -162,7 +162,7 @@ Tutte le modifiche del plan 05-02 vivono ESCLUSIVAMENTE in `packages/worker/src/
 
 ```ts
 // Esempio integration in 05-04 worker-bridge.ts:
-import { assertSerializable, extractTransferables } from '@sembridge/worker'
+import { assertSerializable, extractTransferables } from '@gluezero/worker'
 
 async dispatch(workerId: string, taskName: string, payload: unknown, transferable: readonly string[]) {
   // Step 1: validate (D-139 dev-mode auto, opt-out via config)

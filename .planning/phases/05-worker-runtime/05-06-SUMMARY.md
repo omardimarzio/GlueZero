@@ -11,7 +11,7 @@ duration_minutes: 28
 
 dependency_graph:
   requires:
-    - 05-01 # bootstrap @sembridge/worker (types + augment + vitest 3-tier)
+    - 05-01 # bootstrap @gluezero/worker (types + augment + vitest 3-tier)
     - 05-02 # assert-serializable + transferable-extractor
     - 05-03 # task-tracker (state machine atomico Pitfall 2C closure D-133)
     - 05-04 # WorkerBridge Comlink wrapper (D-124/129/131/132/135/137/139/140/141)
@@ -25,7 +25,7 @@ dependency_graph:
     - 8 integration test Tier-1 (D-151 #1-#6 + #8 + #9)
     - 6 browser smoke Tier-3 Playwright Chromium (D-151 #7 transferable byteLength=0 + Pitfall 7.B/7.E)
   affects:
-    - "@sembridge/worker public API surface (WorkerBroker, createWorkerBroker, createWorkerHandler, deriveTopic)"
+    - "@gluezero/worker public API surface (WorkerBroker, createWorkerBroker, createWorkerHandler, deriveTopic)"
 
 tech-stack:
   added: []
@@ -232,12 +232,12 @@ Composizione finale F5 — `WorkerBroker` composition wrapper di `RouterBroker` 
 
 | Suite                              | Pass | Fail | Skip | Tot |
 | ---------------------------------- | ---- | ---- | ---- | --- |
-| @sembridge/worker (Tier-1 jsdom)   | 121  | 0    | 0    | 121 |
-| @sembridge/worker (Tier-3 Playwright) | 6 | 0    | 0    | 6   |
-| @sembridge/core                    | 248  | 0    | 0    | 248 |
-| @sembridge/mapper                  | 183  | 0    | 0    | 183 |
-| @sembridge/routing                 | 103  | 0    | 0    | 103 |
-| @sembridge/gateway                 | 222  | 0    | 3    | 225 |
+| @gluezero/worker (Tier-1 jsdom)   | 121  | 0    | 0    | 121 |
+| @gluezero/worker (Tier-3 Playwright) | 6 | 0    | 0    | 6   |
+| @gluezero/core                    | 248  | 0    | 0    | 248 |
+| @gluezero/mapper                  | 183  | 0    | 0    | 183 |
+| @gluezero/routing                 | 103  | 0    | 0    | 103 |
+| @gluezero/gateway                 | 222  | 0    | 3    | 225 |
 | **Monorepo full**                  | **877** | **0** | **3** | **880** |
 
 3 skip pre-esistenti (gateway MSW V1.x F4 deferred — non impattati da F5 W4).

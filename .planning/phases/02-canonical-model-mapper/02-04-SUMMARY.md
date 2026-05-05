@@ -29,7 +29,7 @@ tech-stack:
     - "Conflict throw su pair conflittuale + idempotent return false su pair identico (anti-shadow PITFALLS §3.B)"
     - "Resolution order esplicito documentato in JSDoc + return type discriminator `source: 'scoped'|'global'|'name-match'|'unresolved'` per debug (T-02-04-04 mitigation)"
     - "list*() ritorna spread copy + sort deterministico (`[...map.entries()].sort(([a], [b]) => a.localeCompare(b))`) per T-02-04-01 mitigation"
-    - "Module auto-contenuto: niente import da @sembridge/core. Errori sono Error nativi (alias.global.conflict / alias.scoped.conflict / alias.localField.empty), wrapping in BrokerError delegato al consumer mapper-engine"
+    - "Module auto-contenuto: niente import da @gluezero/core. Errori sono Error nativi (alias.global.conflict / alias.scoped.conflict / alias.localField.empty), wrapping in BrokerError delegato al consumer mapper-engine"
     - "TDD RED→GREEN gate verificato in git history (2 commit separati: 018b867 test prima, e1517ee feat dopo)"
 
 key-files:
@@ -40,7 +40,7 @@ key-files:
 
 key-decisions:
   - "Nessuna deviazione da PATTERNS.md §2.2 (alias-registry come role-match di topic-registry F1) e §5.1 (anti-pattern alias globali shadow risolto via Map<pluginId, Map>)"
-  - "Errori `alias.{global,scoped}.conflict` e `alias.localField.empty` sono Error nativi (NON BrokerError) — coerente con error handling auto-contenuto del module. Documentato come decisione consapevole nel PLAN <output>: il consumer mapper-engine wrappa eventualmente in BrokerError quando intercetta. Mantiene il registry agnostico da @sembridge/core."
+  - "Errori `alias.{global,scoped}.conflict` e `alias.localField.empty` sono Error nativi (NON BrokerError) — coerente con error handling auto-contenuto del module. Documentato come decisione consapevole nel PLAN <output>: il consumer mapper-engine wrappa eventualmente in BrokerError quando intercetta. Mantiene il registry agnostico da @gluezero/core."
   - "Test 'truly unresolved' verifica il contract registry: il source 'unresolved' non è prodotto da AliasRegistry direttamente — è riservato al mapper-engine quando consulta CanonicalRegistry (livello 5 D-40). Il default qui è 'name-match' con localField come canonical."
   - "16 test cases invece dei 12 behavior PLAN — la differenza è dovuta a sub-test dei 4 describe block (registerGlobal/registerScoped/resolve/list ciascuno ha 2-7 test it()). Nessuna deviazione concettuale: tutti i 12 behavior sono coperti."
   - "Niente runtime deepFreeze sugli alias post-register — coerente con T-02-03-03 disposition di plan 02-03 (deepFreeze dev mode deferred al mapper-engine plan 02-07)"
@@ -87,7 +87,7 @@ completed: 2026-04-29
 - T-02-04-01 list mutation safety: `listGlobal`/`listScoped` ritornano spread copy ordinata deterministicamente per `localeCompare`
 - T-02-04-04 source discriminator literal union: `AliasResolutionSource` espone esattamente quale livello D-40 ha risolto, per debug Inspector F6
 - Validation guard: `resolve` con `localField === ''` → throw `Error 'alias.localField.empty'`
-- Module auto-contenuto: niente import da `@sembridge/core` runtime; solo `import type { CanonicalSchemaId }` da `./types/canonical-schema`
+- Module auto-contenuto: niente import da `@gluezero/core` runtime; solo `import type { CanonicalSchemaId }` da `./types/canonical-schema`
 - Header italiano + JSDoc IntelliSense in italiano + reference D-XX/REQ-ID/Threat-ID coerente con pattern F1
 - Auto-fix manuale `Array<T>` → `T[]` per Biome `useShorthandArrayType` (formattazione, non altera semantica)
 
@@ -152,16 +152,16 @@ Test cases organizzati in 4 `describe` block:
 
 | Comando | Risultato |
 |---------|-----------|
-| `pnpm --filter @sembridge/mapper test alias-registry` (RED, post Task 1.1) | FAIL atteso: `Failed to resolve import "./alias-registry"` |
-| `pnpm --filter @sembridge/mapper test alias-registry` (GREEN, post Task 1.2) | Exit 0: **`Test Files 1 passed (1) \| Tests 16 passed (16)`** Duration 469ms |
-| `pnpm --filter @sembridge/mapper test` (full mapper) | Exit 0: **`Test Files 2 passed (2) \| Tests 27 passed (27)`** (16 alias-registry + 11 canonical-registry) |
-| `pnpm --filter @sembridge/mapper typecheck` | Exit 0 (isolatedDeclarations enforcement OK) |
-| `pnpm --filter @sembridge/core test` (regression F1) | Exit 0: **24 file/248 test passing** (no regression) |
+| `pnpm --filter @gluezero/mapper test alias-registry` (RED, post Task 1.1) | FAIL atteso: `Failed to resolve import "./alias-registry"` |
+| `pnpm --filter @gluezero/mapper test alias-registry` (GREEN, post Task 1.2) | Exit 0: **`Test Files 1 passed (1) \| Tests 16 passed (16)`** Duration 469ms |
+| `pnpm --filter @gluezero/mapper test` (full mapper) | Exit 0: **`Test Files 2 passed (2) \| Tests 27 passed (27)`** (16 alias-registry + 11 canonical-registry) |
+| `pnpm --filter @gluezero/mapper typecheck` | Exit 0 (isolatedDeclarations enforcement OK) |
+| `pnpm --filter @gluezero/core test` (regression F1) | Exit 0: **24 file/248 test passing** (no regression) |
 | `pnpm biome check packages/mapper/src/alias-registry*.ts` | Exit 0 dopo fix manuale `Array<T>` → `T[]` (suggested unsafe fix di Biome applicato manualmente, formattazione equivalente) |
 | Grep verifica acceptance | 8/8 PASSED (`export class AliasRegistry`, `registerGlobal`, `registerScoped`, `unregisterScopedAll`, `ambiguous`, `source: 'scoped'`, file source + file test esistenti) |
 | Audit `any` literal | 0 occorrenze come tipo |
 | Audit `unknown` non documentato | 0 occorrenze (nessun `unknown` nel module — il dato è solo string→string) |
-| Audit import `@sembridge/core` runtime | 0 (module auto-contenuto come da PLAN must_haves) |
+| Audit import `@gluezero/core` runtime | 0 (module auto-contenuto come da PLAN must_haves) |
 | Post-commit deletion check | OK: no deletions tra HEAD~1 e HEAD |
 
 ## Threat Coverage
@@ -182,7 +182,7 @@ Test cases organizzati in 4 `describe` block:
 
 1. **16 test cases vs 12 behavior PLAN** — la differenza è strutturale: ogni `describe` block raggruppa 2-7 `it()` che insieme coprono 1-3 behavior PLAN. Esempio: PLAN Test 3 ("registerScoped registra alias scoped; idempotent") è coperto da `it('registers scoped alias for one plugin only')` + `it('throws on conflict within same plugin scope')` + `it('different plugins can register conflicting scoped aliases')` perché il conflict throw e l'isolation tra plugin sono behavior correlati ma indipendenti.
 2. **Test 9 PLAN "truly unresolved"** — il PLAN dichiara `source: 'unresolved'` come valore di ritorno; il `<interfaces>` del PLAN chiarisce che il source `'unresolved'` è riservato al mapper-engine quando consulta CanonicalRegistry (livello 5 D-40). Quindi il registry da solo NON produce mai `source: 'unresolved'` — il default è `'name-match'` con `localField` come canonical. Il test verifica esattamente questo contract (`expect(result.source).toBe('name-match')`). Coerente con il PLAN behavior commentato: "the 'unresolved' source is not produced by this registry alone".
-3. **Errori `Error` nativi anziché BrokerError** — `alias.global.conflict`, `alias.scoped.conflict`, `alias.localField.empty` sono Error nativi, NON BrokerError. Documentato esplicitamente nel PLAN `<output>` come decisione consapevole: "conflict error con `alias.global.conflict`/`alias.scoped.conflict` come Error nativo (non BrokerError) — coerente con error handling auto-contenuto del module (delegato al mapper-engine consumer per wrapping eventuale)". Mantiene il registry agnostico da `@sembridge/core`.
+3. **Errori `Error` nativi anziché BrokerError** — `alias.global.conflict`, `alias.scoped.conflict`, `alias.localField.empty` sono Error nativi, NON BrokerError. Documentato esplicitamente nel PLAN `<output>` come decisione consapevole: "conflict error con `alias.global.conflict`/`alias.scoped.conflict` come Error nativo (non BrokerError) — coerente con error handling auto-contenuto del module (delegato al mapper-engine consumer per wrapping eventuale)". Mantiene il registry agnostico da `@gluezero/core`.
 4. **Auto-fix Biome manuale** — Biome ha segnalato 2 errori `useShorthandArrayType` (`Array<T>` → `T[]`). Biome ha classificato il fix come "unsafe" (richiede `--unsafe` flag), quindi l'ho applicato manualmente con `Edit`. Cambio cosmetico: signature da `Array<[string, string]>` a `[string, string][]`, semantica identica. Re-run test e typecheck post-fix: 27/27 passing.
 5. **Re-export `CanonicalSchemaId` dal module** — al fondo di `alias-registry.ts` (riga 240): `export type { CanonicalSchemaId }`. Lo snippet del PLAN lo include nell'`<action>` (riga 417). Convenience re-export per i consumer interni del mapper-engine plan 02-07 quando dovranno coordinare alias resolution con CanonicalRegistry (Pitfall #12 — type confusion prevention). Niente nuovo tipo introdotto, solo passthrough.
 

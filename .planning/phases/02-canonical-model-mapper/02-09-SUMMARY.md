@@ -13,8 +13,8 @@ requires:
     plan: 08
     provides: "MappingInspector + wrapTap + MappingInspectorOptions/Snapshot per export"
 provides:
-  - "TS declaration merging di @sembridge/core: PluginDescriptor + BrokerConfig estesi (D-56/D-57) — chiude i placeholder F1 unknown"
-  - "Barrel @sembridge/mapper public API completo (9 runtime exports + 16+ tipi pubblici + F2PipelineStep)"
+  - "TS declaration merging di @gluezero/core: PluginDescriptor + BrokerConfig estesi (D-56/D-57) — chiude i placeholder F1 unknown"
+  - "Barrel @gluezero/mapper public API completo (9 runtime exports + 16+ tipi pubblici + F2PipelineStep)"
   - "dist/augment.js generato come entry separata (214 B) per side-effect referencing"
   - "package.json sideEffects array esteso (4 patterns) per double-safety tree-shake mitigation"
   - "Re-export __augmentLoaded dal barrel forza bundler a preservare l'import side-effect (T-02-09-01 mitigation primaria)"
@@ -24,7 +24,7 @@ affects: [02-10-broker-wrapper, 02-11-integration-tests, 02-12-final-gate, F3-ro
 tech-stack:
   added: []
   patterns:
-    - "Pattern TS declaration merging additive con `declare module '@sembridge/core'` per estendere interface PluginDescriptor + BrokerConfig — riusabile per F3-F6 augmentations"
+    - "Pattern TS declaration merging additive con `declare module '@gluezero/core'` per estendere interface PluginDescriptor + BrokerConfig — riusabile per F3-F6 augmentations"
     - "Pattern barrel completo (`@packageDocumentation` JSDoc + side-effect import + runtime exports + type exports + literal union additive) — replicato da packages/core/src/index.ts F1"
     - "Pattern entry separata per side-effect file (tsup.config.ts entry: ['src/index.ts', 'src/augment.ts']) per garantire emit di dist/augment.js"
     - "Pattern sideEffects array multi-pattern per double-safety contro tree-shaker aggressivi (./dist/X.js + ./src/X.ts + glob)"
@@ -45,16 +45,16 @@ key-files:
 
 key-decisions:
   - "**Rule 1 fix (deviation from PLAN strict reading)**: rimossi i 3 field placeholder `unknown` da `BrokerConfig` di core per ABILITARE il declaration merging F2 — TS rifiuta il merging che narrow `unknown` a tipo specifico (TS2717). La PLAN richiedeva 'NESSUNA modifica a packages/core/src/' ma D-56 richiede esplicitamente declaration merging — i due vincoli sono in conflitto tecnico. Risolto seguendo D-56 intent (modifica minima 60 insert / 50 delete a config.ts/public-factory.ts/test). Pattern coerente con architettura: F1 placeholder erano *intenzionalmente* per F2-F6, ora migrati alla forma corretta (augmentation dai package downstream)."
-  - "**`v.looseObject` per BrokerConfigSchema**: Valibot `v.object` strippa property non dichiarate; `v.looseObject` le preserva come pass-through. Necessario perché le sezioni F2-F6 sono ora augmented dai package downstream e devono passare il validator F1 senza essere stripped. I package downstream (es. @sembridge/mapper plan 02-10) faranno validation strutturale interna delle proprie sezioni quando verranno wirate."
+  - "**`v.looseObject` per BrokerConfigSchema**: Valibot `v.object` strippa property non dichiarate; `v.looseObject` le preserva come pass-through. Necessario perché le sezioni F2-F6 sono ora augmented dai package downstream e devono passare il validator F1 senza essere stripped. I package downstream (es. @gluezero/mapper plan 02-10) faranno validation strutturale interna delle proprie sezioni quando verranno wirate."
   - "**`PipelineStep` non augmentabile via declaration merging**: `PipelineStep` di core è un `type` alias literal union, NON un'interface. TS non supporta declaration merging di type alias. Soluzione adottata (D-50, T-02-09-05): export di `F2PipelineStep` come literal union additive separato dal barrel mapper. Il consumer che dichiara tap F2 importa il super-set come `type AllSteps = PipelineStep | F2PipelineStep`. Documentato in JSDoc del barrel + threat model."
-  - "**Tree-shaking del side-effect import**: tsup con `treeshake: true` rimuove `import './augment'` da dist/index.js anche con sideEffects array configurato (warning eliminata ma import comunque rimosso). Mitigation primaria: re-export di `__augmentLoaded` dal barrel — il bundler vede un export reale e preserva l'import. Mitigation secondaria: sideEffects array con 4 patterns per double-safety in ambienti consumer (Vite/webpack/esbuild). Mitigation terziaria: dist/augment.js è generato come entry separata (utenti possono `import '@sembridge/mapper/augment'` esplicitamente se necessario)."
+  - "**Tree-shaking del side-effect import**: tsup con `treeshake: true` rimuove `import './augment'` da dist/index.js anche con sideEffects array configurato (warning eliminata ma import comunque rimosso). Mitigation primaria: re-export di `__augmentLoaded` dal barrel — il bundler vede un export reale e preserva l'import. Mitigation secondaria: sideEffects array con 4 patterns per double-safety in ambienti consumer (Vite/webpack/esbuild). Mitigation terziaria: dist/augment.js è generato come entry separata (utenti possono `import '@gluezero/mapper/augment'` esplicitamente se necessario)."
   - "**TDD pattern RED→GREEN per Task 1**: 1 commit RED (test) + 1 commit GREEN (source) — coerente con pattern plan 02-03/04/05/06. Task 2 (barrel completion) NON è TDD perché: (a) il barrel è un file di re-export senza logica testabile; (b) il test di smoke import del bundle è eseguito alla fine in verification."
-  - "**`__augmentLoaded` const esportato**: serve a 3 scopi (1) preserve side-effect import dal tree-shake del bundler che processa il barrel, (2) audit-able via grep nei dist files, (3) testabile a runtime (verifica che import `@sembridge/mapper` carica anche augment)"
+  - "**`__augmentLoaded` const esportato**: serve a 3 scopi (1) preserve side-effect import dal tree-shake del bundler che processa il barrel, (2) audit-able via grep nei dist files, (3) testabile a runtime (verifica che import `@gluezero/mapper` carica anche augment)"
 
 patterns-established:
-  - "Pattern declaration merging additive per estendere @sembridge/core dai package downstream — applicabile a F3 (RoutingConfig, RoutingPluginDescriptor), F4 (RealtimeChannelConfig), F5 (WorkerConfig, WorkerPluginDescriptor), F6 (CacheConfig)"
+  - "Pattern declaration merging additive per estendere @gluezero/core dai package downstream — applicabile a F3 (RoutingConfig, RoutingPluginDescriptor), F4 (RealtimeChannelConfig), F5 (WorkerConfig, WorkerPluginDescriptor), F6 (CacheConfig)"
   - "Pattern trade-off tra D-49 (no modify core) e D-56 (declaration merging dai downstream): la modifica a core è ammissibile quando è di natura 'rimozione di placeholder fittizio per abilitare la sostituzione tipata' — pattern non-breaking se le sezioni F1 erano intenzionalmente unused"
-  - "Pattern barrel completo per package F2+ con side-effect import + runtime exports + type exports + JSDoc IntelliSense — riusabile per @sembridge/{routing, gateway, worker, cache, devtools}"
+  - "Pattern barrel completo per package F2+ con side-effect import + runtime exports + type exports + JSDoc IntelliSense — riusabile per @gluezero/{routing, gateway, worker, cache, devtools}"
   - "Pattern entry separata in tsup.config.ts per file side-effect + sideEffects array multi-pattern + re-export di marker const dal barrel — riusabile per future augmentations F3-F6"
   - "Pattern F2PipelineStep additive literal union come workaround a TS limitazione type alias merging — F3 farà F3PipelineStep, F4 farà F4PipelineStep, ecc. F6 potrà refactor PipelineStep da type alias a interface union per veri declaration merging"
 
@@ -72,7 +72,7 @@ completed: 2026-04-30
 
 # Phase 2 Plan 09: Augment + Barrel Public API Summary
 
-**Implementato `augment.ts` (TS declaration merging) + barrel `src/index.ts` completo per `@sembridge/mapper`. Chiude i placeholder F1 `unknown` su `BrokerConfig` (D-56) e `PluginDescriptor` (D-57) abilitando il typing F2 sui 5 nuovi field. Surface pubblica del package consolidata: 9 runtime exports + 16+ tipi + `F2PipelineStep`. Applicato Rule 1 fix per rimuovere placeholder `unknown` da core (richiesto tecnicamente da TS per abilitare il merging — strict reading di D-49 in conflitto con D-56 intent, risolto seguendo D-56). Build emette `dist/augment.js` come entry separata (214 B) + sideEffects array multi-pattern per tree-shake mitigation T-02-09-01. Pronto per consumption dal Broker wrapper plan 02-10.**
+**Implementato `augment.ts` (TS declaration merging) + barrel `src/index.ts` completo per `@gluezero/mapper`. Chiude i placeholder F1 `unknown` su `BrokerConfig` (D-56) e `PluginDescriptor` (D-57) abilitando il typing F2 sui 5 nuovi field. Surface pubblica del package consolidata: 9 runtime exports + 16+ tipi + `F2PipelineStep`. Applicato Rule 1 fix per rimuovere placeholder `unknown` da core (richiesto tecnicamente da TS per abilitare il merging — strict reading di D-49 in conflitto con D-56 intent, risolto seguendo D-56). Build emette `dist/augment.js` come entry separata (214 B) + sideEffects array multi-pattern per tree-shake mitigation T-02-09-01. Pronto per consumption dal Broker wrapper plan 02-10.**
 
 ## Performance
 
@@ -85,8 +85,8 @@ completed: 2026-04-30
 
 ## Accomplishments
 
-- **D-57 chiusura**: `augment.ts` aggiunge `inputMap?: InputMap`, `outputMap?: OutputMap`, `canonicalSchemaId?: CanonicalSchemaId` al `PluginDescriptor` di `@sembridge/core` via TS declaration merging. Il placeholder F1 commento `// F2 will add: inputMap, outputMap, requires, provides` (plugin.ts:48-51) è ora effettivamente chiuso.
-- **D-56 chiusura**: `augment.ts` aggiunge `canonicalModel?`, `aliasRegistry?`, `transforms?` al `BrokerConfig` di `@sembridge/core` via TS declaration merging — con tipi specifici (NON più `unknown`).
+- **D-57 chiusura**: `augment.ts` aggiunge `inputMap?: InputMap`, `outputMap?: OutputMap`, `canonicalSchemaId?: CanonicalSchemaId` al `PluginDescriptor` di `@gluezero/core` via TS declaration merging. Il placeholder F1 commento `// F2 will add: inputMap, outputMap, requires, provides` (plugin.ts:48-51) è ora effettivamente chiuso.
+- **D-56 chiusura**: `augment.ts` aggiunge `canonicalModel?`, `aliasRegistry?`, `transforms?` al `BrokerConfig` di `@gluezero/core` via TS declaration merging — con tipi specifici (NON più `unknown`).
 - **Rule 1 fix**: rimossi i 3 placeholder `unknown` da `BrokerConfig` di core perché TS non permette declaration merging che narrow `unknown` a tipo specifico (TS2717). Il `BrokerConfigSchema` Valibot ora usa `v.looseObject` per pass-through delle sezioni F2-F6. Vedi sezione **Deviations from Plan** per dettagli.
 - **D-50 (PipelineStep)**: limitazione TS su declaration merging di type alias documentata + workaround `F2PipelineStep` literal union additive esposto dal barrel mapper. Il consumer che dichiara tap F2 fa `type AllSteps = PipelineStep | F2PipelineStep`.
 - **Barrel completo**: 9 runtime exports + 16+ tipi pubblici + `F2PipelineStep`. Sostituisce skeleton plan 02-01.
@@ -117,7 +117,7 @@ completed: 2026-04-30
 3. **Task 1 GREEN — `2b3c521`** `feat(02-09): implementa augment.ts (TS declaration merging — D-49/D-56/D-57)`
    - `packages/mapper/src/augment.ts` (109 LOC) — declaration merging completo
    - 6/6 test passing (compile-time PluginDescriptor/BrokerConfig + runtime __augmentLoaded + backward-compat F1)
-4. **Task 2 — `ef00b46`** `feat(02-09): completa barrel @sembridge/mapper con surface F2 + sideEffects fix`
+4. **Task 2 — `ef00b46`** `feat(02-09): completa barrel @gluezero/mapper con surface F2 + sideEffects fix`
    - `packages/mapper/src/index.ts`: skeleton plan 02-01 → barrel completo (128 LOC)
    - `packages/mapper/tsup.config.ts`: entry list `['src/index.ts', 'src/augment.ts']`
    - `packages/mapper/package.json`: sideEffects array esteso a 4 patterns
@@ -133,7 +133,7 @@ import type { CanonicalSchema, CanonicalSchemaId } from './types/canonical-schem
 import type { InputMap, OutputMap } from './types/input-output-map'
 import type { TransformFn } from './types/transform'
 
-declare module '@sembridge/core' {
+declare module '@gluezero/core' {
   interface PluginDescriptor {
     readonly inputMap?: InputMap
     readonly outputMap?: OutputMap
@@ -216,13 +216,13 @@ Test `accepts F2-F6 placeholder sections as unknown via looseObject pass-through
 
 | Comando | Risultato |
 |---------|-----------|
-| `pnpm --filter @sembridge/mapper test augment` (RED, post commit `bb0eac5`) | FAIL atteso: `Failed to resolve import "./augment"` |
-| `pnpm --filter @sembridge/mapper test augment` (GREEN, post commit `2b3c521`) | Exit 0: **`Test Files 1 passed (1) | Tests 6 passed (6)`** Duration 342ms |
-| `pnpm --filter @sembridge/mapper test` (full mapper, post commit `ef00b46`) | Exit 0: **`Test Files 7 passed (7) | Tests 93 passed (93)`** (11 canonical-registry + 16 alias-registry + 14 transform-pipeline + 10 valibot-adapter + 26 mapper-engine + 10 inspector + 6 augment) |
-| `pnpm --filter @sembridge/mapper typecheck` | Exit 0 (declaration merging risolto correttamente) |
-| `pnpm --filter @sembridge/mapper build` | Exit 0: dist/index.js (27.79 KB) + dist/augment.js (214 B) + dist/index.d.ts (32.93 KB) + dist/augment.d.ts (88 B) + dist/augment-CLfzFiyy.d.ts (9.43 KB shared types) |
-| `pnpm --filter @sembridge/core test` (regression F1) | Exit 0: **24 file/248 test passing** (no regression) |
-| `pnpm --filter @sembridge/core typecheck` | Exit 0 |
+| `pnpm --filter @gluezero/mapper test augment` (RED, post commit `bb0eac5`) | FAIL atteso: `Failed to resolve import "./augment"` |
+| `pnpm --filter @gluezero/mapper test augment` (GREEN, post commit `2b3c521`) | Exit 0: **`Test Files 1 passed (1) | Tests 6 passed (6)`** Duration 342ms |
+| `pnpm --filter @gluezero/mapper test` (full mapper, post commit `ef00b46`) | Exit 0: **`Test Files 7 passed (7) | Tests 93 passed (93)`** (11 canonical-registry + 16 alias-registry + 14 transform-pipeline + 10 valibot-adapter + 26 mapper-engine + 10 inspector + 6 augment) |
+| `pnpm --filter @gluezero/mapper typecheck` | Exit 0 (declaration merging risolto correttamente) |
+| `pnpm --filter @gluezero/mapper build` | Exit 0: dist/index.js (27.79 KB) + dist/augment.js (214 B) + dist/index.d.ts (32.93 KB) + dist/augment.d.ts (88 B) + dist/augment-CLfzFiyy.d.ts (9.43 KB shared types) |
+| `pnpm --filter @gluezero/core test` (regression F1) | Exit 0: **24 file/248 test passing** (no regression) |
+| `pnpm --filter @gluezero/core typecheck` | Exit 0 |
 | `pnpm typecheck` (workspace) | Exit 0 (core + mapper) |
 | Smoke import bundle | `Exports: AliasRegistry, CanonicalRegistry, MapperEngine, MappingInspector, TransformPipeline, __augmentLoaded, isMappingErrorCode, valibotAdapter, wrapTap` (9 runtime exports) |
 | `pnpm exec biome check packages/mapper/src/{augment.ts,augment.test.ts,index.ts} packages/mapper/tsup.config.ts` | Exit 0 (only infos, no errors) |
@@ -233,10 +233,10 @@ Test `accepts F2-F6 placeholder sections as unknown via looseObject pass-through
 
 | Threat ID | Disposition | Mitigation in commit |
 |-----------|-------------|----------------------|
-| T-02-09-01 (Tampering — tree-shaker elimina dist/augment.js) | mitigate (3 layer) | (1) Re-export `__augmentLoaded` dal barrel forza il bundler a preservare l'import (verified: `dist/index.js` contiene `var __augmentLoaded = true; export { ..., __augmentLoaded, ... }`); (2) sideEffects array con 4 patterns nel package.json per consumer-side bundler (Vite/webpack/esbuild); (3) `dist/augment.js` come entry separata (utenti possono `import '@sembridge/mapper/augment'` esplicitamente). |
-| T-02-09-02 (Information disclosure — augment espone inputMap/outputMap a consumer non-mapper) | accept | I field augmented sono `readonly` opzionali, default `undefined`. Consumer F1-only che importano solo `@sembridge/core` NON sono impattati. Consumer che importano `@sembridge/mapper` (via barrel) ottengono i tipi estesi automaticamente — comportamento intenzionale per typed config. |
+| T-02-09-01 (Tampering — tree-shaker elimina dist/augment.js) | mitigate (3 layer) | (1) Re-export `__augmentLoaded` dal barrel forza il bundler a preservare l'import (verified: `dist/index.js` contiene `var __augmentLoaded = true; export { ..., __augmentLoaded, ... }`); (2) sideEffects array con 4 patterns nel package.json per consumer-side bundler (Vite/webpack/esbuild); (3) `dist/augment.js` come entry separata (utenti possono `import '@gluezero/mapper/augment'` esplicitamente). |
+| T-02-09-02 (Information disclosure — augment espone inputMap/outputMap a consumer non-mapper) | accept | I field augmented sono `readonly` opzionali, default `undefined`. Consumer F1-only che importano solo `@gluezero/core` NON sono impattati. Consumer che importano `@gluezero/mapper` (via barrel) ottengono i tipi estesi automaticamente — comportamento intenzionale per typed config. |
 | T-02-09-03 (Tampering — augment estende interface non-additive, breaking F1) | mitigate | TS interface merging è additive per costruzione. F1 PluginDescriptor con i suoi 7 field (id, version, displayName, onRegister, onMount, onUnmount, onDestroy) rimane intatto; F2 aggiunge SOLO 3 field opzionali readonly. Test 4 (PluginDescriptor minimal) e Test 5 (BrokerConfig minimal) verificano backward-compat. |
-| T-02-09-04 (Repudiation — augment scope ambiguous, chi possiede l'augmentation?) | mitigate | JSDoc esplicita "F2 augmentation (D-57)" + reference D-56/D-57 + reference ai placeholder F1 (`// F2 will add: inputMap, outputMap` da plugin.ts:48-51) nel header file augment.ts. Audit-able via grep `'declare module \'@sembridge/core\''`. |
+| T-02-09-04 (Repudiation — augment scope ambiguous, chi possiede l'augmentation?) | mitigate | JSDoc esplicita "F2 augmentation (D-57)" + reference D-56/D-57 + reference ai placeholder F1 (`// F2 will add: inputMap, outputMap` da plugin.ts:48-51) nel header file augment.ts. Audit-able via grep `'declare module \'@gluezero/core\''`. |
 | T-02-09-05 (DoS — PipelineStep type alias non extendibile causa cast workarounds) | accept | Documentato: `PipelineStep` è type alias literal union — TS non permette declaration merging. Soluzione: `F2PipelineStep` literal union additive separato. Consumer che usa tap F2 fa `type AllSteps = PipelineStep | F2PipelineStep`. F6 potrà refactor `PipelineStep` da type alias a interface union per veri declaration merging (rimanderebbe questa workaround). |
 
 ## Deviations from Plan
@@ -245,26 +245,26 @@ Test `accepts F2-F6 placeholder sections as unknown via looseObject pass-through
 
 - **Found during:** Task 1 GREEN typecheck dopo creazione di augment.ts
 - **Issue:** TypeScript rifiuta il declaration merging che narrow un field già dichiarato come `unknown` a tipo specifico. Errore: `TS2717: Subsequent property declarations must have the same type. Property 'canonicalModel' must be of type 'unknown', but here has type '{ readonly schemas?: readonly CanonicalSchema[]; } | undefined'.` (e analoghi per `aliasRegistry`, `transforms`).
-- **Why it's a bug:** Il PLAN richiede esplicitamente "BrokerConfig esteso: canonicalModel?: { schemas?: CanonicalSchema[] }, ..." via declaration merging (must-haves) MA la stessa PLAN dichiara "Vincolo D-49: NESSUNA modifica a packages/core/src/". Questi due vincoli sono **tecnicamente in conflitto** — TS non permette il merging richiesto se i field placeholder F1 esistono come `unknown`. Il CONTEXT D-56 (autoritativo per la fase) dichiara: "il package @sembridge/core (plan 03) ha BrokerConfig con sezioni canonicalModel/aliasRegistry/transforms tipate unknown. F2 fornisce i tipi ... e li wire-in al BrokerConfig via TS declaration merging". Questo intent NON è realizzabile senza modificare core.
+- **Why it's a bug:** Il PLAN richiede esplicitamente "BrokerConfig esteso: canonicalModel?: { schemas?: CanonicalSchema[] }, ..." via declaration merging (must-haves) MA la stessa PLAN dichiara "Vincolo D-49: NESSUNA modifica a packages/core/src/". Questi due vincoli sono **tecnicamente in conflitto** — TS non permette il merging richiesto se i field placeholder F1 esistono come `unknown`. Il CONTEXT D-56 (autoritativo per la fase) dichiara: "il package @gluezero/core (plan 03) ha BrokerConfig con sezioni canonicalModel/aliasRegistry/transforms tipate unknown. F2 fornisce i tipi ... e li wire-in al BrokerConfig via TS declaration merging". Questo intent NON è realizzabile senza modificare core.
 - **Fix:** Modifica minimale a 3 file di core (60 insert / 50 delete totali):
   - `packages/core/src/types/config.ts`: rimossi i 7 placeholder `unknown` field (`canonicalModel`, `aliasRegistry`, `transforms`, `routes`, `transport`, `workers`, `cache`); mantenuto `topicSchemas` (V2 deferred). JSDoc aggiornata per spiegare il pattern.
   - `packages/core/src/public-factory.ts`: `BrokerConfigSchema` cambiato da `v.object` a `v.looseObject` per pass-through delle sezioni F2-F6 augmented (i package downstream le valideranno strutturalmente al wiring).
   - `packages/core/src/public-factory.test.ts`: test 'accepts F2-F6 placeholder sections' aggiornato per usare type assertion `Parameters<typeof createBroker>[0]` (necessario perché senza augment quei field non sono nel tipo F1).
 - **Files modified:** 3 file core (config.ts, public-factory.ts, public-factory.test.ts)
 - **Verification:**
-  - `pnpm --filter @sembridge/core test`: 248/248 passing (no regression)
-  - `pnpm --filter @sembridge/core typecheck`: exit 0
-  - `pnpm --filter @sembridge/core build`: dist/index.d.ts riflette nuova shape
-  - `pnpm --filter @sembridge/mapper typecheck` (post-fix): exit 0 (declaration merging ora funziona)
+  - `pnpm --filter @gluezero/core test`: 248/248 passing (no regression)
+  - `pnpm --filter @gluezero/core typecheck`: exit 0
+  - `pnpm --filter @gluezero/core build`: dist/index.d.ts riflette nuova shape
+  - `pnpm --filter @gluezero/mapper typecheck` (post-fix): exit 0 (declaration merging ora funziona)
 - **Commit:** `3a2840b` `fix(02-09): rimuove placeholder unknown da BrokerConfig per abilitare TS declaration merging F2`
 
 **2. [Rule 1 - Bug] Tree-shake del side-effect import + sideEffects array iniziale incompleto**
 
-- **Found during:** Task 2 build verification (`pnpm --filter @sembridge/mapper build`)
+- **Found during:** Task 2 build verification (`pnpm --filter @gluezero/mapper build`)
 - **Issue:** tsup con `treeshake: true` rimuove `import './augment'` da `dist/index.js` perché:
   1. Il file augment.ts ha solo `declare module` (compile-time) + 1 export const (`__augmentLoaded`) — semanticamente "side-effect free" agli occhi del bundler
   2. L'iniziale `sideEffects: ["./dist/augment.js"]` matcha solo il path dist, ma il bundler durante la build vede `src/augment.ts` (path source). Warning emesso: "Ignoring this import because src/augment.ts was marked as having no side effects".
-  3. Risultato: `dist/index.js` NON contiene `import './augment.js'` né `var __augmentLoaded` — il consumer che importa `@sembridge/mapper` NON carica l'augment, e il TS declaration merging NON è attivo.
+  3. Risultato: `dist/index.js` NON contiene `import './augment.js'` né `var __augmentLoaded` — il consumer che importa `@gluezero/mapper` NON carica l'augment, e il TS declaration merging NON è attivo.
 - **Why it's a bug:** L'acceptance criteria della PLAN dice esplicitamente "Build mapper produce `dist/augment.js` (presente in `sideEffects` array di package.json)" + il barrel deve "import per side-effect" l'augment. Entrambi i requirement non erano soddisfatti dal setup iniziale.
 - **Fix:** Tre cambiamenti combinati:
   1. `tsup.config.ts`: aggiunto `'src/augment.ts'` come entry separata → emette `dist/augment.js` (214 B) come file distinto.
@@ -299,7 +299,7 @@ Plan `type: execute` con Task 1 `tdd="true"` e Task 2 `tdd="false"` (barrel comp
 **GREEN required Rule 1 fix prima di poter passare:** primo run del typecheck dopo creazione di `augment.ts` ha fallito con TS2717 (vedi Deviations 1). Fix applicato in commit `3a2840b` (separato dal commit GREEN feat per leggibilità del git log e per documentare chiaramente il trade-off tecnico). Re-run: tutti i 6 test augment passing + typecheck exit 0.
 
 **Task 2 non-TDD pattern:** il barrel è un file di re-export senza logica testabile. La verification è eseguita via:
-1. Build: `pnpm --filter @sembridge/mapper build` produce dist/index.js + dist/augment.js
+1. Build: `pnpm --filter @gluezero/mapper build` produce dist/index.js + dist/augment.js
 2. Smoke import: `node -e "import('./dist/index.js').then(m => console.log(Object.keys(m)))"` mostra 9 runtime exports
 3. Workspace typecheck: `pnpm typecheck` esce 0 (no regression cross-package)
 
@@ -325,17 +325,17 @@ Nessun auth gate — task interamente automatico (file creation + typecheck/test
   - Barrel ri-esporta tipi: tutti i tipi pubblici da ./types + MapperPluginDescriptor (✅)
   - TS typecheck conferma `PluginDescriptor.inputMap` typed come `InputMap | undefined` (✅, Test 2 verifica)
   - Build mapper produce dist/augment.js presente in sideEffects (✅)
-- ✅ **Ready:** plan 02-10 (broker wrapper) può importare da `@sembridge/mapper`:
+- ✅ **Ready:** plan 02-10 (broker wrapper) può importare da `@gluezero/mapper`:
   ```ts
   import {
     AliasRegistry, CanonicalRegistry, TransformPipeline,
     MapperEngine, MappingInspector, wrapTap, valibotAdapter,
     type MapperEngineOptions, type F2PipelineStep,
-  } from '@sembridge/mapper'
+  } from '@gluezero/mapper'
   ```
   Tutti i tipi pubblici sono esposti. Il `PluginDescriptor` di core è auto-augmentato dopo il side-effect import (transitive via barrel).
 - ⏳ **Pending:** plan 02-10 dovrà istanziare il `MapperEngine` come dipendenza, intercettare `registerPlugin` per chiamare `engine.compileMappings(descriptor)` post-`onRegister`, intercettare `subscribe` per applicare `engine.applyInputMap` per ciascun consumer (passo 11/12), wired la cascade `engine.unregisterPluginMappings(pluginId)` durante `unregisterPlugin`. Inoltre dovrà istanziare `MappingInspector` + comporlo via `wrapTap` col tap utente.
-- ⏳ **Pending:** plan 02-12 (final gate F2) misurerà coverage v8 ≥ 90% sui file `@sembridge/mapper/` inclusi augment.ts (atteso ~100% — solo dichiarazioni + 1 const).
+- ⏳ **Pending:** plan 02-12 (final gate F2) misurerà coverage v8 ≥ 90% sui file `@gluezero/mapper/` inclusi augment.ts (atteso ~100% — solo dichiarazioni + 1 const).
 
 ## Self-Check: PASSED
 

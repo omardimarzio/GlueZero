@@ -18,7 +18,7 @@ provides:
   - "packages/mapper/src/__integration__/plugin-cleanup-mapper.integration.test.ts (4 test) — LIFE-02 ext F2 cascade + isolation A vs B + re-publish passthrough + cascade swallow"
   - "Phase 2 ROADMAP success criteria #1-#5 tutti coperti end-to-end via integration test"
   - "5 integration test files / 20 test totali — TUTTI passing"
-  - "14 test file totali nel package @sembridge/mapper / 136 test passing (era 9/116 baseline)"
+  - "14 test file totali nel package @gluezero/mapper / 136 test passing (era 9/116 baseline)"
   - "0 modifiche a packages/core/ runtime (D-49 confermato — 248/248 core test invariati)"
   - "0 modifiche a packages/mapper/ runtime (solo file in test-utils/ + __integration__/)"
 affects: [02-12-final-gate, F3-routing, F4-realtime, F5-worker, F6-cache-devtools]
@@ -117,9 +117,9 @@ completed: 2026-04-30
   - Test 2 — Cascade isolation: unregister plugin A NON tocca scoped alias/transforms/compiled di plugin B (il counter si decrementa SOLO delle risorse owned da A).
   - Test 3 — Re-publish post-unregister con stesso sourceId è passthrough (mapper.hasCompiled=false → bus.publish diretto col payload originale, NON canonicalizzato).
   - Test 4 — T-02-10-03: cascade swallow per step indipendente — unregister di plugin senza risorse mapper non throw.
-- **D-49 strict confermato runtime-level**: `pnpm -F @sembridge/core test` → 248/248 invariati. Nessun packages/core/ tocco.
+- **D-49 strict confermato runtime-level**: `pnpm -F @gluezero/core test` → 248/248 invariati. Nessun packages/core/ tocco.
 - **Coverage suite mapper**: da 9/116 (baseline plan 02-10) a 14/136 (+5 file +20 test). I 5 integration test files coprono i 5 success criteria F2 ROADMAP 1:1.
-- **Auto-fix Biome applicato post-implementazione**: organizeImports (`import type { BrokerEvent } from '@sembridge/core'` riordinato prima di vitest) + `Record<string, unknown>[]` notation (vs `Array<Record<string, unknown>>`). Cosmetico, semantica identica.
+- **Auto-fix Biome applicato post-implementazione**: organizeImports (`import type { BrokerEvent } from '@gluezero/core'` riordinato prima di vitest) + `Record<string, unknown>[]` notation (vs `Array<Record<string, unknown>>`). Cosmetico, semantica identica.
 
 ## ROADMAP Success Criteria Coverage
 
@@ -201,11 +201,11 @@ Esporta:
 
 | Comando | Risultato |
 |---------|-----------|
-| `pnpm --filter @sembridge/mapper test weather-scenario` (post Task 1 commit `eb923fe`) | Exit 0: **`Test Files 1 passed (1) | Tests 4 passed (4)`** Duration 369ms |
-| `pnpm --filter @sembridge/mapper test __integration__` (post Task 2 commit `585f266`) | Exit 0: **`Test Files 5 passed (5) | Tests 20 passed (20)`** Duration 474ms |
-| `pnpm --filter @sembridge/mapper test` (full mapper suite) | Exit 0: **`Test Files 14 passed (14) | Tests 136 passed (136)`** (era 9/116 baseline plan 02-10) |
-| `pnpm --filter @sembridge/mapper typecheck` | Exit 0 (isolatedDeclarations enforcement OK; ogni metodo pubblico di MapperHarness ha return type esplicito) |
-| `pnpm --filter @sembridge/core test` (regression D-49 check) | Exit 0: **24 file/248 test passing** (no regression — D-49 confermato) |
+| `pnpm --filter @gluezero/mapper test weather-scenario` (post Task 1 commit `eb923fe`) | Exit 0: **`Test Files 1 passed (1) | Tests 4 passed (4)`** Duration 369ms |
+| `pnpm --filter @gluezero/mapper test __integration__` (post Task 2 commit `585f266`) | Exit 0: **`Test Files 5 passed (5) | Tests 20 passed (20)`** Duration 474ms |
+| `pnpm --filter @gluezero/mapper test` (full mapper suite) | Exit 0: **`Test Files 14 passed (14) | Tests 136 passed (136)`** (era 9/116 baseline plan 02-10) |
+| `pnpm --filter @gluezero/mapper typecheck` | Exit 0 (isolatedDeclarations enforcement OK; ogni metodo pubblico di MapperHarness ha return type esplicito) |
+| `pnpm --filter @gluezero/core test` (regression D-49 check) | Exit 0: **24 file/248 test passing** (no regression — D-49 confermato) |
 | `pnpm exec biome check packages/mapper/src/__integration__/ packages/mapper/src/test-utils/` | Exit 0 (no errors after auto-fix organizeImports + array notation) |
 | Audit `git diff HEAD~2 -- packages/core/` | 0 lines diff — D-49 strict confermato |
 | Audit `git diff HEAD~2 -- packages/mapper/src/*.ts` (escludendo test-utils/__integration__) | 0 lines diff — runtime mapper non modificato |
@@ -230,7 +230,7 @@ Esporta:
 - **Analysis:** Questo NON è un bug del MapperEngine — è behavior intenzionale F2 V1 documentato in plan 02-07: il consumer dichiara esplicitamente cosa vuole nel canonical via outputMap (T-02-07-06 partial mapping = whitelist, NON injection di tutti i field schema-level). La semantica documentata è: `MappingRule.default` (rule-level) viene applicato quando `source` è assente; lo schema-level `FieldDescriptor.default` esiste come hint per V2 ma NON viene auto-iniettato in V1. Coerente con D-43.
 - **Fix:** Test 4 modificato per dichiarare `urgency: { source: 'urg', default: 'normal' }` nell'outputMap (rule-level MAP-06) invece di affidarsi allo schema-level. Il payload locale omette il source `urg` → il default rule-level si applica. Test verde al re-run.
 - **Files modified:** `packages/mapper/src/__integration__/weather-scenario.integration.test.ts` (Test 4 rewrite)
-- **Verification:** `pnpm -F @sembridge/mapper test weather-scenario` → 4/4 passing
+- **Verification:** `pnpm -F @gluezero/mapper test weather-scenario` → 4/4 passing
 - **Commit:** `eb923fe` (Task 1 — fix incluso nel commit Task 1 per leggibilità)
 
 **2. [Style — Test count 5 invece di 2 in inspector-snapshot]**
@@ -281,7 +281,7 @@ Esporta:
 
 **Note tecniche minori (non deviazioni):**
 
-1. **Auto-fix Biome `organizeImports`** — In cycle-detection e mapping-error-event: `import type { BrokerEvent } from '@sembridge/core'` riordinato alfabeticamente prima di `import { describe, expect, it } from 'vitest'`. Cosmetico, semantica identica.
+1. **Auto-fix Biome `organizeImports`** — In cycle-detection e mapping-error-event: `import type { BrokerEvent } from '@gluezero/core'` riordinato alfabeticamente prima di `import { describe, expect, it } from 'vitest'`. Cosmetico, semantica identica.
 2. **Auto-fix Biome `useArrayLiterals`** — In weather-scenario: `Array<Record<string, unknown>>` → `Record<string, unknown>[]`. Cosmetico, semantica identica.
 3. **Header file italiano + JSDoc inglese-misto** — Coerente con `02-PATTERNS.md §1.1`. Pattern usato in tutti i plan 02-XX precedenti.
 
@@ -309,8 +309,8 @@ Nessun auth gate — task interamente automatico (file creation + typecheck/test
 - ✅ **Closed:** TEST-02 plugin↔plugin con mapping diverso — coverage via weather-scenario test 1 + test 2 (multi-consumer).
 - ✅ **Closed:** LIFE-02 ext F2 cascade — coverage via plugin-cleanup-mapper test 1-4.
 - ✅ **Ready:** plan 02-12 (Final gate F2) può:
-  - Misurare coverage v8 globale del package @sembridge/mapper (D-55 — atteso ≥ 90% sui file source)
-  - Eseguire CI gates extension a @sembridge/mapper (publint, attw, size-limit)
+  - Misurare coverage v8 globale del package @gluezero/mapper (D-55 — atteso ≥ 90% sui file source)
+  - Eseguire CI gates extension a @gluezero/mapper (publint, attw, size-limit)
   - Aggiungere DOC-03 (canonical model + mapper README + JSDoc full coverage)
   - Eseguire eventuali robustness test (storm, payload large, edge case) — opzionale
 - ⏳ **Pending:** Tap wiring per F2 step (event.source.resolved/event.mapped.canonical/etc.) deferred a F6 quando `inspector.recordSnapshot` sarà popolato. Per ora il tap dell'harness vede SOLO i 5 step F1.

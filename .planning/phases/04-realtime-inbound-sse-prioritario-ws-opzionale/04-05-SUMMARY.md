@@ -5,7 +5,7 @@ subsystem: gateway/sse-ws
 tags: [sse, eventsource, last-event-id, backpressure, custom-event-types, heartbeat, tdd, D-101, D-104, D-105, D-109, D-113, D-115, RT-01, RT-04, RT-06, RT-07, W-4, B-5]
 dependency_graph:
   requires:
-    - "@sembridge/gateway/sse-ws bootstrap (Plan 04-01) — RealtimeChannelDef + tipi"
+    - "@gluezero/gateway/sse-ws bootstrap (Plan 04-01) — RealtimeChannelDef + tipi"
     - "createReconnectStrategy factory (Plan 04-03) — initialMode 'sse' + per-channel override"
     - "createBrokerError + nanoid (F1 core)"
     - "BackpressureStrategy interface (F3 — riuso 1:1 D-115)"
@@ -117,7 +117,7 @@ export class SseAdapter {
 ### Test suite (14/14 PASS)
 
 ```
-> @sembridge/gateway test src/sse-ws/sse-adapter.test.ts --run
+> @gluezero/gateway test src/sse-ws/sse-adapter.test.ts --run
  RUN  v4.1.5
  Test Files  1 passed (1)
       Tests  14 passed (14)
@@ -334,8 +334,8 @@ const orders = MockEventSource.byChannelName.get('orders')  // deterministico
 - [x] File contiene `checkFreshness(staleTimeoutMs: number): boolean` method
 - [x] File NON contiene `Authorization` literal (anti-AP-2 check)
 - [x] File `sse-adapter.test.ts` contiene almeno 12 test (effettivi: 14)
-- [x] `pnpm --filter @sembridge/gateway test src/sse-ws/sse-adapter.test.ts` exit 0 (14/14 PASS)
-- [x] `pnpm --filter @sembridge/gateway exec tsc --noEmit` exit 0 (clean)
+- [x] `pnpm --filter @gluezero/gateway test src/sse-ws/sse-adapter.test.ts` exit 0 (14/14 PASS)
+- [x] `pnpm --filter @gluezero/gateway exec tsc --noEmit` exit 0 (clean)
 - [x] Cronologia git mostra ≥2 commit 04-05 (RED + GREEN); effettivi: 3 (helper + RED + GREEN)
 - [x] MockEventSource.byChannelName implementato (B-NEW-2 fix)
 

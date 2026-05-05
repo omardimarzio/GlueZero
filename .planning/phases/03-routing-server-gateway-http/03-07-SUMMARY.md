@@ -14,13 +14,13 @@ tags:
 dependency-graph:
   requires:
     - phase: 03-02
-      provides: "@sembridge/routing types (RouteOutcome ok|error discriminated)"
+      provides: "@gluezero/routing types (RouteOutcome ok|error discriminated)"
     - phase: 03-05
       provides: "RouteResolver + CompiledRoute interface (definition, ownerId, priority)"
     - phase: 03-06
       provides: "RouteExecutor produce RouteOutcome consumato dal collector"
     - phase: 01
-      provides: "@sembridge/core (BrokerError, BrokerEvent, EventTap, PipelineStep, PipelineSnapshot)"
+      provides: "@gluezero/core (BrokerError, BrokerEvent, EventTap, PipelineStep, PipelineSnapshot)"
   provides:
     - "OutcomeCollector class con collect + recursion guard (Set<eventId+suffix>) + topic resolution"
     - "OutcomeCollectorDeps interface (publishFn DI + tap opzionale)"
@@ -52,7 +52,7 @@ key-files:
 key-decisions:
   - "**Recursion guard chiave `eventId::suffix`** invece di solo `eventId` (replica F2 pattern `sourceTopic::step`): permette di pubblicare DUE eventi distinti per lo stesso eventId quando uno è 'loaded' e un altro è 'failed' (caso impossibile in pratica ma garantisce robustezza). Blocca solo la re-entrata sul medesimo outcome — semantic identica al guard F2."
   - "**Sanitize esclude TRE campi** (originalError, cause, stack): replica esatta del pattern F2 CR-06. Verificato in Test 8: payload non contiene `originalError`, `cause`, né `stack`."
-  - "**Tap step 10 emit inline** (try/catch swallow) invece di import da `safeTapStep` di core: `safeTapStep` non è esposto al barrel `@sembridge/core`. Esporlo violerebbe D-83 strict (no modifiche a packages/core/). Replica del pattern route-executor.ts:236-260 e F2 broker-mapper-wrapper.ts:325. Auditabile via grep."
+  - "**Tap step 10 emit inline** (try/catch swallow) invece di import da `safeTapStep` di core: `safeTapStep` non è esposto al barrel `@gluezero/core`. Esporlo violerebbe D-83 strict (no modifiche a packages/core/). Replica del pattern route-executor.ts:236-260 e F2 broker-mapper-wrapper.ts:325. Auditabile via grep."
   - "**Network.error pubblicato DOPO `<topic>.failed`** (mai prima, mai sostitutivo): D-81 stipula AGGIUNTIVO al BrokerEvent del topic family. Test 4 verifica entrambi i publish con ordine deterministico."
   - "**`publishFn` come DI callback** invece di referenza diretta al broker: mantiene D-83 (ZERO accesso a inner.publish dal collector). Il RouterBroker plan 03-12 farà il bind a `(t, p, o) => mapperBroker.publish(t, p, o)`. Permette test 100% isolati con `vi.fn()` mock."
   - "**Topic resolution multi-segmento** (`weather.alert.requested` → `weather.alert.loaded`): test 7 verifica esplicitamente. La logica `lastIndexOf('.')` + check su suffix `'requested'` gestisce correttamente i casi nested. Fallback `<topic>.loaded` per topic senza suffix `'requested'`."
@@ -95,7 +95,7 @@ Test Files  1 passed (1)
 7. **Test 7**: topic prefix resolution multi-segmento (`weather.alert.requested` → `weather.alert.loaded`/`weather.alert.failed`)
 8. **Test 8**: `outcome.error` con `originalError` → payload sanitized SENZA stack/originalError ma CON code/category/message/details
 
-**Suite completa @sembridge/routing**: 51/51 passing (43 baseline + 8 nuovi). Zero regressioni.
+**Suite completa @gluezero/routing**: 51/51 passing (43 baseline + 8 nuovi). Zero regressioni.
 
 ## REQ-IDs Coverage
 
@@ -163,9 +163,9 @@ Test 8 verifica esplicitamente l'assenza di questi 3 campi via `expect.not.toHav
 
 ## Verification
 
-- [x] 8/8 test passing (`pnpm --filter @sembridge/routing test outcome-collector.test.ts`)
+- [x] 8/8 test passing (`pnpm --filter @gluezero/routing test outcome-collector.test.ts`)
 - [x] 51/51 test routing totale (43 baseline + 8 nuovi, zero regressioni)
-- [x] `tsc --noEmit` exit 0 (`pnpm --filter @sembridge/routing typecheck`)
+- [x] `tsc --noEmit` exit 0 (`pnpm --filter @gluezero/routing typecheck`)
 - [x] 0 changes a `packages/core/` e `packages/mapper/` runtime
 - [x] `class OutcomeCollector` presente nel file (grep ok)
 - [x] `network.error` literal presente (D-81 confermato)

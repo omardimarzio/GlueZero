@@ -129,7 +129,7 @@ Pattern TDD strict: ogni feat preceduto da RED test failing.
 **Opzione B preferred** (RouteExecutorDeps DI extension):
 - Verifica `packages/routing/src/route-executor.ts` `RouteExecutorDeps` interface F3 — accetta extension via DI? Pattern già presente per `httpHandler` + `resolveSubRoute` (D-65). Aggiungere `cacheHandler?: CacheHandlerF6` + `compositeCacheStep?: CompositeHandlerF6` come field opzionali è extension naturale.
 - **Vincolo D-83 strict per 06-08:** se l'aggiunta richiede modifica a `RouteExecutorDeps` interface in `packages/routing/src/`, allora si viola D-83. Soluzione: dichiarazione del field via TS declaration merging in `packages/cache/src/augment.ts` (analog `BrokerConfig.cache` plan 06-01).
-- **Limitazione TS R4 (RESEARCH §17):** `RouteExecutorDeps` è interface → declaration merging supportato. Field aggiuntivi `cacheHandler?` e `compositeCacheStep?` in modulo `'@sembridge/routing/route-executor'` o re-export tramite `@sembridge/routing` package augmentation.
+- **Limitazione TS R4 (RESEARCH §17):** `RouteExecutorDeps` è interface → declaration merging supportato. Field aggiuntivi `cacheHandler?` e `compositeCacheStep?` in modulo `'@gluezero/routing/route-executor'` o re-export tramite `@gluezero/routing` package augmentation.
 
 **Opzione B' fallback** (composition wrapper PRE-RouterBroker intercept publish):
 - `CacheBroker` plan 06-08 intercetta `publish()` PRE-delegate a `inner.publish` (RouterBroker F3) — pattern coerente con `WorkerBroker.publish` intercept Opzione B research §7.2 (F5 D-152 carryover).
@@ -219,7 +219,7 @@ $ git diff main packages/core/src packages/mapper/src packages/routing/src packa
 
 **D-83 strict:** ✅ verified `git diff main packages/{core,mapper,routing,gateway,worker}/src/` = 0 lines.
 
-**Build + Typecheck:** ✅ `pnpm -F @sembridge/cache build && typecheck` exit 0.
+**Build + Typecheck:** ✅ `pnpm -F @gluezero/cache build && typecheck` exit 0.
 
 **Coverage gate ≥90/80/90/90:** ✅ cache-handler.ts 100/92.5/100/100, composite-handler.ts 100/100/100/100.
 

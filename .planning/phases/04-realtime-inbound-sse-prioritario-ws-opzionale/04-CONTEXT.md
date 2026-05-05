@@ -9,7 +9,7 @@
 Esiste almeno un canale realtime inbound dal server attivabile via `connectRealtime()`/`disconnectRealtime()`; SSE è l'adapter prioritario V1 (PRD §18.3-18.4), WebSocket è disponibile come adapter alternativo e fallback automatico per SSE; i messaggi server vengono normalizzati in `BrokerEvent` canonici con `source: { type: 'server', id: 'realtime-channel', name: 'sse' | 'websocket' }`; la reconnection policy gestisce backoff con jitter, heartbeat applicativo, stale detection e visibility-aware behavior.
 
 **In scope:**
-- Adapter SSE (`@sembridge/gateway/sse-ws`) con `EventSource` nativo
+- Adapter SSE (`@gluezero/gateway/sse-ws`) con `EventSource` nativo
 - Adapter WebSocket con ping/pong applicativo + stale detection
 - `RealtimeChannelManager` con N canali per `name` (multi-channel topology)
 - `connectRealtime(config) / disconnectRealtime(name?)` API pubbliche
@@ -38,11 +38,11 @@ Esiste almeno un canale realtime inbound dal server attivabile via `connectRealt
 
 ### A. Architettura adapter & topology
 
-- **D-101:** **Composition wrapper pattern (estensione D-83 di F3)** — F4 introduce `RealtimeBroker` che compone `RouterBroker` di F3 (composition wrapper, NON modifiche runtime a F1/F2/F3). Il `RealtimeBroker` gestisce un `RealtimeChannelManager` interno indicizzato per `name`. Pattern declaration merging via `@sembridge/gateway/src/sse-ws/augment.ts` analogo a `augment.ts` di routing/gateway-http (F3 D-93). Il package `@sembridge/gateway` aggiunge subpath export `./sse-ws` (già anticipato in `packages/gateway/src/index.ts`).
+- **D-101:** **Composition wrapper pattern (estensione D-83 di F3)** — F4 introduce `RealtimeBroker` che compone `RouterBroker` di F3 (composition wrapper, NON modifiche runtime a F1/F2/F3). Il `RealtimeBroker` gestisce un `RealtimeChannelManager` interno indicizzato per `name`. Pattern declaration merging via `@gluezero/gateway/src/sse-ws/augment.ts` analogo a `augment.ts` di routing/gateway-http (F3 D-93). Il package `@gluezero/gateway` aggiunge subpath export `./sse-ws` (già anticipato in `packages/gateway/src/index.ts`).
 
 - **D-102:** **Multi-channel topology con `RealtimeChannelManager`** — `connectRealtime({ name, mode, url, ... })` accetta `name: string` come chiave indice. Il Manager mantiene `Map<name, RealtimeChannel>`. Ogni canale ha proprio reconnect state, proprio adapter (SSE o WS), proprio `buildUrl()` hook. `disconnectRealtime(name?)` chiude singolo canale o tutti se `name` omesso. Coerente con il pattern multi-policy di `gateway.allowlist` (F3 D-71).
 
-- **D-103:** **`PluginDescriptor.realtimeChannels?: RealtimeChannelDef[]`** — estensione via declaration merging in `@sembridge/gateway/src/sse-ws/augment.ts` (pattern F2 D-57, F3 D-94). I canali dichiarati a livello plugin sono auto-registrati al `registerPlugin` con `ownerId = pluginId` per cascade D-26 ext F4. API top-level `connectRealtime` registra canali con `ownerId = 'system'`.
+- **D-103:** **`PluginDescriptor.realtimeChannels?: RealtimeChannelDef[]`** — estensione via declaration merging in `@gluezero/gateway/src/sse-ws/augment.ts` (pattern F2 D-57, F3 D-94). I canali dichiarati a livello plugin sono auto-registrati al `registerPlugin` con `ownerId = pluginId` per cascade D-26 ext F4. API top-level `connectRealtime` registra canali con `ownerId = 'system'`.
 
 ### B. Auth strategy — auth-agnostic hook
 
@@ -84,7 +84,7 @@ Esiste almeno un canale realtime inbound dal server attivabile via `connectRealt
 
 ### H. Test strategy F4
 
-- **D-117:** **Pattern TDD RED→GREEN** (analogo D-88 F3) — ogni modulo (`sse-adapter.ts`, `websocket-adapter.ts`, `realtime-channel-manager.ts`, `reconnect-strategy.ts`, `visibility-detector.ts`, `frame-parser.ts`, `realtime-broker.ts`) ha unit test co-locato. Plan paralleli con file ownership disgiunta (analogo F3 wave-based). Coverage v8 ≥ 90% sui file `@sembridge/gateway/src/sse-ws/` (riuso D-92 F3 setup).
+- **D-117:** **Pattern TDD RED→GREEN** (analogo D-88 F3) — ogni modulo (`sse-adapter.ts`, `websocket-adapter.ts`, `realtime-channel-manager.ts`, `reconnect-strategy.ts`, `visibility-detector.ts`, `frame-parser.ts`, `realtime-broker.ts`) ha unit test co-locato. Plan paralleli con file ownership disgiunta (analogo F3 wave-based). Coverage v8 ≥ 90% sui file `@gluezero/gateway/src/sse-ws/` (riuso D-92 F3 setup).
 
 - **D-118:** **Tre livelli di test** — STACK.md specifica:
   - **Node + Vitest jsdom**: unit logic (frame parser, reconnect math, visibility state machine)
@@ -180,14 +180,14 @@ Esiste almeno un canale realtime inbound dal server attivabile via `connectRealt
 ### Established Patterns
 - **Declaration merging via `augment.ts`** (`packages/routing/src/augment.ts`, `packages/gateway/src/augment.ts`): F4 crea `packages/gateway/src/sse-ws/augment.ts` per estendere `BrokerConfig`, `PluginDescriptor`, `RouteDefinition` (placeholder F1)
 - **Composition wrapper factory** (`createMapperBroker` → `createRouterBroker` → `createRealtimeBroker`): F4 segue catena
-- **Subpath exports** (`@sembridge/gateway/http`, `@sembridge/gateway/sse-ws`): F4 popola subpath già anticipato
+- **Subpath exports** (`@gluezero/gateway/http`, `@gluezero/gateway/sse-ws`): F4 popola subpath già anticipato
 - **TDD RED→GREEN co-located test** (`*.test.ts` accanto a `*.ts`): F4 mantiene
 - **Wave-based plan parallelization con file ownership disgiunta** (F3 9 wave): F4 simile (5-7 plan stimati)
 
 ### Integration Points
 - **`Broker.publish(event)` API**: punto di ingresso per messaggi realtime (D-113), unchanged dal contratto F1
 - **`PluginRegistration.realtimeChannels` field**: nuovo membro nella struttura interna del plugin registry (extension D-103)
-- **`createRealtimeBroker(config)`**: nuovo factory pubblico in `@sembridge/gateway/sse-ws` che compone `createRouterBroker` (D-101)
+- **`createRealtimeBroker(config)`**: nuovo factory pubblico in `@gluezero/gateway/sse-ws` che compone `createRouterBroker` (D-101)
 - **`RealtimeChannelManager` lifecycle**: registra `visibilitychange` listener al primo connect, deregistra al disconnect dell'ultimo canale (D-110)
 - **`BrokerEvent.source` con `type: 'server'`**: già supportato da F1 type, popolato da F4 adapter
 

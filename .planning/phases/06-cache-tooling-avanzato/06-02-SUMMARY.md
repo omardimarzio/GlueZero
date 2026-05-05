@@ -5,12 +5,12 @@ subsystem: cache
 tags: [cache, lru, ttl, stable-hash, fnv1a, cache-key, scope, runtime]
 one-liner: "MemoryCacheAdapter LRU bounded (D-158 maxEntries=1000) + stable-hash utility (FNV-1a 32-bit + cacheKey scope D-156) — Wave 2 building block A pronto per CacheHandler 06-03 e CacheBroker 06-08."
 requires:
-  - "@sembridge/cache types layer (06-01) — CacheAdapter, CacheEntry, CacheStats interfaces"
+  - "@gluezero/cache types layer (06-01) — CacheAdapter, CacheEntry, CacheStats interfaces"
 provides:
   - "createMemoryCacheAdapter({ maxEntries }): CacheAdapter — LRU bounded Map insertion order + TTL ortogonale + invalidate 3-dispatch + stats cumulative"
   - "stableStringify, fnv1a32, stableHash, cacheKey utility pure (zero deps) per cache key derivation D-155/D-156"
 affects:
-  - "@sembridge/cache barrel runtime exports (W2)"
+  - "@gluezero/cache barrel runtime exports (W2)"
 tech-stack:
   added:
     - "Nessuna dipendenza esterna (zero-dep priority RESEARCH §2.3 + §3.2)"
@@ -92,8 +92,8 @@ Pattern TDD RED→GREEN co-located (D-149 carryover F5) verificato: per ogni fil
 
 ### Cross-file gate
 - [x] 38/38 test cache passing (8 augment 06-01 + 15 stable-hash + 15 memory-cache-adapter)
-- [x] `pnpm -F @sembridge/cache build` success (ESM 2.98 KB + DTS 7.12 KB)
-- [x] `pnpm -F @sembridge/cache typecheck` zero errors
+- [x] `pnpm -F @gluezero/cache build` success (ESM 2.98 KB + DTS 7.12 KB)
+- [x] `pnpm -F @gluezero/cache typecheck` zero errors
 
 ## Coverage measured (v8)
 
@@ -155,11 +155,11 @@ Verbatim 05-02/05-03/05-04/05-05: per ogni file source il test è committato PRI
 
 Durante la verifica cross-package zero regression, è emerso un errore pre-esistente NON correlato al plan 06-02:
 
-- **`@sembridge/routing` build DTS error TS7016**: `Could not find a declaration file for module '@sembridge/gateway/http'`. Riprodotto al commit `cf51c97` (HEAD pre-06-02) → errore pre-esistente, fuori scope plan 06-02. Va loggato in `deferred-items.md` o trattato in plan dedicato F3 fix-up.
+- **`@gluezero/routing` build DTS error TS7016**: `Could not find a declaration file for module '@gluezero/gateway/http'`. Riprodotto al commit `cf51c97` (HEAD pre-06-02) → errore pre-esistente, fuori scope plan 06-02. Va loggato in `deferred-items.md` o trattato in plan dedicato F3 fix-up.
 
 ## Building blocks pronti per
 
-- **06-03** (CacheHandler) — può importare `createMemoryCacheAdapter` + `cacheKey` dal barrel `@sembridge/cache`
+- **06-03** (CacheHandler) — può importare `createMemoryCacheAdapter` + `cacheKey` dal barrel `@gluezero/cache`
 - **06-08** (CacheBroker composition wrapper) — può consumare gli stessi runtime exports
 
 ## Self-Check: PASSED

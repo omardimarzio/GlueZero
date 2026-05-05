@@ -61,7 +61,7 @@ key-files:
     - "packages/routing/src/public-factory.test.ts (60 LOC) — 6 test deterministici"
   modified:
     - "packages/routing/src/index.ts — aggiunti runtime exports (RouterBroker, createRouterBroker, RouteResolver) + tipi"
-    - "packages/routing/package.json — aggiunto @sembridge/gateway workspace dep"
+    - "packages/routing/package.json — aggiunto @gluezero/gateway workspace dep"
     - "packages/gateway/src/http/index.ts — aggiunti re-export 7 createXxxStrategy factory + tipi options"
     - "pnpm-lock.yaml — aggiornato workspace symlinks"
 
@@ -138,7 +138,7 @@ _Note: TDD tasks consolidati in un singolo commit per task (test + impl + verify
 ### Modified (4)
 
 - `packages/routing/src/index.ts` — runtime exports F3: RouterBroker, RouterBrokerConfig, createRouterBroker, RouteResolver + tipi (CompiledRoute, RouteRegistration, AmbiguousRouteEvent).
-- `packages/routing/package.json` — aggiunto `@sembridge/gateway: workspace:*` come dep runtime.
+- `packages/routing/package.json` — aggiunto `@gluezero/gateway: workspace:*` come dep runtime.
 - `packages/gateway/src/http/index.ts` — aggiunti re-export delle 7 createXxxStrategy factory + tipi options dal subpath `./http` barrel (consumer single import path).
 - `pnpm-lock.yaml` — workspace symlinks aggiornati.
 
@@ -146,13 +146,13 @@ _Note: TDD tasks consolidati in un singolo commit per task (test + impl + verify
 
 - **D-100 (NEW da revision iter 1)** — RouterBroker isola l'accesso al `CanonicalRegistry` private di F2 in un getter dedicato (`getCanonicalSchemaForTopic`) con loud throw al boot. Bound del registry UNA volta in constructor con presence check structural; throw esplicito `BrokerError 'router.canonical-registry.unavailable'` se F2 non risponde. Opt-in `RoutingConfig.requiresRouteTopics: string[]` come bypass per topic ROUTE-16 senza dipendere dalla convenzione PRD §11. F2 può esporre helper public `getCanonicalRegistry()` in F6 senza breaking change.
 
-- **BLOCKER 2 fix (revision iter 1)** — topic `'routing.composite.deferred'` (no hyphen) sostituisce il precedente `'routing.composite.cache-deferred'`. Il TOPIC_REGEX di `@sembridge/core/topic-matcher.ts` (`/^[a-z][a-z0-9]*(\.[a-z][a-z0-9*]*)*$/`) NON consente hyphen — il vecchio topic falliva `validateTopic()`. Il prefisso `cache-` era ridondante poiché il topic vive sotto `routing.composite.*`.
+- **BLOCKER 2 fix (revision iter 1)** — topic `'routing.composite.deferred'` (no hyphen) sostituisce il precedente `'routing.composite.cache-deferred'`. Il TOPIC_REGEX di `@gluezero/core/topic-matcher.ts` (`/^[a-z][a-z0-9]*(\.[a-z][a-z0-9*]*)*$/`) NON consente hyphen — il vecchio topic falliva `validateTopic()`. Il prefisso `cache-` era ridondante poiché il topic vive sotto `routing.composite.*`.
 
 - **BLOCKER 3 fix (revision iter 1)** — `RouterBroker.subscribe<T>(...args)` delegate esplicito a `inner.subscribe(...)`. Il test harness 03-13 + 14 integration test dipendono da `broker.subscribe(...)` per catturare gli eventi pubblicati (weather.loaded/failed, routing.ambiguous, ...). Senza delegate esplicito, harness fallisce al setup. Preserva semantica F2 (applyInputMap consumer-side se `options.ownerId` dichiarato).
 
 - **BLOCKER 4 fix (revision iter 1)** — Sostituito silent fallback con loud throw esplicito al constructor. Pre-iter1: `checkRequiresRoute` faceva `try {} catch { return false }` mascherando l'opt-in D-67. Post-iter1: presence check structural in constructor (`'canonicalRegistry' in inner && typeof inner.canonicalRegistry.get === 'function'`); se fail → throw `BrokerError 'router.canonical-registry.unavailable'` al boot. Consumer scopre la regressione F2 al `createRouterBroker(config)`, non quando un evento ROUTE-16 prova a partire e silenziosamente esegue delivery locale.
 
-- **Workspace cyclic dep routing↔gateway accettato** — `@sembridge/gateway` aggiunto come dep runtime di `@sembridge/routing` per importare `HttpGateway` + 7 `createXxxStrategy` factory. Il ciclo è gestito da pnpm (warning accettato): `gateway → routing` è SOLO `import type` (tipi RoutePolicies/RouteDefinition); `routing → gateway` è runtime ma in ordine di build (gateway compila prima e routing legge `dist/`). Cleanup di un dist senza ricompilare l'altro causa typecheck fail; documentato in CLAUDE.md per futuro.
+- **Workspace cyclic dep routing↔gateway accettato** — `@gluezero/gateway` aggiunto come dep runtime di `@gluezero/routing` per importare `HttpGateway` + 7 `createXxxStrategy` factory. Il ciclo è gestito da pnpm (warning accettato): `gateway → routing` è SOLO `import type` (tipi RoutePolicies/RouteDefinition); `routing → gateway` è runtime ma in ordine di build (gateway compila prima e routing legge `dist/`). Cleanup di un dist senza ricompilare l'altro causa typecheck fail; documentato in CLAUDE.md per futuro.
 
 - **F3 V1 NO validator default nel RouterEngine** — `valibotAdapter` di F2 espone `validate(schema, payload)` dove `schema` è una Valibot `BaseSchema`. Il `HttpHandlerValidator` di F3 invece richiede `validate(schemaId: string, payload)`. Adapter conversion (lookup schema da `CanonicalRegistry` via schemaId + costruzione `BaseSchema` da `CanonicalSchema.fields`) è deferred a F4/F6 quando VAL-05 sarà fully wired. F3 V1: response validation skip (consumer decide validation locale via `applyInputMap` se necessario).
 
@@ -166,20 +166,20 @@ _Note: TDD tasks consolidati in un singolo commit per task (test + impl + verify
 
 ### Auto-fixed Issues
 
-**1. [Rule 3 — Blocking] Workspace cyclic dependency `@sembridge/routing` → `@sembridge/gateway`**
+**1. [Rule 3 — Blocking] Workspace cyclic dependency `@gluezero/routing` → `@gluezero/gateway`**
 - **Found during:** Task 1 (RouterEngine glue)
-- **Issue:** RouterEngine importa `HttpGateway` + 7 factory `createXxxStrategy` runtime, ma `@sembridge/routing/package.json` aveva solo `@sembridge/core` e `@sembridge/mapper` come deps. Vitest fail con `Failed to resolve import "@sembridge/gateway/http"`.
-- **Fix:** Aggiunto `@sembridge/gateway: workspace:*` a `packages/routing/package.json` deps. Ciclo gestito da pnpm (gateway → routing è solo `import type`, gestito da TS); pnpm emette warning workspace cyclic accettato.
+- **Issue:** RouterEngine importa `HttpGateway` + 7 factory `createXxxStrategy` runtime, ma `@gluezero/routing/package.json` aveva solo `@gluezero/core` e `@gluezero/mapper` come deps. Vitest fail con `Failed to resolve import "@gluezero/gateway/http"`.
+- **Fix:** Aggiunto `@gluezero/gateway: workspace:*` a `packages/routing/package.json` deps. Ciclo gestito da pnpm (gateway → routing è solo `import type`, gestito da TS); pnpm emette warning workspace cyclic accettato.
 - **Files modified:** `packages/routing/package.json`, `pnpm-lock.yaml`
-- **Verification:** `pnpm install` riesce + `pnpm --filter @sembridge/routing test` passa.
+- **Verification:** `pnpm install` riesce + `pnpm --filter @gluezero/routing test` passa.
 - **Committed in:** `0fd1d58` (Task 1 commit)
 
-**2. [Rule 3 — Blocking] Subpath `@sembridge/gateway/http/strategies` non esposto**
+**2. [Rule 3 — Blocking] Subpath `@gluezero/gateway/http/strategies` non esposto**
 - **Found during:** Task 1 (RouterEngine glue)
-- **Issue:** Le 7 factory `createXxxStrategy` sono in `packages/gateway/src/http/strategies/index.ts` ma il `package.json` di gateway esponeva solo `./http` non `./http/strategies`. Plan suggeriva import da `'@sembridge/gateway/http/strategies'`.
-- **Fix:** Aggiunti re-export delle 7 factory + tipi options al barrel `./http/index.ts` (single import path); RouterEngine importa da `'@sembridge/gateway/http'`. Mantenuto il barrel `./strategies/index.ts` per consumer avanzati che usano subpath dedicato (test, override granulari).
+- **Issue:** Le 7 factory `createXxxStrategy` sono in `packages/gateway/src/http/strategies/index.ts` ma il `package.json` di gateway esponeva solo `./http` non `./http/strategies`. Plan suggeriva import da `'@gluezero/gateway/http/strategies'`.
+- **Fix:** Aggiunti re-export delle 7 factory + tipi options al barrel `./http/index.ts` (single import path); RouterEngine importa da `'@gluezero/gateway/http'`. Mantenuto il barrel `./strategies/index.ts` per consumer avanzati che usano subpath dedicato (test, override granulari).
 - **Files modified:** `packages/gateway/src/http/index.ts`
-- **Verification:** `pnpm --filter @sembridge/gateway build` riesce + import RouterEngine OK + 7/7 test routerEngine GREEN.
+- **Verification:** `pnpm --filter @gluezero/gateway build` riesce + import RouterEngine OK + 7/7 test routerEngine GREEN.
 - **Committed in:** `0fd1d58` (Task 1 commit)
 
 **3. [Rule 1 — Bug] valibotAdapter signature mismatch con HttpHandlerValidator**
@@ -190,9 +190,9 @@ _Note: TDD tasks consolidati in un singolo commit per task (test + impl + verify
 - **Verification:** Test 3 (broker.publish con route http → outcome.collected publish weather.loaded) passa.
 - **Committed in:** `41200d9` (Task 2 commit)
 
-**4. [Rule 3 — Blocking] startStep / safeTapStep non esposti dal barrel `@sembridge/core`**
+**4. [Rule 3 — Blocking] startStep / safeTapStep non esposti dal barrel `@gluezero/core`**
 - **Found during:** Task 2 (RouterBroker.publish tap emission)
-- **Issue:** `import { startStep, safeTapStep } from '@sembridge/core'` fail al runtime — i due helper sono interni a `packages/core/src/core/event-tap.ts` ma NON ri-esportati dal barrel pubblico. Vincolo D-83 vieta modifiche a core.
+- **Issue:** `import { startStep, safeTapStep } from '@gluezero/core'` fail al runtime — i due helper sono interni a `packages/core/src/core/event-tap.ts` ma NON ri-esportati dal barrel pubblico. Vincolo D-83 vieta modifiche a core.
 - **Fix:** Sostituito con pattern inline `emitTapStep` (replica F2 `emitF2Tap` + outcome-collector `emitTap` / route-executor `emitTap`) — try/catch swallow inline preserva D-83 strict.
 - **Files modified:** `packages/routing/src/router-broker-wrapper.ts` (helper inline + import cleanup)
 - **Verification:** Test 11 (pipeline §28 step 8/9/10 emessi via tap) passa con i 3 step nominali.
@@ -208,8 +208,8 @@ _Note: TDD tasks consolidati in un singolo commit per task (test + impl + verify
 
 **6. [Rule 1 — Bug] DTS build fail "Cannot write file 'dist/index.d.ts' because it would overwrite input file"**
 - **Found during:** Task 3 (build verification)
-- **Issue:** `pnpm --filter @sembridge/routing build` fallava DTS step. Causa: tsup `clean: true` cancella il proprio dist ma se il consumer (gateway) ha cancellato il suo dist parallelo, il typecheck fail.
-- **Fix:** `rm -rf packages/gateway/dist && pnpm --filter @sembridge/gateway build` → poi `rm -rf packages/routing/dist && pnpm --filter @sembridge/routing build`. Il flow di build è ora idempotente; documentato come known limitation di pnpm cyclic workspace + tsup.
+- **Issue:** `pnpm --filter @gluezero/routing build` fallava DTS step. Causa: tsup `clean: true` cancella il proprio dist ma se il consumer (gateway) ha cancellato il suo dist parallelo, il typecheck fail.
+- **Fix:** `rm -rf packages/gateway/dist && pnpm --filter @gluezero/gateway build` → poi `rm -rf packages/routing/dist && pnpm --filter @gluezero/routing build`. Il flow di build è ora idempotente; documentato come known limitation di pnpm cyclic workspace + tsup.
 - **Files modified:** —
 - **Verification:** Build entrambi i package successivo GREEN; `dist/index.js` + `dist/index.d.ts` (19.25 KB types) emessi.
 - **Committed in:** N/A (transient build issue, no source change needed)

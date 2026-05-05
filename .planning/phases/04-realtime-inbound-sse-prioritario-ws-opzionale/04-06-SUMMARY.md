@@ -5,7 +5,7 @@ subsystem: gateway/sse-ws
 tags: [websocket, envelope-json, ping-pong, stale-detection, scheme-switch, bufferedamount, subprotocols, tdd, D-101, D-104, D-106, D-107, D-109, D-111, D-113, D-115, RT-02, RT-04, RT-05, RT-06, ERR-02, AP-3, AP-4, AP-6, B-NEW-2]
 dependency_graph:
   requires:
-    - "@sembridge/gateway/sse-ws bootstrap (Plan 04-01) — RealtimeChannelDef + tipi (Q4 wsSubprotocols field)"
+    - "@gluezero/gateway/sse-ws bootstrap (Plan 04-01) — RealtimeChannelDef + tipi (Q4 wsSubprotocols field)"
     - "frame-parser (Plan 04-02) — parseFrame + isInternalTopic + INTERNAL_TOPICS"
     - "createReconnectStrategy factory (Plan 04-03) — initialMode 'websocket' + per-channel override"
     - "createBrokerError + nanoid (F1 core)"
@@ -123,7 +123,7 @@ export class WebSocketAdapter {
 ### Test suite (15/15 PASS)
 
 ```
-> @sembridge/gateway test src/sse-ws/websocket-adapter.test.ts --run
+> @gluezero/gateway test src/sse-ws/websocket-adapter.test.ts --run
  RUN  v4.1.5
  Test Files  1 passed (1)
       Tests  15 passed (15)
@@ -135,7 +135,7 @@ Suddivisione test:
 | # | Scenario | Verifica |
 |---|----------|----------|
 | 1 | Scheme switch (D-107) | `buildUrl='https://api.example.com/ws'` → MockWebSocket creato con `wss://api.example.com/ws` |
-| 2 | wsSubprotocols passthrough (Q4) | `def.wsSubprotocols=['sembridge-v1']` → `MockWebSocket.protocol === 'sembridge-v1'` |
+| 2 | wsSubprotocols passthrough (Q4) | `def.wsSubprotocols=['gluezero-v1']` → `MockWebSocket.protocol === 'gluezero-v1'` |
 | 3 | Missing url+buildUrl | throw BrokerError code='realtime.config.invalid' category='config' |
 | 4 | `__open()` + heartbeat avviato | publishFn `system.realtime.connected` con `source.name='websocket'`; dopo intervalMs 1000 → `__ping__` frame inviato |
 | 5 | Envelope JSON valido (D-106) | `{topic:'orders.created',data:{id:1},id:'evt-7'}` → BrokerEvent con id='evt-7', topic='orders.created', payload={id:1} |
@@ -170,7 +170,7 @@ TOTAL:   709/709                  ← +15 vs 694 baseline post-04-05
 ### Typecheck monorepo (clean)
 
 ```
-$ pnpm --filter @sembridge/gateway exec tsc --noEmit
+$ pnpm --filter @gluezero/gateway exec tsc --noEmit
 (exit 0, no output)
 ```
 
@@ -265,7 +265,7 @@ Tutte le modifiche sono nuovi file `additive-only` in `packages/gateway/src/sse-
 
 ## Issues Encountered
 
-- **DTS build TS5055 race condition con `clean: true` di tsup:** durante l'iniziale build post-implementation, `pnpm --filter @sembridge/gateway build` ha lanciato `error TS5055: Cannot write file 'dist/http/index.d.ts' because it would overwrite input file`. Il problema è una race condition di tsup: `clean: true` rimuove `dist/` PRIMA dell'ESM build, ma TS DTS pass scopre i `.d.ts` esistenti come input prima della rimozione. Risolto con `rm -rf packages/gateway/dist && pnpm --filter @sembridge/gateway build` — esit 0 + DTS clean. Non è un issue del codice (verificato: stash + build → success; pop + rm dist + build → success). Il fix è transient — verrà risolto da CI cache fresh.
+- **DTS build TS5055 race condition con `clean: true` di tsup:** durante l'iniziale build post-implementation, `pnpm --filter @gluezero/gateway build` ha lanciato `error TS5055: Cannot write file 'dist/http/index.d.ts' because it would overwrite input file`. Il problema è una race condition di tsup: `clean: true` rimuove `dist/` PRIMA dell'ESM build, ma TS DTS pass scopre i `.d.ts` esistenti come input prima della rimozione. Risolto con `rm -rf packages/gateway/dist && pnpm --filter @gluezero/gateway build` — esit 0 + DTS clean. Non è un issue del codice (verificato: stash + build → success; pop + rm dist + build → success). Il fix è transient — verrà risolto da CI cache fresh.
 - **Inizialmente 1 occorrenza `startsWith('__')` in JSDoc commento dottrinale:** Il commento JSDoc descriveva l'anti-pattern `topic === '__ping__' non startsWith('__')`. Il grep di acceptance criteria conta anche le occorrenze nei comment block `/** ... */`. Per soddisfare strict acceptance, ho riformulato il JSDoc rimuovendo l'esempio `startsWith` (mantenuta la spiegazione strutturale). Counts post-fix: 0/0/0 per AP-2/AP-3/AP-6.
 
 ## Hand-off note per Wave 4 (plan 04-07 RealtimeChannelManager)
@@ -345,8 +345,8 @@ const orders = MockWebSocket.byChannelName.get('orders')  // deterministico
 - [x] File NON contiene `reconnecting-websocket` (anti-AP-3): grep === 0
 - [x] File NON contiene `startsWith('__')` (anti-AP-6): grep === 0 (riformulazione JSDoc post-fix)
 - [x] File `websocket-adapter.test.ts` contiene almeno 15 test (effettivi: 15)
-- [x] `pnpm --filter @sembridge/gateway test packages/gateway/src/sse-ws/websocket-adapter.test.ts` exit 0 (15/15 PASS)
-- [x] `pnpm --filter @sembridge/gateway exec tsc --noEmit` exit 0 (clean)
+- [x] `pnpm --filter @gluezero/gateway test packages/gateway/src/sse-ws/websocket-adapter.test.ts` exit 0 (15/15 PASS)
+- [x] `pnpm --filter @gluezero/gateway exec tsc --noEmit` exit 0 (clean)
 - [x] Cronologia git mostra ≥2 commit 04-06 (RED + GREEN); effettivi: 3 (helper + RED + GREEN)
 - [x] MockWebSocket.byChannelName implementato + `?_channel=<name>` parsing nel constructor (B-NEW-2 fix iter 2)
 - [x] Ping/pong applicativo tested (Test 4/9) + staleTimeoutMs watchdog tested (Test 10) + pong updates lastPongAt tested (Test 8)

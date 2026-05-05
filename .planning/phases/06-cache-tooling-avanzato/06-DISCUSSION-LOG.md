@@ -120,12 +120,12 @@
 
 | Option | Description | Selected |
 |--------|-------------|----------|
-| dot.case namespaced sembridge.<package>.<metric> | Namespace anti-conflict, hierarchy navigabile, OpenMetrics-friendly (`_total`, `_ms`), mapping 1:1 a Prometheus/OTel exporter V1.x. | ✓ |
+| dot.case namespaced gluezero.<package>.<metric> | Namespace anti-conflict, hierarchy navigabile, OpenMetrics-friendly (`_total`, `_ms`), mapping 1:1 a Prometheus/OTel exporter V1.x. | ✓ |
 | snake_case flat (no namespace) | `events_published`, `cache_hits`. Più corto ma rischio collision e niente hierarchy. | |
 | camelCase JS-native | `eventsPublished`, `cacheHits`. JS-idiomatic ma divergente da standard Prometheus. | |
 | Tu decidi | Lascia al planner verificando standard OpenMetrics. | |
 
-**User's choice:** dot.case namespaced sembridge.<package>.<metric> (Recommended)
+**User's choice:** dot.case namespaced gluezero.<package>.<metric> (Recommended)
 **Notes:** Pattern industriale, traduzione 1:1 a OpenTelemetry/Prometheus V1.x banale.
 
 ### Question 2 — Reset semantics
@@ -225,7 +225,7 @@ Aree dove l'utente non ha richiesto deep-dive ma ha indicato "lasciare al planne
 - Stable hash implementation per cache key (json-stable-stringify + crypto.subtle.digest SHA256 vs FNV-1a custom)
 - Reservoir sampling (Algorithm R ~30 LOC) vs t-digest (~200 LOC) per histogram
 - Default thresholds tunable via config (maxEntries=1000, eventBufferSize=500, histogramSamples=1024, maxLabelCombinations=100, pauseQueueMaxSize=1000)
-- Topology: composition wrapper chain `createCacheBroker(createWorkerBroker(...))` vs factory aggregato `createSemBridge(config)` in `@sembridge/sembridge`
+- Topology: composition wrapper chain `createCacheBroker(createWorkerBroker(...))` vs factory aggregato `createGlueZero(config)` in `@gluezero/gluezero`
 - Cache invalidation API surface (signature precisa di `broker.cache.invalidate(keyOrPattern)`, dispatch sync vs microtask, batch via array)
 - DOC consolidation strategy (TypeDoc + `typedoc-plugin-markdown` + README aggregato)
 - Cache-then-network ordering micro-detail (microtask same-tick vs queueMicrotask vs setTimeout)
@@ -234,7 +234,7 @@ Aree dove l'utente non ha richiesto deep-dive ma ha indicato "lasciare al planne
 ## Deferred Ideas
 
 Vedere sezione `<deferred>` di `06-CONTEXT.md` per la lista completa (15 idee deferred a V1.x/V2):
-- @sembridge/cache-idb (V1.x)
+- @gluezero/cache-idb (V1.x)
 - OpenTelemetry/Prometheus exporter nativo (V1.x)
 - Real-time dashboard UI built-in (V2)
 - Distributed tracing W3C traceparent (V1.x)

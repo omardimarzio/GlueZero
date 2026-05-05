@@ -1,7 +1,7 @@
-# Pattern Architetturali — SemBridge
+# Pattern Architetturali — GlueZero
 
 **Dominio:** middleware client-side orientato agli eventi (event-driven broker, routing, gateway, worker, canonical mapping)
-**Progetto:** SemBridge (greenfield, V1)
+**Progetto:** GlueZero (greenfield, V1)
 **Researched:** 2026-04-28
 **Modalità:** Project Research — dimensione Architecture
 **Confidenza complessiva:** HIGH (pattern ben consolidati nella letteratura EIP, requisiti del PRD chiari e prescrittivi)
@@ -10,7 +10,7 @@
 
 ## 1. Sintesi architetturale
 
-SemBridge è un **runtime di messaggistica in-process** che vive nel browser. Concettualmente è la trasposizione lato client dei pattern di Enterprise Integration (Hohpe & Woolf, 2003), adattati a un singolo processo JavaScript con estensioni verso Web Worker e canali realtime.
+GlueZero è un **runtime di messaggistica in-process** che vive nel browser. Concettualmente è la trasposizione lato client dei pattern di Enterprise Integration (Hohpe & Woolf, 2003), adattati a un singolo processo JavaScript con estensioni verso Web Worker e canali realtime.
 
 L'architettura logica si fonda su **sei pattern combinati**, ciascuno applicato a un'area precisa del runtime, integrati attraverso una pipeline ufficiale a 14 step (PRD §28). Il principio guida è la **separazione tra trasporto, semantica e governance**: il Core Broker non sa nulla di HTTP o worker, il Routing Engine non sa nulla del trasporto, il Gateway/Worker non sa nulla del modello canonico.
 
@@ -26,7 +26,7 @@ La metafora più precisa è quella di un **Message Bus locale con Canonical Data
 
 **Perché qui.** Risolve direttamente il problema PRD §3.1 (accoppiamento forte) e §8.1 (disaccoppiamento). Senza Mediator, i plugin avrebbero bisogno di reference incrociati e l'interoperabilità tramite naming locale eterogenei (PRD §13) sarebbe impossibile.
 
-**Riferimento EIP.** Hohpe — *Message Bus* (cap. 7): "a common communication infrastructure that allows separate applications to work together […] without having to know about each other". Il Broker SemBridge è la versione in-process del Message Bus.
+**Riferimento EIP.** Hohpe — *Message Bus* (cap. 7): "a common communication infrastructure that allows separate applications to work together […] without having to know about each other". Il Broker GlueZero è la versione in-process del Message Bus.
 
 **Confidenza:** HIGH (pattern canonico).
 
@@ -65,7 +65,7 @@ La metafora più precisa è quella di un **Message Bus locale con Canonical Data
 
 **Perché qui.** Pattern obbligato dal requisito centrale (PRD §13, §14). I plugin di terze parti usano nomenclature differenti per concetti identici: senza un Canonical Data Model l'interoperabilità richiederebbe un mapper N×N tra plugin (esplosione combinatoriale).
 
-**Riferimento EIP.** Hohpe — *Canonical Data Model* (cap. 8) e *Message Translator* (cap. 8): il CDM riduce le traduzioni da O(N²) a O(2N). SemBridge segue questa identica logica.
+**Riferimento EIP.** Hohpe — *Canonical Data Model* (cap. 8) e *Message Translator* (cap. 8): il CDM riduce le traduzioni da O(N²) a O(2N). GlueZero segue questa identica logica.
 
 **Confidenza:** HIGH.
 
@@ -150,7 +150,7 @@ RoutePolicies = {
 
 ```
 ┌──────────────────────────────────────────────────────────────────────┐
-│                          SemBridge Runtime                           │
+│                          GlueZero Runtime                           │
 │                                                                      │
 │   ┌─────────────────┐   publish/deliver   ┌────────────────────┐     │
 │   │   Plugin API    │ ──────────────────► │   Core Broker      │     │
@@ -1402,7 +1402,7 @@ F1 ──► F2 ──► F3 ──┬──► F4
 
 ### Riferimenti primari
 
-- **PRD del progetto** (`/Users/omarmarzio/programming/prova AI/SemBridge/prd.md`)
+- **PRD del progetto** (`/Users/omarmarzio/programming/prova AI/GlueZero/prd.md`)
   - §10 architettura logica
   - §11-22 specifiche di sottosistema
   - §28 pipeline ufficiale

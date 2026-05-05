@@ -14,13 +14,13 @@ dependency_graph:
   provides:
     - DevtoolsBroker composition wrapper RouterBroker (D-83 strict carryover) + step 14 attivazione D-161
     - createDevtoolsBroker factory Valibot + D-30 anti-singleton
-    - createSemBridge aggregato CHAIN COMPLETA F1+F2+F3+F4+F5+F6 (BLOCKER-2 fix)
+    - createGlueZero aggregato CHAIN COMPLETA F1+F2+F3+F4+F5+F6 (BLOCKER-2 fix)
     - barrel devtools/index.ts FINAL cumulativo Wave 3+4 (BLOCKER-1 fix single-writer)
     - barrel sembridge/index.ts re-export pubblico API surface F6
     - 6 integration test 3-tier (4 devtools + 2 sembridge)
   affects:
     - packages/devtools/src/* (devtools-broker, public-factory, index, integration)
-    - packages/sembridge/src/* (sem-bridge, index, integration)
+    - packages/gluezero/src/* (sem-bridge, index, integration)
 tech_stack:
   added: []
   patterns:
@@ -40,17 +40,17 @@ key_files:
     - packages/devtools/src/__integration__/pause-resume-flow.test.ts
     - packages/devtools/src/__integration__/metrics-cardinality-flow.test.ts
     - packages/devtools/src/__integration__/inspector-snapshot.test.ts
-    - packages/sembridge/src/sem-bridge.ts
-    - packages/sembridge/src/sem-bridge.test.ts
-    - packages/sembridge/src/__integration__/chain-completa-flow.test.ts
-    - packages/sembridge/src/__integration__/features-opt-out.test.ts
+    - packages/gluezero/src/glue-zero.ts
+    - packages/gluezero/src/sem-bridge.test.ts
+    - packages/gluezero/src/__integration__/chain-completa-flow.test.ts
+    - packages/gluezero/src/__integration__/features-opt-out.test.ts
   modified:
     - packages/devtools/src/index.ts (BLOCKER-1 fix barrel FINAL cumulativo single-writer Wave 3+4)
-    - packages/sembridge/src/index.ts (re-export pubblico API surface F6 + side-effect augment)
+    - packages/gluezero/src/index.ts (re-export pubblico API surface F6 + side-effect augment)
 decisions:
-  - "BLOCKER-2 fix: createSemBridge include OBBLIGATORIAMENTE createWorkerBroker + createRealtimeBroker quando features.worker / features.realtime sono enabled (default true). Acceptance grep verified 10 hits ≥ 4."
+  - "BLOCKER-2 fix: createGlueZero include OBBLIGATORIAMENTE createWorkerBroker + createRealtimeBroker quando features.worker / features.realtime sono enabled (default true). Acceptance grep verified 10 hits ≥ 4."
   - "BLOCKER-1 fix: barrel packages/devtools/src/index.ts modificato SOLO da 06-08b (single-writer cumulativo post-Wave 3). File ownership disgiunta verified — Wave 3 plans 06-05/06-06/06-07 NON l'hanno toccato."
-  - "Topology V1: i wrapper realtime/worker/cache/devtools sono ortogonali (estendono RouterBroker via composition diretta). createSemBridge sceglie OUTERMOST in funzione di features. Roadmap V1.x per chain letterale multi-wrapper documentata in JSDoc."
+  - "Topology V1: i wrapper realtime/worker/cache/devtools sono ortogonali (estendono RouterBroker via composition diretta). createGlueZero sceglie OUTERMOST in funzione di features. Roadmap V1.x per chain letterale multi-wrapper documentata in JSDoc."
   - "Rule 1 auto-fix bug: topic 'system.metrics.cardinality-overflow' invalido (trattino non ammesso da F1 D-24 validateTopicPattern). Sostituito con 'system.metrics.cardinalityoverflow' (singolo segment). DOC-06 update in 06-09b final gate."
 metrics:
   duration_minutes: ~25
@@ -60,13 +60,13 @@ metrics:
   coverage_sembridge: 100/100/100/100
 ---
 
-# Phase 6 Plan 08b: DevtoolsBroker + createSemBridge Chain Completa F1+F2+F3+F4+F5+F6
+# Phase 6 Plan 08b: DevtoolsBroker + createGlueZero Chain Completa F1+F2+F3+F4+F5+F6
 
-**One-liner**: DevtoolsBroker composition wrapper Opzione B + step 14 attivazione D-161 + getDebugSnapshot deep-clone D-162 + createSemBridge aggregato CHAIN COMPLETA F1+F2+F3+F4+F5+F6 (BLOCKER-2 fix) + barrel devtools FINAL cumulativo single-writer (BLOCKER-1 fix) + 6 integration test 3-tier — milestone v1.0 SC-2 deliverable.
+**One-liner**: DevtoolsBroker composition wrapper Opzione B + step 14 attivazione D-161 + getDebugSnapshot deep-clone D-162 + createGlueZero aggregato CHAIN COMPLETA F1+F2+F3+F4+F5+F6 (BLOCKER-2 fix) + barrel devtools FINAL cumulativo single-writer (BLOCKER-1 fix) + 6 integration test 3-tier — milestone v1.0 SC-2 deliverable.
 
 ## Obiettivo
 
-Wave 4b sequential gate (post 06-08a — depends_on cache wrapper) completion devtools wrapper + createSemBridge aggregato CHAIN COMPLETA + barrel devtools FINAL append cumulativo + 6 integration test 3-tier.
+Wave 4b sequential gate (post 06-08a — depends_on cache wrapper) completion devtools wrapper + createGlueZero aggregato CHAIN COMPLETA + barrel devtools FINAL append cumulativo + 6 integration test 3-tier.
 
 ## Lavoro svolto
 
@@ -90,15 +90,15 @@ API esposta TOOL-03 + TOOL-04: `enableDebug` / `disableDebug` / `getDebugSnapsho
 
 **Test**: 22 test broker + 8 test factory passing.
 
-### Task 2 — createSemBridge CHAIN COMPLETA F1+F2+F3+F4+F5+F6 (commit `ae1a565` RED, `74e4c4d` GREEN — BLOCKER-2 fix)
+### Task 2 — createGlueZero CHAIN COMPLETA F1+F2+F3+F4+F5+F6 (commit `ae1a565` RED, `74e4c4d` GREEN — BLOCKER-2 fix)
 
-`createSemBridge(config)` factory aggregato chain composition COMPLETA — features opt-out (cache/devtools/worker/realtime). Default tutte enabled (RESEARCH §11.3 Opzione B convenience).
+`createGlueZero(config)` factory aggregato chain composition COMPLETA — features opt-out (cache/devtools/worker/realtime). Default tutte enabled (RESEARCH §11.3 Opzione B convenience).
 
 **BLOCKER-2 fix critico**: chain implementa F1+F2+F3+F4+F5+F6 obbligatoriamente — NON V1 minimal `Devtools(Cache(...))` come iter precedente. Acceptance grep `createWorkerBroker|createRealtimeBroker` → **10 hits** (atteso ≥4).
 
-**Topology V1**: i wrapper realtime/worker/cache/devtools sono ortogonali (estendono RouterBroker via composition diretta). `createSemBridge` sceglie OUTERMOST in funzione di `features` (devtools > cache > worker > realtime > router). Roadmap V1.x per chain letterale multi-wrapper (es. `Devtools(Cache(Worker(Realtime(Router(...)))))`) documentata in JSDoc.
+**Topology V1**: i wrapper realtime/worker/cache/devtools sono ortogonali (estendono RouterBroker via composition diretta). `createGlueZero` sceglie OUTERMOST in funzione di `features` (devtools > cache > worker > realtime > router). Roadmap V1.x per chain letterale multi-wrapper (es. `Devtools(Cache(Worker(Realtime(Router(...)))))`) documentata in JSDoc.
 
-Type union completa: `SemBridge = ReturnType<createBroker | createMapperBroker | createRouterBroker | createRealtimeBroker | createWorkerBroker | createCacheBroker | createDevtoolsBroker>` — 7 ReturnType.
+Type union completa: `GlueZero = ReturnType<createBroker | createMapperBroker | createRouterBroker | createRealtimeBroker | createWorkerBroker | createCacheBroker | createDevtoolsBroker>` — 7 ReturnType.
 
 **Test**: 12 sem-bridge.test.ts passing.
 
@@ -110,14 +110,14 @@ Type union completa: `SemBridge = ReturnType<createBroker | createMapperBroker |
 
 Wave 3 plans 06-05/06-06/06-07 NON hanno modificato il barrel (file ownership disgiunta verified via `git log --oneline packages/devtools/src/index.ts`).
 
-**Barrel `packages/sembridge/src/index.ts`**: side-effect re-export augment cache + devtools + `createSemBridge` + re-export pubblico API surface `@sembridge/cache` + `@sembridge/devtools`.
+**Barrel `packages/gluezero/src/index.ts`**: side-effect re-export augment cache + devtools + `createGlueZero` + re-export pubblico API surface `@gluezero/cache` + `@gluezero/devtools`.
 
 **6 integration test 3-tier (Tier-1 jsdom)**:
 - `devtools/__integration__/multiplex-tap-flow.test.ts` (3 scenari): 3+ tap chain + error isolation + step 14 attivazione D-161
 - `devtools/__integration__/pause-resume-flow.test.ts` (3 scenari): replay FIFO + flushQueue audit + critical priority bypass D-170
 - `devtools/__integration__/metrics-cardinality-flow.test.ts` (3 scenari): cap audit + getMetrics shape + naming Prometheus
 - `devtools/__integration__/inspector-snapshot.test.ts` (3 scenari): Inspector capture + getDebugSnapshot deep-clone D-162 immutability
-- `sembridge/__integration__/chain-completa-flow.test.ts` (3 scenari): createSemBridge default chain F1+F2+F3+F4+F5+F6 active end-to-end
+- `sembridge/__integration__/chain-completa-flow.test.ts` (3 scenari): createGlueZero default chain F1+F2+F3+F4+F5+F6 active end-to-end
 - `sembridge/__integration__/features-opt-out.test.ts` (5 scenari): realtime/worker/cache/devtools opt-out + tutte false → minimal F1+F2+F3
 
 **Test totali plan 06-08b**: **50 test** (22 devtools-broker + 8 factory + 12 sem-bridge + 8 integration scenari devtools-flow).
@@ -134,8 +134,8 @@ Wave 3 plans 06-05/06-06/06-07 NON hanno modificato il barrel (file ownership di
 
 | Package | Stmts | Branches | Functions | Lines |
 |---------|-------|----------|-----------|-------|
-| @sembridge/devtools | **96.44%** | **89.28%** | **94.36%** | **96.98%** |
-| @sembridge/sembridge | **100%** | **100%** | **100%** | **100%** |
+| @gluezero/devtools | **96.44%** | **89.28%** | **94.36%** | **96.98%** |
+| @gluezero/gluezero | **100%** | **100%** | **100%** | **100%** |
 
 Threshold target ≥90/80/90/90 → **PASSED**.
 
@@ -143,14 +143,14 @@ Threshold target ≥90/80/90/90 → **PASSED**.
 
 | Package | Test count | Result |
 |---------|------------|--------|
-| @sembridge/core | invariato | passing |
-| @sembridge/mapper | invariato | passing |
-| @sembridge/routing | invariato | passing |
-| @sembridge/gateway | invariato | passing |
-| @sembridge/worker | 121 | passing |
-| @sembridge/cache | 108 | passing |
-| @sembridge/devtools | 160 | passing |
-| @sembridge/sembridge | 20 | passing |
+| @gluezero/core | invariato | passing |
+| @gluezero/mapper | invariato | passing |
+| @gluezero/routing | invariato | passing |
+| @gluezero/gateway | invariato | passing |
+| @gluezero/worker | 121 | passing |
+| @gluezero/cache | 108 | passing |
+| @gluezero/devtools | 160 | passing |
+| @gluezero/gluezero | 20 | passing |
 
 ## D-83 strict acceptance verified (CRITICO)
 
@@ -179,7 +179,7 @@ Closure finale REQ matrix in 06-09b final gate (atomic flip Complete).
 
 Acceptance grep:
 ```
-grep -cE "createWorkerBroker|createRealtimeBroker" packages/sembridge/src/sem-bridge.ts
+grep -cE "createWorkerBroker|createRealtimeBroker" packages/gluezero/src/glue-zero.ts
 → 10
 ```
 
@@ -192,7 +192,7 @@ grep -cE "createWorkerBroker|createRealtimeBroker" packages/sembridge/src/sem-br
 | T-06-08b-01 (Logic flaw composition order) | mitigate | Devtools è OUTERMOST per default; documented JSDoc + 6 integration test verificano end-to-end |
 | T-06-08b-02 (InfoDisclosure getDebugSnapshot leak) | mitigate | structuredClone D-162; integration test inspector-snapshot.test.ts Test 2 verifica mutation safety |
 | T-06-08b-03 (DoS publish hot-path debug=on) | mitigate | D-160 lazy-mode tap delegate solo quando enabled; Inspector early-return |
-| T-06-08b-04 (Tampering config.features) | mitigate | Valibot safeParse al confine pubblico — 'Invalid SemBridgeConfig:' prefix |
+| T-06-08b-04 (Tampering config.features) | mitigate | Valibot safeParse al confine pubblico — 'Invalid GlueZeroConfig:' prefix |
 | T-06-08b-05 (Logic flaw chain non include realtime/worker) | mitigate | Acceptance grep `createWorkerBroker|createRealtimeBroker` → 10 hits ≥ 4 (BLOCKER-2 fix verified) |
 | T-06-08b-06 (Wave 3 toccato barrel) | mitigate | BLOCKER-1 fix verified — `git log --oneline packages/devtools/src/index.ts` mostra append cumulativo Wave 4b only |
 
@@ -212,7 +212,7 @@ grep -cE "createWorkerBroker|createRealtimeBroker" packages/sembridge/src/sem-br
 - **Found during:** Task 3 integration test features-opt-out
 - **Issue:** Topic `rt-off.topic` / `wrk-off.topic` / `cache-off.topic` / `dt-off.topic` contenevano trattino → rejected da F1 D-24.
 - **Fix:** Sostituiti con `rtoff.topic` / `wrkoff.topic` / `cacheoff.topic` / `dtoff.topic`.
-- **Files modified:** `packages/sembridge/src/__integration__/features-opt-out.test.ts`
+- **Files modified:** `packages/gluezero/src/__integration__/features-opt-out.test.ts`
 - **Commit:** `9a96216`
 
 Nessun'altra deviazione — chain completa F1+F2+F3+F4+F5+F6 implementata esattamente come da plan + RESEARCH §11.3.
@@ -224,7 +224,7 @@ Nessuna — plan 06-08b interamente offline (in-memory broker + composition wrap
 ## Building blocks pronti per 06-09a + 06-09b
 
 **06-09a** (CI gates + size-limit + biome cleanup):
-- DevtoolsBroker + createSemBridge consolidati (16 file source/test pronti per audit Biome + size-limit budget tracking)
+- DevtoolsBroker + createGlueZero consolidati (16 file source/test pronti per audit Biome + size-limit budget tracking)
 - Coverage v8 ≥90/80/90/90 floor calibrato per CI threshold
 
 **06-09b** (DOC-02/05/06 README italiani + JSDoc + REQ matrix flip + PRD §39 #10 closure + CHANGELOG v1.0.0 milestone closure):
@@ -244,15 +244,15 @@ Nessuna — plan 06-08b interamente offline (in-memory broker + composition wrap
 - [x] `packages/devtools/src/__integration__/pause-resume-flow.test.ts` exists
 - [x] `packages/devtools/src/__integration__/metrics-cardinality-flow.test.ts` exists
 - [x] `packages/devtools/src/__integration__/inspector-snapshot.test.ts` exists
-- [x] `packages/sembridge/src/sem-bridge.ts` exists
-- [x] `packages/sembridge/src/sem-bridge.test.ts` exists
-- [x] `packages/sembridge/src/__integration__/chain-completa-flow.test.ts` exists
-- [x] `packages/sembridge/src/__integration__/features-opt-out.test.ts` exists
+- [x] `packages/gluezero/src/glue-zero.ts` exists
+- [x] `packages/gluezero/src/sem-bridge.test.ts` exists
+- [x] `packages/gluezero/src/__integration__/chain-completa-flow.test.ts` exists
+- [x] `packages/gluezero/src/__integration__/features-opt-out.test.ts` exists
 - [x] Commit `4c6950e` (RED devtools-broker test) found
 - [x] Commit `3217a9a` (GREEN devtools-broker source) found
 - [x] Commit `2db79c0` (GREEN devtools-factory) found
 - [x] Commit `ae1a565` (RED sem-bridge test) found
-- [x] Commit `74e4c4d` (GREEN createSemBridge BLOCKER-2 fix) found
+- [x] Commit `74e4c4d` (GREEN createGlueZero BLOCKER-2 fix) found
 - [x] Commit `9a96216` (Task 3 aggregato barrel + integration BLOCKER-1) found
 - [x] D-83 strict: 0 diff lines su packages/{core,mapper,routing,gateway,worker}/src/
 - [x] BLOCKER-2 acceptance grep: 10 hits ≥ 4

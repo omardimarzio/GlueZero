@@ -19,7 +19,7 @@ dependency-graph:
     - core-runtime-deps-installed
   affects:
     - all-future-f1-plans
-    - "@sembridge/core-public-api"
+    - "@gluezero/core-public-api"
 tech-stack:
   added:
     - nanoid@5.1.9 (runtime dep, packages/core)
@@ -56,19 +56,19 @@ metrics:
   commits: 2
 ---
 
-# Phase 1 Plan 02: Configurazione @sembridge/core Summary
+# Phase 1 Plan 02: Configurazione @gluezero/core Summary
 
-Configurazione completa del package `@sembridge/core` come UNICO sub-package con codice attivo in F1: package.json con runtime deps lockate (`nanoid@5.1.9`, `valibot@1.3.1`) + devDeps locali (`tsup@8.5.1`, `typescript@6.0.3`, `vitest@4.1.5`, `jsdom@29.1.0`), tsconfig esteso da base con `ignoreDeprecations: "6.0"`, tsup ESM-only con dts rollup, vitest jsdom + coverage v8 90/85/90/90, README skeleton DOC-01, `src/index.ts` placeholder ESM (`export {}`); pipeline build+test+typecheck verde.
+Configurazione completa del package `@gluezero/core` come UNICO sub-package con codice attivo in F1: package.json con runtime deps lockate (`nanoid@5.1.9`, `valibot@1.3.1`) + devDeps locali (`tsup@8.5.1`, `typescript@6.0.3`, `vitest@4.1.5`, `jsdom@29.1.0`), tsconfig esteso da base con `ignoreDeprecations: "6.0"`, tsup ESM-only con dts rollup, vitest jsdom + coverage v8 90/85/90/90, README skeleton DOC-01, `src/index.ts` placeholder ESM (`export {}`); pipeline build+test+typecheck verde.
 
 ## Objective Achieved
 
-L'obiettivo del plan 01-02 è raggiunto integralmente: `pnpm --filter @sembridge/core build` produce `dist/index.js` (68 B ESM) + `dist/index.d.ts` (13 B declaration), `pnpm --filter @sembridge/core typecheck` esce 0, `pnpm --filter @sembridge/core test` esce 0 (no test files atteso), `node -e "import('./dist/index.js')"` ritorna `[]` (placeholder ESM valido). Tutte e 5 le verifiche packaging baseline (PKG-01 ESM, PKG-02 TS source, PKG-03 ES2022 target, PKG-04 .d.ts, exports field con types-prima-di-import) sono in atto.
+L'obiettivo del plan 01-02 è raggiunto integralmente: `pnpm --filter @gluezero/core build` produce `dist/index.js` (68 B ESM) + `dist/index.d.ts` (13 B declaration), `pnpm --filter @gluezero/core typecheck` esce 0, `pnpm --filter @gluezero/core test` esce 0 (no test files atteso), `node -e "import('./dist/index.js')"` ritorna `[]` (placeholder ESM valido). Tutte e 5 le verifiche packaging baseline (PKG-01 ESM, PKG-02 TS source, PKG-03 ES2022 target, PKG-04 .d.ts, exports field con types-prima-di-import) sono in atto.
 
 ## Tasks Executed
 
 | # | Name | Commit | Status |
 |---|------|--------|--------|
-| 1 | Creare package.json + tsconfig + tsup config + README per @sembridge/core | `6de9f41` | done |
+| 1 | Creare package.json + tsconfig + tsup config + README per @gluezero/core | `6de9f41` | done |
 | 2 | vitest.config.ts + src/index.ts placeholder + install runtime deps | `d6004c7` | done |
 
 ## Files Created
@@ -80,7 +80,7 @@ L'obiettivo del plan 01-02 è raggiunto integralmente: `pnpm --filter @sembridge
 - `packages/core/README.md` — skeleton DOC-01 con installazione pnpm, API surface attesa (createBroker, Broker, BrokerEvent, BrokerError, EventTap, ecc.), vincolo architetturale EventTap pre-instrumentato F1, stato Phase 1 plan-by-plan, riferimenti PRD/CONTEXT/RESEARCH
 
 **Test config (1 file):**
-- `packages/core/vitest.config.ts` — `name: '@sembridge/core'`, `environment: 'jsdom'` (browser-like DOM per integration mid-level, 3-livelli strategy), `globals: false` (`import { describe, it, expect } from 'vitest'` esplicito, DX migliore in libreria pubblicata), `include: ['src/**/*.test.ts']`, coverage v8 con thresholds `90/85/90/90`, `typecheck.enabled: false`
+- `packages/core/vitest.config.ts` — `name: '@gluezero/core'`, `environment: 'jsdom'` (browser-like DOM per integration mid-level, 3-livelli strategy), `globals: false` (`import { describe, it, expect } from 'vitest'` esplicito, DX migliore in libreria pubblicata), `include: ['src/**/*.test.ts']`, coverage v8 con thresholds `90/85/90/90`, `typecheck.enabled: false`
 
 **Source (1 file):**
 - `packages/core/src/index.ts` — modulo ESM placeholder valido (`export {}`); plan 08 (Wave 4) sostituirà con re-export pubblici (`createBroker`, `Broker`, types, errori)
@@ -103,7 +103,7 @@ L'obiettivo del plan 01-02 è raggiunto integralmente: `pnpm --filter @sembridge
 ## Verification Results
 
 ### Acceptance criteria Task 1
-- [x] `packages/core/package.json` esiste e contiene `"name": "@sembridge/core"`, `"type": "module"`, `"sideEffects": false`
+- [x] `packages/core/package.json` esiste e contiene `"name": "@gluezero/core"`, `"type": "module"`, `"sideEffects": false`
 - [x] Runtime deps `nanoid@5.1.9` e `valibot@1.3.1` in `dependencies`
 - [x] devDeps `tsup@8.5.1`, `typescript@6.0.3`, `vitest@4.1.5`, `jsdom@29.1.0`
 - [x] `exports.["."]` con `types` (chiave) PRIMA di `import` (chiave) — verificato visivamente nel JSON
@@ -112,21 +112,21 @@ L'obiettivo del plan 01-02 è raggiunto integralmente: `pnpm --filter @sembridge
 - [x] `size-limit` con budget `8 KB` gzip
 - [x] `tsconfig.json` extends `../../tsconfig.base.json`, `outDir: "./dist"`, `rootDir: "./src"`
 - [x] `tsup.config.ts` ha `format: ['esm']`, `dts: true`, `target: 'es2022'`, `platform: 'browser'`, `splitting: false`, `treeshake: true`, `clean: true`
-- [x] `README.md` esiste, contiene `# @sembridge/core`, menziona `EventTap` come vincolo architetturale F1, elenca API surface skeleton
+- [x] `README.md` esiste, contiene `# @gluezero/core`, menziona `EventTap` come vincolo architetturale F1, elenca API surface skeleton
 - [x] Tutti i JSON parsano senza errori (`node -e "JSON.parse(...)"` esce 0)
 
 ### Acceptance criteria Task 2
 - [x] `vitest.config.ts` contiene `environment: 'jsdom'`, `globals: false`, `provider: 'v8'`, `statements: 90`, `branches: 85`
 - [x] `src/index.ts` contiene `export {}` (modulo ESM valido placeholder)
 - [x] `pnpm install` ha aggiornato `pnpm-lock.yaml` con `nanoid@5.1.9` e `valibot@1.3.1`
-- [x] `pnpm --filter @sembridge/core build` esce 0; ESM `dist/index.js` 68 B, DTS `dist/index.d.ts` 13 B, sourcemap 69 B
+- [x] `pnpm --filter @gluezero/core build` esce 0; ESM `dist/index.js` 68 B, DTS `dist/index.d.ts` 13 B, sourcemap 69 B
 - [x] `packages/core/dist/index.js` esiste post-build
 - [x] `packages/core/dist/index.d.ts` esiste post-build (PKG-04 baseline)
-- [x] `pnpm --filter @sembridge/core typecheck` esce 0
-- [x] `pnpm --filter @sembridge/core test` esce 0 ("No test files found, exiting with code 0")
+- [x] `pnpm --filter @gluezero/core typecheck` esce 0
+- [x] `pnpm --filter @gluezero/core test` esce 0 ("No test files found, exiting with code 0")
 - [x] `cd packages/core && node -e "import('./dist/index.js').then(m => console.log(Object.keys(m)))"` esce 0 e stampa `[]`
 
-### Output finale `pnpm --filter @sembridge/core build`
+### Output finale `pnpm --filter @gluezero/core build`
 
 ```
 CLI Building entry: src/index.ts
@@ -150,7 +150,7 @@ DTS dist/index.d.ts 13.00 B
 ```
 packages/core/dist/
 ├── index.d.ts       13 B   "export {  }"
-├── index.js         68 B   ESM con banner /* @sembridge/core — MIT — ... */
+├── index.js         68 B   ESM con banner /* @gluezero/core — MIT — ... */
 └── index.js.map     69 B   sourcemap
 ```
 
@@ -160,8 +160,8 @@ packages/core/dist/
 
 **1. [Rule 3 - Blocking] Aggiunto `"ignoreDeprecations": "6.0"` a packages/core/tsconfig.json**
 
-- **Found during:** Task 2 — `pnpm --filter @sembridge/core build` (DTS phase)
-- **Issue:** `pnpm --filter @sembridge/core build` falliva nella fase DTS con `error TS5101: Option 'baseUrl' is deprecated and will stop functioning in TypeScript 7.0`. La fonte non è la nostra `tsconfig.json` (che NON contiene `baseUrl`), ma `tsup@8.5.1`: il file `node_modules/.pnpm/tsup@8.5.1.../tsup/dist/rollup.js` linea 6837 hardcoda `baseUrl: compilerOptions.baseUrl || "."` quando configura il rollup-plugin-dts internamente. TypeScript 6.0.3 promuove `baseUrl` da deprecation warning ad errore hard quando processa il config rollup.
+- **Found during:** Task 2 — `pnpm --filter @gluezero/core build` (DTS phase)
+- **Issue:** `pnpm --filter @gluezero/core build` falliva nella fase DTS con `error TS5101: Option 'baseUrl' is deprecated and will stop functioning in TypeScript 7.0`. La fonte non è la nostra `tsconfig.json` (che NON contiene `baseUrl`), ma `tsup@8.5.1`: il file `node_modules/.pnpm/tsup@8.5.1.../tsup/dist/rollup.js` linea 6837 hardcoda `baseUrl: compilerOptions.baseUrl || "."` quando configura il rollup-plugin-dts internamente. TypeScript 6.0.3 promuove `baseUrl` da deprecation warning ad errore hard quando processa il config rollup.
 - **Fix:** Aggiunto `"ignoreDeprecations": "6.0"` a `packages/core/tsconfig.json#compilerOptions`. È la fix raccomandata dal compiler stesso (vedi messaggio TS6101 e https://aka.ms/ts6). Comportamento atteso: silenziare il deprecation per tutto il sub-tree TS finché tsup non riceve fix upstream.
 - **Files modified:** `packages/core/tsconfig.json`
 - **Commit:** `d6004c7`
@@ -169,8 +169,8 @@ packages/core/dist/
 
 **2. [Rule 3 - Blocking] Aggiunto `--passWithNoTests` agli script test/test:coverage**
 
-- **Found during:** Task 2 — `pnpm --filter @sembridge/core test`
-- **Issue:** Vitest 4.1.5 esce con codice 1 (NON 0 come affermato in `01-RESEARCH.md` e nel plan) quando `include: ['src/**/*.test.ts']` non matcha alcun file. Output: `No test files found, exiting with code 1` → `ERR_PNPM_RECURSIVE_RUN_FIRST_FAIL`. L'acceptance criterion del Task 2 dichiara esplicitamente "Comando `pnpm --filter @sembridge/core test` esce 0".
+- **Found during:** Task 2 — `pnpm --filter @gluezero/core test`
+- **Issue:** Vitest 4.1.5 esce con codice 1 (NON 0 come affermato in `01-RESEARCH.md` e nel plan) quando `include: ['src/**/*.test.ts']` non matcha alcun file. Output: `No test files found, exiting with code 1` → `ERR_PNPM_RECURSIVE_RUN_FIRST_FAIL`. L'acceptance criterion del Task 2 dichiara esplicitamente "Comando `pnpm --filter @gluezero/core test` esce 0".
 - **Fix:** Aggiornati `scripts.test` da `vitest run` a `vitest run --passWithNoTests` e `scripts.test:coverage` da `vitest run --coverage` a `vitest run --coverage --passWithNoTests`. È il flag Vitest standard per consentire CI verde durante early bootstrap (zero test files = OK). Convenzione documentata su https://vitest.dev/guide/cli.html.
 - **Files modified:** `packages/core/package.json`
 - **Commit:** `d6004c7`
@@ -237,5 +237,5 @@ Nessuna nuova trust boundary o surface security-relevant introdotta oltre a quel
 - FOUND: `packages/core/dist/index.js.map` (69 B sourcemap)
 
 **Commits verified:**
-- FOUND: `6de9f41` (feat(01-02): configura @sembridge/core con package.json + tsconfig + tsup + README)
+- FOUND: `6de9f41` (feat(01-02): configura @gluezero/core con package.json + tsconfig + tsup + README)
 - FOUND: `d6004c7` (feat(01-02): aggiunge vitest config + src/index.ts placeholder + installa runtime deps)

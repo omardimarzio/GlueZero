@@ -38,7 +38,7 @@ key-files:
     - packages/devtools/src/index.ts
 decisions:
   - D-159 carryover (tap registry chain con error isolation, sostituisce F1 single-tap)
-  - D-20 carryover (try/catch swallow inline — non importato da @sembridge/core per preservare boundary D-83)
+  - D-20 carryover (try/catch swallow inline — non importato da @gluezero/core per preservare boundary D-83)
   - Ordering F6 first + F1 last in wrapLegacyTap (consistency con additive semantica decl merging)
   - Snapshot semantics su getMultiplexed: cattura stato registry alla chiamata (no overhead per-step list rebuild — perf trade-off)
   - Identity preservation step+snapshot (no clone fra tap — Pitfall 7B perf)
@@ -75,7 +75,7 @@ File ownership disgiunta verificata: 06-02 owns `packages/cache/src/{memory-cach
 - **Pattern**: Adapter classico — pipeline F1 vede 1 tap (no breaking), F6 internamente chain N.
 
 ### D-20 carryover — safeTapStep replica inline
-- **Vincolo D-83 strict**: `safeTapStep` di F1 (`packages/core/src/core/event-tap.ts:23-34`) NON è esportato dal barrel `@sembridge/core` runtime. Importarlo via deep path violerebbe il package boundary F1.
+- **Vincolo D-83 strict**: `safeTapStep` di F1 (`packages/core/src/core/event-tap.ts:23-34`) NON è esportato dal barrel `@gluezero/core` runtime. Importarlo via deep path violerebbe il package boundary F1.
 - **Soluzione**: pattern replicato inline in `multiplex-tap.ts` (try/catch swallow per-tap, ~6 LOC). Comment `// swallow — pattern F1 D-20 carryover` documenta la duplicazione intenzionale.
 - **Verifica D-83**: `git diff 78ee413..HEAD -- packages/{core,mapper,routing,gateway,worker}/src/` → 0 lines.
 

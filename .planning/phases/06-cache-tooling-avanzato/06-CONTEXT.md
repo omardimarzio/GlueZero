@@ -6,13 +6,13 @@
 <domain>
 ## Phase Boundary
 
-Esiste un cache layer con `MemoryCacheAdapter` di default (LRU bounded), chiave configurabile per route/topic con default `${topic}::${stableHash(canonicalPayload)}`, TTL configurabile + invalidazione manuale/automatica, scope user-aware obbligatorio per route auth (anti cross-tenant leakage); il metadata di consegna distingue origine `cache` vs `remote` (SC-1). Il developer tooling è completo: **Event Inspector** mostra il ciclo di vita di ogni evento attraverso i 14 step di pipeline §28 (`EventTap` instrumentato in F1 si attiva con implementazione reale via tap registry); **Route Inspector** mostra route intercettate + policy + esito; **MetricsCollector** espone `getMetrics()` con `{ counters, gauges, histograms }` simil-OpenMetrics naming `sembridge.<package>.<metric>` con quantile summary p50/p90/p99 (chiude PRD §39 #10 — TOOL-05); controlli runtime `pauseTopic`/`resumeTopic`/`flushQueue`, `enableDebug`/`disableDebug`/`getDebugSnapshot`. Pipeline §28 step 14 (logging/metrics/debug snapshot) attivato come implementazione reale. DOC consolidamento finale (DOC-01..DOC-06) come deliverable PRD §41.
+Esiste un cache layer con `MemoryCacheAdapter` di default (LRU bounded), chiave configurabile per route/topic con default `${topic}::${stableHash(canonicalPayload)}`, TTL configurabile + invalidazione manuale/automatica, scope user-aware obbligatorio per route auth (anti cross-tenant leakage); il metadata di consegna distingue origine `cache` vs `remote` (SC-1). Il developer tooling è completo: **Event Inspector** mostra il ciclo di vita di ogni evento attraverso i 14 step di pipeline §28 (`EventTap` instrumentato in F1 si attiva con implementazione reale via tap registry); **Route Inspector** mostra route intercettate + policy + esito; **MetricsCollector** espone `getMetrics()` con `{ counters, gauges, histograms }` simil-OpenMetrics naming `gluezero.<package>.<metric>` con quantile summary p50/p90/p99 (chiude PRD §39 #10 — TOOL-05); controlli runtime `pauseTopic`/`resumeTopic`/`flushQueue`, `enableDebug`/`disableDebug`/`getDebugSnapshot`. Pipeline §28 step 14 (logging/metrics/debug snapshot) attivato come implementazione reale. DOC consolidamento finale (DOC-01..DOC-06) come deliverable PRD §41.
 
 **In scope:**
-- `@sembridge/cache` package: `CacheAdapter` interface + `MemoryCacheAdapter` (LRU bounded `maxEntries=1000` default), policy `cache-first` / `network-first` / `cache-then-network`, `RouteDefinition.cache` schema (key, ttl, scope, invalidateOn), `broker.cache.invalidate(keyOrPattern)` API, route handler `type: 'cache'` + `type: 'composite'` integrati in F3 RouteExecutor (Strategy pattern carryover D-77/D-152)
-- `@sembridge/devtools` package: `EventInspector`, `RouteInspector`, `MetricsCollector`, `getDebugSnapshot()`, `enableDebug/disableDebug`, `pauseTopic/resumeTopic/flushQueue` controlli
+- `@gluezero/cache` package: `CacheAdapter` interface + `MemoryCacheAdapter` (LRU bounded `maxEntries=1000` default), policy `cache-first` / `network-first` / `cache-then-network`, `RouteDefinition.cache` schema (key, ttl, scope, invalidateOn), `broker.cache.invalidate(keyOrPattern)` API, route handler `type: 'cache'` + `type: 'composite'` integrati in F3 RouteExecutor (Strategy pattern carryover D-77/D-152)
+- `@gluezero/devtools` package: `EventInspector`, `RouteInspector`, `MetricsCollector`, `getDebugSnapshot()`, `enableDebug/disableDebug`, `pauseTopic/resumeTopic/flushQueue` controlli
 - **Tap registry pattern (D-159)**: `BrokerConfig.taps?: readonly EventTap[]` (chain con error isolation try/catch isolato per tap); F1 single-tap deprecato con auto-wrap
-- **Composition wrapper (D-83 strict carryover)**: F6 vive solo in `packages/cache/src/` + `packages/devtools/src/` + `augment.ts`. Zero modifiche runtime a F1-F5. Pattern: `createCacheBroker` + `createDevtoolsBroker` o aggregazione via factory pubblico in `@sembridge/sembridge` se researcher conferma topology unificata
+- **Composition wrapper (D-83 strict carryover)**: F6 vive solo in `packages/cache/src/` + `packages/devtools/src/` + `augment.ts`. Zero modifiche runtime a F1-F5. Pattern: `createCacheBroker` + `createDevtoolsBroker` o aggregazione via factory pubblico in `@gluezero/gluezero` se researcher conferma topology unificata
 - **Pipeline §28 step 14** (logging/metrics/debug snapshot): attivato come implementazione reale (no-op F1 → real F6); tap invocato per tutti 14 step + lifecycle events
 - **EventTap pre-instrumentato F1** (`packages/core/src/types/tap.ts`: `EventTap`, `PipelineSnapshot`, `PipelineStep` già esportati): F6 sostituisce no-op con implementazioni reali via tap registry
 - **Mapper canonical riuso (F2 carryover)**: Inspector mostra payloadOriginal / payloadCanonical / payloadFinalPerConsumer (TOOL-01 deliverable)
@@ -22,9 +22,9 @@ Esiste un cache layer con `MemoryCacheAdapter` di default (LRU bounded), chiave 
 - DOC consolidation finale (DOC-01..DOC-06) come deliverable PRD §41
 
 **Out of scope (deferred):**
-- `@sembridge/cache-idb` IndexedDB-backed cache (V1.x — ROADMAP esplicito)
+- `@gluezero/cache-idb` IndexedDB-backed cache (V1.x — ROADMAP esplicito)
 - Service Worker / Push notification bridge (V2 — RT2-01 / PRD §18.7)
-- OpenTelemetry / Prometheus exporter nativo (V1.x — il design metric format dot.case `sembridge.<pkg>.<metric>` rende mapping 1:1 banale ma export adapter è separato)
+- OpenTelemetry / Prometheus exporter nativo (V1.x — il design metric format dot.case `gluezero.<pkg>.<metric>` rende mapping 1:1 banale ma export adapter è separato)
 - Real-time dashboard UI (V1 espone API `getMetrics()` + `getDebugSnapshot()` consumabili da UI esterna; non shipping un'UI built-in)
 - Distributed tracing W3C (`traceparent`/`tracestate` propagation): V1 mantiene `traceId` field in BrokerEvent (F1 CORE-05) ma non implementa propagazione cross-process
 - Cache size-bytes-based eviction (V1.x se profiling mostra need; V1 = entry-count LRU)
@@ -60,23 +60,23 @@ Esiste un cache layer con `MemoryCacheAdapter` di default (LRU bounded), chiave 
 
 ### C. MetricsCollector schema & semantics (TOOL-03/05 — chiude PRD §39 #10)
 
-- **D-163:** **Naming `sembridge.<package>.<metric>` dot.case namespaced** — Pattern Prometheus/OpenMetrics-friendly. Esempi:
-  - Counters: `sembridge.broker.events_published_total`, `sembridge.broker.events_dropped_total{reason="..."}`, `sembridge.cache.hits_total`, `sembridge.cache.miss_total`, `sembridge.cache.evictions_total`, `sembridge.http.requests_total{status="200"}`, `sembridge.http.errors_total{category="..."}`, `sembridge.worker.tasks_total{state="completed|failed|cancelled|timeout"}`, `sembridge.realtime.reconnects_total`, `sembridge.mapper.transformations_total`
-  - Gauges: `sembridge.broker.subscribers_count{topic="..."}`, `sembridge.broker.backlog_size{topic="..."}`, `sembridge.worker.active_tasks`, `sembridge.worker.pool_size`, `sembridge.cache.entries_count`, `sembridge.realtime.channels_active`
-  - Histograms: `sembridge.http.duration_ms`, `sembridge.worker.task_duration_ms`, `sembridge.mapper.duration_ms`, `sembridge.pipeline.step_duration_ms{step="..."}`
+- **D-163:** **Naming `gluezero.<package>.<metric>` dot.case namespaced** — Pattern Prometheus/OpenMetrics-friendly. Esempi:
+  - Counters: `gluezero.broker.events_published_total`, `gluezero.broker.events_dropped_total{reason="..."}`, `gluezero.cache.hits_total`, `gluezero.cache.miss_total`, `gluezero.cache.evictions_total`, `gluezero.http.requests_total{status="200"}`, `gluezero.http.errors_total{category="..."}`, `gluezero.worker.tasks_total{state="completed|failed|cancelled|timeout"}`, `gluezero.realtime.reconnects_total`, `gluezero.mapper.transformations_total`
+  - Gauges: `gluezero.broker.subscribers_count{topic="..."}`, `gluezero.broker.backlog_size{topic="..."}`, `gluezero.worker.active_tasks`, `gluezero.worker.pool_size`, `gluezero.cache.entries_count`, `gluezero.realtime.channels_active`
+  - Histograms: `gluezero.http.duration_ms`, `gluezero.worker.task_duration_ms`, `gluezero.mapper.duration_ms`, `gluezero.pipeline.step_duration_ms{step="..."}`
   - Vantaggi: namespace anti-conflict (no clash con user metrics), hierarchy navigabile, `_total` suffix per counter (Prometheus convention), `_ms` suffix per duration, mapping 1:1 a OpenTelemetry/Prometheus exporter V1.x.
 
 - **D-164:** **Cumulative-only counters + helper `getMetricsDelta(previousSnapshot)`** — `getMetrics()` ritorna sempre valori cumulativi dal boot del broker (counter sempre crescente, gauge attuale, histogram aggregate). Nessun side-effect: chiamabile concurrent da N consumer senza race. Helper opzionale `getMetricsDelta(prev: MetricsSnapshot): MetricsDelta` calcola differenze lato consumer (utility pattern). Pattern OpenMetrics/Prometheus standard. Histogram conservano samples in ring buffer interno (capped, non resettato — vedi D-165).
 
 - **D-165:** **Histogram = quantile summary `{ count, sum, p50, p90, p99 }` con ring buffer ~1024 samples** — Per ogni histogram metric: `{ count: number, sum: number, p50: number, p90: number, p99: number }` (number = ms). Calcolo via reservoir sampling (Vitter Algorithm R o equivalente — researcher decide tra t-digest vs reservoir). Ring buffer interno cap default 1024 samples per metric (override `BrokerConfig.devtools.histogramSamples: N`). Compatto, leggibile, copre 95% use-case dashboard, evita memory bloat. Standard Prometheus 'summary' compatible.
 
-- **D-166:** **Labels Prometheus-style flatten in name + cap 100 distinct combinations** — Le label sono parte della metric key concatenata in stringa: `sembridge.http.duration_ms{route_id="weather-fetch",topic="weather.requested"}`. Counter: `sembridge.http.requests_total{route_id="weather-fetch",status="200"}`. Vantaggi: zero ambiguità nel JSON output, parser Prometheus 1:1, sintassi standard. **Cap cardinality: max 100 distinct label combinations per metric base name** (default override `BrokerConfig.devtools.maxLabelCombinations: N`). All'overflow: drop nuove combinazioni + emit `system.metrics.cardinality-overflow` warn (audit). Coerente con pattern anti memory-bloat F5 D-128 cap pool + F4 D-109 cap reconnect.
+- **D-166:** **Labels Prometheus-style flatten in name + cap 100 distinct combinations** — Le label sono parte della metric key concatenata in stringa: `gluezero.http.duration_ms{route_id="weather-fetch",topic="weather.requested"}`. Counter: `gluezero.http.requests_total{route_id="weather-fetch",status="200"}`. Vantaggi: zero ambiguità nel JSON output, parser Prometheus 1:1, sintassi standard. **Cap cardinality: max 100 distinct label combinations per metric base name** (default override `BrokerConfig.devtools.maxLabelCombinations: N`). All'overflow: drop nuove combinazioni + emit `system.metrics.cardinality-overflow` warn (audit). Coerente con pattern anti memory-bloat F5 D-128 cap pool + F4 D-109 cap reconnect.
 
 ### D. Inspector retention + pauseTopic queue (TOOL-01/02/05)
 
 - **D-167:** **EventInspector + RouteInspector ring buffer 500 eventi default + config** — Ring buffer in-memory degli ultimi 500 eventi (incluse `PipelineSnapshot` complete: 14 step + payloadBefore/After + duration per step). Override via `BrokerConfig.devtools.eventBufferSize: N` (analog `BrokerConfig.devtools.routeBufferSize`). Consumer legge via `getEventInspectorBuffer()` / `getRouteInspectorBuffer()` (deep clone immutable via structuredClone, pattern D-162). Eventi più vecchi droppati FIFO silenziosamente. Memory footprint atteso ~5-10MB con payload medio. RouteInspector segue stesso pattern (storia esecuzione route con retry, cache hit/miss, policy applicate, esito).
 
-- **D-168:** **`pauseTopic(topic)` = block publish + queue events FIFO** — Semantica completa "pause": nuove `publish(topic)` vengono accodate in FIFO queue dedicata al topic; subscriber NON ricevono; route NON triggherano (HTTP/worker/cache/realtime/composite/local tutti bloccati). `resumeTopic(topic)` flushha la queue in ordine cronologico delivery FIFO (eventi accodati replayyati attraverso pipeline §28 normale). Coerente con SC-4 wording esplicito "gli eventi vengono accodati". Inspector vede stato `paused` esplicito (gauge `sembridge.broker.paused_topics_count`).
+- **D-168:** **`pauseTopic(topic)` = block publish + queue events FIFO** — Semantica completa "pause": nuove `publish(topic)` vengono accodate in FIFO queue dedicata al topic; subscriber NON ricevono; route NON triggherano (HTTP/worker/cache/realtime/composite/local tutti bloccati). `resumeTopic(topic)` flushha la queue in ordine cronologico delivery FIFO (eventi accodati replayyati attraverso pipeline §28 normale). Coerente con SC-4 wording esplicito "gli eventi vengono accodati". Inspector vede stato `paused` esplicito (gauge `gluezero.broker.paused_topics_count`).
 
 - **D-169:** **`flushQueue(topic?)` = drop silenzioso + emit `system.queue.flushed`** — Svuota la FIFO queue scartando gli eventi accodati durante pauseTopic. Pubblica evento audit `system.queue.flushed` con payload `{ topic, droppedCount, droppedEventIds: readonly string[] }`. **NIENTE re-publish** automatico (evita double-effect side-effect su HTTP/worker/realtime). Per replay → usare resumeTopic() (che fa replay automatico). flushQueue semantica destructive-by-design coerente con admin tool pattern. Argomento opzionale: `flushQueue()` senza topic svuota TUTTE le queue paused.
 
@@ -88,9 +88,9 @@ Esiste un cache layer con `MemoryCacheAdapter` di default (LRU bounded), chiave 
 - **Stable hash implementation per cache key** (D-155): library nativa (es. `json-stable-stringify` + crypto-API SHA256/MD5 oppure custom djb2/FNV-1a hash veloce) lasciato al researcher. Vincolo: zero dependency esterna se possibile (browser-native). Pattern preferenziale: stable JSON serializer + native `crypto.subtle.digest('SHA-256')` o cheap hash (FNV-1a) se collision-rare basta.
 - **Reservoir sampling vs t-digest** per histogram (D-165): lasciato al researcher in base a STACK.md + benchmark dimensione bundle. t-digest è più accurato p99/p999 ma più LOC; reservoir Algorithm R è ~30 LOC e p50/p90/p99 accettabili.
 - **Default thresholds** (`maxEntries=1000`, `eventBufferSize=500`, `histogramSamples=1024`, `maxLabelCombinations=100`, `pauseQueueMaxSize=1000`): lockati come default ragionevoli; tutti override-abili via `BrokerConfig.cache`/`BrokerConfig.devtools`. Researcher può proporre tweak basati su benchmark in F6 RESEARCH.md.
-- **Topology composition wrapper o aggregate factory**: pattern `createCacheBroker(createWorkerBroker(createRealtimeBroker(...)))` chain o factory unificato `createSemBridge(config)` aggregato in `@sembridge/sembridge`: lasciato al researcher per analizzare DX optimal. Vincolo D-83 strict carryover: F6 vive solo in `packages/cache/src/` + `packages/devtools/src/` + `augment.ts`.
+- **Topology composition wrapper o aggregate factory**: pattern `createCacheBroker(createWorkerBroker(createRealtimeBroker(...)))` chain o factory unificato `createGlueZero(config)` aggregato in `@gluezero/gluezero`: lasciato al researcher per analizzare DX optimal. Vincolo D-83 strict carryover: F6 vive solo in `packages/cache/src/` + `packages/devtools/src/` + `augment.ts`.
 - **Cache invalidation API surface** (`broker.cache.invalidate(keyOrPattern)` + `RouteDefinition.cache.invalidateOn: ['topic.x']` event-driven): pattern lockato concettualmente (CACHE-02 + SC-5) ma signature precisa lasciata al planner — `keyOrPattern: string | RegExp | { prefix: string }`, dispatch synchronous vs microtask-deferred, batch invalidation via array.
-- **DOC consolidation strategy** (TypeDoc website auto-generato + README aggregato `@sembridge/sembridge`): lasciato al planner — STACK.md raccomanda TypeDoc + `typedoc-plugin-markdown`.
+- **DOC consolidation strategy** (TypeDoc website auto-generato + README aggregato `@gluezero/gluezero`): lasciato al planner — STACK.md raccomanda TypeDoc + `typedoc-plugin-markdown`.
 - **Cache-then-network ordering** (cache hit publishato in same-tick microtask vs `queueMicrotask` vs `setTimeout(..., 0)`): SC-1 garantisce 2 publish consecutivi `weather.loaded` con `metadata.origin: 'cache'` poi `'remote'`. Researcher decide micro-detail timing per rispettare ordering garantito + DX consumer (es. animation flicker control).
 - **Error categorization**: `category: 'cache'` per errori cache adapter (read/write/evict failures), `category: 'config'` per errori al register (`cache.key.required`, `cache.adapter.invalid`), `category: 'system'` per devtools errors (`metrics.cardinality-overflow`, `queue.overflow`). Pattern coerente con F3/F4/F5 mapping.
 
@@ -165,9 +165,9 @@ Esiste un cache layer con `MemoryCacheAdapter` di default (LRU bounded), chiave 
 - `.planning/research/ARCHITECTURE.md` §13 — Phase ordering rationale F6 finale post-F3 (cache route handler dipende da F3 RouteExecutor)
 
 ### Plan precedenti (codebase scaffolding già in place)
-- `packages/cache/package.json` — placeholder F1 da popolare in F6 (deps: `@sembridge/core`, `@sembridge/mapper`, `@sembridge/routing`, `@sembridge/gateway`)
+- `packages/cache/package.json` — placeholder F1 da popolare in F6 (deps: `@gluezero/core`, `@gluezero/mapper`, `@gluezero/routing`, `@gluezero/gateway`)
 - `packages/cache/src/` — vuota (da popolare in F6)
-- `packages/devtools/package.json` — placeholder F1 da popolare in F6 (deps: `@sembridge/core`, eventualmente `@sembridge/cache` per cache stats inspector)
+- `packages/devtools/package.json` — placeholder F1 da popolare in F6 (deps: `@gluezero/core`, eventualmente `@gluezero/cache` per cache stats inspector)
 - `packages/devtools/src/` — vuota (da popolare in F6)
 - `packages/core/src/types/tap.ts` — `EventTap` interface + `PipelineSnapshot` + `PipelineStep` (pre-instrumentato F1, F6 fornisce implementazioni reali)
 - `packages/core/src/types/config.ts` — `BrokerConfig.tap?: EventTap` (F1 single-tap; F6 estende con `taps?: readonly EventTap[]` array via augment.ts + auto-wrap backward-compat — D-159)
@@ -192,23 +192,23 @@ Esiste un cache layer con `MemoryCacheAdapter` di default (LRU bounded), chiave 
 - **`createPerRouteCircuitBreaker` utility** (F3 03-09): NON riusato direttamente in F6 (cache non ha breaker semantica) ma pattern factory per-route disponibile
 
 ### Established Patterns
-- **Composition wrapper Opzione B** (F2 D-49 → F3 D-83 → F4 D-101 → F5 D-121): F6 segue stesso pattern. Possibili topology: chain `createCacheBroker(createWorkerBroker(...))` o factory aggregato `createSemBridge(config)` in `@sembridge/sembridge`. Decisione lasciata al researcher
+- **Composition wrapper Opzione B** (F2 D-49 → F3 D-83 → F4 D-101 → F5 D-121): F6 segue stesso pattern. Possibili topology: chain `createCacheBroker(createWorkerBroker(...))` o factory aggregato `createGlueZero(config)` in `@gluezero/gluezero`. Decisione lasciata al researcher
 - **Declaration merging via `augment.ts`** (`packages/{routing,gateway,gateway/sse-ws,worker}/src/augment.ts`): F6 crea `packages/cache/src/augment.ts` + `packages/devtools/src/augment.ts` per estendere `BrokerConfig.cache`, `BrokerConfig.devtools`, `BrokerConfig.taps`, `RouteDefinition.cache`, `PluginDescriptor` (eventualmente). Pattern S1 anti tree-shake (`__augmentCacheLoaded` + `__augmentDevtoolsLoaded` const literal) coerente con F1-F5
 - **TDD RED→GREEN co-located test** (`*.test.ts` accanto a `*.ts`): F6 mantiene
 - **3-tier test (Tier-1 jsdom + Tier-2 mock util + Tier-3 Playwright)** (F4 D-118 / F5 D-150): F6 riusa, Tier-3 utile per benchmark cache hit timing reale e structuredClone perf
 - **Reserved internal topics `__X__` filtrati** (F4 D-111 `__ping__`/`__pong__` + F5 D-131 `__cancel__` + F5 D-135 `__progress__`): F6 può usare `__metrics__`/`__inspector__` per internal coordination se serve (planner decide)
 - **System events `system.*` audit** (F3 D-78 `system.warn` + F4 `system.realtime.*` + F5 `system.cache.scope-missing`): F6 estende con `system.cache.*`, `system.queue.flushed`, `system.queue.overflow`, `system.metrics.cardinality-overflow`
-- **CI gates final phase** (F3 03-14 / F4 04-09 / F5 05-07): F6 final gate include publint, attw ESM-only, biome, typecheck, build, size-limit budget per `@sembridge/cache` + `@sembridge/devtools` (TBD researcher), DOC consolidation
+- **CI gates final phase** (F3 03-14 / F4 04-09 / F5 05-07): F6 final gate include publint, attw ESM-only, biome, typecheck, build, size-limit budget per `@gluezero/cache` + `@gluezero/devtools` (TBD researcher), DOC consolidation
 - **Wave-based plan parallelization con file ownership disgiunta** (F3 14 wave, F4 9 wave, F5 7 wave): F6 simile (5-7 plan stimati: bootstrap + cache-adapter + cache-broker-handler + tap-registry + event-inspector + route-inspector + metrics-collector + pause-queue + final-gate-doc-consolidation)
 
 ### Integration Points
 - **`Broker.publish(event)` API**: punto di ingresso per system events `system.cache.*`/`system.queue.*` (D-157/D-169/D-170), unchanged dal contratto F1
 - **`PluginRegistration.workers` / `realtimeChannels`** (F4-F5 cascade): F6 estende cascade per cache invalidation scope-by-owner (D-126 ext F6)
-- **`createCacheBroker(config)` / `createDevtoolsBroker(config)` / `createSemBridge(config)`**: nuovo factory pubblico (researcher decide topology)
+- **`createCacheBroker(config)` / `createDevtoolsBroker(config)` / `createGlueZero(config)`**: nuovo factory pubblico (researcher decide topology)
 - **`MemoryCacheAdapter` lifecycle**: registra entries on-demand, evict LRU/TTL (D-158)
 - **`BrokerEvent.metadata.origin: 'cache' | 'remote'`** (SC-1): popolato da cache handler F6
 - **Pipeline §28 step 14**: tap real implementations (Inspector + Metrics) catturano debug snapshot finale (D-161)
-- **`@sembridge/sembridge` aggregato**: package pubblico finale che re-esporta tutto + factory `createSemBridge` (DOC-01..06 consolidation point)
+- **`@gluezero/gluezero` aggregato**: package pubblico finale che re-esporta tutto + factory `createGlueZero` (DOC-01..06 consolidation point)
 
 </code_context>
 
@@ -226,15 +226,15 @@ Esiste un cache layer con `MemoryCacheAdapter` di default (LRU bounded), chiave 
 <deferred>
 ## Deferred Ideas
 
-- **`@sembridge/cache-idb` IndexedDB-backed** (V1.x — ROADMAP esplicito): adapter per cache persistente cross-session. API contract definito in V1 (`CacheAdapter` interface) prepara lo swap a costo zero per consumer.
-- **OpenTelemetry / Prometheus exporter nativo** (V1.x): mapping 1:1 da `{ counters, gauges, histograms }` D-163 a OTLP/Prometheus exposition format. Implementazione in `@sembridge/devtools-otel` package separato.
+- **`@gluezero/cache-idb` IndexedDB-backed** (V1.x — ROADMAP esplicito): adapter per cache persistente cross-session. API contract definito in V1 (`CacheAdapter` interface) prepara lo swap a costo zero per consumer.
+- **OpenTelemetry / Prometheus exporter nativo** (V1.x): mapping 1:1 da `{ counters, gauges, histograms }` D-163 a OTLP/Prometheus exposition format. Implementazione in `@gluezero/devtools-otel` package separato.
 - **Real-time dashboard UI built-in** (V2): V1 espone API `getMetrics()` + `getDebugSnapshot()` consumabili. Dashboard UI (es. embedded preact app) considerato per V2 milestone separato.
 - **Distributed tracing W3C `traceparent`/`tracestate`** (V1.x): V1 mantiene `traceId` field in BrokerEvent (F1 CORE-05) ma non implementa propagazione. Aggiungere via plugin custom in V1.x quando emerge use case.
 - **Cache size-bytes-based eviction** (V1.x): V1 = entry-count LRU (D-158). Bytes-based eviction richiede estimateSize per entry (overhead + euristica). Riconsiderato se profiling SPA long-lived mostra problema.
 - **Custom histogram bucketing per route policy** (V1.x): V1 = quantile summary only (D-165). Bucket Prometheus configurabili come opt-in via `BrokerConfig.devtools.histograms.<metric>.buckets: number[]` se emerge use case dashboard.
 - **Auto-instrumentation di tap custom oltre Inspector + Metrics** (V1.x): V1 = consumer registra manualmente. Auto-wire tap di terze parti (es. Sentry tap, LogRocket tap) considerato come plugin ecosystem V1.x.
 - **Inspector persistence** (LocalStorage / IndexedDB): V1 = ring buffer in-memory only. Persistenza considerata se utenti chiedono "save debug session for replay".
-- **HMR / hot reload del config devtools** (V1.x bundler-specific): non vincolo SemBridge. Documentazione in DOC-06 punta al bundler docs.
+- **HMR / hot reload del config devtools** (V1.x bundler-specific): non vincolo GlueZero. Documentazione in DOC-06 punta al bundler docs.
 - **`SharedWorker` cross-tab metrics aggregation** (V2): aggregazione metriche cross-tab via SharedWorker. Use case raro, complica lifecycle.
 - **Service Worker / Push notification bridge** (V2 — RT2-01 / PRD §18.7): use case oltre la vita della pagina.
 - **WorkerInspector dedicated** (V1.x): F5 ha già `getDebugSnapshot().workerPoolState` + `workerLateResponses` counter (D-133). Inspector dedicato con timeline visuale dei worker task considerato per V1.x.

@@ -12,7 +12,7 @@
 
 ## File Classification
 
-### Package `@sembridge/cache` (W1 bootstrap + W2 + W2-bis + W4)
+### Package `@gluezero/cache` (W1 bootstrap + W2 + W2-bis + W4)
 
 | File F6 | Ruolo | Data Flow | Closest Analog | Match Quality | Plan |
 |---------|-------|-----------|----------------|---------------|------|
@@ -44,7 +44,7 @@
 | `packages/cache/src/__browser__/cache-hit-ordering.test.ts` | browser test (Tier-3 Playwright) | test (real timing browser) | `packages/worker/src/__browser__/worker-real.test.ts` (D-150) | exact | 06-09 |
 | `packages/cache/README.md` (italiano) | documentation | docs | `packages/worker/README.md` (429 LOC, 11 sezioni italiane) + `packages/gateway/README.md` (579 LOC) | exact | 06-09 |
 
-### Package `@sembridge/devtools` (W1 + W2 ∥ + W3 + W4)
+### Package `@gluezero/devtools` (W1 + W2 ∥ + W3 + W4)
 
 | File F6 | Ruolo | Data Flow | Closest Analog | Match Quality | Plan |
 |---------|-------|-----------|----------------|---------------|------|
@@ -78,16 +78,16 @@
 | `packages/devtools/src/__browser__/structuredclone-perf.test.ts` | browser perf test | test (real timing) | `packages/worker/src/__browser__/worker-real.test.ts` (Tier-3 D-150) | exact | 06-09 |
 | `packages/devtools/README.md` (italiano, 11 sezioni, ~400 LOC target) | documentation (DOC-06 closure) | docs | `packages/worker/README.md` (429 LOC, 11 sezioni) + `packages/gateway/README.md` (579 LOC) | exact | 06-09 |
 
-### Package `@sembridge/sembridge` (aggregato, W4 + W5)
+### Package `@gluezero/gluezero` (aggregato, W4 + W5)
 
 | File F6 | Ruolo | Data Flow | Closest Analog | Match Quality | Plan |
 |---------|-------|-----------|----------------|---------------|------|
-| `packages/sembridge/package.json` (popolare deps su tutti F1-F6) | config (aggregate) | build | `packages/worker/package.json` per shape; nuovo per scope (re-export 7 sub-package) | role-match | 06-01 |
-| `packages/sembridge/src/index.ts` | aggregate barrel (re-export 7 package) | re-export | `packages/core/src/index.ts` (barrel pattern) ma scope aggregato | role-match | 06-08 |
-| `packages/sembridge/src/sem-bridge.ts` | factory aggregato `createSemBridge(config)` | bootstrap (chain createCacheBroker → createDevtoolsBroker → createWorkerBroker → createRealtimeBroker → createRouterBroker → createMapperBroker) | `packages/worker/src/public-factory.ts` (Valibot safeParse al boundary) + chain composition `worker-broker.ts:1-50` (D-121 doc chain example) | exact + new aggregate scope | 06-08 |
-| `packages/sembridge/src/sem-bridge.test.ts` | unit test (chain composition) | test | analog public-factory.test.ts | role-match | 06-08 |
-| `packages/sembridge/README.md` (italiano, DOC-02 + DOC-05) | documentation (guida integrazione plugin + esempi end-to-end + scenario meteo F5+F6) | docs | `packages/worker/README.md` 11 sezioni (carryover scenario meteo §7) + scenario meteo PRD §29 | exact (estende worker README scenario) | 06-09 |
-| `packages/sembridge/EXAMPLES.md` (italiano, DOC-05) | examples + Q&A 20+ | docs | `packages/worker/README.md` §11 Q&A pattern (PRD §39 #11 closure) | exact | 06-09 |
+| `packages/gluezero/package.json` (popolare deps su tutti F1-F6) | config (aggregate) | build | `packages/worker/package.json` per shape; nuovo per scope (re-export 7 sub-package) | role-match | 06-01 |
+| `packages/gluezero/src/index.ts` | aggregate barrel (re-export 7 package) | re-export | `packages/core/src/index.ts` (barrel pattern) ma scope aggregato | role-match | 06-08 |
+| `packages/gluezero/src/glue-zero.ts` | factory aggregato `createGlueZero(config)` | bootstrap (chain createCacheBroker → createDevtoolsBroker → createWorkerBroker → createRealtimeBroker → createRouterBroker → createMapperBroker) | `packages/worker/src/public-factory.ts` (Valibot safeParse al boundary) + chain composition `worker-broker.ts:1-50` (D-121 doc chain example) | exact + new aggregate scope | 06-08 |
+| `packages/gluezero/src/sem-bridge.test.ts` | unit test (chain composition) | test | analog public-factory.test.ts | role-match | 06-08 |
+| `packages/gluezero/README.md` (italiano, DOC-02 + DOC-05) | documentation (guida integrazione plugin + esempi end-to-end + scenario meteo F5+F6) | docs | `packages/worker/README.md` 11 sezioni (carryover scenario meteo §7) + scenario meteo PRD §29 | exact (estende worker README scenario) | 06-09 |
+| `packages/gluezero/EXAMPLES.md` (italiano, DOC-05) | examples + Q&A 20+ | docs | `packages/worker/README.md` §11 Q&A pattern (PRD §39 #11 closure) | exact | 06-09 |
 
 ### File globali F6 (W1 + W5)
 
@@ -109,7 +109,7 @@
 
 **Imports pattern** (riga 1-7):
 ```typescript
-// augment.ts — TS declaration merging per estendere @sembridge/core con tipi F6
+// augment.ts — TS declaration merging per estendere @gluezero/core con tipi F6
 // Cache (D-155 / D-156 / D-167 / D-170 in 06-CONTEXT.md — replica simmetrica
 // di worker/augment.ts di F5).
 //
@@ -120,7 +120,7 @@ import type { CacheAdapter } from './types/cache-adapter'
 
 **Declare module pattern** (analog `packages/worker/src/augment.ts:48-77`):
 ```typescript
-declare module '@sembridge/core' {
+declare module '@gluezero/core' {
   interface BrokerConfig {
     /** F6 sezione `cache` (D-155, PRD §20): config cache layer LRU + scope hybrid. */
     cache?: CacheConfig
@@ -262,10 +262,10 @@ case 'queue-bounded': {
 
 **Imports + DI pattern** (analog `packages/worker/src/worker-handler.ts:50-77`):
 ```typescript
-import { type BrokerError, type BrokerEvent, createBrokerError } from '@sembridge/core'
+import { type BrokerError, type BrokerEvent, createBrokerError } from '@gluezero/core'
 import type { CacheAdapter } from './types/cache-adapter'
-import type { CompiledRoute } from '@sembridge/routing'
-import type { RouteOutcome } from '@sembridge/routing'
+import type { CompiledRoute } from '@gluezero/routing'
+import type { RouteOutcome } from '@gluezero/routing'
 
 export type CachePublishFn = (
   topic: string,
@@ -383,7 +383,7 @@ export function createCompositeHandlerF6(deps: {
 
 **Constructor + composition pattern (analog `packages/worker/src/worker-broker.ts:60-140`):**
 ```typescript
-import { RouterBroker, type RouterBrokerConfig } from '@sembridge/routing'
+import { RouterBroker, type RouterBrokerConfig } from '@gluezero/routing'
 
 export interface CacheBrokerConfig extends RouterBrokerConfig {
   readonly cache?: CacheConfig  // D-155 D-156
@@ -486,7 +486,7 @@ export function createCacheBroker(config: CacheBrokerConfig = {}): CacheBroker {
 ```typescript
 // Pattern documentato in worker-broker.ts e route-executor.ts:236-260
 // Replica del pattern safeTapStep di core (D-20 carryover)
-import type { EventTap, PipelineSnapshot, PipelineStep } from '@sembridge/core'
+import type { EventTap, PipelineSnapshot, PipelineStep } from '@gluezero/core'
 
 export function createMultiplexTap(taps: readonly EventTap[]): EventTap {
   return {
@@ -649,7 +649,7 @@ function checkCardinality(baseName: string, labelSig: string): boolean {
 }
 ```
 
-**Carryover decisions:** D-163 (naming sembridge.<package>.<metric>), D-164 (cumulative-only), D-165 (reservoir histogram), D-166 (cap 100 cardinality), D-128 ext F6 (cap+audit pattern).
+**Carryover decisions:** D-163 (naming gluezero.<package>.<metric>), D-164 (cumulative-only), D-165 (reservoir histogram), D-166 (cap 100 cardinality), D-128 ext F6 (cap+audit pattern).
 
 ---
 
@@ -756,7 +756,7 @@ export function createPauseController(opts: {
 // devtools-broker.ts — `DevtoolsBroker` composition wrapper di `RouterBroker`
 // (Wave 4 plan 06-08 — D-83 strict carryover — F6 vive solo in `packages/devtools/src/`).
 
-import { RouterBroker, type RouterBrokerConfig } from '@sembridge/routing'
+import { RouterBroker, type RouterBrokerConfig } from '@gluezero/routing'
 
 export interface DevtoolsBrokerConfig extends RouterBrokerConfig {
   readonly taps?: readonly EventTap[]  // D-159
@@ -804,21 +804,21 @@ export class DevtoolsBroker {
 
 ---
 
-### `packages/sembridge/src/sem-bridge.ts` (createSemBridge factory aggregato Opzione B RESEARCH §11)
+### `packages/gluezero/src/glue-zero.ts` (createGlueZero factory aggregato Opzione B RESEARCH §11)
 
 **Analog:** chain composition documentata in `packages/worker/src/worker-broker.ts:1-46` (D-121) + Valibot pattern `packages/worker/src/public-factory.ts:147-154`
 
 **Pattern factory aggregato (RESEARCH §11.3):**
 ```typescript
-import { createCacheBroker } from '@sembridge/cache'
-import { createDevtoolsBroker } from '@sembridge/devtools'
-import { createWorkerBroker } from '@sembridge/worker'
-import { createRealtimeBroker } from '@sembridge/gateway/sse-ws'
-import { createRouterBroker } from '@sembridge/routing'
-import { createMapperBroker } from '@sembridge/mapper'
-import { createBroker } from '@sembridge/core'
+import { createCacheBroker } from '@gluezero/cache'
+import { createDevtoolsBroker } from '@gluezero/devtools'
+import { createWorkerBroker } from '@gluezero/worker'
+import { createRealtimeBroker } from '@gluezero/gateway/sse-ws'
+import { createRouterBroker } from '@gluezero/routing'
+import { createMapperBroker } from '@gluezero/mapper'
+import { createBroker } from '@gluezero/core'
 
-export function createSemBridge(config: SemBridgeConfig = {}): SemBridge {
+export function createGlueZero(config: GlueZeroConfig = {}): GlueZero {
   // Default features: tutte enabled (override via config.features)
   const features = config.features ?? { cache: true, devtools: true, worker: true, realtime: true }
   // Chain explicit (Opzione A) — wrappato dal factory aggregato
@@ -865,7 +865,7 @@ if (route.auth && scope === null) {
 
 **Pattern (analog routing/outcome-collector.ts):**
 ```typescript
-import { createBrokerError } from '@sembridge/core'
+import { createBrokerError } from '@gluezero/core'
 
 const error = createBrokerError({
   code: 'cache.adapter.failure',  // category 'cache' (Claude's Discretion CONTEXT)
@@ -911,7 +911,7 @@ export function createXBroker(config = {}): XBroker {
 
 **Pattern:**
 ```typescript
-declare module '@sembridge/core' {
+declare module '@gluezero/core' {
   interface BrokerConfig {
     [F6section]?: F6Config
   }
@@ -929,7 +929,7 @@ export { __augment[X]Loaded, type F6PipelineStep } from './augment'
 ### Composition wrapper Opzione B (D-83 STRICT carryover F1→F2→F3→F4→F5→F6)
 
 **Source:** `packages/worker/src/worker-broker.ts:1-100` (D-121 F5) + `packages/gateway/src/sse-ws/realtime-broker.ts:1-100` (D-101 F4)
-**Apply to:** `cache-broker.ts`, `devtools-broker.ts`, `sem-bridge.ts`
+**Apply to:** `cache-broker.ts`, `devtools-broker.ts`, `glue-zero.ts`
 
 **Pattern:**
 ```typescript
@@ -990,7 +990,7 @@ if (state.buffer.length > state.bufferSize) state.buffer.shift()  // FIFO drop o
 ### Documentation README italiano 11 sezioni (DOC-06 carryover)
 
 **Source:** `packages/worker/README.md` (429 LOC, 11 sezioni italiane: Quick start → Worker contract → Pool → Cancellation → Progress → Serialization WK-07 → Scenario meteo → State machine → Worker module loading → Limitazioni V1 → Q&A PRD §39 #11 closure)
-**Apply to:** `packages/cache/README.md`, `packages/devtools/README.md`, `packages/sembridge/README.md`
+**Apply to:** `packages/cache/README.md`, `packages/devtools/README.md`, `packages/gluezero/README.md`
 
 **Pattern:**
 1. Quick start con factory esempio
@@ -1021,7 +1021,7 @@ if (state.buffer.length > state.bufferSize) state.buffer.shift()  // FIFO drop o
 | `cardinality-cap.ts` | F5 worker-registry.ts:39 D-128 cap+console.warn | F4 reconnect-strategy cap | D-166, D-128 ext |
 | `pause-controller.ts` | F3 backpressure-strategy.ts:127-160 D-75 cap+critical | F5 D-130 critical bypass | D-75, D-130, D-168, D-169, D-170 |
 | `devtools-broker.ts` | F5 worker-broker.ts composition Opzione B | F4 realtime-broker.ts | D-83, D-101, D-121, D-159 |
-| `sem-bridge.ts` | NEW chain composition aggregato (RESEARCH §11.3) | F1-F6 factory pattern | D-30, D-83 |
+| `glue-zero.ts` | NEW chain composition aggregato (RESEARCH §11.3) | F1-F6 factory pattern | D-30, D-83 |
 | `augment.ts` (cache + devtools) | F5 worker/augment.ts:48-125 declaration merging + S1 | F2 D-57, F3 D-94 | D-94, D-159 |
 | `README.md` (cache + devtools + sembridge) | F5 worker/README.md 11 sezioni 429 LOC | F4 gateway/README.md 579 LOC | DOC-02, DOC-05, DOC-06 |
 
@@ -1042,7 +1042,7 @@ Per entrambi: planner usa direttamente RESEARCH.md §8.2 (reservoir) e §15.3 (p
 
 ### Lesson #1 — size-limit pre-implementation underestimate 20-30%
 **Source:** F3 03-14 commit `9922a36` (routing 19.15/24 KB raised post-impl), F4 04-09 (gateway/sse-ws raised post-impl), F5 05-07 (worker raised post-impl).
-**Apply to F6:** Pre-implementation estimate `@sembridge/cache` 5-8 KB, `@sembridge/devtools` 8-12 KB, `@sembridge/sembridge` 50-80 KB. Calibrare post-impl in plan 06-09 a `measured + 20% headroom`. Pattern explicit nel plan 06-09 ROADMAP lesson learned.
+**Apply to F6:** Pre-implementation estimate `@gluezero/cache` 5-8 KB, `@gluezero/devtools` 8-12 KB, `@gluezero/gluezero` 50-80 KB. Calibrare post-impl in plan 06-09 a `measured + 20% headroom`. Pattern explicit nel plan 06-09 ROADMAP lesson learned.
 
 ### Lesson #2 — D-83 STRICT verification meccanico
 **Source:** F3 03-14, F4 04-09, F5 05-07 (zero modifiche runtime upstream verificato CI).
@@ -1074,7 +1074,7 @@ Per entrambi: planner usa direttamente RESEARCH.md §8.2 (reservoir) e §15.3 (p
 
 ### Lesson #9 — README italiano 11 sezioni
 **Source:** F5 worker/README.md 429 LOC + F4 gateway/README.md 579 LOC (struttura 11 sezioni: quick start → contract → policies → cancellation → progress → serialization → scenario meteo → state machine → loading → limits V1 → Q&A PRD §39 #X closure).
-**Apply to F6:** Replica meccanica per cache (cache adapter contract + LRU + TTL + scope + invalidate + scenario meteo cache-then-network), devtools (tap registry + Inspector + Metrics + pauseTopic + Q&A PRD §39 #10 closure TOOL-05), sembridge (createSemBridge aggregato + DOC-02 plugin integration + DOC-05 esempi end-to-end + scenario meteo F1+F2+F3+F4+F5+F6).
+**Apply to F6:** Replica meccanica per cache (cache adapter contract + LRU + TTL + scope + invalidate + scenario meteo cache-then-network), devtools (tap registry + Inspector + Metrics + pauseTopic + Q&A PRD §39 #10 closure TOOL-05), sembridge (createGlueZero aggregato + DOC-02 plugin integration + DOC-05 esempi end-to-end + scenario meteo F1+F2+F3+F4+F5+F6).
 
 ### Lesson #10 — DOC consolidation TypeDoc finale
 **Source:** F5 05-07 (TypeDoc + plugin markdown installati workspace, attivati F6 final gate).
@@ -1091,7 +1091,7 @@ Per entrambi: planner usa direttamente RESEARCH.md §8.2 (reservoir) e §15.3 (p
 - `packages/gateway/src/http/` — dedupe-strategy.ts (D-74 KeyBased), backpressure-strategy.ts (D-75 cap+critical bypass)
 - `packages/gateway/src/sse-ws/` — realtime-broker.ts (D-101 composition), realtime-channel-manager.ts (registry pattern), augment.ts, public-factory.ts (Valibot schema F4)
 - `packages/worker/src/` — worker-broker.ts (D-121 composition exatto), worker-handler.ts (Strategy DI), worker-pool.ts (counter atomic + cap), worker-registry.ts (D-128 cap pool 8 + audit), task-tracker.ts (state machine atomico Pitfall 2C closure), augment.ts (D-122 pattern + F5PipelineStep), public-factory.ts (D-30 + Valibot), test-utils/mock-worker.ts (D-150 Tier-1)
-- `packages/sembridge/` — package.json + README.md (placeholder F1)
+- `packages/gluezero/` — package.json + README.md (placeholder F1)
 - `packages/cache/` + `packages/devtools/` — package.json + README.md (placeholder F1, src/ vuoto)
 
 **Files scanned:** ~38 file F6 to create + ~25 file analog F1-F5 letti per estrazione pattern excerpts.

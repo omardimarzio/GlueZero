@@ -43,7 +43,7 @@ key-decisions:
 patterns-established:
   - "Pattern register idempotent + listener observer + list() copia per registry F2: replica diretta TopicRegistry F1, applicabile anche a AliasRegistry (plan 02-04) e TransformPipeline (plan 02-05) — file ownership disgiunta in Wave 3"
   - "Pattern requires resolution check al register: estendibile a future relazioni di dipendenza tra schemi/route/worker"
-  - "Pattern cross-package error: `import { createBrokerError } from '@sembridge/core'` + `category: 'mapping'` (già definita in F1 ErrorCategory union plan 03)"
+  - "Pattern cross-package error: `import { createBrokerError } from '@gluezero/core'` + `category: 'mapping'` (già definita in F1 ErrorCategory union plan 03)"
   - "Pattern TDD RED→GREEN cross-package: test importa './canonical-registry' (FAIL RED) → implementa modulo (PASS GREEN). Stesso pattern dei plan F1 04/05/06."
 
 requirements-completed: []
@@ -80,7 +80,7 @@ completed: 2026-04-29
 - Strict mode opzionale (`RegisterOptions.strict: true`) → throw `BrokerError 'canonical.id.duplicate'` per detection accidentale duplicati
 - Tutti i metodi con return type esplicito (isolatedDeclarations enforcement)
 - Header italiano + JSDoc IntelliSense in italiano + reference D-XX/REQ-ID/Threat-ID coerente con pattern F1
-- Cross-package import `createBrokerError` da `@sembridge/core` + `category: 'mapping'` (già definita in F1 ErrorCategory)
+- Cross-package import `createBrokerError` da `@gluezero/core` + `category: 'mapping'` (già definita in F1 ErrorCategory)
 - Auto-fix Biome formattazione applicato (lineWidth: 100) — coerente con repo standard
 
 ## Task Commits
@@ -132,13 +132,13 @@ Test cases:
 
 | Comando | Risultato |
 |---------|-----------|
-| `pnpm --filter @sembridge/mapper test canonical-registry` (RED, post Task 1.1) | FAIL atteso: `Failed to resolve import "./canonical-registry"` |
-| `pnpm --filter @sembridge/mapper test canonical-registry` (GREEN, post Task 1.2) | Exit 0: **`Test Files 1 passed (1) | Tests 11 passed (11)`** Duration 377ms |
-| `pnpm --filter @sembridge/mapper test` (full mapper) | Exit 0: 1 file 11 test passing |
-| `pnpm --filter @sembridge/mapper typecheck` | Exit 0 (isolatedDeclarations enforcement OK) |
-| `pnpm --filter @sembridge/core test` (regression F1) | Exit 0: **24 file/248 test passing** (no regression) |
+| `pnpm --filter @gluezero/mapper test canonical-registry` (RED, post Task 1.1) | FAIL atteso: `Failed to resolve import "./canonical-registry"` |
+| `pnpm --filter @gluezero/mapper test canonical-registry` (GREEN, post Task 1.2) | Exit 0: **`Test Files 1 passed (1) | Tests 11 passed (11)`** Duration 377ms |
+| `pnpm --filter @gluezero/mapper test` (full mapper) | Exit 0: 1 file 11 test passing |
+| `pnpm --filter @gluezero/mapper typecheck` | Exit 0 (isolatedDeclarations enforcement OK) |
+| `pnpm --filter @gluezero/core test` (regression F1) | Exit 0: **24 file/248 test passing** (no regression) |
 | `pnpm biome check packages/mapper/src/canonical-registry*.ts` | Exit 0 dopo auto-fix lineWidth |
-| Grep verifica acceptance | 7/7 PASSED (`export class CanonicalRegistry`, `canonical.requires.unresolved`, `canonical.id.duplicate`, `createBrokerError`, `@sembridge/core`, file source + file test esistenti) |
+| Grep verifica acceptance | 7/7 PASSED (`export class CanonicalRegistry`, `canonical.requires.unresolved`, `canonical.id.duplicate`, `createBrokerError`, `@gluezero/core`, file source + file test esistenti) |
 | Audit `any` literal | 0 occorrenze come tipo |
 | Audit `unknown` non documentato | 0 occorrenze (`unknown` solo in `details?: Record<string, unknown>` ereditato dal contratto BrokerError F1) |
 

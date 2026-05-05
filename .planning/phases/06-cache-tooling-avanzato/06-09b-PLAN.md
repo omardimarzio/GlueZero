@@ -7,8 +7,8 @@ depends_on: [06-09a]
 files_modified:
   - packages/cache/README.md
   - packages/devtools/README.md
-  - packages/sembridge/README.md
-  - packages/sembridge/EXAMPLES.md
+  - packages/gluezero/README.md
+  - packages/gluezero/EXAMPLES.md
   - packages/cache/src/cache-broker.ts
   - packages/cache/src/public-factory.ts
   - packages/cache/src/cache-handler.ts
@@ -19,7 +19,7 @@ files_modified:
   - packages/devtools/src/route-inspector.ts
   - packages/devtools/src/metrics-collector.ts
   - packages/devtools/src/pause-controller.ts
-  - packages/sembridge/src/sem-bridge.ts
+  - packages/gluezero/src/glue-zero.ts
   - .planning/REQUIREMENTS.md
   - .planning/ROADMAP.md
   - .planning/STATE.md
@@ -48,7 +48,7 @@ must_haves:
   truths:
     - "DOC-02 README italiano packages/cache/README.md ~250 LOC con 11 sezioni: Quick start (createCacheBroker), Cache key D-155, Scope hybrid D-156/D-157, LRU bounded D-158, route cache type, route composite, invalidation API, scenario meteo F6, Limitazioni V1, Q&A 5+ domande"
     - "DOC-05 README italiano packages/devtools/README.md ~400 LOC con 11 sezioni: Quick start, Tap registry D-159, enableDebug D-160, Inspector D-161/D-167, getDebugSnapshot D-162, MetricsCollector D-163-D-166, PauseController D-168/D-169/D-170, scenario meteo F6 + Inspector dump, Limitazioni V1, Q&A 7+ domande Sezione 6 'MetricsCollector PRD §39 #10 closure'"
-    - "DOC-06 README italiano packages/sembridge/README.md ~400 LOC con 11 sezioni: Quick start createSemBridge, Features flag, Chain composition F1+F2+F3+F4+F5+F6, scenario meteo END-TO-END cross-feature integrato F1+F2+F3+F4+F5+F6, esempi tree-shake selective import, EXAMPLES.md cross-package, Limitazioni V1, Q&A 8+ domande"
+    - "DOC-06 README italiano packages/gluezero/README.md ~400 LOC con 11 sezioni: Quick start createGlueZero, Features flag, Chain composition F1+F2+F3+F4+F5+F6, scenario meteo END-TO-END cross-feature integrato F1+F2+F3+F4+F5+F6, esempi tree-shake selective import, EXAMPLES.md cross-package, Limitazioni V1, Q&A 8+ domande"
     - "WARNING-2 fix applicato: DOC-05 (devtools README) Sezione 6 enumerate ALMENO 7 Q&A su MetricsCollector PRD §39 #10 closure (Q1 dot.case rationale D-163, Q2 getMetricsDelta D-164, Q3 reservoir vs t-digest D-165, Q4 cardinality overflow D-166, Q5 Prometheus/OTel exporter, Q6 metriche standard, Q7 custom metric V1.x)"
     - "JSDoc TypeDoc-ready su 11 file public con @example/@see/@throws preservati in dist/index.d.ts (target ≥27 @example / ≥30 @see / ≥9 @throws — pattern F5 05-07 commit e3b8770 23/30/21 carryover)"
     - "REQ matrix flip atomic in REQUIREMENTS.md: CACHE-01..03 + TOOL-01..05 + PIPE-01 ext F6 + LIFE-02 ext F6 + ERR-02 ext F6 + TEST-01/02 ext F6 + DOC-02/05/06 → Complete (atomic flip)"
@@ -64,9 +64,9 @@ must_haves:
       provides: "DOC italiano ~250 LOC — cache adapter + LRU + 3 strategies + scope D-156 + scenario cache-then-network + Q&A 5+"
     - path: "packages/devtools/README.md"
       provides: "DOC-05 italiano ~400 LOC — 11 sezioni tooling debug + Sezione 6 MetricsCollector PRD §39 #10 closure (7 Q&A enumerate)"
-    - path: "packages/sembridge/README.md"
+    - path: "packages/gluezero/README.md"
       provides: "DOC-02 italiano ~400 LOC — guida integrazione plugin v1.0 + chain composition F1+F2+F3+F4+F5+F6 + scenario meteo end-to-end"
-    - path: "packages/sembridge/EXAMPLES.md"
+    - path: "packages/gluezero/EXAMPLES.md"
       provides: "DOC italiano — esempi end-to-end consolidati cross-package + Q&A 8+"
     - path: ".planning/REQUIREMENTS.md"
       provides: "CACHE-01..03 + TOOL-01..05 + ERR-02/LIFE-02/PIPE-01/TEST-01/02 ext F6 + DOC-02/05/06 → Complete (atomic flip)"
@@ -93,7 +93,7 @@ must_haves:
       to: "TypeDoc-ready API documentation"
       via: "@example/@see/@throws preserved in dts after build"
       pattern: "@example\\|@see\\|@throws"
-    - from: "packages/sembridge/README.md scenario meteo"
+    - from: "packages/gluezero/README.md scenario meteo"
       to: "scenario PRD §29 esteso F1+F2+F3+F4+F5+F6"
       via: "end-to-end + cache-then-network + Inspector + Metrics + plugin lifecycle"
       pattern: "weather\\.requested\\|weather\\.loaded\\|origin: 'cache'\\|origin: 'remote'"
@@ -102,7 +102,7 @@ must_haves:
 <objective>
 Final gate F6 (Wave 5b — Phase 6 closure + **milestone v1.0 closure**): aggregazione di TUTTI i deliverable per dichiarare la fase E IL MILESTONE v1.0 completi. Plan NON aggiunge runtime nuovo (zero `*.ts` source code change a livello di logica) — agisce su 4 layer (analog F5 05-07 / F4 04-09 / F3 03-14):
 
-1. **DOC consolidation finale** — 4 README italiani (`packages/cache/README.md` + `packages/devtools/README.md` DOC-05 + `packages/sembridge/README.md` DOC-02 + `packages/sembridge/EXAMPLES.md` DOC) ~1400 LOC totali italiano. **WARNING-2 fix in DOC-05 Sezione 6**: 7 Q&A enumerate su MetricsCollector PRD §39 #10 closure.
+1. **DOC consolidation finale** — 4 README italiani (`packages/cache/README.md` + `packages/devtools/README.md` DOC-05 + `packages/gluezero/README.md` DOC-02 + `packages/gluezero/EXAMPLES.md` DOC) ~1400 LOC totali italiano. **WARNING-2 fix in DOC-05 Sezione 6**: 7 Q&A enumerate su MetricsCollector PRD §39 #10 closure.
 
 2. **JSDoc API pubblica TypeDoc-ready** — annotazioni @example/@see/@throws/@param su 11 file public preservati in `dist/index.d.ts` per ogni package F6.
 
@@ -150,8 +150,8 @@ Output: 4 commit atomici (DOC + JSDoc + REQ matrix flip + final closure SUMMARY+
 @packages/devtools/src/metrics-collector.ts
 @packages/devtools/src/pause-controller.ts
 @packages/devtools/src/multiplex-tap.ts
-@packages/sembridge/src/index.ts
-@packages/sembridge/src/sem-bridge.ts
+@packages/gluezero/src/index.ts
+@packages/gluezero/src/glue-zero.ts
 
 <interfaces>
 F5 05-07 ha prodotto 5 commit (analog target):
@@ -177,7 +177,7 @@ F6 06-09b applica stesso pattern adattato a 3 package + DOC consolidation (DOC-0
 
 <task type="auto">
   <name>Task 1: DOC-02 + DOC-05 + DOC-06 README italiani consolidation finale (4 file ~1400 LOC totali — WARNING-2 Q&A fix)</name>
-  <files>packages/cache/README.md, packages/devtools/README.md, packages/sembridge/README.md, packages/sembridge/EXAMPLES.md</files>
+  <files>packages/cache/README.md, packages/devtools/README.md, packages/gluezero/README.md, packages/gluezero/EXAMPLES.md</files>
   <read_first>
     - packages/worker/README.md (analog DOC-05 11 sezioni 429 LOC italiano F5 — pattern struttura verbatim)
     - packages/gateway/README.md (analog F4 sezione Realtime SSE/WS 579 LOC italiano)
@@ -217,10 +217,10 @@ Outline 11 sezioni con headings + Q&A target:
 3. **EventInspector** — ring buffer 500 + getBuffer deep-clone D-162 + lazy mode D-160 + NODE_ENV detection
 4. **RouteInspector** — capture step 9+10 + retry/cacheHit/policies aggregation per (eventId, routeId)
 5. **MetricsCollector** — D-163 naming Prometheus + D-164 cumulative + D-165 reservoir + D-166 cardinality cap
-6. **PRD §39 #10 closure (TOOL-05 metrics format)** — schema { counters, gauges, histograms } + naming `sembridge.<package>.<metric>{<labels>}` + reservoir Algorithm R Vitter 1985 + 7 Q&A enumerate (WARNING-2 fix):
+6. **PRD §39 #10 closure (TOOL-05 metrics format)** — schema { counters, gauges, histograms } + naming `gluezero.<package>.<metric>{<labels>}` + reservoir Algorithm R Vitter 1985 + 7 Q&A enumerate (WARNING-2 fix):
 
    **Q&A obbligatorie (WARNING-2 fix verbatim — almeno 7 enumerate)**:
-   - **Q1: "Perché dot.case `sembridge.<package>.<metric>` invece di snake_case?"** (D-163 rationale)
+   - **Q1: "Perché dot.case `gluezero.<package>.<metric>` invece di snake_case?"** (D-163 rationale)
      A: dot.case è coerente con Prometheus convention storica + permette grouping naturale per package quando si esporta a Prometheus/OTel via mapping 1:1 (snake_case è l'output finale prometheus, ma dot.case è l'input library-friendly).
    - **Q2: "Come si calcola un counter delta tra due getMetrics()?"** (D-164 getMetricsDelta usage)
      A: usa `broker.getMetricsDelta(prevSnapshot)` — counters delta=current-prev, gauges=current snapshot, histograms=current. Pattern monitoring scrape interval.
@@ -231,7 +231,7 @@ Outline 11 sezioni con headings + Q&A target:
    - **Q5: "Come integrare con Prometheus/OpenTelemetry?"** (V1.x exporter map 1:1)
      A: V1 fornisce schema `{ counters, gauges, histograms }` simil-OpenMetrics. Mapping 1:1 esportabile via custom adapter (`getMetrics()` → Prometheus textfile / OTel SDK). Adapter ufficiale V1.x roadmap.
    - **Q6: "Quali metriche standard sono disponibili out-of-the-box?"** (lista enumeration)
-     A: counters: `sembridge.cache.hits_total`, `sembridge.cache.misses_total`, `sembridge.cache.evictions_total`, `sembridge.routing.routes_dispatched_total`, `sembridge.gateway.fetches_total`, `sembridge.worker.tasks_total`. Gauges: `sembridge.cache.entries`, `sembridge.worker.pool_size`. Histograms: `sembridge.routing.dispatch_duration_ms`, `sembridge.gateway.fetch_duration_ms`.
+     A: counters: `gluezero.cache.hits_total`, `gluezero.cache.misses_total`, `gluezero.cache.evictions_total`, `gluezero.routing.routes_dispatched_total`, `gluezero.gateway.fetches_total`, `gluezero.worker.tasks_total`. Gauges: `gluezero.cache.entries`, `gluezero.worker.pool_size`. Histograms: `gluezero.routing.dispatch_duration_ms`, `gluezero.gateway.fetch_duration_ms`.
    - **Q7: "Come si registra un custom metric?"** (V1.x deferred — pattern current via tap.onPipelineStep)
      A: V1 NON espone API `registerCustomMetric()`. Pattern current: subscribe a `tap.onPipelineStep('event.observed', ...)` + chiamare `metrics.increment/setGauge/observe` direttamente. API ergonomica V1.x roadmap.
 
@@ -241,31 +241,31 @@ Outline 11 sezioni con headings + Q&A target:
 10. **Performance caveat** — lazy mode D-160 + structuredClone perf su payload grandi RESEARCH §15.3
 11. **Q&A consolidato** (best practice + cross-link DOC-02 sembridge)
 
-**1.3 — `packages/sembridge/README.md` (NEW italiano ~400 LOC — DOC-02 closure):**
+**1.3 — `packages/gluezero/README.md` (NEW italiano ~400 LOC — DOC-02 closure):**
 
-Guida integrazione plugin SemBridge v1.0:
+Guida integrazione plugin GlueZero v1.0:
 
-1. **Quick start** — `createSemBridge` aggregato (RESEARCH §11.3 Opzione B)
+1. **Quick start** — `createGlueZero` aggregato (RESEARCH §11.3 Opzione B)
 2. **Power-user chain explicit** — Opzione A (RESEARCH §11.1)
 3. **Features flag** — opt-out cache/devtools/worker/realtime
 4. **Chain composition F1+F2+F3+F4+F5+F6** — order outermost devtools → cache → worker → realtime → router → mapper → broker
 5. **Plugin lifecycle** — registerPlugin + onMount + onDestroy + cascade LIFE-02
 6. **Scenario meteo end-to-end F1+F2+F3+F4+F5+F6** (PRD §29 esteso completo cross-feature integrato)
-7. **Tree-shake selective import** — `import { createCacheBroker } from '@sembridge/cache'` (no full bundle)
+7. **Tree-shake selective import** — `import { createCacheBroker } from '@gluezero/cache'` (no full bundle)
 8. **Versioning v1.0 milestone closure**
 9. **Migration guide** (V1 → V1.x roadmap deferred)
 10. **Limitazioni V1 + roadmap V1.x** (cache-idb / OTel exporter / Inspector UI)
 11. **Q&A** (8+ domande):
-    - Q1: "Quando usare createSemBridge vs chain manuale?"
+    - Q1: "Quando usare createGlueZero vs chain manuale?"
     - Q2: "Come fare opt-out per SPA non realtime?"
-    - Q3: "createSemBridge vs createBroker base — differenze?"
+    - Q3: "createGlueZero vs createBroker base — differenze?"
     - Q4: "Come integrare con framework (React/Vue/Svelte)?"
     - Q5: "Tree-shake — quanto pesa selective import vs full bundle?"
     - Q6: "Multi-tenant isolation D-30 — come si garantisce?"
     - Q7: "Plugin scope hybrid — registerPlugin con scopeProvider?"
     - Q8: "Migration da V0.x → V1.0 — breaking changes?"
 
-**1.4 — `packages/sembridge/EXAMPLES.md` (NEW italiano):**
+**1.4 — `packages/gluezero/EXAMPLES.md` (NEW italiano):**
 
 Esempi end-to-end completi cross-package:
 
@@ -283,21 +283,21 @@ Esempi end-to-end completi cross-package:
 **Commit 1:**
 
 ```bash
-git add packages/cache/README.md packages/devtools/README.md packages/sembridge/README.md packages/sembridge/EXAMPLES.md
+git add packages/cache/README.md packages/devtools/README.md packages/gluezero/README.md packages/gluezero/EXAMPLES.md
 git commit -m "docs(06-09b): DOC-02/05/06 consolidation finale italiano (4 README ~1400 LOC totali — WARNING-2 fix Q&A enumerate)
 
-DOC-02 packages/sembridge/README.md (~400 LOC italiano): guida integrazione plugin v1.0 +
+DOC-02 packages/gluezero/README.md (~400 LOC italiano): guida integrazione plugin v1.0 +
 chain composition F1+F2+F3+F4+F5+F6 + scenario meteo end-to-end + Q&A 8+ domande.
 
 DOC-05 packages/devtools/README.md (~400 LOC italiano): 11 sezioni tooling debug —
 **Closes PRD §39 #10 (TOOL-05 metrics format)** in Sezione 6 con schema
-{ counters, gauges, histograms } simil-OpenMetrics + naming sembridge.<package>.<metric>
+{ counters, gauges, histograms } simil-OpenMetrics + naming gluezero.<package>.<metric>
 Prometheus + reservoir Algorithm R Vitter 1985 + **7 Q&A enumerate (WARNING-2 fix)**:
 Q1 dot.case rationale (D-163), Q2 getMetricsDelta (D-164), Q3 reservoir vs t-digest (D-165),
 Q4 cardinality overflow (D-166), Q5 Prometheus/OTel exporter (V1.x), Q6 metriche standard
 out-of-the-box, Q7 custom metric V1.x deferred.
 
-DOC-06 packages/sembridge/EXAMPLES.md italiano: esempi end-to-end consolidati (10 scenari)
+DOC-06 packages/gluezero/EXAMPLES.md italiano: esempi end-to-end consolidati (10 scenari)
 + scenario meteo cross-feature integrato F1+F2+F3+F4+F5+F6.
 
 packages/cache/README.md (~250 LOC italiano): cache adapter + LRU bounded + 3 strategies +
@@ -310,13 +310,13 @@ Co-Authored-By: Claude Opus 4.7 <noreply@anthropic.com>"
 
 - `grep -c "PRD §39 #10\|TOOL-05" packages/devtools/README.md` ≥1 (closure annotation)
 - `grep -cE "Q1[:.]|Q2[:.]|Q3[:.]|Q4[:.]|Q5[:.]|Q6[:.]|Q7[:.]" packages/devtools/README.md` ≥7 (WARNING-2 Q&A enumerate)
-- `grep -c "scenario meteo\|weather.requested" packages/sembridge/README.md` ≥1
+- `grep -c "scenario meteo\|weather.requested" packages/gluezero/README.md` ≥1
 - `grep -c "structuredClone\|reservoir\|p50\|p90\|p99" packages/devtools/README.md` ≥4 (key concepts)
-- `grep -c "createSemBridge\|createCacheBroker\|createDevtoolsBroker" packages/sembridge/README.md` ≥3
-- `grep -c "F1+F2+F3+F4+F5+F6\|chain completa" packages/sembridge/README.md` ≥1 (BLOCKER-2 ack)
+- `grep -c "createGlueZero\|createCacheBroker\|createDevtoolsBroker" packages/gluezero/README.md` ≥3
+- `grep -c "F1+F2+F3+F4+F5+F6\|chain completa" packages/gluezero/README.md` ≥1 (BLOCKER-2 ack)
   </action>
   <verify>
-    <automated>wc -l "/Users/omarmarzio/programming/prova AI/SemBridge/packages/cache/README.md" "/Users/omarmarzio/programming/prova AI/SemBridge/packages/devtools/README.md" "/Users/omarmarzio/programming/prova AI/SemBridge/packages/sembridge/README.md" "/Users/omarmarzio/programming/prova AI/SemBridge/packages/sembridge/EXAMPLES.md" 2>&1 && grep -cE "Q1[:.]|Q2[:.]|Q3[:.]|Q4[:.]|Q5[:.]|Q6[:.]|Q7[:.]" "/Users/omarmarzio/programming/prova AI/SemBridge/packages/devtools/README.md" 2>&1</automated>
+    <automated>wc -l "/Users/omarmarzio/programming/prova AI/GlueZero/packages/cache/README.md" "/Users/omarmarzio/programming/prova AI/GlueZero/packages/devtools/README.md" "/Users/omarmarzio/programming/prova AI/GlueZero/packages/gluezero/README.md" "/Users/omarmarzio/programming/prova AI/GlueZero/packages/gluezero/EXAMPLES.md" 2>&1 && grep -cE "Q1[:.]|Q2[:.]|Q3[:.]|Q4[:.]|Q5[:.]|Q6[:.]|Q7[:.]" "/Users/omarmarzio/programming/prova AI/GlueZero/packages/devtools/README.md" 2>&1</automated>
   </verify>
   <done>
     - 4 README italiani creati: cache (~250) + devtools (~400) + sembridge (~400) + EXAMPLES (~varia)
@@ -329,7 +329,7 @@ Co-Authored-By: Claude Opus 4.7 <noreply@anthropic.com>"
 
 <task type="auto">
   <name>Task 2: JSDoc API pubblica TypeDoc-ready (11 file public con @example/@see/@throws preservati in dts)</name>
-  <files>packages/cache/src/cache-broker.ts, packages/cache/src/public-factory.ts, packages/cache/src/cache-handler.ts, packages/cache/src/memory-cache-adapter.ts, packages/devtools/src/devtools-broker.ts, packages/devtools/src/public-factory.ts, packages/devtools/src/event-inspector.ts, packages/devtools/src/route-inspector.ts, packages/devtools/src/metrics-collector.ts, packages/devtools/src/pause-controller.ts, packages/sembridge/src/sem-bridge.ts</files>
+  <files>packages/cache/src/cache-broker.ts, packages/cache/src/public-factory.ts, packages/cache/src/cache-handler.ts, packages/cache/src/memory-cache-adapter.ts, packages/devtools/src/devtools-broker.ts, packages/devtools/src/public-factory.ts, packages/devtools/src/event-inspector.ts, packages/devtools/src/route-inspector.ts, packages/devtools/src/metrics-collector.ts, packages/devtools/src/pause-controller.ts, packages/gluezero/src/glue-zero.ts</files>
   <read_first>
     - packages/worker/src/public-factory.ts (analog target VERBATIM @example multi-scenario + @see + @throws preservation in dts F5 05-07)
     - packages/worker/src/worker-handler.ts (analog @example dispatch strategy + @throws sanitized error)
@@ -354,7 +354,7 @@ Per ogni file public F6, aggiungi/rinforza JSDoc preservation TypeDoc-ready:
 | devtools/route-inspector.ts | 2 (capture step 9+10 + aggregate eventId+routeId) | 1 | 0 |
 | devtools/metrics-collector.ts | 3 (counter + gauge + histogram observe) | 3 (D-163/D-165/D-166) | 0 |
 | devtools/pause-controller.ts | 3 (pauseTopic + flushQueue audit + critical bypass) | 3 (D-168/D-169/D-170) | 0 |
-| sembridge/sem-bridge.ts | 3 (Quick start aggregato chain F1+F2+F3+F4+F5+F6 + features opt-out + multi-tenant D-30) | 3 (RESEARCH §11) | 1 (Invalid SemBridgeConfig) |
+| sembridge/glue-zero.ts | 3 (Quick start aggregato chain F1+F2+F3+F4+F5+F6 + features opt-out + multi-tenant D-30) | 3 (RESEARCH §11) | 1 (Invalid GlueZeroConfig) |
 
 **Target preservation in dts post-build:**
 - @example: ≥27 hits in `packages/{cache,devtools,sembridge}/dist/index.d.ts`
@@ -366,14 +366,14 @@ Per ogni file public F6, aggiungi/rinforza JSDoc preservation TypeDoc-ready:
 **2.2 — Verifica preservation post-build:**
 
 ```bash
-cd "/Users/omarmarzio/programming/prova AI/SemBridge"
-pnpm -F @sembridge/cache build
-pnpm -F @sembridge/devtools build
-pnpm -F @sembridge/sembridge build
+cd "/Users/omarmarzio/programming/prova AI/GlueZero"
+pnpm -F @gluezero/cache build
+pnpm -F @gluezero/devtools build
+pnpm -F @gluezero/gluezero build
 
-EXAMPLES_TOTAL=$(grep -c "@example" packages/cache/dist/index.d.ts packages/devtools/dist/index.d.ts packages/sembridge/dist/index.d.ts | awk -F: '{sum+=$2} END {print sum}')
-SEE_TOTAL=$(grep -c "@see" packages/cache/dist/index.d.ts packages/devtools/dist/index.d.ts packages/sembridge/dist/index.d.ts | awk -F: '{sum+=$2} END {print sum}')
-THROWS_TOTAL=$(grep -c "@throws" packages/cache/dist/index.d.ts packages/devtools/dist/index.d.ts packages/sembridge/dist/index.d.ts | awk -F: '{sum+=$2} END {print sum}')
+EXAMPLES_TOTAL=$(grep -c "@example" packages/cache/dist/index.d.ts packages/devtools/dist/index.d.ts packages/gluezero/dist/index.d.ts | awk -F: '{sum+=$2} END {print sum}')
+SEE_TOTAL=$(grep -c "@see" packages/cache/dist/index.d.ts packages/devtools/dist/index.d.ts packages/gluezero/dist/index.d.ts | awk -F: '{sum+=$2} END {print sum}')
+THROWS_TOTAL=$(grep -c "@throws" packages/cache/dist/index.d.ts packages/devtools/dist/index.d.ts packages/gluezero/dist/index.d.ts | awk -F: '{sum+=$2} END {print sum}')
 echo "@example total: $EXAMPLES_TOTAL (target ≥27)"
 echo "@see total: $SEE_TOTAL (target ≥30)"
 echo "@throws total: $THROWS_TOTAL (target ≥9)"
@@ -382,7 +382,7 @@ echo "@throws total: $THROWS_TOTAL (target ≥9)"
 **Commit 2:**
 
 ```bash
-git add packages/cache/src/cache-broker.ts packages/cache/src/public-factory.ts packages/cache/src/cache-handler.ts packages/cache/src/memory-cache-adapter.ts packages/devtools/src/devtools-broker.ts packages/devtools/src/public-factory.ts packages/devtools/src/event-inspector.ts packages/devtools/src/route-inspector.ts packages/devtools/src/metrics-collector.ts packages/devtools/src/pause-controller.ts packages/sembridge/src/sem-bridge.ts
+git add packages/cache/src/cache-broker.ts packages/cache/src/public-factory.ts packages/cache/src/cache-handler.ts packages/cache/src/memory-cache-adapter.ts packages/devtools/src/devtools-broker.ts packages/devtools/src/public-factory.ts packages/devtools/src/event-inspector.ts packages/devtools/src/route-inspector.ts packages/devtools/src/metrics-collector.ts packages/devtools/src/pause-controller.ts packages/gluezero/src/glue-zero.ts
 git commit -m "docs(06-09b): JSDoc API pubblica TypeDoc-ready su 11 file public F6 (@example/@see/@throws)
 
 11 file public arricchiti:
@@ -402,7 +402,7 @@ Co-Authored-By: Claude Opus 4.7 <noreply@anthropic.com>"
 ```
   </action>
   <verify>
-    <automated>cd "/Users/omarmarzio/programming/prova AI/SemBridge" && pnpm -F @sembridge/cache build && pnpm -F @sembridge/devtools build && pnpm -F @sembridge/sembridge build && grep -c "@example" packages/cache/dist/index.d.ts packages/devtools/dist/index.d.ts packages/sembridge/dist/index.d.ts | awk -F: '{sum+=$2} END {print "@example total:",sum,"(target ≥27)"}'</automated>
+    <automated>cd "/Users/omarmarzio/programming/prova AI/GlueZero" && pnpm -F @gluezero/cache build && pnpm -F @gluezero/devtools build && pnpm -F @gluezero/gluezero build && grep -c "@example" packages/cache/dist/index.d.ts packages/devtools/dist/index.d.ts packages/gluezero/dist/index.d.ts | awk -F: '{sum+=$2} END {print "@example total:",sum,"(target ≥27)"}'</automated>
   </verify>
   <done>
     - 11 file public arricchiti @example/@see/@throws
@@ -432,12 +432,12 @@ Aggiorna ogni riga REQ-ID F6 con `Complete` + plan reference + closure note:
 - [x] **CACHE-02**: TTL configurabile e invalidazione manuale/automatica *(PRD §20.2)* — Complete: TTL ortogonale a LRU + invalidate API (string/RegExp/{prefix}) + invalidateOn declarativo + cascade unregisterPlugin invalidate by ownerId (LIFE-02 ext F6 D-126)
 - [x] **CACHE-03**: Metadata di consegna distingue origine `cache` vs `remote` *(PRD §20.2, §20.4)* — Complete (plan 06-03): metadata.origin popolato dal CacheHandler 3-strategy + cache-then-network ordering microtask (D-156 RESEARCH §15.6)
 - [x] **TOOL-01**: Event Inspector completo *(PRD §25.1)* — Complete (plan 06-05 + 06-08b): EventInspector ring buffer 500 + RouteInspector capture step 9+10 + tap registry chain D-159 + getBuffer deep-clone D-162
-- [x] **TOOL-02**: Metrics canonical *(PRD §25.5)* — Complete (plan 06-06): MetricsCollector counters/gauges/histograms simil-OpenMetrics + naming sembridge.<package>.<metric>{<labels>} Prometheus + reservoir Algorithm R Vitter 1985 (D-163/D-164/D-165) + cardinality cap 100 + audit (D-166)
+- [x] **TOOL-02**: Metrics canonical *(PRD §25.5)* — Complete (plan 06-06): MetricsCollector counters/gauges/histograms simil-OpenMetrics + naming gluezero.<package>.<metric>{<labels>} Prometheus + reservoir Algorithm R Vitter 1985 (D-163/D-164/D-165) + cardinality cap 100 + audit (D-166)
 - [x] **TOOL-03**: enableDebug/disableDebug/getDebugSnapshot *(PRD §16.2, §16.3)* — Complete (plan 06-08b): DevtoolsBroker.enableDebug/disableDebug toggle live-mode (D-160 + NODE_ENV detection) + getDebugSnapshot deep-clone via structuredClone (D-162)
 - [x] **TOOL-04**: pauseTopic/resumeTopic/flushQueue *(PRD §16.3)* — Complete (plan 06-07 + 06-08b): PauseController D-168 pauseTopic block FIFO + D-169 flushQueue drop + system.queue.flushed audit + D-170 cap drop-oldest + critical bypass (Pitfall 4.C carryover F3 D-75 + F5 D-130)
-- [x] **TOOL-05**: Format delle metriche documentato esplicitamente *(PRD §39 — open issue da chiudere)* — Complete (plan 06-06 + 06-09b DOC-05) — **Closes PRD §39 #10** ✅ 2026-05-XX: schema { counters, gauges, histograms } simil-OpenMetrics naming sembridge.<package>.<metric>{<labels>} dot.case Prometheus + cumulative-only counters (D-164) + helper getMetricsDelta + reservoir Algorithm R Vitter 1985 (D-165) + cardinality cap 100 distinct combinations + audit (D-166). DOC-05 packages/devtools/README.md italiano 11 sezioni — Sezione 6 "PRD §39 #10 closure" con tabella naming convention + 7 Q&A enumerate + anti-pattern cardinality explosion
-- [x] **DOC-02**: Guida integrazione plugin *(PRD §41.4)* — Complete (plan 06-09b): packages/sembridge/README.md italiano ~400 LOC con scenario meteo F1+F2+F3+F4+F5+F6 end-to-end + chain composition + Q&A 8+
-- [x] **DOC-05**: Esempi end-to-end *(PRD §41.8)* — Complete (plan 06-09b): packages/sembridge/EXAMPLES.md italiano consolidato F5 (worker section delivered) + F6 (cache + tooling) + scenario cross-feature integrato F1+F2+F3+F4+F5+F6
+- [x] **TOOL-05**: Format delle metriche documentato esplicitamente *(PRD §39 — open issue da chiudere)* — Complete (plan 06-06 + 06-09b DOC-05) — **Closes PRD §39 #10** ✅ 2026-05-XX: schema { counters, gauges, histograms } simil-OpenMetrics naming gluezero.<package>.<metric>{<labels>} dot.case Prometheus + cumulative-only counters (D-164) + helper getMetricsDelta + reservoir Algorithm R Vitter 1985 (D-165) + cardinality cap 100 distinct combinations + audit (D-166). DOC-05 packages/devtools/README.md italiano 11 sezioni — Sezione 6 "PRD §39 #10 closure" con tabella naming convention + 7 Q&A enumerate + anti-pattern cardinality explosion
+- [x] **DOC-02**: Guida integrazione plugin *(PRD §41.4)* — Complete (plan 06-09b): packages/gluezero/README.md italiano ~400 LOC con scenario meteo F1+F2+F3+F4+F5+F6 end-to-end + chain composition + Q&A 8+
+- [x] **DOC-05**: Esempi end-to-end *(PRD §41.8)* — Complete (plan 06-09b): packages/gluezero/EXAMPLES.md italiano consolidato F5 (worker section delivered) + F6 (cache + tooling) + scenario cross-feature integrato F1+F2+F3+F4+F5+F6
 - [x] **DOC-06**: Documentazione debug tooling *(PRD §41.9)* — Complete (plan 06-09b): packages/devtools/README.md italiano 11 sezioni con anti-pattern cardinality explosion + 7 Q&A enumerate (WARNING-2 fix) + structuredClone perf caveat + PRD §39 #10 closure
 ```
 
@@ -454,7 +454,7 @@ Aggiorna anche cross-cutting REQ extension F6:
 Aggiorna sezione **Open Issues PRD §39 — Map to Phases**:
 
 ```markdown
-- **Closed:** ... ; **#10 (TOOL-05 — Phase 6 plan 06-06 + 06-09b DOC-05: schema { counters, gauges, histograms } simil-OpenMetrics + naming sembridge.<package>.<metric> Prometheus + reservoir Algorithm R + cardinality cap)** ✅ CLOSED 2026-05-XX
+- **Closed:** ... ; **#10 (TOOL-05 — Phase 6 plan 06-06 + 06-09b DOC-05: schema { counters, gauges, histograms } simil-OpenMetrics + naming gluezero.<package>.<metric> Prometheus + reservoir Algorithm R + cardinality cap)** ✅ CLOSED 2026-05-XX
 ```
 
 **3.2 — Verifica completeness:**
@@ -489,7 +489,7 @@ Co-Authored-By: Claude Opus 4.7 <noreply@anthropic.com>"
 ```
   </action>
   <verify>
-    <automated>grep -cE "Complete \(plan 06-(02|03|05|06|07|08a|08b|09b)" "/Users/omarmarzio/programming/prova AI/SemBridge/.planning/REQUIREMENTS.md" && grep -c "Closes PRD §39 #10\|TOOL-05.*Complete" "/Users/omarmarzio/programming/prova AI/SemBridge/.planning/REQUIREMENTS.md"</automated>
+    <automated>grep -cE "Complete \(plan 06-(02|03|05|06|07|08a|08b|09b)" "/Users/omarmarzio/programming/prova AI/GlueZero/.planning/REQUIREMENTS.md" && grep -c "Closes PRD §39 #10\|TOOL-05.*Complete" "/Users/omarmarzio/programming/prova AI/GlueZero/.planning/REQUIREMENTS.md"</automated>
   </verify>
   <done>
     - REQUIREMENTS.md atomic flip F6 REQ-IDs done
@@ -515,11 +515,11 @@ Co-Authored-By: Claude Opus 4.7 <noreply@anthropic.com>"
 Aggiorna entry Phase 6 (11/11 plans, post split BLOCKER-3):
 
 ```markdown
-- [x] **Phase 6: Cache & Tooling avanzato** ✅ **COMPLETE** (11/11 plans, ready for verifier) — Cache layer in-memory LRU bounded + scope user-aware + cache-then-network ordering + Event Inspector + Route Inspector + MetricsCollector simil-OpenMetrics (TOOL-05 closure PRD §39 #10) + pauseTopic/flushQueue + getDebugSnapshot deep-clone + createSemBridge chain completa F1+F2+F3+F4+F5+F6. Closes PRD §39 #10 (TOOL-05 metrics format). Closure date: 2026-05-XX.
+- [x] **Phase 6: Cache & Tooling avanzato** ✅ **COMPLETE** (11/11 plans, ready for verifier) — Cache layer in-memory LRU bounded + scope user-aware + cache-then-network ordering + Event Inspector + Route Inspector + MetricsCollector simil-OpenMetrics (TOOL-05 closure PRD §39 #10) + pauseTopic/flushQueue + getDebugSnapshot deep-clone + createGlueZero chain completa F1+F2+F3+F4+F5+F6. Closes PRD §39 #10 (TOOL-05 metrics format). Closure date: 2026-05-XX.
 
 ### Phase 6: Cache & Tooling avanzato
 
-**Plans**: 11/11 complete (06-01 bootstrap + 06-02 MemoryCacheAdapter+stable-hash + 06-03 CacheHandler+CompositeHandler concretizza F3 D-77 + 06-04 MultiplexTap+TapRegistry + 06-05 EventInspector+RouteInspector + 06-06 MetricsCollector+reservoir+cardinality + 06-07 PauseController + 06-08a CacheBroker composition + 06-08b DevtoolsBroker composition + createSemBridge chain completa + 06-09a CI gates calibration + 06-09b DOC + JSDoc + REQ flip + milestone closure)
+**Plans**: 11/11 complete (06-01 bootstrap + 06-02 MemoryCacheAdapter+stable-hash + 06-03 CacheHandler+CompositeHandler concretizza F3 D-77 + 06-04 MultiplexTap+TapRegistry + 06-05 EventInspector+RouteInspector + 06-06 MetricsCollector+reservoir+cardinality + 06-07 PauseController + 06-08a CacheBroker composition + 06-08b DevtoolsBroker composition + createGlueZero chain completa + 06-09a CI gates calibration + 06-09b DOC + JSDoc + REQ flip + milestone closure)
 **Status**: ✅ COMPLETE — ready for verification (gsd-verifier Phase 6)
 **Closure date**: 2026-05-XX
 **Test coverage**: <count> test files / <count> test passing (Tier-1 + Tier-3 Playwright)
@@ -569,26 +569,26 @@ Aggiorna campi:
 
 ```markdown
 ---
-"@sembridge/core": major
-"@sembridge/mapper": major
-"@sembridge/routing": major
-"@sembridge/gateway": major
-"@sembridge/worker": major
-"@sembridge/cache": major
-"@sembridge/devtools": major
-"@sembridge/sembridge": major
+"@gluezero/core": major
+"@gluezero/mapper": major
+"@gluezero/routing": major
+"@gluezero/gateway": major
+"@gluezero/worker": major
+"@gluezero/cache": major
+"@gluezero/devtools": major
+"@gluezero/gluezero": major
 ---
 
-# SemBridge v1.0.0 — Milestone Release
+# GlueZero v1.0.0 — Milestone Release
 
-Prima release pubblica major v1.0.0 di SemBridge: libreria browser-side TypeScript-first per pub/sub, routing, canonical model, server gateway, worker runtime, cache + developer tooling.
+Prima release pubblica major v1.0.0 di GlueZero: libreria browser-side TypeScript-first per pub/sub, routing, canonical model, server gateway, worker runtime, cache + developer tooling.
 
 ## Highlights
 
 - **6 fasi PRD complete**: Core + Mapper + Routing + Realtime + Worker + Cache/Tooling
 - **11 open issues PRD §39 closed**
 - **91 REQ-IDs Complete**
-- **8 pacchetti pubblicati**: `@sembridge/{core,mapper,routing,gateway,worker,cache,devtools,sembridge}`
+- **8 pacchetti pubblicati**: `@gluezero/{core,mapper,routing,gateway,worker,cache,devtools,sembridge}`
 - **Zero deps esterne core** — solo nanoid + valibot + Comlink (worker)
 - **ESM-only** + TypeScript declarations
 - **Coverage v8 ≥90/80/90/90** su tutti i package F2-F6
@@ -601,7 +601,7 @@ Nessuna — prima release pubblica.
 ## What's New (vs Pre-1.0)
 
 - **Phase 6 Cache & Tooling**: MemoryCacheAdapter LRU + scope hybrid + Event Inspector + Metrics simil-OpenMetrics + pauseTopic + getDebugSnapshot
-- **createSemBridge aggregato**: chain composition F1+F2+F3+F4+F5+F6 con features opt-out
+- **createGlueZero aggregato**: chain composition F1+F2+F3+F4+F5+F6 con features opt-out
 
 ## Open Issues PRD §39 Closed
 
@@ -640,7 +640,7 @@ Final closure summary con:
 **4.6 — Final commit atomico:**
 
 ```bash
-cd "/Users/omarmarzio/programming/prova AI/SemBridge"
+cd "/Users/omarmarzio/programming/prova AI/GlueZero"
 git add .planning/ROADMAP.md .planning/STATE.md .planning/TRACKER.md .changeset/v1-0-0-release.md .planning/phases/06-cache-tooling-avanzato/06-09b-SUMMARY.md
 
 DIFF=$(git diff main...HEAD -- packages/core/src/ packages/mapper/src/ packages/routing/src/ packages/gateway/src/ packages/worker/src/ | wc -l)
@@ -656,12 +656,12 @@ Phase 6 (Cache & Tooling avanzato) complete: 11/11 plans (06-01..06-09b) + 5/5 s
 - 6 fasi PRD complete (F1 Core + F2 Mapper + F3 Routing + F4 Realtime + F5 Worker + F6 Cache/Tooling)
 - 11 open issues PRD §39 closed (MAP-17 + VAL-08 + VAL-09 + ROUTE-09/15/16 + LIFE-02 + RT-07 + WK-07 + **TOOL-05**)
 - 91 REQ-IDs Complete su 91 totali (100%)
-- 8 pacchetti @sembridge/* ESM-only ready for v1.0.0 publish
+- 8 pacchetti @gluezero/* ESM-only ready for v1.0.0 publish
 - D-83 strict carryover OK verified TUTTA F6: git diff main packages/{core,mapper,routing,gateway,worker}/src/ exit 0 lines
 
 Final F6 closure highlights:
 - Plans: 06-01..06-07 + 06-08a CacheBroker composition + 06-08b DevtoolsBroker composition +
-  createSemBridge chain completa F1+F2+F3+F4+F5+F6 + 06-09a CI gates + 06-09b DOC/REQ/closure
+  createGlueZero chain completa F1+F2+F3+F4+F5+F6 + 06-09a CI gates + 06-09b DOC/REQ/closure
 - 16 decisioni F6 D-155..D-170 lockate
 - CI gates: publint OK (7/7), attw ESM-only OK, size-limit OK cache + devtools + sembridge,
   biome OK, typecheck OK, build OK
@@ -677,7 +677,7 @@ Final F6 closure highlights:
 Phase 6 ready for gsd-verifier 6 finale + npm publish v1.0.0.
 
 Closes-PRD-§39-#10: TOOL-05 metrics format documentato — schema { counters, gauges, histograms }
-simil-OpenMetrics naming sembridge.<package>.<metric>{<labels>} dot.case Prometheus +
+simil-OpenMetrics naming gluezero.<package>.<metric>{<labels>} dot.case Prometheus +
 cumulative-only counters + reservoir Algorithm R Vitter 1985 + cardinality cap 100.
 
 Co-Authored-By: Claude Opus 4.7 <noreply@anthropic.com>"
@@ -692,10 +692,10 @@ Co-Authored-By: Claude Opus 4.7 <noreply@anthropic.com>"
 6. `grep -E "Complete \(plan 06-(02|03|05|06|07|08a|08b|09b)" .planning/REQUIREMENTS.md` ≥10 hits
 7. `grep "PRD §39 #10\|TOOL-05.*Closes" .planning/REQUIREMENTS.md` ≥1
 8. `grep "MILESTONE v1.0\|✅ CHIUSA" .planning/{ROADMAP,STATE,TRACKER}.md` ≥3 hits totali
-9. Acceptance grep BLOCKER-2: `grep -cE "createWorkerBroker|createRealtimeBroker" packages/sembridge/src/sem-bridge.ts` ≥4 hits
+9. Acceptance grep BLOCKER-2: `grep -cE "createWorkerBroker|createRealtimeBroker" packages/gluezero/src/glue-zero.ts` ≥4 hits
   </action>
   <verify>
-    <automated>cd "/Users/omarmarzio/programming/prova AI/SemBridge" && DIFF=$(git diff main...HEAD -- packages/core/src/ packages/mapper/src/ packages/routing/src/ packages/gateway/src/ packages/worker/src/ | wc -l); echo "D-83 strict diff lines $DIFF (atteso 0)" && pnpm -r typecheck 2>&1 | tail -3 && grep -cE "Complete \(plan 06-(02|03|05|06|07|08a|08b|09b)" .planning/REQUIREMENTS.md && grep -c "MILESTONE v1.0\|CHIUSA" .planning/ROADMAP.md .planning/STATE.md .planning/TRACKER.md 2>&1 && grep -cE "createWorkerBroker|createRealtimeBroker" packages/sembridge/src/sem-bridge.ts</automated>
+    <automated>cd "/Users/omarmarzio/programming/prova AI/GlueZero" && DIFF=$(git diff main...HEAD -- packages/core/src/ packages/mapper/src/ packages/routing/src/ packages/gateway/src/ packages/worker/src/ | wc -l); echo "D-83 strict diff lines $DIFF (atteso 0)" && pnpm -r typecheck 2>&1 | tail -3 && grep -cE "Complete \(plan 06-(02|03|05|06|07|08a|08b|09b)" .planning/REQUIREMENTS.md && grep -c "MILESTONE v1.0\|CHIUSA" .planning/ROADMAP.md .planning/STATE.md .planning/TRACKER.md 2>&1 && grep -cE "createWorkerBroker|createRealtimeBroker" packages/gluezero/src/glue-zero.ts</automated>
   </verify>
   <done>
     - .planning/ROADMAP.md flip Phase 6 11/11 + milestone v1.0
@@ -722,7 +722,7 @@ Co-Authored-By: Claude Opus 4.7 <noreply@anthropic.com>"
 - PRD §39 #10 closed in DOC-05 + REQUIREMENTS.md + ROADMAP.md
 - ROADMAP/STATE/TRACKER/CHANGELOG flip atomic milestone v1.0
 - D-83 strict acceptance gate finale verified (CRITICO): zero diff packages/{core,mapper,routing,gateway,worker}/src/
-- BLOCKER-2 acceptance verified: createSemBridge include chain completa F1+F2+F3+F4+F5+F6
+- BLOCKER-2 acceptance verified: createGlueZero include chain completa F1+F2+F3+F4+F5+F6
 - BLOCKER-1 acceptance verified: barrel devtools/src/index.ts modificato SOLO da 06-08b
 - Cross-package zero regression full monorepo (~900+ test passing)
 </verification>

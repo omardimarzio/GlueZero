@@ -5,7 +5,7 @@ subsystem: gateway/sse-ws/reconnect-strategy
 tags: [reconnect, full-jitter, fallback, state-machine, tdd, D-107, D-109, Q3]
 dependency_graph:
   requires:
-    - "@sembridge/gateway/sse-ws (Plan 04-01 bootstrap)"
+    - "@gluezero/gateway/sse-ws (Plan 04-01 bootstrap)"
   provides:
     - "createReconnectStrategy(options) factory"
     - "ReconnectStrategy interface (8 metodi)"
@@ -90,7 +90,7 @@ export function createReconnectStrategy(options?: ReconnectStrategyOptions): Rec
 ### Test suite (15/15 PASS)
 
 ```
-> @sembridge/gateway test packages/gateway/src/sse-ws/reconnect-strategy.test.ts
+> @gluezero/gateway test packages/gateway/src/sse-ws/reconnect-strategy.test.ts
 
  Test Files  1 passed (1)
       Tests  15 passed (15)

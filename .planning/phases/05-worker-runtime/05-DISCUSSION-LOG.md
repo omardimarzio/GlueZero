@@ -286,7 +286,7 @@
 
 ## Worker module loading
 
-### Q7.1 — Quale tipo di Worker SemBridge supporta in V1?
+### Q7.1 — Quale tipo di Worker GlueZero supporta in V1?
 
 | Option | Description | Selected |
 |--------|-------------|----------|
@@ -302,7 +302,7 @@
 | Option | Description | Selected |
 |--------|-------------|----------|
 | Documenta `new URL('./x.worker.ts', import.meta.url)` (Recommended) | Pattern Vite/esbuild/tsup standard. Niente helper custom. | ✓ |
-| Helper SemBridge `workerFromUrl(url, opts)` | Più DX ma meno trasparente. | |
+| Helper GlueZero `workerFromUrl(url, opts)` | Più DX ma meno trasparente. | |
 | Documenta entrambi | DX e flessibilità ma più codice da mantenere. | |
 
 **User's choice:** Documenta `new URL(..., import.meta.url)` only

@@ -36,14 +36,14 @@ caveats:
   - description: "package.json versions ancora a 0.0.0 — bump major a v1.0.0 avverrà via Changesets `pnpm release` (changeset publish) post-verifier come da workflow standard."
     classification: standard_release_workflow
     actionable: false
-  - description: "Pre-existing typecheck issue su @sembridge/gateway/routing in deferred-items.md (06-06) risolto in 06-09a CI calibration — typecheck ora PASS 8/8."
+  - description: "Pre-existing typecheck issue su @gluezero/gateway/routing in deferred-items.md (06-06) risolto in 06-09a CI calibration — typecheck ora PASS 8/8."
     classification: resolved_in_phase
     actionable: false
 ---
 
 # Phase 6: Cache & Tooling avanzato — Verification Report
 
-**Phase Goal (ROADMAP.md §227-247):** In-memory cache layer + Event/Route Inspector + MetricsCollector + PauseController + getDebugSnapshot + tap registry chain + step 14 reale + chain completa `createSemBridge` F1+F2+F3+F4+F5+F6. **Closes PRD §39 #10 (TOOL-05 metrics format).**
+**Phase Goal (ROADMAP.md §227-247):** In-memory cache layer + Event/Route Inspector + MetricsCollector + PauseController + getDebugSnapshot + tap registry chain + step 14 reale + chain completa `createGlueZero` F1+F2+F3+F4+F5+F6. **Closes PRD §39 #10 (TOOL-05 metrics format).**
 
 **Verificato:** 2026-05-05T21:30:00Z
 **Verdict:** ✅ **PASS**
@@ -59,7 +59,7 @@ caveats:
 |---|----------------------|--------|----------|
 | 1 | Cache-then-network: due eventi `<topic>.loaded` consecutivi con `metadata.origin: 'cache'` poi `'remote'`, microtask ordering | ✅ VERIFIED | `packages/cache/src/cache-handler.ts:1-470` (CacheHandlerF6 3-strategy), `packages/cache/src/__integration__/cache-then-network.test.ts` ✓, REQ CACHE-03 + D-156 RESEARCH §15.6 |
 | 2 | Event Inspector + Route Inspector espongono ciclo vita evento + 14 step pipeline + cache hit/miss + retry + policy | ✅ VERIFIED | `packages/devtools/src/event-inspector.ts:172` ring buffer 500 (D-167) + `route-inspector.ts:222` capture step 9+10 + `multiplex-tap.ts:83` chain D-159 + `tap-registry.ts:163` + `__integration__/inspector-snapshot.test.ts` ✓ |
-| 3 | PRD §39 #10 chiuso: `getMetrics()` → struttura JSON simil-OpenMetrics `{counters, gauges, histograms}` con metriche standard | ✅ VERIFIED | `packages/devtools/src/metrics-collector.ts:222` + `reservoir-sampling.ts:107` Algorithm R Vitter 1985 (D-165) + `cardinality-cap.ts:115` cap 100 (D-166) + naming `sembridge.<package>.<metric>{<labels>}` Prometheus dot.case (D-163) + cumulative-only (D-164). `packages/devtools/README.md:169-244` Sezione 6 con tabella naming + 7 Q&A enumerate Q1-Q7. Commit `058b2dc` chiude esplicitamente §39 #10 |
+| 3 | PRD §39 #10 chiuso: `getMetrics()` → struttura JSON simil-OpenMetrics `{counters, gauges, histograms}` con metriche standard | ✅ VERIFIED | `packages/devtools/src/metrics-collector.ts:222` + `reservoir-sampling.ts:107` Algorithm R Vitter 1985 (D-165) + `cardinality-cap.ts:115` cap 100 (D-166) + naming `gluezero.<package>.<metric>{<labels>}` Prometheus dot.case (D-163) + cumulative-only (D-164). `packages/devtools/README.md:169-244` Sezione 6 con tabella naming + 7 Q&A enumerate Q1-Q7. Commit `058b2dc` chiude esplicitamente §39 #10 |
 | 4 | Controlli runtime `pauseTopic`/`resumeTopic`/`flushQueue` + `enableDebug`/`disableDebug` toggle live-mode | ✅ VERIFIED | `packages/devtools/src/pause-controller.ts:204` D-168 block FIFO + D-169 flushQueue audit `system.queue.flushed` + D-170 cap drop-oldest + critical bypass + `devtools-broker.ts:442` `enableDebug/disableDebug` toggle live-mode + `__integration__/pause-resume-flow.test.ts` ✓ |
 | 5 | Cache invalidation scope user-aware (D-156/D-157) + TTL configurabile + invalidate API (string/RegExp/{prefix}) + cascade unregisterPlugin | ✅ VERIFIED | `packages/cache/src/memory-cache-adapter.ts:156` LRU bounded `maxEntries=1000` (D-158) + scope hybrid prefix isolation (D-156) + `system.cache.scope-missing` audit (D-157) + cascade by ownerId LIFE-02 ext F6 D-126 + `__integration__/lifecycle-cleanup.test.ts` ✓ |
 
@@ -75,19 +75,19 @@ caveats:
 | CACHE-02 | F6 | ✅ Complete | TTL ortogonale a LRU + invalidate API (string/RegExp/{prefix}) + cascade unregisterPlugin invalidate by ownerId (LIFE-02 ext F6 D-126) |
 | CACHE-03 | F6 | ✅ Complete | metadata.origin `cache` vs `remote` popolato CacheHandlerF6 3-strategy + cache-then-network ordering microtask (D-156 RESEARCH §15.6) |
 | TOOL-01 | F6 | ✅ Complete | EventInspector ring buffer 500 (D-167) + RouteInspector capture step 9+10 + tap registry chain D-159 + getBuffer deep-clone D-162 |
-| TOOL-02 | F6 | ✅ Complete | MetricsCollector counters/gauges/histograms simil-OpenMetrics + naming `sembridge.<package>.<metric>{<labels>}` Prometheus + reservoir Algorithm R Vitter 1985 (D-163/D-164/D-165) + cardinality cap 100 + audit (D-166) |
+| TOOL-02 | F6 | ✅ Complete | MetricsCollector counters/gauges/histograms simil-OpenMetrics + naming `gluezero.<package>.<metric>{<labels>}` Prometheus + reservoir Algorithm R Vitter 1985 (D-163/D-164/D-165) + cardinality cap 100 + audit (D-166) |
 | TOOL-03 | F6 | ✅ Complete | DevtoolsBroker.enableDebug/disableDebug toggle live-mode (D-160 + NODE_ENV detection) + getDebugSnapshot deep-clone via structuredClone (D-162) |
 | TOOL-04 | F6 | ✅ Complete | PauseController D-168 pauseTopic block FIFO + D-169 flushQueue drop + `system.queue.flushed` audit + D-170 cap drop-oldest + critical bypass |
-| **TOOL-05** | F6 | ✅ **Complete — Closes PRD §39 #10** ✅ | schema `{counters, gauges, histograms}` simil-OpenMetrics + naming `sembridge.<package>.<metric>` dot.case Prometheus + cumulative-only D-164 + getMetricsDelta + reservoir D-165 + cardinality cap 100 D-166. DOC-05 `packages/devtools/README.md` Sezione 6 + 7 Q&A Q1-Q7 + anti-pattern cardinality explosion |
-| DOC-02 | F6 | ✅ Complete | `packages/sembridge/README.md` italiano ~452 LOC scenario meteo F1+F2+F3+F4+F5+F6 + chain composition + Q&A 8 |
-| DOC-05 | F6 | ✅ Complete | `packages/sembridge/EXAMPLES.md` italiano ~519 LOC consolidato F1+F2+F3+F4+F5+F6 |
+| **TOOL-05** | F6 | ✅ **Complete — Closes PRD §39 #10** ✅ | schema `{counters, gauges, histograms}` simil-OpenMetrics + naming `gluezero.<package>.<metric>` dot.case Prometheus + cumulative-only D-164 + getMetricsDelta + reservoir D-165 + cardinality cap 100 D-166. DOC-05 `packages/devtools/README.md` Sezione 6 + 7 Q&A Q1-Q7 + anti-pattern cardinality explosion |
+| DOC-02 | F6 | ✅ Complete | `packages/gluezero/README.md` italiano ~452 LOC scenario meteo F1+F2+F3+F4+F5+F6 + chain composition + Q&A 8 |
+| DOC-05 | F6 | ✅ Complete | `packages/gluezero/EXAMPLES.md` italiano ~519 LOC consolidato F1+F2+F3+F4+F5+F6 |
 | DOC-06 | F6 | ✅ Complete | `packages/devtools/README.md` italiano ~368 LOC 11 sezioni + 7 Q&A enumerate + cardinality explosion anti-pattern |
 | ERR-02 ext F6 | F2→F6 | ✅ Complete ext | F6 estende: `system.cache.scope-missing` (D-157) + `system.queue.flushed` (D-169) + `system.queue.overflow` (D-170) + `system.metrics.cardinalityoverflow` (D-166) + sanitized cache.* errors |
 | LIFE-02 ext F6 | F1→F6 | ✅ Complete ext | F6 cascade: cache invalidate by ownerId D-126 + DevtoolsBroker per-owner state cleanup (V1) |
 | PIPE-01 ext F6 | F1→F6 | ✅ Complete ext | F6 step 14 reale attivato via DevtoolsBroker post `inner.publish` (D-161 `event.observed` lifecycle event + tap chain MultiplexTap D-159) — pipeline §28 14 step ora completa end-to-end |
 | TEST-01 ext F6 | F1→F6 | ✅ Complete ext | 4 cache integration test 3-tier (cache-then-network microtask + cascade invalidate + scope-missing audit + LRU eviction) |
-| TEST-02 ext F6 | F2→F6 | ✅ Complete ext | 6 devtools+sembridge integration test 3-tier (createSemBridge chain F1..F6 + getDebugSnapshot deep-clone + pauseTopic FIFO + flushQueue audit + critical bypass + tap chain MultiplexTap) |
-| PKG-01..04 ext F6 | F1→F6 | ✅ Complete ext | 8 pacchetti monorepo `@sembridge/*` ESM-only + `package.json` exports + tsup ESM-only build + .d.ts generati + target evergreen ES2022 |
+| TEST-02 ext F6 | F2→F6 | ✅ Complete ext | 6 devtools+sembridge integration test 3-tier (createGlueZero chain F1..F6 + getDebugSnapshot deep-clone + pauseTopic FIFO + flushQueue audit + critical bypass + tap chain MultiplexTap) |
+| PKG-01..04 ext F6 | F1→F6 | ✅ Complete ext | 8 pacchetti monorepo `@gluezero/*` ESM-only + `package.json` exports + tsup ESM-only build + .d.ts generati + target evergreen ES2022 |
 
 **REQ-IDs F6 totali: 12/12 ✅ Complete + 5 ext (ERR-02/LIFE-02/PIPE-01/TEST-01/02) ✅ Complete + 4 PKG-* ext ✅ Complete.**
 
@@ -102,11 +102,11 @@ $ # exit 0, zero output, zero file modificati, zero righe diff
 
 | Package | Files modified | Lines diff | Status |
 |---------|----------------|-----------|--------|
-| `@sembridge/core/src/` | 0 | 0 | ✅ CLEAN |
-| `@sembridge/mapper/src/` | 0 | 0 | ✅ CLEAN |
-| `@sembridge/routing/src/` | 0 | 0 | ✅ CLEAN |
-| `@sembridge/gateway/src/` | 0 | 0 | ✅ CLEAN |
-| `@sembridge/worker/src/` | 0 | 0 | ✅ CLEAN |
+| `@gluezero/core/src/` | 0 | 0 | ✅ CLEAN |
+| `@gluezero/mapper/src/` | 0 | 0 | ✅ CLEAN |
+| `@gluezero/routing/src/` | 0 | 0 | ✅ CLEAN |
+| `@gluezero/gateway/src/` | 0 | 0 | ✅ CLEAN |
+| `@gluezero/worker/src/` | 0 | 0 | ✅ CLEAN |
 
 **D-83 strict carryover meccanico VERIFIED.** Base commit Phase 5 closure `6d76bbf` → HEAD F6 `058b2dc`. Tutta la composition Opzione B vive nei 3 package F6 (cache + devtools + sembridge). Zero retrofit invasivo dei filtri F1-F5.
 
@@ -114,12 +114,12 @@ $ # exit 0, zero output, zero file modificati, zero righe diff
 
 ## 4. PRD §39 #10 (TOOL-05) Closure Evidence
 
-**Open issue PRD §39 #10**: "Format metriche — JSON simil-OpenMetrics `{counters, gauges, histograms}` + naming `sembridge.<package>.<metric>{<labels>}` Prometheus dot.case + cumulative-only counters + reservoir Algorithm R Vitter 1985 + cardinality cap 100".
+**Open issue PRD §39 #10**: "Format metriche — JSON simil-OpenMetrics `{counters, gauges, histograms}` + naming `gluezero.<package>.<metric>{<labels>}` Prometheus dot.case + cumulative-only counters + reservoir Algorithm R Vitter 1985 + cardinality cap 100".
 
 | Aspetto | File | Evidence |
 |---------|------|----------|
 | Schema simil-OpenMetrics | `packages/devtools/src/metrics-collector.ts:222` | `getMetrics()` → `{counters, gauges, histograms}` |
-| Naming Prometheus dot.case | metrics-collector + cardinality-cap | `sembridge.<package>.<metric>{<labels>}` |
+| Naming Prometheus dot.case | metrics-collector + cardinality-cap | `gluezero.<package>.<metric>{<labels>}` |
 | Cumulative-only counters | metrics-collector D-164 | + helper `getMetricsDelta` |
 | Reservoir Algorithm R | `packages/devtools/src/reservoir-sampling.ts:107` | Vitter 1985 inline (D-165) |
 | Cardinality cap 100 + audit | `packages/devtools/src/cardinality-cap.ts:115` | `system.metrics.cardinalityoverflow` audit (D-166) |
@@ -131,31 +131,31 @@ $ # exit 0, zero output, zero file modificati, zero righe diff
 
 ---
 
-## 5. Chain Completa createSemBridge F1+F2+F3+F4+F5+F6
+## 5. Chain Completa createGlueZero F1+F2+F3+F4+F5+F6
 
-**Verifica `packages/sembridge/src/sem-bridge.ts`:**
+**Verifica `packages/gluezero/src/glue-zero.ts`:**
 
 ```
-$ grep -nE "createBus|createMapperBroker|createRouterBroker|createRealtimeBroker|createWorkerBroker|createCacheBroker|createDevtoolsBroker" packages/sembridge/src/sem-bridge.ts | wc -l
+$ grep -nE "createBus|createMapperBroker|createRouterBroker|createRealtimeBroker|createWorkerBroker|createCacheBroker|createDevtoolsBroker" packages/gluezero/src/glue-zero.ts | wc -l
 29
 ```
 
 29 hits sui factory (target ≥5). Import statement:
 
 ```ts
-// sem-bridge.ts:39-45
-import { createCacheBroker } from '@sembridge/cache'
-import type { createBroker } from '@sembridge/core'
-import { createDevtoolsBroker } from '@sembridge/devtools'
-import { createRealtimeBroker } from '@sembridge/gateway/sse-ws'
-import type { createMapperBroker } from '@sembridge/mapper'
-import { createRouterBroker } from '@sembridge/routing'
-import { createWorkerBroker } from '@sembridge/worker'
+// glue-zero.ts:39-45
+import { createCacheBroker } from '@gluezero/cache'
+import type { createBroker } from '@gluezero/core'
+import { createDevtoolsBroker } from '@gluezero/devtools'
+import { createRealtimeBroker } from '@gluezero/gateway/sse-ws'
+import type { createMapperBroker } from '@gluezero/mapper'
+import { createRouterBroker } from '@gluezero/routing'
+import { createWorkerBroker } from '@gluezero/worker'
 ```
 
-Order chain composition (OUTERMOST → INNERMOST): **devtools → cache → worker → realtime → router → mapper → broker** (RESEARCH §11.3 Opzione B convenience). Type union `SemBridge` include tutti e 7 i wrapper.
+Order chain composition (OUTERMOST → INNERMOST): **devtools → cache → worker → realtime → router → mapper → broker** (RESEARCH §11.3 Opzione B convenience). Type union `GlueZero` include tutti e 7 i wrapper.
 
-Integration test BLOCKER-2 closure: `packages/sembridge/src/__integration__/chain-completa-flow.test.ts` ✓ + `features-opt-out.test.ts` ✓ — 20/20 test sembridge passing.
+Integration test BLOCKER-2 closure: `packages/gluezero/src/__integration__/chain-completa-flow.test.ts` ✓ + `features-opt-out.test.ts` ✓ — 20/20 test sembridge passing.
 
 ---
 
@@ -175,14 +175,14 @@ Integration test BLOCKER-2 closure: `packages/sembridge/src/__integration__/chai
 
 | Package | Budget | Actual | Margin |
 |---------|--------|--------|--------|
-| `@sembridge/core` | 8 KB | 6.17 KB | 23% |
-| `@sembridge/mapper` | 12 KB | 11.66 KB | 3% |
-| `@sembridge/routing` | 24 KB | 19.97 KB | 17% |
-| `@sembridge/gateway/http` | 8 KB | 6.83 KB | 15% |
-| `@sembridge/worker` | 32 KB | 26.83 KB | 16% |
-| `@sembridge/cache` | 27 KB | 22.14 KB | 18% |
-| `@sembridge/devtools` | 27 KB | 22.28 KB | 17% |
-| `@sembridge/sembridge` | 42 KB | 34.79 KB | 17% |
+| `@gluezero/core` | 8 KB | 6.17 KB | 23% |
+| `@gluezero/mapper` | 12 KB | 11.66 KB | 3% |
+| `@gluezero/routing` | 24 KB | 19.97 KB | 17% |
+| `@gluezero/gateway/http` | 8 KB | 6.83 KB | 15% |
+| `@gluezero/worker` | 32 KB | 26.83 KB | 16% |
+| `@gluezero/cache` | 27 KB | 22.14 KB | 18% |
+| `@gluezero/devtools` | 27 KB | 22.28 KB | 17% |
+| `@gluezero/gluezero` | 42 KB | 34.79 KB | 17% |
 
 ---
 
@@ -190,7 +190,7 @@ Integration test BLOCKER-2 closure: `packages/sembridge/src/__integration__/chai
 
 ### ROADMAP.md §368
 
-> **Milestone v1.0 ✅ CHIUSA 2026-05-05** — 6/6 fasi PRD complete + 10/11 open issues PRD §39 closed (#2 deferred V1.x) + 91/91 REQ-IDs Complete + 8 pacchetti `@sembridge/*` ESM-only ready for `npm publish v1.0.0`.
+> **Milestone v1.0 ✅ CHIUSA 2026-05-05** — 6/6 fasi PRD complete + 10/11 open issues PRD §39 closed (#2 deferred V1.x) + 91/91 REQ-IDs Complete + 8 pacchetti `@gluezero/*` ESM-only ready for `npm publish v1.0.0`.
 
 ### ROADMAP §357-364 Progress Table
 
@@ -209,16 +209,16 @@ Integration test BLOCKER-2 closure: `packages/sembridge/src/__integration__/chai
 
 `.changeset/v1-0-0-release.md` (85 LOC) — bump `major` su 8 package:
 
-- `@sembridge/core: major`
-- `@sembridge/mapper: major`
-- `@sembridge/routing: major`
-- `@sembridge/gateway: major`
-- `@sembridge/worker: major`
-- `@sembridge/cache: major`
-- `@sembridge/devtools: major`
-- `@sembridge/sembridge: major`
+- `@gluezero/core: major`
+- `@gluezero/mapper: major`
+- `@gluezero/routing: major`
+- `@gluezero/gateway: major`
+- `@gluezero/worker: major`
+- `@gluezero/cache: major`
+- `@gluezero/devtools: major`
+- `@gluezero/gluezero: major`
 
-Changeset coerente: "SemBridge v1.0.0 — Milestone Release" + 6 fasi + 10/11 open issues + 91/91 REQ-IDs + bundle size table.
+Changeset coerente: "GlueZero v1.0.0 — Milestone Release" + 6 fasi + 10/11 open issues + 91/91 REQ-IDs + bundle size table.
 
 **Caveat workflow standard:** `package.json` versions ancora a `0.0.0` — il bump effettivo a `1.0.0` avverrà via `pnpm release` (=`pnpm build && changeset version && changeset publish`) post-verifier come da workflow Changesets standard. Non actionable per la verifica.
 
@@ -239,8 +239,8 @@ Last completed: Plan 06-09b at 2026-05-05 (commit 058b2dc)
 | 1 | `package.json` versions ancora a `0.0.0` | Workflow Changesets standard — bump al `pnpm release` | ❌ No (release step) |
 | 2 | Pre-existing typecheck issue gateway/routing in deferred-items.md (06-06) | Resolved in 06-09a CI calibration — typecheck ora PASS 8/8 | ❌ No (resolved) |
 | 3 | PRD §39 #2 (cross-fase pipeline ordering canonical doc) | Deferred V1.x come da ROADMAP §322-334 + changeset roadmap V1.x | ❌ No (deferral pianificato) |
-| 4 | `@sembridge/cache-idb` IndexedDB persistence | Deferred V1.x (ROADMAP §233 + changeset V1.x roadmap) | ❌ No (deferral pianificato) |
-| 5 | `@sembridge/metrics-prometheus` + `@sembridge/metrics-otel` exporter | Deferred V1.x (changeset V1.x roadmap) | ❌ No (deferral pianificato) |
+| 4 | `@gluezero/cache-idb` IndexedDB persistence | Deferred V1.x (ROADMAP §233 + changeset V1.x roadmap) | ❌ No (deferral pianificato) |
+| 5 | `@gluezero/metrics-prometheus` + `@gluezero/metrics-otel` exporter | Deferred V1.x (changeset V1.x roadmap) | ❌ No (deferral pianificato) |
 | 6 | Biome warnings F6 (33 warnings + 8 infos cosmetic) | Cosmetic — zero errors blocking | ❌ No (cosmetic) |
 | 7 | MSW V1.x F4 deferred (3 skip test in gateway/sse-ws) | Deferred V1.x da F4 closure | ❌ No (deferral pianificato) |
 
@@ -271,9 +271,9 @@ Nessun anti-pattern blocker rilevato.
 - **12/12 REQ-IDs F6** Complete + 5 ext (ERR-02/LIFE-02/PIPE-01/TEST-01/02) + 4 PKG-* ext Complete
 - **D-83 strict** ✓ verified (zero diff su core/mapper/routing/gateway/worker `src/` da `6d76bbf` a `058b2dc`)
 - **PRD §39 #10 (TOOL-05 metrics format)** → **CLOSED** in DOC-05 + ROADMAP + REQUIREMENTS + CHANGESET
-- **Chain createSemBridge F1+F2+F3+F4+F5+F6** wired (29 hits factory + 20/20 integration test)
+- **Chain createGlueZero F1+F2+F3+F4+F5+F6** wired (29 hits factory + 20/20 integration test)
 - **CI gates 8/8 ✅** typecheck + build + publint + attw + size-limit + biome zero errors + tests 288/288 F6
-- **Milestone v1.0 CHIUSA** — 6/6 fasi + 10/11 open issues PRD §39 + 91/91 REQ-IDs + 8 pacchetti `@sembridge/*` ESM-only ready for `npm publish v1.0.0`
+- **Milestone v1.0 CHIUSA** — 6/6 fasi + 10/11 open issues PRD §39 + 91/91 REQ-IDs + 8 pacchetti `@gluezero/*` ESM-only ready for `npm publish v1.0.0`
 
 **Caveats:** 7 totali, tutti classificati come non actionable (deferral pianificati V1.x, cosmetic warnings, workflow Changesets standard pre-publish).
 

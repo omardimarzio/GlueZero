@@ -9,10 +9,10 @@
 Esiste un `WorkerRegistry` che gestisce worker dedicati o pool con riuso bounded; la route `worker` delega un task a un worker correlato via `correlationId`; il worker riceve payload **canonico** (mapper applicato pre-dispatch, PRD §19.4 step 3), ritorna `success` / `progress` / `error` come `BrokerEvent` canonici (`<topic>.completed` / `<topic>.progress` / `<topic>.failed`); state machine atomico `pending → done | timeout | error` (Pitfall 2C); cancellazione + timeout first-class; cascade cleanup completo su `unregisterPlugin`; serializzazione documentata (structuredClone default + transferable opt-in via JSONPath, chiusura PRD §39 #11 / WK-07).
 
 **In scope:**
-- `@sembridge/worker` package: `WorkerRegistry`, `WorkerPool`, `WorkerBridge` (Comlink wrapper interno), `TaskTracker` (state machine atomico), `assertSerializable` validator
+- `@gluezero/worker` package: `WorkerRegistry`, `WorkerPool`, `WorkerBridge` (Comlink wrapper interno), `TaskTracker` (state machine atomico), `assertSerializable` validator
 - `WorkerBroker` composition wrapper di `RouterBroker` (D-83 strict carryover) — F5 ortogonale a F4 (utente sceglie uno o compone esplicitamente)
 - API top-level: `broker.registerWorker(descriptor)` / `unregisterWorker(id)` con `ownerId='system'`
-- `PluginDescriptor.workers?: WorkerDescriptor[]` extension via declaration merging in `@sembridge/worker/augment.ts` (pattern F2 D-57, F3 D-94, F4 D-103) per cascade cleanup
+- `PluginDescriptor.workers?: WorkerDescriptor[]` extension via declaration merging in `@gluezero/worker/augment.ts` (pattern F2 D-57, F3 D-94, F4 D-103) per cascade cleanup
 - Route handler `type: 'worker'` integrato in F3 RouteExecutor (pattern Strategy)
 - Mapper canonical pre-dispatch (riuso `MapperEngine.mapToCanonical` di F2 — D-114 carryover)
 - BackpressureStrategy riusata (D-75/D-115)
@@ -30,7 +30,7 @@ Esiste un `WorkerRegistry` che gestisce worker dedicati o pool con riuso bounded
 - Custom RPC alternative to Comlink — astrazione `WorkerBridge` interna prepara lo swap, ma V1 = solo Comlink
 - `superjson` adapter — pluggable opt-in deferred V1.x quando emerga il caso d'uso fuori SCA
 - Auto-detect transferable heuristic — V1 = JSONPath dichiarato esplicito
-- Worker module HMR per dev mode — bundler-specific, non vincolo SemBridge
+- Worker module HMR per dev mode — bundler-specific, non vincolo GlueZero
 
 </domain>
 
@@ -41,7 +41,7 @@ Esiste un `WorkerRegistry` che gestisce worker dedicati o pool con riuso bounded
 
 - **D-121:** **Composition wrapper pattern (estensione D-83 strict / D-101)** — F5 introduce `WorkerBroker` che compone `RouterBroker` di F3 (NON modifica runtime a F1/F2/F3/F4). F5 vive SOLO in `packages/worker/src/` + `packages/worker/src/augment.ts` (declaration merging tipi). F4 e F5 sono **ortogonali**: l'utente sceglie un solo entry point (`createRealtimeBroker` o `createWorkerBroker`) oppure compone esplicitamente `createWorkerBroker(createRealtimeBroker(config))` — l'ordine compositivo non rompe contratti perché entrambi delegano `publish/subscribe` a `inner` (RouterBroker base condivisa).
 
-- **D-122:** **`createWorkerBroker(config)` factory pubblico** — `@sembridge/worker` espone `createWorkerBroker(config: WorkerBrokerConfig)` con Valibot `safeParse` (pattern F4 D-30 + 04-08 createRealtimeBroker). `WorkerBrokerConfig extends RouterBrokerConfig` con `workers?: WorkerConfig` aggiunto via declaration merging.
+- **D-122:** **`createWorkerBroker(config)` factory pubblico** — `@gluezero/worker` espone `createWorkerBroker(config: WorkerBrokerConfig)` con Valibot `safeParse` (pattern F4 D-30 + 04-08 createRealtimeBroker). `WorkerBrokerConfig extends RouterBrokerConfig` con `workers?: WorkerConfig` aggiunto via declaration merging.
 
 ### B. Worker source contract
 
@@ -69,7 +69,7 @@ Esiste un `WorkerRegistry` che gestisce worker dedicati o pool con riuso bounded
   - `mode: 'dedicated'` → `worker.terminate()` immediato (worker isolato, no impatto su altri task)
   - `mode: 'pool'` → invia `__cancel__` message via reserved topic; il worker honora cooperando (riceve `AbortSignal` proxied via Comlink dentro la task signature). Se non risponde entro `cancelGraceMs` (default 2000ms) → `terminate()` last resort + respawn nuovo worker per la slot.
 
-- **D-132:** **AbortSignal proxied via Comlink** — la task signature lato worker è `async (input: TInput, signal: AbortSignal, onProgress?: ProgressCallback): Promise<TOutput>`. SemBridge wrappa: il bridge crea un `AbortController` lato main → invia `controller.signal` come proxy Comlink (Comlink 4.4.x supporta function/object proxy; `signal.aborted` letto via async getter, `addEventListener('abort')` proxied). Il dev del worker fa `signal.throwIfAborted()` nei punti di check naturali.
+- **D-132:** **AbortSignal proxied via Comlink** — la task signature lato worker è `async (input: TInput, signal: AbortSignal, onProgress?: ProgressCallback): Promise<TOutput>`. GlueZero wrappa: il bridge crea un `AbortController` lato main → invia `controller.signal` come proxy Comlink (Comlink 4.4.x supporta function/object proxy; `signal.aborted` letto via async getter, `addEventListener('abort')` proxied). Il dev del worker fa `signal.throwIfAborted()` nei punti di check naturali.
 
 - **D-133:** **State machine atomico per `taskId` (Pitfall 2C closure)** — `Map<TaskId, TaskState>` con `TaskState = 'pending' | 'done' | 'timeout' | 'cancelled' | 'error'`. Transizioni esclusive: una volta `state ≠ 'pending'`, ogni successivo message dal worker viene **scartato silenziosamente** (logged in debug snapshot). Niente doppia pubblicazione `failed (timeout)` + `completed (late)`. State garantito da check-and-set atomico (single-threaded JS event loop = atomicità implicita).
 
@@ -109,11 +109,11 @@ Esiste un `WorkerRegistry` che gestisce worker dedicati o pool con riuso bounded
 
 - **D-147:** **ESM `{ type: 'module' }` default + classic opt-in** — Default V1: `WorkerDescriptor.workerType: 'module' | 'classic'` con default `'module'` (PRD §31.3 evergreen + STACK.md ESM-only). Classic opt-in via `workerType: 'classic'` per consumer con bundler vintage che non supportano module workers (rare ma esistenti — es. legacy webpack 4 senza plugin). Documenta esplicitamente in DOC-05 il trade-off (classic = no ESM imports nel worker).
 
-- **D-148:** **Pattern bundler-friendly `new URL(..., import.meta.url)`** — DOC-05 documenta il pattern Vite/esbuild/tsup standard: `factory: () => new Worker(new URL('./x.worker.ts', import.meta.url), { type: 'module' })`. Il bundler riconosce e bundla il worker come asset separato. NIENTE helper SemBridge `workerFromUrl` — pattern minimale, ecosystem-aligned, zero magia.
+- **D-148:** **Pattern bundler-friendly `new URL(..., import.meta.url)`** — DOC-05 documenta il pattern Vite/esbuild/tsup standard: `factory: () => new Worker(new URL('./x.worker.ts', import.meta.url), { type: 'module' })`. Il bundler riconosce e bundla il worker come asset separato. NIENTE helper GlueZero `workerFromUrl` — pattern minimale, ecosystem-aligned, zero magia.
 
 ### I. Test strategy F5
 
-- **D-149:** **Pattern TDD RED→GREEN co-located** (analogo D-88 F3 / D-117 F4) — ogni modulo (`worker-registry.ts`, `worker-pool.ts`, `worker-bridge.ts`, `task-tracker.ts`, `assert-serializable.ts`, `worker-broker.ts`, `worker-handler.ts`) ha unit test co-locato. Plan paralleli con file ownership disgiunta (analogo F3/F4 wave-based). Coverage v8 ≥ 90% sui file `@sembridge/worker/src/` (riuso D-92 F3 setup, D-117 F4 setup).
+- **D-149:** **Pattern TDD RED→GREEN co-located** (analogo D-88 F3 / D-117 F4) — ogni modulo (`worker-registry.ts`, `worker-pool.ts`, `worker-bridge.ts`, `task-tracker.ts`, `assert-serializable.ts`, `worker-broker.ts`, `worker-handler.ts`) ha unit test co-locato. Plan paralleli con file ownership disgiunta (analogo F3/F4 wave-based). Coverage v8 ≥ 90% sui file `@gluezero/worker/src/` (riuso D-92 F3 setup, D-117 F4 setup).
 
 - **D-150:** **Tre livelli di test (riuso D-118 F4)** — coerente con STACK.md:
   - **Node + Vitest jsdom**: unit logic (state machine, assertSerializable deep-walk, JSONPath transferable extractor, throttle calc)
@@ -219,7 +219,7 @@ Esiste un `WorkerRegistry` che gestisce worker dedicati o pool con riuso bounded
 - `.planning/research/ARCHITECTURE.md` §13 — Phase ordering rationale F5 ortogonale F4
 
 ### Plan precedenti (codebase scaffolding già in place)
-- `packages/worker/package.json` — placeholder F1 da popolare in F5 (deps: comlink, @sembridge/core, @sembridge/mapper, @sembridge/routing, @sembridge/gateway opzionale)
+- `packages/worker/package.json` — placeholder F1 da popolare in F5 (deps: comlink, @gluezero/core, @gluezero/mapper, @gluezero/routing, @gluezero/gateway opzionale)
 - `packages/worker/src/` — vuota (da popolare in F5)
 - `packages/core/src/types/plugin.ts` — placeholder per `// F5 will add: workers` (analogo a placeholder F4 realtimeChannels già rimosso)
 - `packages/core/src/types/broker-event.ts` — `BrokerEvent.source.type` accetta già `'worker'` (PRD §11.1 union)
@@ -253,7 +253,7 @@ Esiste un `WorkerRegistry` che gestisce worker dedicati o pool con riuso bounded
 ### Integration Points
 - **`Broker.publish(event)` API**: punto di ingresso per eventi worker `<topic>.completed/.progress/.failed` (D-152), unchanged dal contratto F1
 - **`PluginRegistration.workers` field**: nuovo membro nella struttura interna del plugin registry (extension D-126)
-- **`createWorkerBroker(config)`**: nuovo factory pubblico in `@sembridge/worker` che compone `createRouterBroker` (D-122)
+- **`createWorkerBroker(config)`**: nuovo factory pubblico in `@gluezero/worker` che compone `createRouterBroker` (D-122)
 - **`WorkerRegistry` lifecycle**: registra workers al `registerWorker` (lazy spawn al first dispatch D-129), deregistra al `unregisterWorker`/`unregisterPlugin` cascade D-126
 - **`BrokerEvent.source` con `type: 'worker'`**: già supportato da F1 type, popolato da F5 worker handler con `source: { type: 'worker', id: 'workerId', name: 'taskName' }`
 - **Pipeline §28 step 9**: `RouteExecutor.dispatchWorker` aggiunto al dispatch table di F3 (D-152)
@@ -280,7 +280,7 @@ Esiste un `WorkerRegistry` che gestisce worker dedicati o pool con riuso bounded
 - **`SharedWorker` cross-tab support**: V2. Use case raro, complica lifecycle e cleanup.
 - **Worker retry policy idempotent**: V1.x come opt-in `worker.retry: { mode: 'idempotent', maxAttempts: N }`. Default V1 = no retry (D-143). Aggiungere retry richiede contratto idempotency esplicito (rischia Pitfall 2A se mal usato).
 - **Auto-detect transferable heuristic**: V1.x. Default V1 = JSONPath dichiarato esplicito (D-141). Auto-detect potrebbe causare sorprese (Pitfall 7.E ownership unexpected).
-- **Worker module HMR per dev mode**: bundler-specific (Vite/webpack), non vincolo SemBridge. Documentazione in DOC-05 punta al bundler docs.
+- **Worker module HMR per dev mode**: bundler-specific (Vite/webpack), non vincolo GlueZero. Documentazione in DOC-05 punta al bundler docs.
 - **Service Worker / Push notification bridge** (RT2-01): V2 per use case oltre la vita della pagina (PRD §18.7).
 - **Worker telemetry hooks per F6**: F6 introdurrà `WorkerInspector` analogo a `EventInspector`/`MappingInspector`/`RouteInspector`. F5 pre-instrumenta le hook tap (`tap.onPipelineStep('worker.dispatched', snapshot)`, `'worker.completed'`, `'worker.failed'`) coerente con CORE-13 / EventTap pre-instrumentation pattern.
 

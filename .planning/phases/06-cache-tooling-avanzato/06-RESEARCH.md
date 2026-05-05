@@ -41,7 +41,7 @@ versions_verified:
 # Phase 6: Cache & Tooling avanzato — Research
 
 **Researched:** 2026-05-05
-**Domain:** Cache layer (`@sembridge/cache`) + Developer Tooling (`@sembridge/devtools`) — milestone v1.0 closure
+**Domain:** Cache layer (`@gluezero/cache`) + Developer Tooling (`@gluezero/devtools`) — milestone v1.0 closure
 **Confidence overall:** HIGH
 
 > Lingua: italiano per testo descrittivo; inglese per identificatori, codice, nomi librerie/file/comandi/tipi (vincolo CLAUDE.md).
@@ -68,7 +68,7 @@ versions_verified:
 
 #### C. MetricsCollector schema & semantics (TOOL-03/05 — chiude PRD §39 #10)
 
-- **D-163:** Naming `sembridge.<package>.<metric>` dot.case namespaced (Prometheus/OpenMetrics-friendly). Suffix convention: `_total` per counter, `_ms` per duration histogram.
+- **D-163:** Naming `gluezero.<package>.<metric>` dot.case namespaced (Prometheus/OpenMetrics-friendly). Suffix convention: `_total` per counter, `_ms` per duration histogram.
 - **D-164:** Cumulative-only counters dal boot. Helper opzionale `getMetricsDelta(prev)` calcola differenze lato consumer.
 - **D-165:** Histogram `{ count, sum, p50, p90, p99 }` con ring buffer ~1024 samples. Calcolo via reservoir sampling (Vitter Algorithm R) o t-digest — researcher decide §8.
 - **D-166:** Labels Prometheus-style flatten `metric.name{key="value"}`. Cap **100 distinct combinations per metric base name** + emit `system.metrics.cardinality-overflow` warn.
@@ -86,16 +86,16 @@ versions_verified:
 - Stable hash impl (`json-stable-stringify` + crypto.subtle.digest SHA-256 vs FNV-1a inline custom)
 - Reservoir sampling Algorithm R vs t-digest per histogram
 - Default thresholds `maxEntries=1000` / `eventBufferSize=500` / `histogramSamples=1024` / `maxLabelCombinations=100` / `pauseQueueMaxSize=1000`
-- Topology composition wrapper (chain `createCacheBroker(createDevtoolsBroker(createWorkerBroker(...)))` vs factory aggregato `createSemBridge(config)` in `@sembridge/sembridge`)
+- Topology composition wrapper (chain `createCacheBroker(createDevtoolsBroker(createWorkerBroker(...)))` vs factory aggregato `createGlueZero(config)` in `@gluezero/gluezero`)
 - Cache invalidation API surface (`broker.cache.invalidate(keyOrPattern)` signature: `string | RegExp | { prefix: string }`, dispatch sync vs microtask, batch via array)
-- DOC consolidation strategy (TypeDoc website auto-generato + README aggregato `@sembridge/sembridge`)
+- DOC consolidation strategy (TypeDoc website auto-generato + README aggregato `@gluezero/gluezero`)
 - Cache-then-network ordering (timing micro-detail: same-tick vs `queueMicrotask` vs `setTimeout 0`)
 - Error categorization mapping (`category: 'cache'` per adapter, `'config'` per register, `'system'` per devtools)
 
 ### Deferred Ideas (OUT OF SCOPE V1)
 
-- `@sembridge/cache-idb` IndexedDB adapter (V1.x — ROADMAP esplicito)
-- OpenTelemetry / Prometheus exporter nativo (V1.x — package separato `@sembridge/devtools-otel`)
+- `@gluezero/cache-idb` IndexedDB adapter (V1.x — ROADMAP esplicito)
+- OpenTelemetry / Prometheus exporter nativo (V1.x — package separato `@gluezero/devtools-otel`)
 - Real-time dashboard UI built-in (V2)
 - Distributed tracing W3C `traceparent`/`tracestate` propagation (V1.x)
 - Cache size-bytes-based eviction (V1.x)
@@ -138,9 +138,9 @@ versions_verified:
 |-----------|-----------------|
 | **Modello opus per ogni sub-agent** | Spawn agenti GSD F6 con override esplicito `model: "opus"` (no sonnet/haiku per verifier/checker/synthesizer). Config `model_profile: "quality"` non sufficiente da solo. |
 | **Lingua italiana** | RESEARCH.md, PLAN.md F6, JSDoc descrittivi, commit message, descrizioni REQ-ID, success criteria → italiano. Codice/identificatori/nomi librerie/file/log keyword/error code → inglese. |
-| **Boundary di sicurezza** | F6 vive in `/Users/omarmarzio/programming/prova AI/SemBridge/packages/{cache,devtools,sembridge}/` — area libera. Niente touch fuori boundary. |
+| **Boundary di sicurezza** | F6 vive in `/Users/omarmarzio/programming/prova AI/GlueZero/packages/{cache,devtools,sembridge}/` — area libera. Niente touch fuori boundary. |
 | **Alta autonomia decisionale** | 16 decisions D-155..D-170 lockate in CONTEXT.md → NON re-discutere. Procedi su default ragionevoli per Claude's Discretion. |
-| **D-83 strict carryover** | F6 NON tocca runtime di `packages/{core,mapper,routing}/src/` né `packages/gateway/src/{http,sse-ws}/` né `packages/worker/src/`. F6 vive SOLO in `packages/cache/src/` + `packages/devtools/src/` + `packages/sembridge/src/` + i rispettivi `augment.ts`. Verifica `git diff main...HEAD packages/{core,mapper,routing,gateway,worker}/src/` exit 0 lines. |
+| **D-83 strict carryover** | F6 NON tocca runtime di `packages/{core,mapper,routing}/src/` né `packages/gateway/src/{http,sse-ws}/` né `packages/worker/src/`. F6 vive SOLO in `packages/cache/src/` + `packages/devtools/src/` + `packages/gluezero/src/` + i rispettivi `augment.ts`. Verifica `git diff main...HEAD packages/{core,mapper,routing,gateway,worker}/src/` exit 0 lines. |
 | **Agent-swarm preferred** | Wave-based parallelization con file ownership disgiunta. Spawn multipli in singolo messaggio. |
 | **TRACKER.md protocol** | Aggiornare TRACKER.md a fine ogni plan F6 con commit hash + path SUMMARY.md. |
 
@@ -148,7 +148,7 @@ versions_verified:
 
 ## 1. Executive Summary
 
-La Fase 6 chiude il milestone v1.0 di SemBridge introducendo **due package runtime** (`@sembridge/cache` e `@sembridge/devtools`) e un **package aggregato pubblico** (`@sembridge/sembridge`) che re-esporta la libreria completa con factory unificato. La fase NON modifica F1-F5: vive interamente in nuovo codice, secondo il pattern D-83 strict consolidato 5 volte (F2 D-49 → F3 D-83 → F4 D-101 → F5 D-121 → F6 ext).
+La Fase 6 chiude il milestone v1.0 di GlueZero introducendo **due package runtime** (`@gluezero/cache` e `@gluezero/devtools`) e un **package aggregato pubblico** (`@gluezero/gluezero`) che re-esporta la libreria completa con factory unificato. La fase NON modifica F1-F5: vive interamente in nuovo codice, secondo il pattern D-83 strict consolidato 5 volte (F2 D-49 → F3 D-83 → F4 D-101 → F5 D-121 → F6 ext).
 
 **Sei decisioni implementative non-banali (D-159, D-161, D-162, D-165, D-166, D-170) hanno conseguenze concrete che guidano la decomposition in plan:**
 
@@ -171,9 +171,9 @@ La Fase 6 chiude il milestone v1.0 di SemBridge introducendo **due package runti
 - `vitest@4.1.5` + `@vitest/browser@4.1.5` + `playwright@1.59.1` + `jsdom@29.1.0` per Tier-1/Tier-3 (riuso F4/F5)
 - `typedoc@0.28.19` + `typedoc-plugin-markdown@4.11.0` per DOC consolidation finale (già installati workspace, attivati in F6 final gate)
 
-**Primary recommendation:** decomporre in **9 plan wave-based** (analogo F4 9 plan / F3 14 plan / F5 7 plan), file ownership disgiunta entro ogni wave per parallelizzazione. Final gate plan dedicato (06-09) chiude milestone v1.0 con coverage v8 ≥90%, REQ matrix flip CACHE-01..03 + TOOL-01..05 → Complete, chiusura PRD §39 #10, DOC-02/05/06 consolidation, bundle aggregato `@sembridge/sembridge` validato. Vedi §17 plan structure dettagliata.
+**Primary recommendation:** decomporre in **9 plan wave-based** (analogo F4 9 plan / F3 14 plan / F5 7 plan), file ownership disgiunta entro ogni wave per parallelizzazione. Final gate plan dedicato (06-09) chiude milestone v1.0 con coverage v8 ≥90%, REQ matrix flip CACHE-01..03 + TOOL-01..05 → Complete, chiusura PRD §39 #10, DOC-02/05/06 consolidation, bundle aggregato `@gluezero/gluezero` validato. Vedi §17 plan structure dettagliata.
 
-**Vincolo D-83 strict (carryover F1-F5 → F6):** ZERO modifiche runtime a `packages/{core,mapper,routing,gateway,worker}/src/`. Tutto F6 vive in `packages/cache/src/` + `packages/devtools/src/` + `packages/sembridge/src/`. Verifica `git diff main...HEAD packages/{core,mapper,routing,gateway,worker}/src/` exit 0 lines per tutta F6 (pattern già consolidato in F3/F4/F5).
+**Vincolo D-83 strict (carryover F1-F5 → F6):** ZERO modifiche runtime a `packages/{core,mapper,routing,gateway,worker}/src/`. Tutto F6 vive in `packages/cache/src/` + `packages/devtools/src/` + `packages/gluezero/src/`. Verifica `git diff main...HEAD packages/{core,mapper,routing,gateway,worker}/src/` exit 0 lines per tutta F6 (pattern già consolidato in F3/F4/F5).
 
 ---
 
@@ -208,7 +208,7 @@ La Fase 6 chiude il milestone v1.0 di SemBridge introducendo **due package runti
                                                   │
                                                   ▼
               ┌────────────────────────────────────────────────────────────────────────┐
-              │   @sembridge/cache — runtime F6 (D-83 strict, only here)              │
+              │   @gluezero/cache — runtime F6 (D-83 strict, only here)              │
               │ ┌──────────────────┐    lookup       ┌────────────────────┐           │
               │ │ CacheHandler     │◄───────────────│  MemoryCacheAdapter│           │
               │ │ (Strategy F3)    │                 │  LRU Map<key, entry>│           │
@@ -228,7 +228,7 @@ La Fase 6 chiude il milestone v1.0 di SemBridge introducendo **due package runti
               └────────────────────────────────────────────────────────────────────────┘
                                                   │
                                                   ▼
-              tap step 14 → MetricsCollector.increment('sembridge.cache.hits_total'/.misses_total)
+              tap step 14 → MetricsCollector.increment('gluezero.cache.hits_total'/.misses_total)
                           → EventInspector.record(snapshot)
                           → RouteInspector.record(routeOutcome)
                                                   │
@@ -345,7 +345,7 @@ export function createMemoryCacheAdapter(opts: { maxEntries?: number } = {}): Ca
 2. **Insertion order garantito da spec ECMAScript** dal 2015 (Baseline universale)
 3. **Re-insert on get = LRU touch**: pattern noto, ~2 op O(1) (`delete` + `set`)
 4. **Eviction O(1)**: `cache.keys().next().value` ritorna primo key (LRU)
-5. **Bundle target stretto** (vedi §16): zero dep prioritario per `@sembridge/cache` <8KB
+5. **Bundle target stretto** (vedi §16): zero dep prioritario per `@gluezero/cache` <8KB
 6. **Spec D-158 cap entries** (NON cap bytes) — questa impl la rispetta esattamente
 
 **Caveat:**
@@ -519,7 +519,7 @@ broker.cache.invalidate(/^user-42::/)  // tutto user-scoped per user-42
 
 ```ts
 // packages/devtools/src/multiplex-tap.ts (proposed)
-import type { EventTap, PipelineSnapshot, PipelineStep } from '@sembridge/core'
+import type { EventTap, PipelineSnapshot, PipelineStep } from '@gluezero/core'
 
 /**
  * Aggregator: invoca N tap in ordine con error isolation try/catch isolato.
@@ -681,37 +681,37 @@ export interface HistogramSummary {
 }
 ```
 
-**Naming convention** (D-163): `sembridge.<package>.<metric>{<labels>}` formato Prometheus-style flatten.
+**Naming convention** (D-163): `gluezero.<package>.<metric>{<labels>}` formato Prometheus-style flatten.
 
 ### 7.2 Metriche standard pre-definite
 
 **Counter (`_total` suffix):**
-- `sembridge.broker.events_published_total{topic="weather.requested"}`
-- `sembridge.broker.events_dropped_total{reason="paused|backpressure|filter"}`
-- `sembridge.cache.hits_total{route_id="weather-fetch"}`
-- `sembridge.cache.misses_total`
-- `sembridge.cache.evictions_total{reason="lru|ttl|invalidate"}`
-- `sembridge.http.requests_total{status="200"}`
-- `sembridge.http.errors_total{category="4xx|5xx|network"}`
-- `sembridge.worker.tasks_total{state="completed|failed|cancelled|timeout"}`
-- `sembridge.realtime.reconnects_total{adapter="sse|websocket"}`
-- `sembridge.mapper.transformations_total{schema="..."}`
-- `sembridge.mapper.errors_total{type="missing-field|transform-failure"}`
+- `gluezero.broker.events_published_total{topic="weather.requested"}`
+- `gluezero.broker.events_dropped_total{reason="paused|backpressure|filter"}`
+- `gluezero.cache.hits_total{route_id="weather-fetch"}`
+- `gluezero.cache.misses_total`
+- `gluezero.cache.evictions_total{reason="lru|ttl|invalidate"}`
+- `gluezero.http.requests_total{status="200"}`
+- `gluezero.http.errors_total{category="4xx|5xx|network"}`
+- `gluezero.worker.tasks_total{state="completed|failed|cancelled|timeout"}`
+- `gluezero.realtime.reconnects_total{adapter="sse|websocket"}`
+- `gluezero.mapper.transformations_total{schema="..."}`
+- `gluezero.mapper.errors_total{type="missing-field|transform-failure"}`
 
 **Gauge (current value):**
-- `sembridge.broker.subscribers_count{topic="..."}`
-- `sembridge.broker.backlog_size{topic="..."}`
-- `sembridge.broker.paused_topics_count`
-- `sembridge.worker.active_tasks`
-- `sembridge.worker.pool_size{worker_id="..."}`
-- `sembridge.cache.entries_count`
-- `sembridge.realtime.channels_active`
+- `gluezero.broker.subscribers_count{topic="..."}`
+- `gluezero.broker.backlog_size{topic="..."}`
+- `gluezero.broker.paused_topics_count`
+- `gluezero.worker.active_tasks`
+- `gluezero.worker.pool_size{worker_id="..."}`
+- `gluezero.cache.entries_count`
+- `gluezero.realtime.channels_active`
 
 **Histogram (`_ms` suffix):**
-- `sembridge.http.duration_ms{route_id="..."}`
-- `sembridge.worker.task_duration_ms{worker_id="...",task="..."}`
-- `sembridge.mapper.duration_ms{schema="..."}`
-- `sembridge.pipeline.step_duration_ms{step="..."}`
+- `gluezero.http.duration_ms{route_id="..."}`
+- `gluezero.worker.task_duration_ms{worker_id="...",task="..."}`
+- `gluezero.mapper.duration_ms{schema="..."}`
+- `gluezero.pipeline.step_duration_ms{step="..."}`
 
 ### 7.3 Counter atomic update
 
@@ -873,7 +873,7 @@ export function computeSummary(state: ReservoirState): HistogramSummary {
 
 ### 9.1 Pattern algoritmico
 
-Per ogni metric base name (es. `sembridge.http.duration_ms`):
+Per ogni metric base name (es. `gluezero.http.duration_ms`):
 1. Mantenere `Set<flattenedLabelSig>` (es. `{route_id="weather"}`, `{route_id="users"}`)
 2. Su `observe(name, value, labels)`:
    - Compute `sig = flatLabels(labels)`
@@ -1010,11 +1010,11 @@ const broker = createCacheBroker(
 )
 ```
 
-**Opzione B — Factory aggregato in `@sembridge/sembridge`:**
+**Opzione B — Factory aggregato in `@gluezero/gluezero`:**
 ```ts
-import { createSemBridge } from '@sembridge/sembridge'
+import { createGlueZero } from '@gluezero/gluezero'
 
-const broker = createSemBridge({
+const broker = createGlueZero({
   ...config,
   features: { cache: true, devtools: true, worker: true, realtime: true }
 })
@@ -1034,8 +1034,8 @@ const broker = createSemBridge({
 ### 11.3 Raccomandazione researcher
 
 **Espone ENTRAMBE le API**:
-1. **Opzione A (default raccomandato)** — i factory `createCacheBroker` / `createDevtoolsBroker` sono esposti dai package singoli (`@sembridge/cache` / `@sembridge/devtools`). Consumer può chain manualmente.
-2. **Opzione B (convenience)** — `@sembridge/sembridge` fornisce `createSemBridge(config)` come factory aggregato che internamente fa la chain. Default features tutte enabled (override via `config.features?.cache: false` per opt-out).
+1. **Opzione A (default raccomandato)** — i factory `createCacheBroker` / `createDevtoolsBroker` sono esposti dai package singoli (`@gluezero/cache` / `@gluezero/devtools`). Consumer può chain manualmente.
+2. **Opzione B (convenience)** — `@gluezero/gluezero` fornisce `createGlueZero(config)` come factory aggregato che internamente fa la chain. Default features tutte enabled (override via `config.features?.cache: false` per opt-out).
 
 **Pattern coerente:**
 - Chain explicit: consumer power-user che vuole tree-shaking max o stack custom
@@ -1060,7 +1060,7 @@ const broker = createSemBridge({
 
 **`packages/devtools/src/augment.ts`:**
 ```ts
-declare module '@sembridge/core' {
+declare module '@gluezero/core' {
   interface BrokerConfig {
     taps?: readonly EventTap[]  // D-159
     devtools?: {
@@ -1125,8 +1125,8 @@ Coverage v8 ≥90% sui file F6. Test obbligatori:
 
 | Package | Statements | Branches | Functions | Lines |
 |---------|-----------|----------|-----------|-------|
-| `@sembridge/cache` | ≥90% | ≥80% | ≥90% | ≥90% |
-| `@sembridge/devtools` | ≥90% | ≥80% | ≥90% | ≥90% |
+| `@gluezero/cache` | ≥90% | ≥80% | ≥90% | ≥90% |
+| `@gluezero/devtools` | ≥90% | ≥80% | ≥90% | ≥90% |
 
 Calibrazione post-implementation pattern F3/F4/F5 (raise floor a measured + 1-2%).
 
@@ -1209,10 +1209,10 @@ Calibrazione post-implementation pattern F3/F4/F5 (raise floor a measured + 1-2%
 
 ```ts
 // ❌ ANTI-PATTERN — cardinality explosion
-metrics.observe('sembridge.http.duration_ms', dur, { userId: event.payload.userId })
+metrics.observe('gluezero.http.duration_ms', dur, { userId: event.payload.userId })
 
 // ✅ GOOD — limited cardinality (≤10 categories)
-metrics.observe('sembridge.http.duration_ms', dur, { route_id: route.id, status: '2xx' })
+metrics.observe('gluezero.http.duration_ms', dur, { route_id: route.id, status: '2xx' })
 ```
 
 ### 15.2 Ring buffer leak (Pitfall NEW F6)
@@ -1263,7 +1263,7 @@ metrics.observe('sembridge.http.duration_ms', dur, { route_id: route.id, status:
 
 ## 16. size-limit budget proposta + final gate F6 spec
 
-### 16.1 Budget proposto `@sembridge/cache` + `@sembridge/devtools` + `@sembridge/sembridge`
+### 16.1 Budget proposto `@gluezero/cache` + `@gluezero/devtools` + `@gluezero/gluezero`
 
 **Lesson learned F3-F5** (vedi STACK.md size-limit + ROADMAP.md F3 03-14): pre-implementation sotto-stima del 20-30%, raise post-implementation al floor measured + 20-30% headroom.
 
@@ -1271,28 +1271,28 @@ metrics.observe('sembridge.http.duration_ms', dur, { route_id: route.id, status:
 
 | Package | Estimate gz | Components |
 |---------|-------------|-------------|
-| `@sembridge/cache` | 5-8 KB | MemoryCacheAdapter + CacheHandler + CompositeHandler + stable-hash + augment + types + factory |
-| `@sembridge/devtools` | 8-12 KB | MultiplexTap + EventInspector + RouteInspector + MetricsCollector + reservoir-sampling + PauseController + augment + types + factory |
-| `@sembridge/sembridge` | 50-80 KB | re-exports core + mapper + routing + gateway/http + gateway/sse-ws + worker + cache + devtools + createSemBridge factory aggregato |
+| `@gluezero/cache` | 5-8 KB | MemoryCacheAdapter + CacheHandler + CompositeHandler + stable-hash + augment + types + factory |
+| `@gluezero/devtools` | 8-12 KB | MultiplexTap + EventInspector + RouteInspector + MetricsCollector + reservoir-sampling + PauseController + augment + types + factory |
+| `@gluezero/gluezero` | 50-80 KB | re-exports core + mapper + routing + gateway/http + gateway/sse-ws + worker + cache + devtools + createGlueZero factory aggregato |
 
 **Plan 06-09 final gate** budget configurato (con 20% headroom):
 
 ```json
 {
-  "name": "@sembridge/cache (gzip)",
+  "name": "@gluezero/cache (gzip)",
   "path": "packages/cache/dist/index.js",
   "limit": "10 KB",
   "gzip": true
 },
 {
-  "name": "@sembridge/devtools (gzip)",
+  "name": "@gluezero/devtools (gzip)",
   "path": "packages/devtools/dist/index.js",
   "limit": "16 KB",
   "gzip": true
 },
 {
-  "name": "@sembridge/sembridge (gzip)",
-  "path": "packages/sembridge/dist/index.js",
+  "name": "@gluezero/gluezero (gzip)",
+  "path": "packages/gluezero/dist/index.js",
   "limit": "100 KB",
   "gzip": true
 }
@@ -1323,8 +1323,8 @@ Pattern carryover F3 03-14 / F4 04-09 / F5 05-07:
 
 | Deliverable | Path | Contenuto |
 |-------------|------|-----------|
-| DOC-02 | `packages/sembridge/README.md` (italiano) | Guida integrazione plugin: registerPlugin, inputMap/outputMap, lifecycle hooks, scenario meteo end-to-end |
-| DOC-05 | `packages/sembridge/EXAMPLES.md` (italiano) + cross-link | Esempi end-to-end completi: scenario meteo con cache + tooling + worker (estende F5 worker section), Q&A 20+ domande |
+| DOC-02 | `packages/gluezero/README.md` (italiano) | Guida integrazione plugin: registerPlugin, inputMap/outputMap, lifecycle hooks, scenario meteo end-to-end |
+| DOC-05 | `packages/gluezero/EXAMPLES.md` (italiano) + cross-link | Esempi end-to-end completi: scenario meteo con cache + tooling + worker (estende F5 worker section), Q&A 20+ domande |
 | DOC-06 | `packages/devtools/README.md` (italiano) 11 sezioni | Tooling debug: enableDebug/disableDebug, getDebugSnapshot, EventInspector + RouteInspector + MetricsCollector usage, anti-pattern cardinality explosion, ring buffer config, structured clone perf caveat |
 | TypeDoc website | `docs/api/` auto-generato | API reference auto da JSDoc TypeDoc + plugin markdown |
 | CHANGELOG | `.changeset/v1-0-0-release.md` | Major bump tutti i 7 package — release v1.0.0 milestone closure |
@@ -1404,7 +1404,7 @@ Pattern carryover F3 03-14 / F4 04-09 / F5 05-07:
                        │ Composition     │  (sequential gate — consumer)
                        │ createCacheBkr  │
                        │ createDevtBkr   │
-                       │ createSemBridge │
+                       │ createGlueZero │
                        │ getDebugSnap    │
                        │ enableDebug     │
                        │ + 8 integ test  │
@@ -1441,12 +1441,12 @@ Pattern carryover F3 03-14 / F4 04-09 / F5 05-07:
 **Wave 4 (06-08 sequential):** consuma TUTTI i moduli W2/W3 — composition wrapper + factory. File esclusivi:
 - `packages/cache/src/cache-broker.ts` + `packages/cache/src/public-factory.ts`
 - `packages/devtools/src/devtools-broker.ts` + `packages/devtools/src/public-factory.ts`
-- `packages/sembridge/src/index.ts` + `packages/sembridge/src/sem-bridge.ts` (createSemBridge aggregato)
+- `packages/gluezero/src/index.ts` + `packages/gluezero/src/glue-zero.ts` (createGlueZero aggregato)
 - `packages/cache/src/__integration__/`, `packages/devtools/src/__integration__/`
 - `packages/cache/src/test-utils/cache-harness.ts`
 
 **Wave 5 (06-09 sequential):** owns:
-- DOC files (`packages/sembridge/README.md`, `packages/devtools/README.md`, `packages/sembridge/EXAMPLES.md`)
+- DOC files (`packages/gluezero/README.md`, `packages/devtools/README.md`, `packages/gluezero/EXAMPLES.md`)
 - ROADMAP.md, REQUIREMENTS.md, STATE.md, TRACKER.md update (closure milestone)
 - `package.json` size-limit additions
 - `.changeset/v1-0-0-release.md` (major bump release)
@@ -1498,17 +1498,17 @@ Pattern già consolidato F3 03-14 / F4 04-09 / F5 05-07 — meccanico per F6.
 | Biome | lint+format | ✓ | 2.4.13 | — |
 | TypeDoc | DOC consolidation final | ✓ | 0.28.19 | — |
 | typedoc-plugin-markdown | DOC website output | ✗ (da installare 06-09) | 4.11.0 (target) | — |
-| `@sembridge/core` | workspace dep | ✓ | workspace:* | — |
-| `@sembridge/mapper` | workspace dep | ✓ | workspace:* | — |
-| `@sembridge/routing` | workspace dep | ✓ | workspace:* | — |
-| `@sembridge/gateway` | workspace dep | ✓ | workspace:* | — |
-| `@sembridge/worker` | workspace dep | ✓ | workspace:* | — |
+| `@gluezero/core` | workspace dep | ✓ | workspace:* | — |
+| `@gluezero/mapper` | workspace dep | ✓ | workspace:* | — |
+| `@gluezero/routing` | workspace dep | ✓ | workspace:* | — |
+| `@gluezero/gateway` | workspace dep | ✓ | workspace:* | — |
+| `@gluezero/worker` | workspace dep | ✓ | workspace:* | — |
 
 **Missing dependencies with no fallback:** nessuno (tutto disponibile).
 
 **Missing dependencies da installare:**
-- Plan 06-01: workspace dep `@sembridge/core@workspace:*`, `@sembridge/mapper@workspace:*`, `@sembridge/routing@workspace:*`, `@sembridge/gateway@workspace:*`, `@sembridge/worker@workspace:*` per `@sembridge/cache` + `@sembridge/devtools` + `@sembridge/sembridge`
-- Plan 06-09: `typedoc-plugin-markdown@^4.11.0` per `@sembridge/sembridge` workspace dev (final DOC consolidation)
+- Plan 06-01: workspace dep `@gluezero/core@workspace:*`, `@gluezero/mapper@workspace:*`, `@gluezero/routing@workspace:*`, `@gluezero/gateway@workspace:*`, `@gluezero/worker@workspace:*` per `@gluezero/cache` + `@gluezero/devtools` + `@gluezero/gluezero`
+- Plan 06-09: `typedoc-plugin-markdown@^4.11.0` per `@gluezero/gluezero` workspace dev (final DOC consolidation)
 - Plan 06-01: `valibot@^1.3.1` workspace dep per cache + devtools (Valibot safeParse di config)
 - Plan 06-01: `nanoid@^5.1.11` workspace dep (probabilmente non necessario — riuso event.id existing)
 
@@ -1629,7 +1629,7 @@ Pattern già consolidato F3 03-14 / F4 04-09 / F5 05-07 — meccanico per F6.
 
 4. **R4 — structuredClone perf su payload grandi (§15.3):** `getDebugSnapshot()` deep-clone potrebbe sforare 50ms su mobile. Mitigation: Tier-3 perf benchmark + DOC-06 caveat "rare-call". Fallback opt-in `getDebugSnapshot({deep:false})` shallow se profiling reale richiede.
 
-5. **R5 — Opzione A chain vs B aggregato createSemBridge (§11):** API surface duplicata (espose entrambe). Risk: confusione consumer "quale usare?". Mitigation: DOC-02 chiara "createSemBridge è zero-config; createCacheBroker è power-user". Pattern coerente con npm ecosystem (es. `react-router` esposto via `BrowserRouter` aggregato + componenti separati).
+5. **R5 — Opzione A chain vs B aggregato createGlueZero (§11):** API surface duplicata (espose entrambe). Risk: confusione consumer "quale usare?". Mitigation: DOC-02 chiara "createGlueZero è zero-config; createCacheBroker è power-user". Pattern coerente con npm ecosystem (es. `react-router` esposto via `BrowserRouter` aggregato + componenti separati).
 
 **Versioni npm verificate live (2026-05-05):**
 - `lru-cache@11.3.6` — VALUTATO, NON adottato (Map insertion order custom)
@@ -1639,6 +1639,6 @@ Pattern già consolidato F3 03-14 / F4 04-09 / F5 05-07 — meccanico per F6.
 - `vitest@4.1.5` + `@vitest/browser@4.1.5` + `playwright@1.59.1` + `jsdom@29.1.0` (riuso F1-F5)
 - `valibot@1.3.1` + `nanoid@5.1.11` (riuso F1-F5)
 
-**File creato:** `/Users/omarmarzio/programming/prova AI/SemBridge/.planning/phases/06-cache-tooling-avanzato/06-RESEARCH.md`
+**File creato:** `/Users/omarmarzio/programming/prova AI/GlueZero/.planning/phases/06-cache-tooling-avanzato/06-RESEARCH.md`
 
-**Pronto per:** `/gsd-plan-phase 6` (planner consumerà questo RESEARCH.md per produrre 9 PLAN.md F6 — 06-01 bootstrap + types + augment, 06-02 MemoryCacheAdapter + stable-hash, 06-03 CacheHandler + Composite ext, 06-04 MultiplexTap + tap registry, 06-05 EventInspector + RouteInspector, 06-06 MetricsCollector + reservoir + cardinality cap, 06-07 PauseController + queue cap + critical bypass, 06-08 composition wrappers + createSemBridge aggregato + integration test, 06-09 final gate F6 + DOC-02/05/06 + REQ matrix flip + chiusura PRD §39 #10 + milestone v1.0).
+**Pronto per:** `/gsd-plan-phase 6` (planner consumerà questo RESEARCH.md per produrre 9 PLAN.md F6 — 06-01 bootstrap + types + augment, 06-02 MemoryCacheAdapter + stable-hash, 06-03 CacheHandler + Composite ext, 06-04 MultiplexTap + tap registry, 06-05 EventInspector + RouteInspector, 06-06 MetricsCollector + reservoir + cardinality cap, 06-07 PauseController + queue cap + critical bypass, 06-08 composition wrappers + createGlueZero aggregato + integration test, 06-09 final gate F6 + DOC-02/05/06 + REQ matrix flip + chiusura PRD §39 #10 + milestone v1.0).

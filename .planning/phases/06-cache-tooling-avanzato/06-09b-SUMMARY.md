@@ -7,13 +7,13 @@ wave: 5b
 tags: [docs, jsdoc, req-matrix-flip, changelog, milestone-v1.0-closure, prd-39-10-toolclosure]
 requires:
   - "06-09a-SUMMARY.md (CI gates calibrazione)"
-  - "06-08b-SUMMARY.md (DevtoolsBroker + createSemBridge chain F1+F2+F3+F4+F5+F6)"
+  - "06-08b-SUMMARY.md (DevtoolsBroker + createGlueZero chain F1+F2+F3+F4+F5+F6)"
   - "06-08a-SUMMARY.md (CacheBroker composition wrapper)"
   - "06-01..06-07-SUMMARY.md (building blocks F6 cumulative)"
 provides:
-  - "DOC-02 packages/sembridge/README.md italiano 452 LOC"
+  - "DOC-02 packages/gluezero/README.md italiano 452 LOC"
   - "DOC-05 packages/devtools/README.md italiano 368 LOC + closure PRD §39 #10"
-  - "DOC-06 packages/sembridge/EXAMPLES.md italiano 519 LOC"
+  - "DOC-06 packages/gluezero/EXAMPLES.md italiano 519 LOC"
   - "packages/cache/README.md italiano 409 LOC"
   - "JSDoc TypeDoc-ready 11 file public F6 (@example 36 / @see 55 / @throws 9)"
   - "REQUIREMENTS.md atomic flip CACHE-01..03 + TOOL-01..05 + DOC-02/05/06 + cross-cutting ext F6 → Complete"
@@ -34,8 +34,8 @@ key-files:
   created:
     - "packages/cache/README.md"
     - "packages/devtools/README.md"
-    - "packages/sembridge/README.md"
-    - "packages/sembridge/EXAMPLES.md"
+    - "packages/gluezero/README.md"
+    - "packages/gluezero/EXAMPLES.md"
     - ".changeset/v1-0-0-release.md"
     - ".planning/phases/06-cache-tooling-avanzato/06-09b-SUMMARY.md"
   modified:
@@ -44,7 +44,7 @@ key-files:
     - "packages/devtools/src/devtools-broker.ts (+2 @example + 1 @throws)"
     - "packages/devtools/src/metrics-collector.ts (+3 @example)"
     - "packages/devtools/src/pause-controller.ts (+2 @example)"
-    - "packages/sembridge/src/sem-bridge.ts (+2 @example + 1 @throws)"
+    - "packages/gluezero/src/glue-zero.ts (+2 @example + 1 @throws)"
     - ".planning/REQUIREMENTS.md"
     - ".planning/ROADMAP.md"
     - ".planning/STATE.md"
@@ -65,8 +65,8 @@ metrics:
 ✅ **DOC consolidation finale italiano (~1748 LOC totali)** — 4 README:
 - `packages/cache/README.md` — 409 LOC, 11 sezioni: Quick start `createCacheBroker` + cache adapter contract + cache key + scope hybrid D-156 + TTL + invalidate + 3 cache strategies + cache-then-network ordering microtask RESEARCH §15.6 + scope user-aware D-157 fail-secure + scenario meteo F1+F2+F3+F6 end-to-end + anti-pattern cache stampede + Limitazioni V1 + Q&A 5 (cache-first vs cache-then-network, invalidate plugin, missing scope auth, custom adapter, TTL during background fetch)
 - `packages/devtools/README.md` — 368 LOC, 11 sezioni: Quick start `createDevtoolsBroker` + tap registry chain D-159 + EventInspector + RouteInspector ring buffer 500 D-167 + enableDebug/disableDebug toggle live-mode D-160 + getDebugSnapshot deep-clone structuredClone D-162 + **MetricsCollector — closes PRD §39 #10 (TOOL-05)** con tabella naming convention + 7 Q&A enumerate Q1-Q7 (Q1 dot.case rationale D-163, Q2 getMetricsDelta D-164, Q3 reservoir vs t-digest D-165, Q4 cardinality overflow D-166, Q5 Prometheus/OTel exporter V1.x, Q6 metriche standard out-of-the-box, Q7 custom metric V1.x deferred) + PauseController D-168/D-169/D-170 + scenario meteo + Inspector dump + anti-pattern cardinality explosion + Performance caveat + Q&A consolidato
-- `packages/sembridge/README.md` — 452 LOC, 11 sezioni: Quick start `createSemBridge` chain completa F1+F2+F3+F4+F5+F6 + Power-user chain explicit Opzione A + Features flag opt-out cache/devtools/worker/realtime + Chain composition F1+F2+F3+F4+F5+F6 outermost devtools→cache→worker→realtime→router→mapper→broker + Plugin lifecycle + cascade LIFE-02 multi-step F1+F3+F4+F5+F6 + scenario meteo end-to-end F1+F2+F3+F4+F5+F6 + Tree-shake selective import + Versioning v1.0 milestone closure + Migration guide V1→V1.x + Limitazioni V1 + Q&A 8 (createSemBridge vs chain manuale, opt-out SPA, vs createBroker base, integrazione framework, tree-shake bundle cost, multi-tenant isolation D-30, plugin scope hybrid, migration V0.x → V1.0)
-- `packages/sembridge/EXAMPLES.md` — 519 LOC, 10 esempi: Hello World pub/sub + canonical mapping + HTTP route retry/timeout + SSE realtime + worker offload report + cache-then-network UI flicker control + Inspector + Metrics dashboard data + pauseTopic admin flow + multi-tenant scope D-156 + cross-feature integrato F1+F2+F3+F4+F5+F6 scenario meteo full chain
+- `packages/gluezero/README.md` — 452 LOC, 11 sezioni: Quick start `createGlueZero` chain completa F1+F2+F3+F4+F5+F6 + Power-user chain explicit Opzione A + Features flag opt-out cache/devtools/worker/realtime + Chain composition F1+F2+F3+F4+F5+F6 outermost devtools→cache→worker→realtime→router→mapper→broker + Plugin lifecycle + cascade LIFE-02 multi-step F1+F3+F4+F5+F6 + scenario meteo end-to-end F1+F2+F3+F4+F5+F6 + Tree-shake selective import + Versioning v1.0 milestone closure + Migration guide V1→V1.x + Limitazioni V1 + Q&A 8 (createGlueZero vs chain manuale, opt-out SPA, vs createBroker base, integrazione framework, tree-shake bundle cost, multi-tenant isolation D-30, plugin scope hybrid, migration V0.x → V1.0)
+- `packages/gluezero/EXAMPLES.md` — 519 LOC, 10 esempi: Hello World pub/sub + canonical mapping + HTTP route retry/timeout + SSE realtime + worker offload report + cache-then-network UI flicker control + Inspector + Metrics dashboard data + pauseTopic admin flow + multi-tenant scope D-156 + cross-feature integrato F1+F2+F3+F4+F5+F6 scenario meteo full chain
 
 ✅ **JSDoc API pubblica TypeDoc-ready** — 6 file source arricchiti (cache-broker, cache-handler, devtools-broker, metrics-collector, pause-controller, sem-bridge) con +12 @example + +4 @throws cumulative. Preservation post tsup ESM-only build (`pnpm -F build` cache + devtools + sembridge):
 - `@example`: 36 totali in `dist/index.d.ts` (target ≥27 — pattern F5 05-07 commit `e3b8770` 23/30/21 carryover ✓)
@@ -83,7 +83,7 @@ metrics:
 
 ✅ **PRD §39 #10 (TOOL-05 metrics format) → CLOSED 2026-05-05** — ULTIMA open issue v1.0 chiusa:
 - Schema `{ counters, gauges, histograms }` simil-OpenMetrics
-- Naming `sembridge.<package>.<metric>{<labels>}` dot.case Prometheus-friendly
+- Naming `gluezero.<package>.<metric>{<labels>}` dot.case Prometheus-friendly
 - Cumulative-only counters (D-164) + helper `getMetricsDelta(prev)`
 - Reservoir Algorithm R Vitter 1985 (D-165) ~30 LOC inline zero-deps, default 1024 samples
 - Cardinality cap 100 distinct combinations per base name (D-166) + audit `system.metrics.cardinalityoverflow`
@@ -122,7 +122,7 @@ git diff main...HEAD -- packages/core/src/ packages/mapper/src/ packages/routing
 
 ✅ **Typecheck 8/8 OK** — `pnpm -r typecheck` zero errori su core + mapper + routing + gateway + worker + cache + devtools + sembridge.
 
-✅ **Build 8/8 OK** — `pnpm -F @sembridge/cache build && pnpm -F @sembridge/devtools build && pnpm -F @sembridge/sembridge build` produce dist/ ESM-only + dts.
+✅ **Build 8/8 OK** — `pnpm -F @gluezero/cache build && pnpm -F @gluezero/devtools build && pnpm -F @gluezero/gluezero build` produce dist/ ESM-only + dts.
 
 ✅ **JSDoc preservation in dts:**
 - @example: 36 (target ≥27 ✓)
@@ -133,7 +133,7 @@ git diff main...HEAD -- packages/core/src/ packages/mapper/src/ packages/routing
 - WARNING-2 fix: `grep -cE "Q1[:.]|Q2[:.]|Q3[:.]|Q4[:.]|Q5[:.]|Q6[:.]|Q7[:.]" packages/devtools/README.md` = 7 ✓
 - PRD §39 #10/TOOL-05: 7 hits in DOC-05 ✓
 - scenario meteo references: 10 hits in sembridge README ✓
-- createSemBridge/createCacheBroker/createDevtoolsBroker: 33 hits in sembridge README ✓
+- createGlueZero/createCacheBroker/createDevtoolsBroker: 33 hits in sembridge README ✓
 - F1+F2+F3+F4+F5+F6 / chain completa: 8 hits ✓
 - structuredClone/reservoir/p50/p90/p99: 9 hits in DOC-05 ✓
 
@@ -177,8 +177,8 @@ git diff main...HEAD -- packages/core/src/ packages/mapper/src/ packages/routing
 
 - [x] `packages/cache/README.md` esiste (409 LOC italiano)
 - [x] `packages/devtools/README.md` esiste (368 LOC italiano + 7 Q&A enumerate Q1-Q7 + PRD §39 #10 closure)
-- [x] `packages/sembridge/README.md` esiste (452 LOC italiano + scenario meteo F1-F6 + chain completa)
-- [x] `packages/sembridge/EXAMPLES.md` esiste (519 LOC italiano + 10 esempi cross-feature)
+- [x] `packages/gluezero/README.md` esiste (452 LOC italiano + scenario meteo F1-F6 + chain completa)
+- [x] `packages/gluezero/EXAMPLES.md` esiste (519 LOC italiano + 10 esempi cross-feature)
 - [x] `.changeset/v1-0-0-release.md` esiste (major bump 8 package + release notes)
 - [x] `.planning/REQUIREMENTS.md` aggiornato (CACHE-01..03 + TOOL-01..05 + DOC-02/05/06 + cross-cutting ext F6 → Complete + PRD §39 #10 closed)
 - [x] `.planning/ROADMAP.md` aggiornato (Phase 6 ✅ Complete + Milestone v1.0 ✅ chiusa + Open Issues table #10 closed + Progress table 11/11)

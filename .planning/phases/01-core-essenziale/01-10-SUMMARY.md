@@ -72,8 +72,8 @@ Implementati 4 file robustness test in `packages/core/src/__integration__/` (`st
 L'obiettivo del plan 01-10 è raggiunto integralmente:
 
 - **4 file creati** in `packages/core/src/__integration__/` con pattern naming `*.test.ts` non-integration (file ownership disgiunta da plan 09 che possiede `*.integration.test.ts`)
-- **`pnpm --filter @sembridge/core test`** esce 0 e riporta `Test Files 24 passed (24) | Tests 248 passed (248)` in ~1.16s (suite cumulativa post-Wave-7 = 20 file pre-10 + 4 nuovi robustness test = 24)
-- **`pnpm --filter @sembridge/core typecheck`** esce 0 (no TS errors, isolatedDeclarations conforme su tutti i file robustness test)
+- **`pnpm --filter @gluezero/core test`** esce 0 e riporta `Test Files 24 passed (24) | Tests 248 passed (248)` in ~1.16s (suite cumulativa post-Wave-7 = 20 file pre-10 + 4 nuovi robustness test = 24)
+- **`pnpm --filter @gluezero/core typecheck`** esce 0 (no TS errors, isolatedDeclarations conforme su tutti i file robustness test)
 - **`pnpm biome check packages/core/src/`** esce 0 (48 file checked, 0 errori, 0 warning — scope ora include 4 nuovi `*.test.ts` non-integration)
 - **TEST-03 (subset)** coperto end-to-end attraverso il `Broker` reale (composition root) via `createPipelineHarness` fixture (plan 09)
 - **Performance budget rispettati con margini ampi**: storm 24ms vs 10s budget; wildcard-perf 11ms vs 50ms budget
@@ -123,15 +123,15 @@ NOTA: il PLAN dichiarava un singolo `<task>` con 4 file. Ho applicato il suggeri
 - [x] File `wildcard-perf.test.ts` con test 10000 wildcard subscribers + match < 50ms — verificato (2 test passing; misurato 11ms)
 - [x] File `plugin-fault.test.ts` con test: onMount throw → broker continues, onRegister throw → rollback, handler throw → other handlers OK, multiple plugin throws → broker survives — verificato (4 test passing)
 - [x] File `concurrent-unregister.test.ts` con test: AbortSignal abort durante in-flight, multiple plugin isolation, rapid register/unregister no leak — verificato (3 test passing)
-- [x] `pnpm --filter @sembridge/core test storm wildcard-perf plugin-fault concurrent-unregister` esce 0 → 4 file, 11 test passing in ~440ms
+- [x] `pnpm --filter @gluezero/core test storm wildcard-perf plugin-fault concurrent-unregister` esce 0 → 4 file, 11 test passing in ~440ms
 - [x] Suite completa post-plan-10: `Test Files 24 passed (24) | Tests 248 passed (248)`
 
 ### Plan-wide verification
 
 - [x] 4 file robustness test creati in `packages/core/src/__integration__/`
 - [x] File ownership disgiunta da plan 09 (`*.test.ts` non-integration vs `*.integration.test.ts`)
-- [x] `pnpm --filter @sembridge/core test` esce 0 con `Test Files 24 passed | Tests 248 passed`
-- [x] `pnpm --filter @sembridge/core typecheck` esce 0
+- [x] `pnpm --filter @gluezero/core test` esce 0 con `Test Files 24 passed | Tests 248 passed`
+- [x] `pnpm --filter @gluezero/core typecheck` esce 0
 - [x] `pnpm biome check packages/core/src/` esce 0 (48 file checked, +4 vs 44 di Wave 6)
 - [x] Performance budget rispettati con margini ampi (storm 24ms vs 10s, wildcard-perf 11ms vs 50ms)
 
@@ -151,7 +151,7 @@ TEST-03 (subset) ✓ coperto da 11 test deterministici end-to-end attraverso il 
 ## Final test output
 
 ```
-> @sembridge/core@0.0.0 test
+> @gluezero/core@0.0.0 test
 > vitest run --passWithNoTests
 
  RUN  v4.1.5 packages/core
@@ -255,7 +255,7 @@ Nessun open item rimasto al termine di plan 10. La closure outstanding ereditata
 
 ## Ready For
 
-- **Plan 11** (build verification + DOC-01 README finale + JSDoc on public exports + smoke test pubblico via `from '@sembridge/core'`) — public surface invariata post plan 10 (no nuovi runtime export, solo test files), build output identico a Wave 6
+- **Plan 11** (build verification + DOC-01 README finale + JSDoc on public exports + smoke test pubblico via `from '@gluezero/core'`) — public surface invariata post plan 10 (no nuovi runtime export, solo test files), build output identico a Wave 6
 - **Wave 8** chiusura Phase 1 (post plan 11 verification)
 
 ## Self-Check: PASSED

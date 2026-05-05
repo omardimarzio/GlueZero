@@ -95,15 +95,15 @@ Plan 03-12 (createRouterBroker) inietterà queste strategy nelle `HttpGatewayStr
 ## Test Results
 
 ```
-Test Files  14 passed (14) — @sembridge/gateway
+Test Files  14 passed (14) — @gluezero/gateway
      Tests  97 passed (97)
 ```
 
 **Suite delta vs baseline 03-10:**
-- @sembridge/gateway: 97/97 (78 baseline + 19 nuovi: 9 auth + 10 circuit-breaker)
-- @sembridge/core: 248/248 (D-83 invariant — zero modifiche runtime)
-- @sembridge/mapper: 183/183 (D-83 invariant — zero modifiche runtime)
-- @sembridge/routing: 58/58 (D-83 invariant — zero modifiche runtime)
+- @gluezero/gateway: 97/97 (78 baseline + 19 nuovi: 9 auth + 10 circuit-breaker)
+- @gluezero/core: 248/248 (D-83 invariant — zero modifiche runtime)
+- @gluezero/mapper: 183/183 (D-83 invariant — zero modifiche runtime)
+- @gluezero/routing: 58/58 (D-83 invariant — zero modifiche runtime)
 
 **Behavior coverage per task:**
 
@@ -200,7 +200,7 @@ export type ErrorCategory =
 - Core 248/248 test passing (invariant)
 - Mapper 183/183 test passing (invariant)
 - Routing 58/58 test passing (invariant)
-- Pattern composition wrapper rispettato: nuove strategy in @sembridge/gateway/http/strategies — extension package isolato.
+- Pattern composition wrapper rispettato: nuove strategy in @gluezero/gateway/http/strategies — extension package isolato.
 - BLOCKER 1 fix iter 1 (category 'config' invece di 'auth') rispetta D-83 — non modifica `packages/core/src/types/error.ts`.
 
 ## Verification
@@ -242,7 +242,7 @@ import {
   createBackpressureStrategy,
   createAuthStrategy,
   createCircuitBreakerStrategy,
-} from '@sembridge/gateway/http'
+} from '@gluezero/gateway/http'
 ```
 
 E le caverà come `HttpGatewayStrategies` bundle iniettato nel HttpGateway middleware chain quando le rispettive sezioni di `gateway.*` config sono definite (auth quando `gateway.auth` non-undefined, circuit-breaker quando `gateway.circuitBreaker !== false`).

@@ -4,19 +4,19 @@ plan: 08a
 subsystem: cache
 tags: [cache-broker, composition-wrapper, opzione-b, factory, harness, integration-test]
 requires:
-  - "@sembridge/core (F1)"
-  - "@sembridge/routing (F3 — RouterBroker delegate base)"
-  - "@sembridge/cache::memory-cache-adapter (06-02)"
-  - "@sembridge/cache::stable-hash (06-02)"
-  - "@sembridge/cache::cache-handler (06-03)"
+  - "@gluezero/core (F1)"
+  - "@gluezero/routing (F3 — RouterBroker delegate base)"
+  - "@gluezero/cache::memory-cache-adapter (06-02)"
+  - "@gluezero/cache::stable-hash (06-02)"
+  - "@gluezero/cache::cache-handler (06-03)"
 provides:
   - "CacheBroker class composition wrapper di RouterBroker (Opzione B + cascade D-126 ext F6 LIFE-02)"
   - "createCacheBroker(config) factory pubblico Valibot safeParse + D-30 anti-singleton"
   - "createCacheHarness fixture per integration test (analog F5 worker-harness — W-3 wildcard multi-depth)"
-  - "Public barrel @sembridge/cache Wave 4a chiusura cache package"
+  - "Public barrel @gluezero/cache Wave 4a chiusura cache package"
 affects:
-  - "@sembridge/devtools (06-08b consumer di config.runtime.tap forwarding D-161)"
-  - "@sembridge/sembridge (06-08b createSemBridge chain F1+F2+F3+F4+F5+F6)"
+  - "@gluezero/devtools (06-08b consumer di config.runtime.tap forwarding D-161)"
+  - "@gluezero/gluezero (06-08b createGlueZero chain F1+F2+F3+F4+F5+F6)"
 tech-stack:
   added: []
   patterns:
@@ -71,7 +71,7 @@ forwarding D-161 readiness, factory `createCacheBroker` Valibot D-30, harness
 `createCacheHarness` con DI httpDelegate, e 13 integration test 3-tier
 deterministici. Pattern carryover esatto da F5 WorkerBroker e F4
 RealtimeBroker. Building blocks pronti per 06-08b (DevtoolsBroker + chain
-completa F1+F2+F3+F4+F5+F6 via createSemBridge).
+completa F1+F2+F3+F4+F5+F6 via createGlueZero).
 
 ## Commit list
 
@@ -159,12 +159,12 @@ git diff main -- packages/core/src/ packages/mapper/src/ \
 
 | Building block | Esposto via | Consumer 06-08b |
 |----------------|-------------|-----------------|
-| `CacheBroker` class | `@sembridge/cache` barrel | DevtoolsBroker compose CacheBroker → RouterBroker |
-| `createCacheBroker` factory | `@sembridge/cache` barrel | createSemBridge chain F1+F2+F3+F4+F5+F6 final |
+| `CacheBroker` class | `@gluezero/cache` barrel | DevtoolsBroker compose CacheBroker → RouterBroker |
+| `createCacheBroker` factory | `@gluezero/cache` barrel | createGlueZero chain F1+F2+F3+F4+F5+F6 final |
 | Tap forwarding via `config.runtime.tap` | CacheBroker constructor — handler.tap injected | MultiplexTap (06-04) wires su tap singleton consumed da Inspector (06-05) + MetricsCollector (06-06) |
 | `CacheBrokerRouteDefinition` type | barrel pubblico | DevtoolsBroker config schema cacheRoutes pass-through |
 | `getCacheStats()` snapshot | CacheBroker public method | DevtoolsBroker debug snapshot aggregato |
-| `createCacheHarness` fixture | `@sembridge/cache` barrel | 06-08b può comporre con devtools-harness per chain integration test |
+| `createCacheHarness` fixture | `@gluezero/cache` barrel | 06-08b può comporre con devtools-harness per chain integration test |
 
 ## Deviazioni dal plan
 
@@ -187,7 +187,7 @@ git diff main -- packages/core/src/ packages/mapper/src/ \
 
 **3. [Rule 3 - Blocking] Build chain DTS gateway↔routing circular pre-esistente**
 - **Found during:** Task 2 verify build
-- **Issue:** `routing/dist/` non aveva `.d.ts` (cleaned by tsup); `pnpm -F @sembridge/cache build` falliva perché TS non risolveva `@sembridge/routing` types.
+- **Issue:** `routing/dist/` non aveva `.d.ts` (cleaned by tsup); `pnpm -F @gluezero/cache build` falliva perché TS non risolveva `@gluezero/routing` types.
 - **Fix:** Generazione manuale `.d.ts` di routing via `tsc --emitDeclarationOnly --outDir dist`. Pre-esistente ai pacchetti F3 (gateway↔routing tipologica circolare); risolto rigenerando dts cross-package.
 - **Files modified:** Nessuno (azione di setup chain DTS pre-esistente).
 - **Note:** Out-of-scope deferral per 06-09a (CI gates topological build).

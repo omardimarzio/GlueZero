@@ -106,7 +106,7 @@
 **Code excerpt analog (`packages/gateway/package.json:1-72`):**
 ```json
 {
-  "name": "@sembridge/gateway",
+  "name": "@gluezero/gateway",
   "version": "0.0.0",
   "type": "module",
   "main": "./dist/index.js",
@@ -121,9 +121,9 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@sembridge/core": "workspace:*",
-    "@sembridge/mapper": "workspace:*",
-    "@sembridge/routing": "workspace:*",
+    "@gluezero/core": "workspace:*",
+    "@gluezero/mapper": "workspace:*",
+    "@gluezero/routing": "workspace:*",
     "nanoid": "5.1.9",
     "valibot": "1.3.1"
   },
@@ -132,7 +132,7 @@
 ```
 
 **Adattamento F5:**
-- name → `@sembridge/worker`
+- name → `@gluezero/worker`
 - aggiungi dep runtime `comlink: "4.4.2"` (D-125 lockata RESEARCH §2.1)
 - preserva `sideEffects` glob `**/augment.ts` (Pattern S1 anti-tree-shake)
 - single `exports` `.` (no subpath: F5 è single-purpose)
@@ -185,7 +185,7 @@ export { SseAdapter, type SseAdapterDeps } from './sse-adapter'
 import type { RealtimeChannelDef } from './types/realtime-channel-def'
 import type { RealtimeConfig } from './types/realtime-config'
 
-declare module '@sembridge/core' {
+declare module '@gluezero/core' {
   /** F4 augmentation (D-102, PRD §27): aggiunge la sezione `realtime` a `BrokerConfig`. */
   interface BrokerConfig {
     /** Sezione `realtime` (D-102, PRD §16.2/§18.3-18.4): config canali SSE/WS multi-channel. */
@@ -202,7 +202,7 @@ declare module '@sembridge/core' {
 /**
  * F4 PipelineStep — eventi step §28 emessi dagli adapter SSE/WS (D-113 ingress).
  *
- * **Limitazione TS**: `PipelineStep` di `@sembridge/core` è un type alias literal union, NON
+ * **Limitazione TS**: `PipelineStep` di `@gluezero/core` è un type alias literal union, NON
  * un'interface — TS non supporta declaration merging di type alias. Soluzione: il consumer
  * che dichiara tap F4 importa questo super-set additive...
  */
@@ -218,7 +218,7 @@ export const __augmentSseWsLoaded: true = true
 **Adattamento F5 (D-126/D-122/D-152):**
 ```ts
 // Pseudo-template
-declare module '@sembridge/core' {
+declare module '@gluezero/core' {
   interface BrokerConfig {
     /** Sezione `workers` (D-122, PRD §19): config runtime worker (assertSerializable mode, defaults). */
     workers?: WorkerConfig
@@ -294,7 +294,7 @@ export interface WorkerDescriptor {
 
 **Adattamento F5 (RESEARCH §7.1):**
 ```ts
-import type { RoutePolicies } from '@sembridge/routing'
+import type { RoutePolicies } from '@gluezero/routing'
 
 export interface RouteWorkerDefinition {
   readonly type: 'worker'
@@ -1177,7 +1177,7 @@ if (event.priority === 'critical') {
 }
 return backpressureStrategy.schedule(route.id, event.priority, () => this.dispatchInternal(...))
 ```
-**F5 import pattern:** `import type { BackpressureStrategy } from '@sembridge/gateway/http'` + `import { createBackpressureStrategy } from '@sembridge/gateway/http'` (workspace dep). NO ridichiarazione del type union F5.
+**F5 import pattern:** `import type { BackpressureStrategy } from '@gluezero/gateway/http'` + `import { createBackpressureStrategy } from '@gluezero/gateway/http'` (workspace dep). NO ridichiarazione del type union F5.
 
 ### S8 — Sanitization payload errors (T-03-07-01 / T-04-08-09 mitigation)
 
@@ -1280,7 +1280,7 @@ return backpressureStrategy.schedule(route.id, event.priority, () => this.dispat
 - **Cascade unregisterByOwner** (S2 — D-26 → D-86 → D-112 → ext F5): try/catch isolato per ogni step (3-step cascade in F5 vs 2-step in F4).
 - **Reserved internal topics STRICT match** (S5 — D-111 → ext F5): `__cancel__`/`__progress__` filtrati con `topic === '__cancel__'` esatto, NO prefix.
 - **3-tier test riuso** (S9 — D-118 → D-150): identico a F4 con MockWorker al posto di MockEventSource/MockWebSocket.
-- **BackpressureStrategy F3 riusata 1:1** (S7 — D-75 → D-115 → D-130): import `@sembridge/gateway/http`, NO ridichiarazione tipi.
+- **BackpressureStrategy F3 riusata 1:1** (S7 — D-75 → D-115 → D-130): import `@gluezero/gateway/http`, NO ridichiarazione tipi.
 - **Anti tree-shake `__augmentLoaded`** (S1): pattern già consolidato 3 volte (F2/F3/F4) — F5 quarto utilizzo.
 
 **File created:** `.planning/phases/05-worker-runtime/05-PATTERNS.md`

@@ -16,8 +16,8 @@ provides:
   - "packages/mapper/README.md (366 LOC ≥ 200 target) — DOC-03 completo"
   - "packages/mapper/src/__integration__/transform-failure-modes.test.ts (6 test) — robustness D-44/VAL-09"
   - "packages/mapper/src/__integration__/alias-ambiguity.test.ts (7 test) — robustness D-41/MAP-16"
-  - "ci:publint extended @sembridge/core + @sembridge/mapper"
-  - "ci:attw extended @sembridge/core + @sembridge/mapper (ESM-only)"
+  - "ci:publint extended @gluezero/core + @gluezero/mapper"
+  - "ci:attw extended @gluezero/core + @gluezero/mapper (ESM-only)"
   - "ci:size budget mapper raised 5 KB → 12 KB gzip (Rule 1 fix — STACK estimate vs actual surface)"
   - "Phase 2 final gate verde: 5 success criteria coperti + 27 REQ-IDs F2 chiusi"
   - "16 test file / 149 test passing (era 14/136)"
@@ -31,7 +31,7 @@ tech-stack:
     - "Pattern README.md package-level esteso DOC-03: quickstart end-to-end + API surface tabella + policy tabelle (resolution order, field policy, transform failure) + roadmap deferred + success criteria coverage. Replicato struttura da packages/core/README.md F1 ma con tabelle dedicate ai 3 closure PRD §39."
     - "Pattern @example al @packageDocumentation del barrel index.ts: il TypeDoc preserva l'esempio nel dist/index.d.ts (visibile in IntelliSense del consumer). Quickstart funzionale (scenario meteo PRD §29 D-53) come prova di vita."
     - "Pattern robustness test deterministic con createMapperHarness reale (NO mock interni F2): il test verifica behavior end-to-end attraverso MapperBroker pubblico con `deliveryMode: 'sync'` per timing deterministic + `await new Promise(queueMicrotask)` 2x per propagazione async di mapping.error. Replica del pattern plan 02-11 mapping-error-event."
-    - "Pattern explicit filter dei pnpm script ci:* per cross-package: `--filter @sembridge/core --filter @sembridge/mapper` invece di `--filter '@sembridge/*'` (che pickerebbe anche placeholder packages F3-F6 senza dist build). Replicabile per F3-F6: estendere il filter con i nuovi package quando saranno scaffoldati."
+    - "Pattern explicit filter dei pnpm script ci:* per cross-package: `--filter @gluezero/core --filter @gluezero/mapper` invece di `--filter '@gluezero/*'` (che pickerebbe anche placeholder packages F3-F6 senza dist build). Replicabile per F3-F6: estendere il filter con i nuovi package quando saranno scaffoldati."
     - "Pattern size-limit budget realistic post-implementation: il budget pre-implementation (STACK 5 KB) è stato sistematicamente sotto-stimato per package F2+; il valore realistic post-implementation è 9.68 KB → budget 12 KB (gzip) con 2.32 KB headroom. Replicabile per F3+ con stessa policy: misura post-implementation, fissa budget +20-30% headroom."
 
 key-files:
@@ -41,7 +41,7 @@ key-files:
   modified:
     - "packages/mapper/README.md: skeleton 30 LOC → DOC-03 completo 366 LOC"
     - "packages/mapper/src/index.ts: package-level @example aggiunto al @packageDocumentation"
-    - "package.json (root): ci:publint + ci:attw extended a @sembridge/mapper; size-limit mapper budget 5 KB → 12 KB"
+    - "package.json (root): ci:publint + ci:attw extended a @gluezero/mapper; size-limit mapper budget 5 KB → 12 KB"
     - "packages/mapper/package.json: size-limit local mapper budget 5 KB → 12 KB"
     - "packages/mapper/src/augment.test.ts: auto-fix biome useLiteralKeys (4 dot-access)"
     - "packages/mapper/src/types/index.ts: auto-fix biome organizeImports (alfabetico cross-section)"
@@ -51,10 +51,10 @@ key-files:
 key-decisions:
   - "**Size-limit budget mapper raised 5 KB → 12 KB (Rule 1 fix)**: STACK.md aveva stimato 5 KB pre-implementation; PATTERNS.md §3.1 aveva rivisto a 10 KB; il bundle reale a fine F2 è 9.68 KB. Decisione: 12 KB con 2.32 KB di headroom per future microadditions F3 minor (es. helper introspection aggiuntivi del MapperEngine). 5 KB era irrealistico per Mapper + Broker wrapper + Inspector + Valibot adapter (4 moduli compositi). 12 KB allinea con la prassi 'misura post-impl, fissa budget +20-30% headroom'. Documentato come deviation; lo STACK budget V1 è stato sotto-stimato sistematicamente per F2+ (lesson learned da capitalizzare in F3-F6 — vedi pattern_established 5)."
   - "**Pre-existing biome errors auto-fix (Rule 1 — final gate)**: `pnpm biome check .` mostrava 4 errori pre-existing (4 useLiteralKeys in augment.test.ts + 1 organizeImports in types/index.ts) NON causati da plan 02-12. Plan acceptance criteria richiede biome exit 0 — questo è un final-gate plan e i criteri di chiusura sono required. Applicato `pnpm biome check --write --unsafe .` (auto-fix safe + unsafe — gli unsafe in questo caso erano puramente cosmetici: bracket→dot access). 4 file fixati. Tutti i test 16/149 + core 24/248 passing post-fix."
-  - "**JSDoc package-level @example al barrel**: aggiunto un quickstart funzionale (scenario meteo PRD §29 D-53 condensed) al @packageDocumentation di src/index.ts. Il TypeDoc/IntelliSense consumer-side mostra l'esempio quando hover sul nome del package — replicabile per F3-F6. Pattern alignement con `@sembridge/core` README + augment package documentation."
+  - "**JSDoc package-level @example al barrel**: aggiunto un quickstart funzionale (scenario meteo PRD §29 D-53 condensed) al @packageDocumentation di src/index.ts. Il TypeDoc/IntelliSense consumer-side mostra l'esempio quando hover sul nome del package — replicabile per F3-F6. Pattern alignement con `@gluezero/core` README + augment package documentation."
   - "**Test 5 transform-failure-modes documenta canonical validation behavior V1**: il test 'canonical validation failure' usa un canonicalSchemaId NON registrato per triggerare il fail. Il behavior runtime corrente di V1 è permissive (structural pass quando schema non registrato → no validation error). Il test usa un branching `if (errorEvents.length > 0)` per documentare entrambi i path (fail con D-58 conformità OR pass passthrough). Robustness check: il publish NON throw uncaught indipendentemente dal path."
   - "**13 test totali in plan 02-12 (6 transform + 7 alias) invece di 5 (3+2) del plan**: il PLAN richiedeva 3 test transform + 2 test alias = 5 totali. Coverage gap rilevato: (a) edge case 'fallback senza default' (Test 4 transform — degrade a skip); (b) canonical validation failure (Test 5 transform); (c) ortogonalità required+skip (Test 6 transform); (d) D-40 livello 4 name-match (Test 6 alias); (e) cascade unregisterScopedAll (Test 7 alias); (f) D-40 livello 1 esplicito vs alias (Test 4 alias). Tutti additivi, nessun breaking — i 5 test core del PLAN sono inclusi (Test 1-3 transform + Test 1-2 alias). Coerente con plan 02-10/02-11 dove ho aggiunto test extra per coverage gap esplicito."
-  - "**Filter pnpm explicit per ci:* invece di glob '@sembridge/*'**: i 7 placeholder package F3-F6 (cache, devtools, gateway, routing, sembridge, worker — fuori scope F1/F2) hanno `package.json` con `main: ./dist/index.js` ma nessun build. Glob `--filter '@sembridge/*'` includerebbe loro, e publint correggerebbe `pkg.main but file does not exist`. Soluzione: filter explicit `--filter @sembridge/core --filter @sembridge/mapper`. F3 estenderà il filter quando @sembridge/routing avrà dist; F4 quando @sembridge/gateway; ecc."
+  - "**Filter pnpm explicit per ci:* invece di glob '@gluezero/*'**: i 7 placeholder package F3-F6 (cache, devtools, gateway, routing, sembridge, worker — fuori scope F1/F2) hanno `package.json` con `main: ./dist/index.js` ma nessun build. Glob `--filter '@gluezero/*'` includerebbe loro, e publint correggerebbe `pkg.main but file does not exist`. Soluzione: filter explicit `--filter @gluezero/core --filter @gluezero/mapper`. F3 estenderà il filter quando @gluezero/routing avrà dist; F4 quando @gluezero/gateway; ecc."
 
 patterns-established:
   - "Pattern README.md package F2+: quickstart end-to-end (PRD §29 scenario meteo come prova di vita) + API surface tabella (metodi delegati F1 + new F2) + policy tabelle (resolution order, field policy, transform failure) + roadmap deferred + success criteria coverage. Replicabile per F3-F6 con i loro PRD example end-to-end."
@@ -77,7 +77,7 @@ completed: 2026-04-30
 
 # Phase 2 Plan 12: Final Gate F2 (DOC-03 + CI Gates + Robustness Tests) Summary
 
-**Implementato il final gate di Phase 2: README.md espanso (366 LOC) con scenario meteo PRD §29 + API surface + policy tabelle (MAP-17/VAL-08/VAL-09) + roadmap F3-F6; @example package-level al barrel; 13 robustness test deterministic (6 transform-failure-modes + 7 alias-ambiguity) per chiudere D-44/VAL-09 e D-41/MAP-16 end-to-end via createMapperHarness reale; CI gates extended a @sembridge/mapper (publint + attw esm-only + size-limit con budget realistic 12 KB gzip vs 9.68 KB actual). Suite mapper passa da 14/136 (post plan 02-11) a 16/149. Core 24/248 invariati (D-49 strict confermato). Phase 2 chiusa: 5 success criteria coperti, 27 REQ-IDs F2 verificati, 0 modifiche a packages/core/ runtime.**
+**Implementato il final gate di Phase 2: README.md espanso (366 LOC) con scenario meteo PRD §29 + API surface + policy tabelle (MAP-17/VAL-08/VAL-09) + roadmap F3-F6; @example package-level al barrel; 13 robustness test deterministic (6 transform-failure-modes + 7 alias-ambiguity) per chiudere D-44/VAL-09 e D-41/MAP-16 end-to-end via createMapperHarness reale; CI gates extended a @gluezero/mapper (publint + attw esm-only + size-limit con budget realistic 12 KB gzip vs 9.68 KB actual). Suite mapper passa da 14/136 (post plan 02-11) a 16/149. Core 24/248 invariati (D-49 strict confermato). Phase 2 chiusa: 5 success criteria coperti, 27 REQ-IDs F2 verificati, 0 modifiche a packages/core/ runtime.**
 
 ## Performance
 
@@ -126,11 +126,11 @@ completed: 2026-04-30
 - **TEST-03 subset F2 chiuso**: i 13 robustness test sopra (6 transform + 7 alias) coprono i casi edge non coperti da plan 02-11 (che ha verificato i 5 success criteria ROADMAP). Plan 02-12 chiude D-41 + D-44 a livello integration.
 
 - **CI gates extended** (Task 3):
-  - `ci:publint`: filter explicit `@sembridge/core --filter @sembridge/mapper` → 2/2 "All good!"
+  - `ci:publint`: filter explicit `@gluezero/core --filter @gluezero/mapper` → 2/2 "All good!"
   - `ci:attw`: idem con `--profile=esm-only` → 2/2 🟢 (node16 ESM, bundler)
   - `ci:size`: budget mapper 5 KB → **12 KB** gzip (Rule 1 fix — vedi Deviations); 2.32 KB headroom
 
-- **D-49 strict confermato**: `pnpm --filter @sembridge/core test` → 248/248 invariati post-plan-02-12. Nessuna modifica a packages/core/ runtime (verificato via `git diff HEAD~3 -- packages/core/` = 0 lines diff).
+- **D-49 strict confermato**: `pnpm --filter @gluezero/core test` → 248/248 invariati post-plan-02-12. Nessuna modifica a packages/core/ runtime (verificato via `git diff HEAD~3 -- packages/core/` = 0 lines diff).
 
 - **Suite mapper coverage gain**: da 14/136 (baseline plan 02-11) a 16/149 (+2 file +13 test). Tutti i 16 file passing al primo run.
 
@@ -175,8 +175,8 @@ completed: 2026-04-30
    - packages/mapper/src/__integration__/alias-ambiguity.test.ts (7 test, ~210 LOC)
    - 13/13 test passing al primo run
 
-3. **Task 3 — `5320ff6`** `chore(02-12): estende CI gates a @sembridge/mapper + size budget realistico`
-   - package.json (root): ci:publint + ci:attw filter `@sembridge/core + @sembridge/mapper`; size-limit mapper 5→12 KB
+3. **Task 3 — `5320ff6`** `chore(02-12): estende CI gates a @gluezero/mapper + size budget realistico`
+   - package.json (root): ci:publint + ci:attw filter `@gluezero/core + @gluezero/mapper`; size-limit mapper 5→12 KB
    - packages/mapper/package.json: size-limit local 5→12 KB
    - 4 file biome auto-fix (augment.test.ts + types/index.ts + valibot-adapter + valibot-adapter.test) — vedi Deviations
 
@@ -218,15 +218,15 @@ Aggiunto un `@example Quickstart (scenario meteo PRD §29)` al `@packageDocument
 ### package.json (root, modified)
 
 ```diff
-- "ci:publint": "pnpm --filter @sembridge/core exec publint",
-- "ci:attw": "pnpm --filter @sembridge/core exec attw --pack --profile=esm-only",
-+ "ci:publint": "pnpm --filter @sembridge/core --filter @sembridge/mapper exec publint",
-+ "ci:attw": "pnpm --filter @sembridge/core --filter @sembridge/mapper exec attw --pack --profile=esm-only",
+- "ci:publint": "pnpm --filter @gluezero/core exec publint",
+- "ci:attw": "pnpm --filter @gluezero/core exec attw --pack --profile=esm-only",
++ "ci:publint": "pnpm --filter @gluezero/core --filter @gluezero/mapper exec publint",
++ "ci:attw": "pnpm --filter @gluezero/core --filter @gluezero/mapper exec attw --pack --profile=esm-only",
 ```
 
 ```diff
   {
-    "name": "@sembridge/mapper (gzip)",
+    "name": "@gluezero/mapper (gzip)",
     "path": "packages/mapper/dist/index.js",
 -   "limit": "5 KB",
 +   "limit": "12 KB",
@@ -251,11 +251,11 @@ Stesso cambio di budget size-limit (5→12 KB) per coerenza tra root e package-l
 | `wc -l packages/mapper/README.md` | **366** (target ≥ 200) |
 | `grep -c "createMapperBroker\|MAP-17\|VAL-08\|VAL-09\|MAP-16" packages/mapper/README.md` | 14 (acceptance ≥ 1 ciascuno) |
 | `grep -c "@param\|@example\|@returns\|@throws" packages/mapper/dist/index.d.ts` | 70 (JSDoc preservato) |
-| `pnpm --filter @sembridge/mapper test transform-failure-modes alias-ambiguity` | Exit 0: **`Test Files 2 passed (2) | Tests 13 passed (13)`** Duration 426ms |
-| `pnpm --filter @sembridge/mapper test` (full mapper suite) | Exit 0: **`Test Files 16 passed (16) | Tests 149 passed (149)`** Duration 1.09s |
-| `pnpm --filter @sembridge/core test` (D-49 regression check) | Exit 0: **`Test Files 24 passed (24) | Tests 248 passed (248)`** — INVARIATO |
-| `pnpm --filter @sembridge/mapper build` | Exit 0: dist/index.js (45.30 KB) + dist/augment.js (214 B) + dist/index.d.ts (48.20 KB con JSDoc) |
-| `pnpm --filter @sembridge/core build` | Exit 0: dist/index.js + dist/index.d.ts (19.61 KB) |
+| `pnpm --filter @gluezero/mapper test transform-failure-modes alias-ambiguity` | Exit 0: **`Test Files 2 passed (2) | Tests 13 passed (13)`** Duration 426ms |
+| `pnpm --filter @gluezero/mapper test` (full mapper suite) | Exit 0: **`Test Files 16 passed (16) | Tests 149 passed (149)`** Duration 1.09s |
+| `pnpm --filter @gluezero/core test` (D-49 regression check) | Exit 0: **`Test Files 24 passed (24) | Tests 248 passed (248)`** — INVARIATO |
+| `pnpm --filter @gluezero/mapper build` | Exit 0: dist/index.js (45.30 KB) + dist/augment.js (214 B) + dist/index.d.ts (48.20 KB con JSDoc) |
+| `pnpm --filter @gluezero/core build` | Exit 0: dist/index.js + dist/index.d.ts (19.61 KB) |
 | `pnpm ci:publint` | Exit 0: 2/2 "All good!" (core + mapper) |
 | `pnpm ci:attw` | Exit 0: 2/2 🟢 ESM-only (core + mapper, node16 ESM + bundler) |
 | `pnpm ci:size` | Exit 0: core 6.17 KB / 8 KB; **mapper 9.68 KB / 12 KB** |
@@ -269,7 +269,7 @@ Stesso cambio di budget size-limit (5→12 KB) per coerenza tra root e package-l
 
 | Threat ID | Disposition | Mitigation in commit |
 |-----------|-------------|----------------------|
-| T-02-12-01 (Tampering — F2 modifica accidentalmente core/* di F1 → regression) | mitigate | `git diff HEAD~3 -- packages/core/` = 0 lines confermato; `pnpm -F @sembridge/core test` 248/248 invariati. D-49 strict enforcement. |
+| T-02-12-01 (Tampering — F2 modifica accidentalmente core/* di F1 → regression) | mitigate | `git diff HEAD~3 -- packages/core/` = 0 lines confermato; `pnpm -F @gluezero/core test` 248/248 invariati. D-49 strict enforcement. |
 | T-02-12-02 (DoS — bundle size exceeds budget → ship blocked) | mitigate | Budget 12 KB realistic post-impl con 2.32 KB headroom. ci:size enforced gate. |
 | T-02-12-03 (Information disclosure — JSDoc espone internal helper) | mitigate | JSDoc solo su export pubblici dal barrel `index.ts`. Internal-only file (`canonical-registry`, `alias-registry`, `transform-pipeline` interni) hanno JSDoc minimo (function-level signature; non `@example` consumer-facing). README documenta solo MapperBroker + factory + tipi pubblici. |
 | T-02-12-04 (Spoofing — publint passa con package.json malformato) | accept | publint è il check di reference per package shape; verifica consumer-side problemi quale `pkg.main but file does not exist`, malformato `exports`. F2 publint: All good!. Eventuali edge case rimandate. |
@@ -294,7 +294,7 @@ Stesso cambio di budget size-limit (5→12 KB) per coerenza tra root e package-l
 - **Why it's a bug:** Plan 02-12 acceptance criteria include `pnpm biome check .` exit 0 come must-have. Questo è il final-gate plan e i criteri di chiusura sono required. Per scope-boundary, "fix solo issue causate dal task corrente" — ma il REFACTOR gate generalizzato è considerato parte del final-gate intent (lessons learned F1 plan 01-11 ha fatto lo stesso pattern).
 - **Fix:** `pnpm biome check --write --unsafe .` — auto-fix safe + unsafe. In questo caso gli unsafe erano puramente cosmetici (bracket['literal']→.dot access). 4 file fixati.
 - **Files modified:** `packages/mapper/src/augment.test.ts` (4 useLiteralKeys), `packages/mapper/src/types/index.ts` (organizeImports), `packages/mapper/src/valibot-adapter.ts` + `.test.ts` (lineWidth — non avevano errori ma sono stati riformattati in single-line per Biome).
-- **Verification:** `pnpm biome check .` exit 0; `pnpm --filter @sembridge/mapper test` 16/149 passing post-fix; `pnpm --filter @sembridge/core test` 24/248 passing post-fix (zero impatto).
+- **Verification:** `pnpm biome check .` exit 0; `pnpm --filter @gluezero/mapper test` 16/149 passing post-fix; `pnpm --filter @gluezero/core test` 24/248 passing post-fix (zero impatto).
 - **Commit:** `5320ff6` (Task 3 — incluso per atomicità del CI gate)
 
 **3. [Style — Test count 13 invece di 5 (3+2) totali]**
@@ -308,12 +308,12 @@ Stesso cambio di budget size-limit (5→12 KB) per coerenza tra root e package-l
 - **Verification:** 13/13 test passing al primo run
 - **Commit:** `140a502` (Task 2)
 
-**4. [Style — Filter pnpm explicit invece di glob '@sembridge/*']**
+**4. [Style — Filter pnpm explicit invece di glob '@gluezero/*']**
 
 - **Found during:** Task 3 prima implementazione di ci:publint
-- **Issue:** Tentativo di usare `--filter '@sembridge/*'` ha causato fail su `packages/devtools` (e altri 5 placeholder F3-F6) perché loro `package.json` ha `main: ./dist/index.js` ma nessun build esiste. publint ha errato: `pkg.main is ./dist/index.js but the file does not exist`.
-- **Why it's a bug:** Il glob `--filter '@sembridge/*'` matcha tutti i 9 sub-package (incluso 7 placeholder F3-F6 senza build); il filter explicit `--filter @sembridge/core --filter @sembridge/mapper` match solo i 2 package F1+F2 con dist disponibile. Replicabile per F3-F6 estendendo il filter quando i package saranno scaffoldati.
-- **Fix:** Sostituito glob con filter explicit `--filter @sembridge/core --filter @sembridge/mapper`. Documentato nel pattern_established 5 + key-decision 6.
+- **Issue:** Tentativo di usare `--filter '@gluezero/*'` ha causato fail su `packages/devtools` (e altri 5 placeholder F3-F6) perché loro `package.json` ha `main: ./dist/index.js` ma nessun build esiste. publint ha errato: `pkg.main is ./dist/index.js but the file does not exist`.
+- **Why it's a bug:** Il glob `--filter '@gluezero/*'` matcha tutti i 9 sub-package (incluso 7 placeholder F3-F6 senza build); il filter explicit `--filter @gluezero/core --filter @gluezero/mapper` match solo i 2 package F1+F2 con dist disponibile. Replicabile per F3-F6 estendendo il filter quando i package saranno scaffoldati.
+- **Fix:** Sostituito glob con filter explicit `--filter @gluezero/core --filter @gluezero/mapper`. Documentato nel pattern_established 5 + key-decision 6.
 - **Files modified:** `package.json` (root) — 2 line edit
 - **Verification:** `pnpm ci:publint` exit 0 con "All good!" 2/2
 - **Commit:** `5320ff6` (Task 3 — fix incluso nello stesso commit)

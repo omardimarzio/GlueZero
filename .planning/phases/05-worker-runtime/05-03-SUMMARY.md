@@ -81,9 +81,9 @@ State machine `task-tracker.ts` con `Map<TaskId, TrackerState>` e tryTransition 
 
 ## CI Gates
 
-- [x] `pnpm -F @sembridge/worker test --run task-tracker` → **12/12 pass** ✓
-- [x] `pnpm -F @sembridge/worker typecheck` → **clean** (0 errors) ✓
-- [x] `pnpm -F @sembridge/worker build` → **dist/index.js + dist/index.d.ts** generati ✓
+- [x] `pnpm -F @gluezero/worker test --run task-tracker` → **12/12 pass** ✓
+- [x] `pnpm -F @gluezero/worker typecheck` → **clean** (0 errors) ✓
+- [x] `pnpm -F @gluezero/worker build` → **dist/index.js + dist/index.d.ts** generati ✓
 - [x] `grep -c "createTaskTracker" packages/worker/dist/index.js` → 2 hits ✓
 - [x] `grep -c "createTaskTracker" packages/worker/dist/index.d.ts` → 3 hits ✓
 - [x] `grep -c "export function createTaskTracker" packages/worker/src/task-tracker.ts` → 1 ✓ (≥1)
@@ -203,9 +203,9 @@ Nessun deferred item, nessun BLOCKER, nessun checkpoint richiesto.
 ## Self-Check: PASSED
 
 **Files exist:**
-- ✓ `/Users/omarmarzio/programming/prova AI/SemBridge/packages/worker/src/task-tracker.ts`
-- ✓ `/Users/omarmarzio/programming/prova AI/SemBridge/packages/worker/src/task-tracker.test.ts`
-- ✓ `/Users/omarmarzio/programming/prova AI/SemBridge/packages/worker/src/index.ts` (modified)
+- ✓ `/Users/omarmarzio/programming/prova AI/GlueZero/packages/worker/src/task-tracker.ts`
+- ✓ `/Users/omarmarzio/programming/prova AI/GlueZero/packages/worker/src/task-tracker.test.ts`
+- ✓ `/Users/omarmarzio/programming/prova AI/GlueZero/packages/worker/src/index.ts` (modified)
 
 **Commits exist (verified via `git log`):**
 - ✓ `f0c768f` test(05-03) RED

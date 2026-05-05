@@ -1,14 +1,14 @@
 # Phase 3: Routing & Server Gateway HTTP — Pattern Map
 
 **Mapped:** 2026-04-30
-**Files analyzed:** 30 file di nuova creazione (split tra `@sembridge/routing` e `@sembridge/gateway/http`) + 0 modifiche dirette a F1/F2 (vincolo composition wrapper D-83)
+**Files analyzed:** 30 file di nuova creazione (split tra `@gluezero/routing` e `@gluezero/gateway/http`) + 0 modifiche dirette a F1/F2 (vincolo composition wrapper D-83)
 **Analogs found:** 27 / 30 con analogo F1/F2 esatto o role-match. 3 file (Strategy primitives) hanno NEW pattern documentato in RESEARCH §"Pattern 3 — Strategy Pattern + Chain of Responsibility".
 
 > **Vincolo D-83:** ZERO modifiche a `packages/core/src/` runtime e `packages/mapper/src/` runtime. F3 è un'estensione **composition wrapper** (`RouterBroker = wrap(MapperBroker)`) + TS declaration merging via `augment.ts`. I pattern analoghi sono il riferimento autoritativo per ciascun nuovo file.
 
 ## File Classification
 
-### `@sembridge/routing` (Routing Engine)
+### `@gluezero/routing` (Routing Engine)
 
 | New File | Role | Data Flow | Closest Analog | Match Quality |
 |----------|------|-----------|----------------|---------------|
@@ -39,7 +39,7 @@
 | `packages/routing/src/__integration__/route-cascade-cleanup.test.ts` | integration test | test | F2 cascade test pattern | role-match |
 | `packages/routing/src/index.ts` | barrel public API | type-only re-export | `packages/mapper/src/index.ts` | exact |
 
-### `@sembridge/gateway/http` (HTTP Gateway)
+### `@gluezero/gateway/http` (HTTP Gateway)
 
 | New File | Role | Data Flow | Closest Analog | Match Quality |
 |----------|------|-----------|----------------|---------------|
@@ -180,7 +180,7 @@ registerCanonicalSchema(schema: CanonicalSchema, options: RegisterCanonicalSchem
 **Header pattern** (lines 1-46 dell'analogo, copiare ad-letteram con sostituzioni F2→F3):
 
 ```typescript
-// augment.ts — TS declaration merging per estendere @sembridge/core con i tipi F3.
+// augment.ts — TS declaration merging per estendere @gluezero/core con i tipi F3.
 // (D-85, D-93, D-94, D-95 in 03-CONTEXT.md)
 //
 // Vincolo D-83: NESSUNA modifica a packages/core/src/ né packages/mapper/src/.
@@ -204,7 +204,7 @@ registerCanonicalSchema(schema: CanonicalSchema, options: RegisterCanonicalSchem
 **`declare module` block pattern** (lines 52-95 dell'analogo):
 
 ```typescript
-declare module '@sembridge/core' {
+declare module '@gluezero/core' {
   interface PluginDescriptor {
     /** F3 augmentation (D-94): route dichiarate dal plugin auto-registrate al registerPlugin. */
     readonly routes?: readonly RouteDefinition[]
@@ -218,7 +218,7 @@ declare module '@sembridge/core' {
   }
 }
 
-declare module '@sembridge/mapper' {
+declare module '@gluezero/mapper' {
   interface CanonicalSchema {
     /** F3 augmentation (D-95, ROUTE-16): se true, topic senza route → throw route.required.missing. */
     readonly requiresRoute?: boolean
@@ -228,11 +228,11 @@ declare module '@sembridge/mapper' {
 export const __augmentLoaded: true = true
 ```
 
-**Adattamento F3:** stesso identico schema di F2; aggiungere il declare module per `@sembridge/mapper` per estendere `CanonicalSchema`.
+**Adattamento F3:** stesso identico schema di F2; aggiungere il declare module per `@gluezero/mapper` per estendere `CanonicalSchema`.
 
 #### `packages/gateway/src/augment.ts` (augment, type-only)
 
-**Analog:** identico a `packages/mapper/src/augment.ts`. Augmenta SOLO `BrokerConfig.gateway`. Pattern identico al routing augment, con `declare module '@sembridge/core'` solo per `gateway?: GatewayConfig`.
+**Analog:** identico a `packages/mapper/src/augment.ts`. Augmenta SOLO `BrokerConfig.gateway`. Pattern identico al routing augment, con `declare module '@gluezero/core'` solo per `gateway?: GatewayConfig`.
 
 ---
 
@@ -325,7 +325,7 @@ export class TopicTrie<T> {
 }
 ```
 
-**Adattamento F3:** istanziare `TopicTrie<CompiledRoute>` come membro privato del `RouteResolver`. Insert al `registerRoute(def)`, match al `resolve(topic)`. **IMPORTANTE:** `TopicTrie` è currently NON esposto da `@sembridge/core` barrel (è solo internal). Plan F3-04 deve ri-esportarlo via path interno (`@sembridge/core/internal/topic-matcher`) oppure ricomporlo via composition lookup nel `Subscription.matcher` esistente. Decidere in plan 03-05.
+**Adattamento F3:** istanziare `TopicTrie<CompiledRoute>` come membro privato del `RouteResolver`. Insert al `registerRoute(def)`, match al `resolve(topic)`. **IMPORTANTE:** `TopicTrie` è currently NON esposto da `@gluezero/core` barrel (è solo internal). Plan F3-04 deve ri-esportarlo via path interno (`@gluezero/core/internal/topic-matcher`) oppure ricomporlo via composition lookup nel `Subscription.matcher` esistente. Decidere in plan 03-05.
 
 **Register/listener/ownership pattern** (lines 100-160 di canonical-registry.ts):
 
@@ -479,7 +479,7 @@ private handleMappingError(err: BrokerError, sourceTopic: string, step: string):
 
 ```typescript
 // mapper-harness.ts — fixture condivisa per integration test del package
-// `@sembridge/mapper` (PRD §29 D-53 scenario meteo end-to-end, REQ TEST-01/TEST-02).
+// `@gluezero/mapper` (PRD §29 D-53 scenario meteo end-to-end, REQ TEST-01/TEST-02).
 
 export interface MapperHarnessOptions {
   readonly debug?: boolean
@@ -558,8 +558,8 @@ afterAll(() => server.close())
 **Pattern discriminated union F3:**
 
 ```typescript
-import type { GatewayConfig } from '@sembridge/gateway'
-import type { CanonicalSchemaId, InputMap, OutputMap } from '@sembridge/mapper'
+import type { GatewayConfig } from '@gluezero/gateway'
+import type { CanonicalSchemaId, InputMap, OutputMap } from '@gluezero/mapper'
 
 export interface RouteLocalDefinition {
   readonly id: string
@@ -921,25 +921,25 @@ afterAll(() => server.close())
 
 ### Pattern S9: CI gates extension (publint + attw + size-limit) — pattern F2 plan 02-12
 
-**Source:** F2 plan 02-12 ha esteso `publint`, `attw` (Are The Types Wrong), `size-limit` a `@sembridge/mapper` (replicare per F3).
+**Source:** F2 plan 02-12 ha esteso `publint`, `attw` (Are The Types Wrong), `size-limit` a `@gluezero/mapper` (replicare per F3).
 
 **F3 plan 03-14 final gate must:**
 - Estendere `publint --strict` a `packages/routing/` e `packages/gateway/`
 - Estendere `attw --pack` a entrambi i package F3
 - Aggiungere `size-limit` budget:
-  - `@sembridge/routing` → 5 KB gzip (RESEARCH line 13)
-  - `@sembridge/gateway/http` → 6 KB gzip (RESEARCH line 13 + line 339)
+  - `@gluezero/routing` → 5 KB gzip (RESEARCH line 13)
+  - `@gluezero/gateway/http` → 6 KB gzip (RESEARCH line 13 + line 339)
 - Aggiungere config `package.json` `exports` con subpath `./http` e `./sse-ws` (placeholder F4) — RESEARCH lines 330-342:
 
 ```json
 {
-  "name": "@sembridge/gateway",
+  "name": "@gluezero/gateway",
   "exports": {
     ".": { "types": "./dist/index.d.ts", "import": "./dist/index.js" },
     "./http": { "types": "./dist/http/index.d.ts", "import": "./dist/http/index.js" }
   },
   "size-limit": [
-    { "name": "@sembridge/gateway/http (gzip)", "path": "dist/http/index.js", "limit": "6 KB", "gzip": true }
+    { "name": "@gluezero/gateway/http (gzip)", "path": "dist/http/index.js", "limit": "6 KB", "gzip": true }
   ]
 }
 ```

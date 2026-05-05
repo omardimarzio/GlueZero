@@ -21,7 +21,7 @@ dependency-graph:
     - phase: 03-08
       provides: "parseRetryAfter + MAX_BACKOFF_MS (retry-after-parser.ts) + HttpGateway consumer downstream"
     - phase: 01
-      provides: "nanoid 5.1.9 (re-export indiretto via @sembridge/core/event-factory.ts pattern)"
+      provides: "nanoid 5.1.9 (re-export indiretto via @gluezero/core/event-factory.ts pattern)"
   provides:
     - "createRetryStrategy (ExponentialBackoffWithJitter) — D-69 chiusura ROUTE-09 / PRD §39 #8"
     - "createTimeoutStrategy (FixedTimeout) — D-68 wrapper su AbortSignal.timeout()"
@@ -91,15 +91,15 @@ metrics:
 ## Test Results
 
 ```
-Test Files  10 passed (10) — @sembridge/gateway
+Test Files  10 passed (10) — @gluezero/gateway
      Tests  60 passed (60)
 ```
 
 **Suite delta vs baseline:**
-- @sembridge/gateway: 60/60 (33 baseline 03-08 + 27 nuovi: 15 retry + 4 timeout + 8 idempotency)
-- @sembridge/core: 248/248 (D-83 invariant — zero modifiche runtime)
-- @sembridge/mapper: 183/183 (D-83 invariant — zero modifiche runtime)
-- @sembridge/routing: 58/58 (D-83 invariant — zero modifiche runtime)
+- @gluezero/gateway: 60/60 (33 baseline 03-08 + 27 nuovi: 15 retry + 4 timeout + 8 idempotency)
+- @gluezero/core: 248/248 (D-83 invariant — zero modifiche runtime)
+- @gluezero/mapper: 183/183 (D-83 invariant — zero modifiche runtime)
+- @gluezero/routing: 58/58 (D-83 invariant — zero modifiche runtime)
 
 **Behavior coverage per task:**
 
@@ -199,7 +199,7 @@ Test Files  10 passed (10) — @sembridge/gateway
 - Core 248/248 test passing (invariant)
 - Mapper 183/183 test passing (invariant)
 - Routing 58/58 test passing (invariant)
-- Pattern composition wrapper rispettato: nuove strategy in @sembridge/gateway/http/strategies — extension package isolato
+- Pattern composition wrapper rispettato: nuove strategy in @gluezero/gateway/http/strategies — extension package isolato
 
 ## Verification
 

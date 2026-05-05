@@ -71,15 +71,15 @@ metrics:
 
 # Phase 1 Plan 07: EventBus Core Summary
 
-Implementato `EventBus` (`bus.ts`) — il cuore del broker SemBridge: dispatch pub/sub con handler isolation try/catch (sync) + `.catch()` (async), tap orchestration sui 5 step F1 della pipeline §28, delivery semantics `async` (default via `queueMicrotask`) / `sync` (immediate) / `worker`+`remote` (fallback async + warn `mapping.delivery.fallback`), AbortSignal-first subscribe (auto-unsubscribe su abort), `Subscription.unsubscribe()` idempotente, `SubscribeOptions.once` (single-invocation), `unsubscribeByOwner(ownerId): number` (cascade plugin cleanup), e `deepFreeze` opt-in in debug mode. Pattern TDD RED→GREEN preservato: 1 commit `test(01-07)` + 1 commit `feat(01-07)`. Coverage REQ-IDs: CORE-01 ✓, CORE-09 ✓, CORE-12 ✓, ERR-03 ✓ (più D-01, D-02, D-03, D-04, D-16, D-20, D-26, D-27).
+Implementato `EventBus` (`bus.ts`) — il cuore del broker GlueZero: dispatch pub/sub con handler isolation try/catch (sync) + `.catch()` (async), tap orchestration sui 5 step F1 della pipeline §28, delivery semantics `async` (default via `queueMicrotask`) / `sync` (immediate) / `worker`+`remote` (fallback async + warn `mapping.delivery.fallback`), AbortSignal-first subscribe (auto-unsubscribe su abort), `Subscription.unsubscribe()` idempotente, `SubscribeOptions.once` (single-invocation), `unsubscribeByOwner(ownerId): number` (cascade plugin cleanup), e `deepFreeze` opt-in in debug mode. Pattern TDD RED→GREEN preservato: 1 commit `test(01-07)` + 1 commit `feat(01-07)`. Coverage REQ-IDs: CORE-01 ✓, CORE-09 ✓, CORE-12 ✓, ERR-03 ✓ (più D-01, D-02, D-03, D-04, D-16, D-20, D-26, D-27).
 
 ## Objective Achieved
 
 L'obiettivo del plan 01-07 è raggiunto integralmente:
 
 - **2 file creati** in `packages/core/src/core/` (1 source 291 LOC + 1 test 402 LOC, 693 LOC totali)
-- **`pnpm --filter @sembridge/core test`** esce 0 e riporta `Test Files 10 passed (10) | Tests 159 passed (159)` in 545 ms (suite cumulativa post-Wave-4 = 9 test files Wave 3 + 1 nuovo `bus.test.ts`)
-- **`pnpm --filter @sembridge/core typecheck`** esce 0 (no TS errors, isolatedDeclarations conforme)
+- **`pnpm --filter @gluezero/core test`** esce 0 e riporta `Test Files 10 passed (10) | Tests 159 passed (159)` in 545 ms (suite cumulativa post-Wave-4 = 9 test files Wave 3 + 1 nuovo `bus.test.ts`)
+- **`pnpm --filter @gluezero/core typecheck`** esce 0 (no TS errors, isolatedDeclarations conforme)
 - **`pnpm biome check packages/core/src/core/`** esce 0 (20 file checked, 0 errori, 0 warning)
 - **TDD pattern RED→GREEN** preservato: 1 commit `test(01-07): aggiunge test RED ...` precede il commit `feat(01-07): implementa ...` corrispondente
 - **5 step pipeline F1** emessi al tap nell'ordine corretto (verificato dal test "invokes tap on all 5 F1 steps in order")
@@ -126,7 +126,7 @@ NOTA: il PLAN suddivideva in 2 task separati ("Task 1: bus.ts impl" e "Task 2: b
 - [x] File pubblica `system.error` in handler isolation (CORE-12) — verificato grep `'system.error'` + test "sync handler that throws does not crash broker"
 - [x] File logga warning `mapping.delivery.fallback` per `worker`/`remote` deliveryMode (D-03) — verificato grep + 2 test
 - [x] Idempotenza unsubscribe: `unsubscribeInternal` ha early return su `!sub?.active` (D-27)
-- [x] `pnpm --filter @sembridge/core typecheck` esce 0 (no TS errors)
+- [x] `pnpm --filter @gluezero/core typecheck` esce 0 (no TS errors)
 
 ### Acceptance criteria Task 2 (bus.test.ts)
 
@@ -140,15 +140,15 @@ NOTA: il PLAN suddivideva in 2 task separati ("Task 1: bus.ts impl" e "Task 2: b
 - [x] Test verifica: `once: true` (single invocation) ✓
 - [x] Test verifica: deep-freeze in debug mode, NOT in production ✓
 - [x] Test verifica: validateEvent fail al publish ✓
-- [x] `pnpm --filter @sembridge/core test bus` esce 0 con tutti i 25 test passing
-- [x] Suite completa post-plan 07: `pnpm --filter @sembridge/core test` riporta `Test Files 10 passed` (4 plan04 + 3 plan05 + 2 plan06 + 1 plan07)
+- [x] `pnpm --filter @gluezero/core test bus` esce 0 con tutti i 25 test passing
+- [x] Suite completa post-plan 07: `pnpm --filter @gluezero/core test` riporta `Test Files 10 passed` (4 plan04 + 3 plan05 + 2 plan06 + 1 plan07)
 
 ### Plan-wide verification
 
 - [x] `packages/core/src/core/bus.ts` esiste con `EventBus` class (291 LOC, target ≥ 150)
 - [x] `packages/core/src/core/bus.test.ts` esiste con 25 test cases (target ≥ 16)
-- [x] `pnpm --filter @sembridge/core test bus` esce 0 → `Test Files 1 passed (1) | Tests 25 passed (25)`
-- [x] `pnpm --filter @sembridge/core typecheck` esce 0
+- [x] `pnpm --filter @gluezero/core test bus` esce 0 → `Test Files 1 passed (1) | Tests 25 passed (25)`
+- [x] `pnpm --filter @gluezero/core typecheck` esce 0
 - [x] `pnpm biome check packages/core/src/core/bus.ts packages/core/src/core/bus.test.ts` esce 0 (zero warning, zero errori)
 - [x] Suite completa post-Wave-4: `Test Files 10 passed | Tests 159 passed`
 - [ ] Coverage v8 ≥ 90% su bus.ts — **NON MISURATA** (open item ereditato da plan 04: missing dep `@vitest/coverage-v8`); surrogate confidence: 25 test isolati con behavior coverage esplicito sui 5 step pipeline + 4 delivery modes + handler isolation sync+async + abort signal + once + unsubscribeByOwner + getStats + setDebugMode
@@ -156,7 +156,7 @@ NOTA: il PLAN suddivideva in 2 task separati ("Task 1: bus.ts impl" e "Task 2: b
 ## Final test output
 
 ```
-> @sembridge/core@0.0.0 test
+> @gluezero/core@0.0.0 test
 > vitest run --passWithNoTests
 
  RUN  v4.1.5 packages/core
@@ -261,7 +261,7 @@ Nessun nuovo threat surface introdotto fuori dal `<threat_model>` del plan.
 ## Open Items
 
 Open item ereditato da plan 04 (non risolto in plan 07):
-- **Coverage v8 measurement**: install `@vitest/coverage-v8` (devDependency root) e ri-eseguire `pnpm --filter @sembridge/core test:coverage` al termine di Wave 4 per verificare il target ≥ 90% sui file `core/`. Non bloccante per F1 progress; surrogate confidence: 159 test passing su 10 moduli isolati con behavior coverage esplicito.
+- **Coverage v8 measurement**: install `@vitest/coverage-v8` (devDependency root) e ri-eseguire `pnpm --filter @gluezero/core test:coverage` al termine di Wave 4 per verificare il target ≥ 90% sui file `core/`. Non bloccante per F1 progress; surrogate confidence: 159 test passing su 10 moduli isolati con behavior coverage esplicito.
 
 Nessun altro open item sul plan 07. Tutti i comportamenti elencati nel PLAN `<behavior>` sono coperti da test, e i 6 test extra Rule 2 estendono la copertura ai contratti documentati implicitamente dallo snippet RESEARCH.
 

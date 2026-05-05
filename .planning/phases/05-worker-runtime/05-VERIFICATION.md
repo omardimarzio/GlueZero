@@ -125,9 +125,9 @@ Tutti i gate eseguiti dal verificatore (no SUMMARY trust):
 | Test cross-package  | vitest 4.1.5          | core 248/248 + mapper 183/183 + routing 103/103 + gateway 222/225 (3 skip MSW V1.x F4) + worker 121/121 = 877/880 | ✅      |
 | publint             | publint 0.3.18        | "All good!" (0 errors, 0 warnings)                                                                                  | ✅      |
 | attw ESM-only       | @arethetypeswrong/cli | `node16 (from ESM) 🟢 ESM` + `bundler 🟢` + `node10 ignored 🟢` + `node16 (from CJS) ignored ⚠️ ESM (dynamic import only)` profile esm-only | ✅ |
-| size-limit          | size-limit 11.x       | `@sembridge/worker 26.83 / 32 KB gz` (with all deps) — sotto budget                                                 | ✅      |
+| size-limit          | size-limit 11.x       | `@gluezero/worker 26.83 / 32 KB gz` (with all deps) — sotto budget                                                 | ✅      |
 
-**Note:** transient `TS5055 dts build error` su `routing/dist/index.d.ts` osservato durante run `pnpm -r build` parallel — è un known issue race condition (documentato in TRACKER.md F4 04-06 e SUMMARY.md). Risolto con `rm -rf dist && pnpm --filter @sembridge/routing build` (Build success 1.5s). Non blocca chiusura: ogni package builds correttamente da solo, e l'errore non riguarda il worker package.
+**Note:** transient `TS5055 dts build error` su `routing/dist/index.d.ts` osservato durante run `pnpm -r build` parallel — è un known issue race condition (documentato in TRACKER.md F4 04-06 e SUMMARY.md). Risolto con `rm -rf dist && pnpm --filter @gluezero/routing build` (Build success 1.5s). Non blocca chiusura: ogni package builds correttamente da solo, e l'errore non riguarda il worker package.
 
 ---
 
@@ -251,7 +251,7 @@ Verifica pattern atomico TDD nei commit F5:
 | `packages/worker/src/transferable-extractor.ts`                | JSONPath extraction zero-dep                                 | ✓ VERIFIED | 15 unit test passing                                  |
 | `packages/worker/src/public-factory.ts`                        | createWorkerBroker + Valibot + D-30 no singleton             | ✓ VERIFIED | Prefisso "Invalid WorkerBrokerConfig:" + safeParse    |
 | `packages/worker/src/types/{worker-descriptor,worker-config,route-worker-definition,progress-payload,task-state,internal-topics}.ts` | Type module F5 7 file | ✓ VERIFIED | TypeScript declarations + augment.ts decl merging |
-| `packages/worker/src/augment.ts`                                | declare module '@sembridge/core' + workers field             | ✓ VERIFIED | Pattern S1 anti tree-shake `__augmentWorkerLoaded`    |
+| `packages/worker/src/augment.ts`                                | declare module '@gluezero/core' + workers field             | ✓ VERIFIED | Pattern S1 anti tree-shake `__augmentWorkerLoaded`    |
 | `packages/worker/src/__integration__/*.test.ts` (8 file)        | D-151 #1-#6,#8,#9 Tier-1 jsdom                              | ✓ VERIFIED | Tutti passing, deterministici                         |
 | `packages/worker/src/__browser__/playwright-worker-smoke.test.ts` | Tier-3 Playwright Chromium reale + D-151 #7              | ✓ VERIFIED | 6 test passing browser smoke                          |
 | `packages/worker/README.md`                                     | DOC-05 italiano 11 sezioni 429 LOC                          | ✓ VERIFIED | Sezione 6 WK-07 + Sezione 11 Q&A 15 domande           |
@@ -278,15 +278,15 @@ Verifica pattern atomico TDD nei commit F5:
 
 | Behavior                                              | Command                                                                          | Result                                                          | Status |
 | ----------------------------------------------------- | -------------------------------------------------------------------------------- | --------------------------------------------------------------- | ------ |
-| Worker package test suite passa                       | `pnpm --filter @sembridge/worker exec vitest run --passWithNoTests`             | 18 test files / 121 tests passing — duration 1.56s             | ✅      |
+| Worker package test suite passa                       | `pnpm --filter @gluezero/worker exec vitest run --passWithNoTests`             | 18 test files / 121 tests passing — duration 1.56s             | ✅      |
 | Monorepo full test suite                              | `pnpm -r --workspace-concurrency=1 exec vitest run --passWithNoTests`           | 877 passing + 3 skipped — 5/5 packages all green                | ✅      |
 | Typecheck multi-package                               | `pnpm -r typecheck`                                                              | 5/5 packages — Done                                              | ✅      |
-| Build worker package ESM-only                         | `pnpm --filter @sembridge/worker build`                                         | dist/index.js 50.92 KB + dts 64.83 KB — Build success           | ✅      |
-| publint @sembridge/worker                             | `pnpm --filter @sembridge/worker exec publint`                                   | "All good!" 0 errors                                            | ✅      |
-| attw ESM-only @sembridge/worker                       | `pnpm --filter @sembridge/worker exec attw --pack --profile esm-only .`         | node16 (ESM) 🟢 + bundler 🟢                                     | ✅      |
-| size-limit @sembridge/worker                          | `pnpm --filter @sembridge/worker exec size-limit`                                | 26.83 / 32 KB gz — sotto budget                                 | ✅      |
+| Build worker package ESM-only                         | `pnpm --filter @gluezero/worker build`                                         | dist/index.js 50.92 KB + dts 64.83 KB — Build success           | ✅      |
+| publint @gluezero/worker                             | `pnpm --filter @gluezero/worker exec publint`                                   | "All good!" 0 errors                                            | ✅      |
+| attw ESM-only @gluezero/worker                       | `pnpm --filter @gluezero/worker exec attw --pack --profile esm-only .`         | node16 (ESM) 🟢 + bundler 🟢                                     | ✅      |
+| size-limit @gluezero/worker                          | `pnpm --filter @gluezero/worker exec size-limit`                                | 26.83 / 32 KB gz — sotto budget                                 | ✅      |
 | D-83 strict carryover                                 | `git log 4aac8986..HEAD -- packages/{core,mapper,routing}/src/ + gateway/src/{http,sse-ws}/` | exit 0, ZERO commits                                  | ✅      |
-| Biome lint @sembridge/worker                          | `pnpm --filter @sembridge/worker exec biome check .`                             | 29 warnings + 28 infos, ZERO ERRORS                              | ✅      |
+| Biome lint @gluezero/worker                          | `pnpm --filter @gluezero/worker exec biome check .`                             | 29 warnings + 28 infos, ZERO ERRORS                              | ✅      |
 
 **Esito:** 9/9 behavioral spot-checks PASS.
 
@@ -310,7 +310,7 @@ Verifica pattern atomico TDD nei commit F5:
 
 ### Notes
 
-1. **Routing build dts transient race** — il run `pnpm -r build` sequenziale può occasionalmente produrre `TS5055 routing/dist/index.d.ts cannot overwrite input file`. Issue noto e documentato in TRACKER.md (F4 04-06). Risolto con `rm -rf dist && pnpm --filter @sembridge/routing build`. NON impatta la chiusura F5.
+1. **Routing build dts transient race** — il run `pnpm -r build` sequenziale può occasionalmente produrre `TS5055 routing/dist/index.d.ts cannot overwrite input file`. Issue noto e documentato in TRACKER.md (F4 04-06). Risolto con `rm -rf dist && pnpm --filter @gluezero/routing build`. NON impatta la chiusura F5.
 
 2. **Coverage thresholds calibration ammirevole** — pattern post-implementation calibration analog F4 04-09 (commit 761e4ad). Thresholds 91.5/83/90/93.5 sopra il floor inderogabile 85/75/88/87. Margini ampi (+6.96 / +8.73 / +2.58 / +7.17).
 

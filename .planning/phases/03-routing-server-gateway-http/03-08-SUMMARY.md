@@ -15,9 +15,9 @@ tags:
 dependency-graph:
   requires:
     - phase: 03-02
-      provides: "@sembridge/gateway/http types (GatewayConfig, HttpStrategies bundle interfaces, HttpRequestSpec/HttpResponseSpec, GatewayErrorCode)"
+      provides: "@gluezero/gateway/http types (GatewayConfig, HttpStrategies bundle interfaces, HttpRequestSpec/HttpResponseSpec, GatewayErrorCode)"
     - phase: 03-04
-      provides: "@sembridge/gateway/http barrel + augment.ts (BrokerConfig.gateway type-only)"
+      provides: "@gluezero/gateway/http barrel + augment.ts (BrokerConfig.gateway type-only)"
     - phase: 03-05
       provides: "RouteResolver + CompiledRoute interface (consumato dal http-handler)"
     - phase: 03-06
@@ -27,13 +27,13 @@ dependency-graph:
     - phase: 02
       provides: "MapperEngine (mapToShape D-96 + mapToCanonical D-97 — wired via adapter dal RouterBroker plan 03-12) + valibotAdapter (validate VAL-05)"
     - phase: 01
-      provides: "@sembridge/core (BrokerError factory, BrokerEvent, isBrokerError type guard)"
+      provides: "@gluezero/core (BrokerError factory, BrokerEvent, isBrokerError type guard)"
   provides:
     - "HttpGateway class (373 LOC): execute(request, route, event, signal, strategies) → policy chain end-to-end + abortInFlight + abortInFlightByOwner + Pitfall 7 redirect re-validation"
     - "createHttpGateway factory con Valibot validation della GatewayConfig (allowlist string|RegExp, auth function shape, circuitBreaker false|object — D-71/D-72/D-99)"
-    - "createHttpHandler factory (300 LOC) in @sembridge/routing — integra mapper.mapToShape + gateway.execute + mapper.mapToCanonical + validator.validate → wrappa in RouteOutcome (D-80 shape)"
+    - "createHttpHandler factory (300 LOC) in @gluezero/routing — integra mapper.mapToShape + gateway.execute + mapper.mapToCanonical + validator.validate → wrappa in RouteOutcome (D-80 shape)"
     - "4 utility gateway primitives: combineSignals (polyfill AbortSignal.any per ES2022 — Pitfall 4), parseRetryAfter (RFC 7231 §7.1.3 + cap MAX_BACKOFF_MS=60_000ms), validateAgainstAllowlist (SEC-05 / D-71), compose (Koa-style policy chain — RESEARCH §Pattern 3)"
-    - "Structural-typed deps interface (HttpHandlerGateway, HttpHandlerMapper, HttpHandlerValidator, HttpHandlerStrategies) per evitare cyclic dependency @sembridge/routing ↔ @sembridge/gateway"
+    - "Structural-typed deps interface (HttpHandlerGateway, HttpHandlerMapper, HttpHandlerValidator, HttpHandlerStrategies) per evitare cyclic dependency @gluezero/routing ↔ @gluezero/gateway"
   affects:
     - "03-09 (Strategies Wave 4-A retry+timeout+idempotency): forniranno default implementation di RetryStrategy/TimeoutStrategy/IdempotencyStrategy iniettate via HttpGatewayStrategies bundle al gateway.execute"
     - "03-10 (Strategies Wave 4-B dedupe+backpressure): default DedupeStrategy/BackpressureStrategy"
@@ -43,7 +43,7 @@ dependency-graph:
     - "03-14 (final gate): coverage v8 ≥ 90% richiede test deterministici qui presenti + size-limit (gateway/http target 8KB gz)"
 tech-stack:
   added:
-    - "msw 2.13.6 setupServer Node mode (test deterministici fetch — già presente come devDependency in @sembridge/gateway)"
+    - "msw 2.13.6 setupServer Node mode (test deterministici fetch — già presente come devDependency in @gluezero/gateway)"
   patterns:
     - "Pattern 3 (Koa-compose policy chain): minimal allocation per request — closures bound al construct, ctx mutabile in-place. Implementato in policy-chain.ts/compose; RESEARCH lines 555-568"
     - "Pattern 5 (single-flight refresh): delegato a AuthStrategy plan 03-11 — il gateway si limita a chiamare strategies.auth.getToken()"
@@ -72,13 +72,13 @@ key-files:
     - "packages/gateway/src/http/index.ts (aggiunge runtime export HttpGateway/createHttpGateway/utility)"
     - "packages/routing/src/route-handlers/index.ts (aggiunge createHttpHandler + 9 type aliases)"
 key-decisions:
-  - "**Structural-typed deps in http-handler** invece di import diretto da @sembridge/gateway/http: definite HttpHandlerGateway, HttpHandlerMapper, HttpHandlerValidator, HttpHandlerStrategies, HttpHandlerRequestSpec, HttpHandlerResponseSpec come duck-typed interfaces nel file http-handler.ts. Motivazione: @sembridge/gateway dipende da @sembridge/routing per RouteDefinition (vedi gateway-config.ts), e aggiungere @sembridge/gateway come dep runtime di @sembridge/routing creerebbe cyclic dependency in pnpm workspace (warning emesso in primo install, dependency graph mal definito). Il RouterBroker plan 03-12 cabla istanze concrete (HttpGateway → HttpHandlerGateway compatible structural)."
+  - "**Structural-typed deps in http-handler** invece di import diretto da @gluezero/gateway/http: definite HttpHandlerGateway, HttpHandlerMapper, HttpHandlerValidator, HttpHandlerStrategies, HttpHandlerRequestSpec, HttpHandlerResponseSpec come duck-typed interfaces nel file http-handler.ts. Motivazione: @gluezero/gateway dipende da @gluezero/routing per RouteDefinition (vedi gateway-config.ts), e aggiungere @gluezero/gateway come dep runtime di @gluezero/routing creerebbe cyclic dependency in pnpm workspace (warning emesso in primo install, dependency graph mal definito). Il RouterBroker plan 03-12 cabla istanze concrete (HttpGateway → HttpHandlerGateway compatible structural)."
   - "**HttpGateway.execute NON throw su 4xx/5xx**: ritorna HttpResponseSpec.ok=false con httpStatus preservato. Il caller (http-handler) decide come trasformarli in RouteOutcome.error. Throw riservato a errori unrecoverable: gateway.url.forbidden (allowlist), gateway.timeout/aborted/network (signal abort + fetch error), circuit.open. Pattern coerente con NodeFetch + ben con il retry loop interno (lastResponse usato dopo retry exhausted)."
   - "**redirect:'manual' + post-redirect re-validation** invece di redirect:'follow' nativo (T-03-08-01 mitigation Pitfall 7): fetch nativo con `redirect:'follow'` rifa fetch al Location header SENZA opportunità per il gateway di applicare allowlist al nuovo URL. Con `redirect:'manual'`, la response è pass-through con status 302/Location header, e il gateway può rivalidare prima del refetch. Refetch manuale con stessi headers preserva Idempotency-Key e Authorization."
   - "**inFlight Map cleanup garantito via finally** (T-03-08-06): pattern try/finally nel execute() garantisce delete(eventId) anche su throw inatteso o early return. Verifica via test 8 (`abortInFlight`): post-promise settle, `inFlightCount() === 0`."
   - "**Idempotency-Key auto-generata SOLO al first attempt + persistente sui retry** (D-70 — chiusura PITFALLS #3): la nanoid generata al primo attempt viene STESSA usata sui retry — chiave: BrokerEvent.id originario. Implementato delegando a strategies.idempotency.generate(event.id) prima del retry loop (chiamata UNA volta in fase auth header injection). Il refetch interno (post-redirect) usa lo stesso `init` object con headers già popolato — preserva Idempotency-Key + Authorization."
   - "**combineSignals polyfill ES2022 per AbortSignal.any** (Pitfall 4 fix): TS target ES2022 non include `AbortSignal.any()` (ES2024). Il polyfill detect runtime tramite `(AbortSignal as any).any` e fallback a AbortController che ascolta tutti i signal. Browser moderni evergreen forniscono nativo, polyfill solo per Node test runtime."
-  - "**HttpGatewayRouteInfo plain {id, ownerId?}** invece di import CompiledRoute da @sembridge/routing: gateway agnostico al routing engine (T-03-08-02 mitigation). Coerente con la separazione di concern — il RouteExecutor passa al gateway solo i field necessari."
+  - "**HttpGatewayRouteInfo plain {id, ownerId?}** invece di import CompiledRoute da @gluezero/routing: gateway agnostico al routing engine (T-03-08-02 mitigation). Coerente con la separazione di concern — il RouteExecutor passa al gateway solo i field necessari."
   - "**msw 2.13.6 setupServer Node mode** invece di vi.fn() per fetch mock: maggiore fedeltà a network behavior (real Response object con headers, status, redirect, body parsing). Già usato in 03-04 augment test, no nuovo deps. Test 7 (timeout via abort) e test 9 (cascade abort) richiedono server reale per simulare slow response."
   - "**Validation della GatewayConfig at the public boundary** (createHttpGateway factory): Valibot looseObject preserva future fields (forward-compat) ma valida shape strutturale di auth.getToken (function), allowlist (array string|RegExp), circuitBreaker (false|object). Pattern coerente con createMapperBroker F2."
 metrics:
@@ -96,7 +96,7 @@ metrics:
 
 # Phase 03 Plan 08: HttpGateway core + policy chain + http-handler integrazione mapper+gateway+VAL-05
 
-`HttpGateway` class compone le 6+1 Strategy primitives come dependency injection nella `execute()` (D-68 Strategy Pattern + Pattern 3 Koa-compose policy chain), applica URL allowlist pre-fetch (SEC-05/D-71) + post-redirect Location re-validation (Pitfall 7), inietta Authorization Bearer header (D-72) + Idempotency-Key persistente sui retry (D-70/SEC-03), coordina N AbortSignal via `combineSignals` polyfill ES2022 (D-77/Pitfall 4); `createHttpHandler` factory in `@sembridge/routing` integra `mapper.mapToShape` (D-96 request build) + `httpGateway.execute` + `mapper.mapToCanonical` (D-97 response parse) + `validator.validate` (VAL-05/D-78 response validation) e wrappa in `RouteOutcome` discriminato (D-80 shape) — il route handler "ponte" tra `RouteExecutor` e `HttpGateway`.
+`HttpGateway` class compone le 6+1 Strategy primitives come dependency injection nella `execute()` (D-68 Strategy Pattern + Pattern 3 Koa-compose policy chain), applica URL allowlist pre-fetch (SEC-05/D-71) + post-redirect Location re-validation (Pitfall 7), inietta Authorization Bearer header (D-72) + Idempotency-Key persistente sui retry (D-70/SEC-03), coordina N AbortSignal via `combineSignals` polyfill ES2022 (D-77/Pitfall 4); `createHttpHandler` factory in `@gluezero/routing` integra `mapper.mapToShape` (D-96 request build) + `httpGateway.execute` + `mapper.mapToCanonical` (D-97 response parse) + `validator.validate` (VAL-05/D-78 response validation) e wrappa in `RouteOutcome` discriminato (D-80 shape) — il route handler "ponte" tra `RouteExecutor` e `HttpGateway`.
 
 ## Tasks Completed
 
@@ -107,23 +107,23 @@ metrics:
 | 2    | HttpGateway class + createHttpGateway factory (RED)                                                | `1dc5a86` | http-gateway.test.ts (10 test) + public-factory.test.ts (3 test)                                        |
 | 2    | GREEN HttpGateway core + createHttpGateway factory                                                 | `99a1d73` | http-gateway.ts (373 LOC) + public-factory.ts (86 LOC) + index.ts (runtime exports)                     |
 | 3    | route-handlers/http-handler.ts integrazione mapper+gateway+valibot validation (RED)                | `bf1477d` | http-handler.test.ts (7 test mockati con vi.fn() per gateway/mapper/validator)                          |
-| 3    | GREEN createHttpHandler in @sembridge/routing                                                      | `32c3eb8` | http-handler.ts (300 LOC) + route-handlers/index.ts (barrel update con 9 type aliases)                  |
+| 3    | GREEN createHttpHandler in @gluezero/routing                                                      | `32c3eb8` | http-handler.ts (300 LOC) + route-handlers/index.ts (barrel update con 9 type aliases)                  |
 
 ## Test Results
 
 ```
-Test Files  7 passed (7) — @sembridge/gateway
+Test Files  7 passed (7) — @gluezero/gateway
      Tests  33 passed (33)
 
-Test Files  7 passed (7) — @sembridge/routing
+Test Files  7 passed (7) — @gluezero/routing
      Tests  58 passed (58)
 ```
 
 **Suite delta vs baseline:**
-- @sembridge/gateway: 33/33 (5 baseline 03-04 augment + 15 utility nuovi + 13 HttpGateway+factory nuovi)
-- @sembridge/routing: 58/58 (51 baseline + 7 http-handler nuovi)
-- @sembridge/core: 248/248 (D-83 invariant — zero modifiche runtime)
-- @sembridge/mapper: 183/183 (D-83 invariant — zero modifiche runtime)
+- @gluezero/gateway: 33/33 (5 baseline 03-04 augment + 15 utility nuovi + 13 HttpGateway+factory nuovi)
+- @gluezero/routing: 58/58 (51 baseline + 7 http-handler nuovi)
+- @gluezero/core: 248/248 (D-83 invariant — zero modifiche runtime)
+- @gluezero/mapper: 183/183 (D-83 invariant — zero modifiche runtime)
 
 **Behavior coverage per task:**
 
@@ -224,7 +224,7 @@ Test Files  7 passed (7) — @sembridge/routing
 **ZERO modifiche** a `packages/core/` e `packages/mapper/` runtime per tutto plan 03-08.
 - Core 248/248 test passing (invariant)
 - Mapper 183/183 test passing (invariant)
-- Pattern composition wrapper rispettato: HttpGateway in @sembridge/gateway/http è invocato dal http-handler in @sembridge/routing — entrambi extension package senza accesso diretto a inner di core/mapper
+- Pattern composition wrapper rispettato: HttpGateway in @gluezero/gateway/http è invocato dal http-handler in @gluezero/routing — entrambi extension package senza accesso diretto a inner di core/mapper
 
 ## Verification
 
@@ -255,9 +255,9 @@ Test Files  7 passed (7) — @sembridge/routing
 
 ### Auto-fixed Issues
 
-**1. [Rule 1 - Bug] Cyclic dependency tra @sembridge/routing e @sembridge/gateway**
-- **Found during:** Task 3 (initial implementation con `import type { HttpGateway } from '@sembridge/gateway/http'`)
-- **Issue:** Il piano originale prescriveva `import type { HttpGateway, HttpGatewayStrategies } from '@sembridge/gateway/http'` nel http-handler. Aggiungere @sembridge/gateway come dependency di @sembridge/routing crea ciclo (gateway già dipende da routing per `RouteDefinition` import nei type files). pnpm emette warning `cyclic workspace dependencies`.
+**1. [Rule 1 - Bug] Cyclic dependency tra @gluezero/routing e @gluezero/gateway**
+- **Found during:** Task 3 (initial implementation con `import type { HttpGateway } from '@gluezero/gateway/http'`)
+- **Issue:** Il piano originale prescriveva `import type { HttpGateway, HttpGatewayStrategies } from '@gluezero/gateway/http'` nel http-handler. Aggiungere @gluezero/gateway come dependency di @gluezero/routing crea ciclo (gateway già dipende da routing per `RouteDefinition` import nei type files). pnpm emette warning `cyclic workspace dependencies`.
 - **Fix:** Definite interfaces strutturali (HttpHandlerGateway, HttpHandlerMapper, HttpHandlerValidator, HttpHandlerStrategies, HttpHandlerRequestSpec, HttpHandlerResponseSpec) duck-typed nel file http-handler.ts. Pattern coerente con la deps interface già usata per `mapper` (structural protocol). Il RouterBroker plan 03-12 fornisce le istanze concrete (HttpGateway → HttpHandlerGateway compatible).
 - **Files modified:** packages/routing/src/route-handlers/http-handler.ts (interfaces strutturali invece di import dal package gateway), packages/routing/package.json (NESSUNA modifica — dep gateway NON aggiunta)
 - **Commit:** 32c3eb8 (incluso nel commit GREEN)
@@ -294,6 +294,6 @@ Test Files  7 passed (7) — @sembridge/routing
 - [x] **GREEN gate Task 1**: commit `feat(03-08): implementa gateway primitives` (61014e8) successivo
 - [x] **RED gate Task 2**: commit `test(03-08): aggiunge test RED per HttpGateway class + createHttpGateway factory` (1dc5a86)
 - [x] **GREEN gate Task 2**: commit `feat(03-08): GREEN HttpGateway core + createHttpGateway factory` (99a1d73)
-- [x] **RED gate Task 3**: commit `test(03-08): RED test per http-handler in @sembridge/routing` (bf1477d) verificato fail (test fallisce perché http-handler.ts non esiste)
-- [x] **GREEN gate Task 3**: commit `feat(03-08): GREEN createHttpHandler in @sembridge/routing` (32c3eb8) test che prima fallivano ora passano
+- [x] **RED gate Task 3**: commit `test(03-08): RED test per http-handler in @gluezero/routing` (bf1477d) verificato fail (test fallisce perché http-handler.ts non esiste)
+- [x] **GREEN gate Task 3**: commit `feat(03-08): GREEN createHttpHandler in @gluezero/routing` (32c3eb8) test che prima fallivano ora passano
 - [x] No REFACTOR commit necessario per nessun task — implementazioni pulite al primo passaggio

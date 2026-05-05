@@ -100,11 +100,11 @@ human_verification:
 
 | Behavior | Command | Result | Status |
 | -------- | ------- | ------ | ------ |
-| Test suite mapper completa passa | `pnpm -F @sembridge/mapper test` | 16 file / 183 test PASS in 1.00s | ✓ PASS |
-| Test suite core invariata (D-49 strict) | `pnpm -F @sembridge/core test` | 24 file / 248 test PASS in 1.22s | ✓ PASS |
+| Test suite mapper completa passa | `pnpm -F @gluezero/mapper test` | 16 file / 183 test PASS in 1.00s | ✓ PASS |
+| Test suite core invariata (D-49 strict) | `pnpm -F @gluezero/core test` | 24 file / 248 test PASS in 1.22s | ✓ PASS |
 | D-49 vincolo: bus.ts unchanged dal Phase 1 close | `git diff f7faadb..HEAD -- packages/core/src/core/bus.ts` | empty (0 lines, 0 commits) | ✓ PASS |
-| Build mapper produce dist/ | `pnpm -F @sembridge/mapper build` | dist/index.js 72.05 KB ESM + dist/index.d.ts 61.84 KB | ✓ PASS |
-| TypeScript typecheck mapper | `pnpm -F @sembridge/mapper exec tsc --noEmit` | clean (no errors) | ✓ PASS |
+| Build mapper produce dist/ | `pnpm -F @gluezero/mapper build` | dist/index.js 72.05 KB ESM + dist/index.d.ts 61.84 KB | ✓ PASS |
+| TypeScript typecheck mapper | `pnpm -F @gluezero/mapper exec tsc --noEmit` | clean (no errors) | ✓ PASS |
 | publint mapper | `pnpm exec publint packages/mapper` | "All good!" | ✓ PASS |
 | attw ESM-only mapper | `pnpm exec attw --pack ./packages/mapper --profile=esm-only` | 🟢 node16 (from ESM) + 🟢 bundler | ✓ PASS |
 | size-limit mapper budget | `pnpm exec size-limit` | 11662 / 12000 bytes gzip (97%, 338 B headroom) | ✓ PASS |

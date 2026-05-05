@@ -13,11 +13,11 @@ tags:
 dependency-graph:
   requires:
     - phase: 03-01
-      provides: "@sembridge/routing + @sembridge/gateway buildable, sideEffects array, subpath exports ./http"
+      provides: "@gluezero/routing + @gluezero/gateway buildable, sideEffects array, subpath exports ./http"
     - phase: 02
-      provides: "@sembridge/mapper (CanonicalSchemaId, OutputMap, ValidationResult, MappingErrorCode)"
+      provides: "@gluezero/mapper (CanonicalSchemaId, OutputMap, ValidationResult, MappingErrorCode)"
     - phase: 01
-      provides: "@sembridge/core (BrokerError, BrokerEvent, ErrorCategory)"
+      provides: "@gluezero/core (BrokerError, BrokerEvent, ErrorCategory)"
   provides:
     - "RouteDefinition discriminated union (local|http|cache|composite) — backbone wave 3-4"
     - "RoutePolicies con 7 sub-config types (Retry/Dedupe/Backpressure/Auth/Idempotency/Error/Timeout)"
@@ -40,7 +40,7 @@ tech-stack:
     - "Literal union codes + set-based type guard (analogo MappingErrorCode F2)"
     - "Conditional spread per exactOptionalPropertyTypes (Pattern S4)"
     - "Type-only barrel re-export (Pattern S1 cross-package consumer)"
-    - "Workspace dep cross-package: @sembridge/routing → @sembridge/gateway (type-only import)"
+    - "Workspace dep cross-package: @gluezero/routing → @gluezero/gateway (type-only import)"
 key-files:
   created:
     - "packages/routing/src/types/route-definition.ts"
@@ -54,10 +54,10 @@ key-files:
     - "packages/gateway/src/http/types/index.ts"
   modified:
     - "packages/routing/src/index.ts (aggiunto export type * from './types')"
-    - "packages/gateway/package.json (aggiunto @sembridge/routing workspace dep)"
+    - "packages/gateway/package.json (aggiunto @gluezero/routing workspace dep)"
     - "pnpm-lock.yaml (workspace risoluzione aggiornata)"
 key-decisions:
-  - "Aggiunta @sembridge/routing come workspace dep di @sembridge/gateway (Rule 3 fix: import type RetryPolicyConfig/DedupePolicyConfig/IdempotencyPolicyConfig/BackpressurePolicyConfig/RouteDefinition richiesto dal plan)"
+  - "Aggiunta @gluezero/routing come workspace dep di @gluezero/gateway (Rule 3 fix: import type RetryPolicyConfig/DedupePolicyConfig/IdempotencyPolicyConfig/BackpressurePolicyConfig/RouteDefinition richiesto dal plan)"
   - "Estensione barrel routing/src/index.ts con export type * (necessario perché tsc consumer risolve via dist/index.d.ts)"
   - "Pattern uniforme route-policies.ts vs http-strategies.ts: routing file dichiara i `*Config` descriptor (cosa la route richiede), gateway file dichiara le `*Strategy` interface implementabili (come la policy si esegue)"
   - "RouteOutcome metadata branch separato (RouteOutcomeMetadata interface) per consentire estensioni F4/F5 senza breaking change al union type"
@@ -66,7 +66,7 @@ patterns-established:
   - "Discriminated union RouteDefinition: pattern di riferimento per F5 RouteWorkerDefinition (declaration merging additive)"
   - "Strategy interface naming: `*Strategy` (pluggable interface, gateway side) vs `*PolicyConfig` (descriptor, routing side)"
   - "Type guard set-based isGatewayErrorCode: pattern replicabile in F4 per isRealtimeErrorCode"
-  - "Cross-package type-only import (workspace:* dep): pattern usato qui per @sembridge/gateway → @sembridge/routing per la prima volta in monorepo"
+  - "Cross-package type-only import (workspace:* dep): pattern usato qui per @gluezero/gateway → @gluezero/routing per la prima volta in monorepo"
 requirements-completed:
   - ROUTE-01
   - ROUTE-02
@@ -117,11 +117,11 @@ metrics:
 
 ## Type esportati (totale)
 
-### `@sembridge/routing/types`
+### `@gluezero/routing/types`
 
 **Type/interface:** `RouteDefinitionBase`, `RouteLocalDefinition`, `RouteHttpDefinition`, `RouteCacheDefinition`, `RouteCompositeDefinition`, `RouteDefinition`, `RouteHttpRequestSpec`, `RouteHttpResponseSpec`, `RouteHttpPublishesSpec`, `RouteCacheStrategy`, `RouteCompositeStep`, `RetryPolicyConfig`, `DedupePolicyConfig`, `ConcurrencyPolicy`, `BackpressurePolicyConfig`, `AuthPolicyConfig`, `IdempotencyPolicyConfig`, `ErrorPolicyConfig`, `TimeoutPolicyConfig`, `RoutePolicies`, `RouteOutcomeMetadata`, `RouteOutcome`, `RouteResult`, `RouteError`, `MultipleRoutesPolicy`, `RoutingConfig`. **Totale: 26 type esportati.**
 
-### `@sembridge/gateway/http/types`
+### `@gluezero/gateway/http/types`
 
 **Type/interface:** `AllowlistEntry`, `AuthStrategyConfig`, `DefaultsConfig`, `CircuitBreakerConfig`, `GatewayConfig`, `HttpRequestSpec`, `HttpResponseSpec`, `GatewayContext`, `GatewayMiddleware`, `RetryStrategy`, `TimeoutStrategy`, `DedupeStrategy`, `BackpressureStrategy`, `AuthStrategy`, `IdempotencyStrategy`, `CircuitBreakerStrategy`, `GatewayErrorCode`. **Totale: 17 type esportati.**
 
@@ -172,13 +172,13 @@ _Nessuna metadata commit finale — sarà aggiunta dopo update STATE.md/ROADMAP.
 ### Modified (3)
 
 - `packages/routing/src/index.ts` — aggiunto `export type * from './types'` per esporre i tipi via dist d.ts ai consumer (necessario per la risoluzione cross-package via `dist/index.d.ts`)
-- `packages/gateway/package.json` — aggiunto `"@sembridge/routing": "workspace:*"` come dependency (Rule 3 fix sotto)
+- `packages/gateway/package.json` — aggiunto `"@gluezero/routing": "workspace:*"` come dependency (Rule 3 fix sotto)
 - `pnpm-lock.yaml` — aggiornamento workspace risoluzione con il nuovo edge gateway → routing
 
 ## Decisions Made
 
-- **Aggiunta workspace dep gateway → routing:** import type `RetryPolicyConfig`/`DedupePolicyConfig`/`IdempotencyPolicyConfig`/`BackpressurePolicyConfig`/`RouteDefinition` richiesti dal plan in `gateway-config.ts` e `http-strategies.ts`. Il plan non menzionava esplicitamente la modifica `package.json` perché il workspace edge era assunto. Risolto via Rule 3 (blocking): senza questo edge il typecheck gateway falliva con `TS2307: Cannot find module '@sembridge/routing'`.
-- **Estensione barrel `routing/src/index.ts`:** aggiunto `export type * from './types'` perché tsc dei consumer (gateway) risolve `@sembridge/routing` via `dist/index.d.ts` e il barrel deve esporre i tipi. Nessun cambio runtime — solo type re-export.
+- **Aggiunta workspace dep gateway → routing:** import type `RetryPolicyConfig`/`DedupePolicyConfig`/`IdempotencyPolicyConfig`/`BackpressurePolicyConfig`/`RouteDefinition` richiesti dal plan in `gateway-config.ts` e `http-strategies.ts`. Il plan non menzionava esplicitamente la modifica `package.json` perché il workspace edge era assunto. Risolto via Rule 3 (blocking): senza questo edge il typecheck gateway falliva con `TS2307: Cannot find module '@gluezero/routing'`.
+- **Estensione barrel `routing/src/index.ts`:** aggiunto `export type * from './types'` perché tsc dei consumer (gateway) risolve `@gluezero/routing` via `dist/index.d.ts` e il barrel deve esporre i tipi. Nessun cambio runtime — solo type re-export.
 - **`RouteOutcomeMetadata` come interface separata:** invece di inlinare metadata in `RouteOutcome`, isolato in `RouteOutcomeMetadata` per consentire estensioni F4/F5 (es. nuovi campi `cacheKey`, `workerId`) senza touch al union type.
 - **GatewayErrorCode 11 codes invece di 10:** aggiunto `'route.id.duplicate'` (D-87 — `registerRoute` strict mode) e `'cache.not-implemented'` (cache stub F3→F6) oltre ai 9 D-80. Coverage completa per tutti i path di errore F3.
 - **Pattern naming routing vs gateway:** routing dichiara `*PolicyConfig` (descriptor consumer-side: cosa la route richiede), gateway dichiara `*Strategy` (interface implementer-side: come si esegue). Il `RoutePolicies.retry: RetryPolicyConfig` viene tradotto a runtime in una `RetryStrategy` instance dal gateway.
@@ -187,22 +187,22 @@ _Nessuna metadata commit finale — sarà aggiunta dopo update STATE.md/ROADMAP.
 
 ### Auto-fixed Issues
 
-**1. [Rule 3 - Blocking] Aggiunta `@sembridge/routing` come workspace dep di `@sembridge/gateway`**
+**1. [Rule 3 - Blocking] Aggiunta `@gluezero/routing` come workspace dep di `@gluezero/gateway`**
 
 - **Found during:** Task 2 (types gateway HTTP)
-- **Issue:** Il plan istruisce `import type { RetryPolicyConfig, IdempotencyPolicyConfig, DedupePolicyConfig, BackpressurePolicyConfig } from '@sembridge/routing'` in `gateway-config.ts` e `import type { RouteDefinition, RoutePolicies } from '@sembridge/routing'` in `http-strategies.ts`. Il `package.json` di `@sembridge/gateway` (creato in plan 03-01) include solo `@sembridge/core` e `@sembridge/mapper` come deps workspace — il symlink `node_modules/@sembridge/routing` non esisteva e tsc falliva con `TS2307: Cannot find module '@sembridge/routing' or its corresponding type declarations.` (5 errori).
-- **Fix:** Aggiunto `"@sembridge/routing": "workspace:*"` a `packages/gateway/package.json` dependencies. Eseguito `pnpm install` per creare il symlink workspace. Buildato `@sembridge/routing` (`pnpm --filter @sembridge/routing build`) per generare `dist/index.d.ts` con i tipi del Task 1.
+- **Issue:** Il plan istruisce `import type { RetryPolicyConfig, IdempotencyPolicyConfig, DedupePolicyConfig, BackpressurePolicyConfig } from '@gluezero/routing'` in `gateway-config.ts` e `import type { RouteDefinition, RoutePolicies } from '@gluezero/routing'` in `http-strategies.ts`. Il `package.json` di `@gluezero/gateway` (creato in plan 03-01) include solo `@gluezero/core` e `@gluezero/mapper` come deps workspace — il symlink `node_modules/@gluezero/routing` non esisteva e tsc falliva con `TS2307: Cannot find module '@gluezero/routing' or its corresponding type declarations.` (5 errori).
+- **Fix:** Aggiunto `"@gluezero/routing": "workspace:*"` a `packages/gateway/package.json` dependencies. Eseguito `pnpm install` per creare il symlink workspace. Buildato `@gluezero/routing` (`pnpm --filter @gluezero/routing build`) per generare `dist/index.d.ts` con i tipi del Task 1.
 - **Files modified:** `packages/gateway/package.json`, `pnpm-lock.yaml`
-- **Verification:** `pnpm --filter @sembridge/gateway exec tsc --noEmit` exit 0 dopo il fix.
+- **Verification:** `pnpm --filter @gluezero/gateway exec tsc --noEmit` exit 0 dopo il fix.
 - **Committed in:** `55220ee` (Task 2 commit)
 
 **2. [Rule 3 - Blocking] Estensione barrel `routing/src/index.ts` con `export type * from './types'`**
 
 - **Found during:** Task 2 (types gateway HTTP)
-- **Issue:** Anche dopo l'aggiunta della workspace dep, tsc del gateway falliva con `TS2305: Module '"@sembridge/routing"' has no exported member 'BackpressurePolicyConfig'` (e altri 4). Il barrel `packages/routing/src/index.ts` (post plan 03-01) era ancora `export {}` placeholder — il `dist/index.d.ts` generato non includeva i tipi di `./types/`.
-- **Fix:** Sostituito `export {}` con `export type * from './types'` in `packages/routing/src/index.ts`. Ribuildato `@sembridge/routing` (dts ora 16.09 KB con tutti i tipi). Modifica documentata anche dal plan stesso ("Plan 03-02 popola i type exports") quindi era nello scope.
+- **Issue:** Anche dopo l'aggiunta della workspace dep, tsc del gateway falliva con `TS2305: Module '"@gluezero/routing"' has no exported member 'BackpressurePolicyConfig'` (e altri 4). Il barrel `packages/routing/src/index.ts` (post plan 03-01) era ancora `export {}` placeholder — il `dist/index.d.ts` generato non includeva i tipi di `./types/`.
+- **Fix:** Sostituito `export {}` con `export type * from './types'` in `packages/routing/src/index.ts`. Ribuildato `@gluezero/routing` (dts ora 16.09 KB con tutti i tipi). Modifica documentata anche dal plan stesso ("Plan 03-02 popola i type exports") quindi era nello scope.
 - **Files modified:** `packages/routing/src/index.ts`
-- **Verification:** `pnpm --filter @sembridge/gateway exec tsc --noEmit` exit 0 + `pnpm --filter @sembridge/routing exec tsc --noEmit` exit 0 (no regression).
+- **Verification:** `pnpm --filter @gluezero/gateway exec tsc --noEmit` exit 0 + `pnpm --filter @gluezero/routing exec tsc --noEmit` exit 0 (no regression).
 - **Committed in:** `55220ee` (Task 2 commit, insieme al primo fix)
 
 ---
@@ -217,16 +217,16 @@ Nessuno significativo. I 2 errori di typecheck riscontrati durante Task 2 erano 
 ## Verification Output
 
 ```bash
-$ pnpm --filter @sembridge/routing exec tsc --noEmit
+$ pnpm --filter @gluezero/routing exec tsc --noEmit
 # exit 0 — 0 errori
 
-$ pnpm --filter @sembridge/gateway exec tsc --noEmit
+$ pnpm --filter @gluezero/gateway exec tsc --noEmit
 # exit 0 — 0 errori
 
-$ pnpm --filter @sembridge/core test
+$ pnpm --filter @gluezero/core test
 # Test Files  24 passed (24) | Tests  248 passed (248)
 
-$ pnpm --filter @sembridge/mapper test
+$ pnpm --filter @gluezero/mapper test
 # Test Files  16 passed (16) | Tests  183 passed (183)
 ```
 

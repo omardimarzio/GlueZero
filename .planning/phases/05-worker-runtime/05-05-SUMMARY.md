@@ -5,9 +5,9 @@ subsystem: worker-runtime
 tags: [worker, pool, registry, backpressure, cascade, lifecycle, tdd]
 dependency_graph:
   requires:
-    - 05-01 (bootstrap @sembridge/worker + types + augment)
-    - "@sembridge/gateway/http (BackpressureStrategy F3 D-75 carryover)"
-    - "@sembridge/core (createBrokerError + WorkerDescriptor types)"
+    - 05-01 (bootstrap @gluezero/worker + types + augment)
+    - "@gluezero/gateway/http (BackpressureStrategy F3 D-75 carryover)"
+    - "@gluezero/core (createBrokerError + WorkerDescriptor types)"
   provides:
     - "WorkerRegistry — Map<id, WorkerEntry> registry + cascade D-126"
     - "WorkerPool — bounded slots + queue + lazy spawn + respawn + cascade"
@@ -37,7 +37,7 @@ decisions:
   - "D-127: defaultPoolSize() = min(navigator.hardwareConcurrency, 4) con fallback 4"
   - "D-128: cap hard 8 + allowUnboundedPool: true opt-in con console.warn 1x"
   - "D-129: lazy first dispatch — spawn on-demand fino a targetSize"
-  - "D-130: F3 BackpressureStrategy riusato 1:1 — import @sembridge/gateway/http"
+  - "D-130: F3 BackpressureStrategy riusato 1:1 — import @gluezero/gateway/http"
   - "D-131: cancellation hybrid — terminateByOwner cascade idempotente"
 metrics:
   duration: "~30 min"
@@ -55,7 +55,7 @@ metrics:
 
 # Phase 5 Plan 05-05: WorkerRegistry + WorkerPool Summary
 
-**Wave 3-B (parallel con 05-04 worker-bridge — file ownership disgiunta).** Implementati `WorkerRegistry` (Map<id, WorkerEntry> + cascade D-126) e `WorkerPool` (bounded slots + queue + lazy spawn + respawn + cancellation hybrid + cascade) production-ready in TDD RED→GREEN co-located. F3 BackpressureStrategy riusato 1:1 via import workspace dep da `@sembridge/gateway/http` — zero ridichiarazione, zero copia.
+**Wave 3-B (parallel con 05-04 worker-bridge — file ownership disgiunta).** Implementati `WorkerRegistry` (Map<id, WorkerEntry> + cascade D-126) e `WorkerPool` (bounded slots + queue + lazy spawn + respawn + cancellation hybrid + cascade) production-ready in TDD RED→GREEN co-located. F3 BackpressureStrategy riusato 1:1 via import workspace dep da `@gluezero/gateway/http` — zero ridichiarazione, zero copia.
 
 ---
 
@@ -118,7 +118,7 @@ Tutte mitigation defensive non raggiungibili da test deterministici (ramo regist
 | **D-127** | `defaultPoolSize() = min(navigator.hardwareConcurrency, 4)` con fallback 4 (jsdom/SSR) | `worker-pool.ts:defaultPoolSize` (Test 1) |
 | **D-128** | Cap hard 8 (`MAX_POOL_SIZE_HARD`) + `allowUnboundedPool: true` bypass + `console.warn` 1x per worker | `worker-registry.ts:validateDescriptor` (Test 10) + `worker-pool.ts:resolveSize` (Test 12) |
 | **D-129** | Lazy first dispatch — `acquireSlot` spawna on-demand fino a targetSize | `worker-pool.ts:acquireSlot` (Test 2, Test 9) |
-| **D-130** | F3 BackpressureStrategy riusato 1:1 — `import { createBackpressureStrategy } from '@sembridge/gateway/http'` + critical bypass | `worker-pool.ts:schedule` (Test 8, Test 10) |
+| **D-130** | F3 BackpressureStrategy riusato 1:1 — `import { createBackpressureStrategy } from '@gluezero/gateway/http'` + critical bypass | `worker-pool.ts:schedule` (Test 8, Test 10) |
 | **D-131** | Cancellation hybrid: `terminateByOwner` cascade idempotente; bridge.terminate fault recovery via `respawn` | `worker-pool.ts:terminateByOwner/respawn` (Test 5, Test 6, Test 7) |
 
 ---
@@ -132,7 +132,7 @@ $ git diff 4c3c3e5...HEAD --name-only -- packages/core/src/ packages/mapper/src/
 (empty)
 ```
 
-**Result:** ✓ Zero modifiche fuori `packages/worker/src/`. F5 vive isolato — F3 BackpressureStrategy importato come workspace dep `@sembridge/gateway/http` senza modificare la sua source.
+**Result:** ✓ Zero modifiche fuori `packages/worker/src/`. F5 vive isolato — F3 BackpressureStrategy importato come workspace dep `@gluezero/gateway/http` senza modificare la sua source.
 
 ---
 
@@ -268,7 +268,7 @@ Il plan 05-06 (worker-handler + worker-broker composition wrapper) ha ora a disp
 
 **Wave 4 wiring esempio:**
 ```ts
-import { WorkerRegistry, WorkerPool } from '@sembridge/worker'
+import { WorkerRegistry, WorkerPool } from '@gluezero/worker'
 import { WorkerBridge } from './worker-bridge'  // 05-04 produced
 
 class WorkerBroker /* extends RouterBroker (composition wrapper D-83) */ {

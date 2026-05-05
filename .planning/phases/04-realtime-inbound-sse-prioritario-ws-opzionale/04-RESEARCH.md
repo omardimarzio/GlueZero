@@ -41,7 +41,7 @@ versions_verified:
 
 ## 1. Executive Summary
 
-La Fase 4 introduce un singolo nuovo subpath `@sembridge/gateway/sse-ws` che ospita **8 moduli runtime + 1 augment** seguendo il pattern di composizione consolidato in F3 (D-83). Il `RealtimeBroker` compone `RouterBroker` di F3 estendendo l'API pubblica con `connectRealtime(config)` / `disconnectRealtime(name?)` (PRD §16.2) e gestendo internamente un `RealtimeChannelManager` che indicizza N canali per `name`. La pipeline §28 step 1 (ingress) accoglie i messaggi server come pubblicazioni esterne — gli step 4-12 (canonicalizzazione, validazione, routing) si applicano automaticamente attraverso il `RouterBroker` sottostante.
+La Fase 4 introduce un singolo nuovo subpath `@gluezero/gateway/sse-ws` che ospita **8 moduli runtime + 1 augment** seguendo il pattern di composizione consolidato in F3 (D-83). Il `RealtimeBroker` compone `RouterBroker` di F3 estendendo l'API pubblica con `connectRealtime(config)` / `disconnectRealtime(name?)` (PRD §16.2) e gestendo internamente un `RealtimeChannelManager` che indicizza N canali per `name`. La pipeline §28 step 1 (ingress) accoglie i messaggi server come pubblicazioni esterne — gli step 4-12 (canonicalizzazione, validazione, routing) si applicano automaticamente attraverso il `RouterBroker` sottostante.
 
 **Stack lockato (no choice — già fissato in STACK.md + D-105):**
 - `EventSource` nativo per SSE
@@ -77,7 +77,7 @@ La Fase 4 introduce un singolo nuovo subpath `@sembridge/gateway/sse-ws` che osp
 | Mock SSE/WS | `msw` | 2.14.2 | LOCKED (riuso F3 D-89) | MSW 2.x supporta SSE + WS handler |
 | Browser-real test | `@vitest/browser` + `playwright` | 4.1.5 + 1.59.1 | LOCKED (STACK.md) | Per TEST-02/03 reconnect reali |
 | Unit + jsdom | `vitest` + `jsdom` | 4.1.5 + 29.1.0 | LOCKED | Per logica deterministica (math reconnect, frame parser, state machine) |
-| Composition base | `RouterBroker` di `@sembridge/routing` | workspace:* | LOCKED (D-101) | F4 estende, NON modifica |
+| Composition base | `RouterBroker` di `@gluezero/routing` | workspace:* | LOCKED (D-101) | F4 estende, NON modifica |
 
 ### 2.2 Alternative valutate e RIGETTATE
 
@@ -412,7 +412,7 @@ Il classic problem documentato in PITFALLS.md #6.B: `readyState === OPEN` ma TCP
 
 ### 4.7 Subprotocols come discriminator (Claude's discretion)
 
-`new WebSocket(url, ['sembridge-v1'])` invia `Sec-WebSocket-Protocol: sembridge-v1` header. Il server può accettare/rejectare. **Use case F4 potenziale:**
+`new WebSocket(url, ['gluezero-v1'])` invia `Sec-WebSocket-Protocol: sembridge-v1` header. Il server può accettare/rejectare. **Use case F4 potenziale:**
 
 - Versioning del contract envelope (D-106 `{topic, data, id?}`). Se in V1.x si aggiunge `parseFrame` custom (deferred D-CONTEXT), subprotocol può negoziare la versione.
 - **V1 decision (Claude's discretion):** non usare subprotocols. Documentare come extension point in DOC-04 per V1.x. Aggiungere `RealtimeChannelDef.wsSubprotocols?: string | string[]` come opt-in passthrough.
@@ -520,7 +520,7 @@ class VisibilityDetector {
 
 ### 5.3 iframe / web worker — guards necessari
 
-**iframe nascosto:** `document.visibilityState` segue il top-level frame. Un iframe nascosto in una tab visible vede comunque `visibilityState === 'visible'`. **Implicazione:** se SemBridge gira in un iframe sandbox, la stale detection visibility-aware non funziona come atteso. Documentare DOC-04 limitazione.
+**iframe nascosto:** `document.visibilityState` segue il top-level frame. Un iframe nascosto in una tab visible vede comunque `visibilityState === 'visible'`. **Implicazione:** se GlueZero gira in un iframe sandbox, la stale detection visibility-aware non funziona come atteso. Documentare DOC-04 limitazione.
 
 **Web Worker:** non c'è `document` nel worker context. F4 vive nel main thread (V1 lock — il worker runtime è F5), ma per robustezza il `VisibilityDetector` deve guard:
 
@@ -931,7 +931,7 @@ function createSseChannel(def: RealtimeChannelDef, ctx: { signal: AbortSignal })
 - Cascade cleanup logic (con mock channels).
 - Visibility state machine (con DI mock detector).
 
-**Stack:** Vitest 4.1.5 + jsdom 29.1.0 (già installato in `@sembridge/gateway`).
+**Stack:** Vitest 4.1.5 + jsdom 29.1.0 (già installato in `@gluezero/gateway`).
 
 **Mocking strategy per EventSource/WebSocket in unit:**
 
@@ -1058,8 +1058,8 @@ export default defineWorkspace([
 
 | Pacchetto | Required by | Already installed? |
 |-----------|------------|--------------------|
-| `vitest` 4.1.5 | unit + jsdom | ✅ in `@sembridge/gateway` devDeps |
-| `jsdom` 29.1.0 | unit dom | ✅ in `@sembridge/gateway` devDeps |
+| `vitest` 4.1.5 | unit + jsdom | ✅ in `@gluezero/gateway` devDeps |
+| `jsdom` 29.1.0 | unit dom | ✅ in `@gluezero/gateway` devDeps |
 | `msw` 2.14.2 | integration SSE/WS mock | ⚠️ workspace devDep (verificare) |
 | `@vitest/browser` 4.1.5 | browser-real | ⚠️ workspace devDep (verificare) |
 | `playwright` 1.59.1 | browser provider | ⚠️ workspace devDep (verificare) |
@@ -1076,7 +1076,7 @@ export default defineWorkspace([
 
 | Plan | Nome | File ownership | Wave | Depends |
 |------|------|---------------|------|---------|
-| **04-01** | Bootstrap `@sembridge/gateway/sse-ws/` + types + augment | `sse-ws/index.ts`, `sse-ws/augment.ts`, `sse-ws/types/realtime-config.ts`, `sse-ws/types/realtime-channel-def.ts`, `sse-ws/types/index.ts`, package.json updates (subpath export `./sse-ws`), tsup.config.ts updates | W1 | F3 complete |
+| **04-01** | Bootstrap `@gluezero/gateway/sse-ws/` + types + augment | `sse-ws/index.ts`, `sse-ws/augment.ts`, `sse-ws/types/realtime-config.ts`, `sse-ws/types/realtime-channel-def.ts`, `sse-ws/types/index.ts`, package.json updates (subpath export `./sse-ws`), tsup.config.ts updates | W1 | F3 complete |
 | **04-02** | `frame-parser.ts` + envelope Valibot schema (puro) | `sse-ws/frame-parser.ts` + `.test.ts` | W2 | 04-01 |
 | **04-03** | `reconnect-strategy.ts` (full jitter math + state machine D-107) | `sse-ws/reconnect-strategy.ts` + `.test.ts` | W2 (parallel a 04-02) | 04-01 |
 | **04-04** | `visibility-detector.ts` + DI guard | `sse-ws/visibility-detector.ts` + `.test.ts` | W2 (parallel) | 04-01 |
@@ -1084,7 +1084,7 @@ export default defineWorkspace([
 | **04-06** | `websocket-adapter.ts` (uses 04-02 + 04-03 + 04-04) + ping/pong | `sse-ws/websocket-adapter.ts` + `.test.ts`, `sse-ws/test-utils/mock-websocket.ts`, `sse-ws/test-utils/ws-server.ts` | W3 (parallel a 04-05) | 04-02, 04-03, 04-04 |
 | **04-07** | `realtime-channel-manager.ts` + cascade cleanup D-112 | `sse-ws/realtime-channel-manager.ts` + `.test.ts` | W4 | 04-05, 04-06 |
 | **04-08** | `realtime-broker.ts` composition wrapper + `createRealtimeBroker(config)` factory | `sse-ws/realtime-broker.ts` + `.test.ts`, `sse-ws/public-factory.ts` + `.test.ts`, `sse-ws/test-utils/realtime-harness.ts`, integration test 6 scenari D-119 in `sse-ws/__integration__/` | W5 | 04-07 |
-| **04-09** | Final gate F4: lint + typecheck + build + test + coverage v8 ≥90% + REQ matrix + DOC-04 ext + smoke cross-package + ROADMAP/STATE update | README updates `@sembridge/gateway/sse-ws/README.md` (italiano), JSDoc public API, CI gates ext, ROADMAP.md, STATE.md, REQUIREMENTS.md flip | W6 | 04-08 |
+| **04-09** | Final gate F4: lint + typecheck + build + test + coverage v8 ≥90% + REQ matrix + DOC-04 ext + smoke cross-package + ROADMAP/STATE update | README updates `@gluezero/gateway/sse-ws/README.md` (italiano), JSDoc public API, CI gates ext, ROADMAP.md, STATE.md, REQUIREMENTS.md flip | W6 | 04-08 |
 
 **Wave-based parallelization (D-117 carryover F3 pattern):**
 

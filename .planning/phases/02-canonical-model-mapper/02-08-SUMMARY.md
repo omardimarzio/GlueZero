@@ -96,7 +96,7 @@ completed: 2026-04-30
 - `wrapTap` con try/catch swallow attorno al tap originale — T-02-08-03 mitigation; coerente con il pattern F1 `safeTapStep` di event-tap.ts:23-34. Errori del tap originale non rompono il chain
 - `clearErrors()` per reset esplicito post-debug session (utility, non invocato auto)
 - `recordSnapshot` no-op runtime in F2 V1 — JSDoc esplicita lo scope-out con riferimento a F6 (TOOL-01)
-- Cross-package import `import { createBrokerError } from '@sembridge/core'` (test-only) + `import type { BrokerError, EventTap, PipelineSnapshot, PipelineStep } from '@sembridge/core'` (source) — coerente con pattern F2 plan 02-03/02-05/02-07
+- Cross-package import `import { createBrokerError } from '@gluezero/core'` (test-only) + `import type { BrokerError, EventTap, PipelineSnapshot, PipelineStep } from '@gluezero/core'` (source) — coerente con pattern F2 plan 02-03/02-05/02-07
 - Header italiano + JSDoc IntelliSense in italiano + reference D-XX/REQ-ID/Threat-ID coerente con pattern F1 e plan 02-03/04/05/06/07
 - Auto-fix Biome applicato post-implementazione: organizeImports (riordino import) + lineWidth (consolidamento expect chain)
 - 10 test cases covering 9 acceptance criteria + 1 default-buffer-size extra: 8 in describe MappingInspector + 2 in describe wrapTap
@@ -166,11 +166,11 @@ Test cases organizzati in 2 `describe` block:
 
 | Comando | Risultato |
 |---------|-----------|
-| `pnpm --filter @sembridge/mapper test inspector` (RED, post commit 505bddd) | FAIL atteso: `Failed to resolve import "./inspector"` |
-| `pnpm --filter @sembridge/mapper test inspector` (post-GREEN) | Exit 0: **`Test Files 1 passed (1) | Tests 10 passed (10)`** Duration 487ms |
-| `pnpm --filter @sembridge/mapper test` (full mapper) | Exit 0: **`Test Files 6 passed (6) | Tests 87 passed (87)`** (11 canonical-registry + 16 alias-registry + 14 transform-pipeline + 10 valibot-adapter + 26 mapper-engine + 10 inspector) |
-| `pnpm --filter @sembridge/mapper typecheck` | Exit 0 (isolatedDeclarations enforcement OK; ogni metodo pubblico ha return type esplicito) |
-| `pnpm --filter @sembridge/core test` (regression F1) | Exit 0: **24 file/248 test passing** (no regression) |
+| `pnpm --filter @gluezero/mapper test inspector` (RED, post commit 505bddd) | FAIL atteso: `Failed to resolve import "./inspector"` |
+| `pnpm --filter @gluezero/mapper test inspector` (post-GREEN) | Exit 0: **`Test Files 1 passed (1) | Tests 10 passed (10)`** Duration 487ms |
+| `pnpm --filter @gluezero/mapper test` (full mapper) | Exit 0: **`Test Files 6 passed (6) | Tests 87 passed (87)`** (11 canonical-registry + 16 alias-registry + 14 transform-pipeline + 10 valibot-adapter + 26 mapper-engine + 10 inspector) |
+| `pnpm --filter @gluezero/mapper typecheck` | Exit 0 (isolatedDeclarations enforcement OK; ogni metodo pubblico ha return type esplicito) |
+| `pnpm --filter @gluezero/core test` (regression F1) | Exit 0: **24 file/248 test passing** (no regression) |
 | `pnpm exec biome check packages/mapper/src/inspector*.ts` | Exit 0 dopo auto-fix organizeImports + lineWidth |
 | Grep verifica acceptance | 6/6 PASSED (`export class MappingInspector`, `export function wrapTap`, `lastErrors`, `errorBuffer`, file source + file test esistenti) |
 | Audit `any` literal | 0 occorrenze come tipo |
@@ -240,7 +240,7 @@ Nessun auth gate — task interamente automatico (file creation + typecheck/test
 - ✅ **Closed:** D-46 (estende EventTap di F1, NON parallel API) — `wrapTap` composition pattern implementato.
 - ✅ **Closed:** D-47 (PipelineSnapshot esteso) — placeholder per F2 V1: `recordSnapshot` accetta i 5 step F2 (cast esplicito `as PipelineStep` per V1; sparirà post-augment.ts).
 - ✅ **Closed:** D-48 (getDebugSnapshot mappings section) — `MappingInspectorSnapshot` con 4 property: counter dei 3 registry + ring buffer errori.
-- ✅ **Ready:** plan 02-09 (`augment.ts`) può fare TS declaration merging del `PipelineStep` di `@sembridge/core` per aggiungere i 5 nuovi step F2 (`event.source.resolved`, `event.mapped.canonical`, `event.canonical.validated`, `event.mapped.consumer`, `event.final.validated`); il cast `as PipelineStep` nel test sparirà automaticamente.
+- ✅ **Ready:** plan 02-09 (`augment.ts`) può fare TS declaration merging del `PipelineStep` di `@gluezero/core` per aggiungere i 5 nuovi step F2 (`event.source.resolved`, `event.mapped.canonical`, `event.canonical.validated`, `event.mapped.consumer`, `event.final.validated`); il cast `as PipelineStep` nel test sparirà automaticamente.
 - ✅ **Ready:** plan 02-10 (broker wrapper) può istanziare il `MappingInspector` come dipendenza, comporlo col tap utente via `wrapTap(config.runtime?.tap ?? noopEventTap, inspector)`, esporre `Broker.getDebugSnapshot().mappings = inspector.getSnapshot()`, e wirare `inspector.recordError(err)` quando il MapperEngine lancia errori `mapping.*`.
 - ⏳ **Pending:** `MAP-15` Mapping Inspector richiesto dal PRD §14.8 di mostrare "payload originale, canonico, finale, trasformazioni applicate, warning di ambiguità" — F2 V1 espone solo counter + lastErrors. Full snapshot per evento (payload before/after, transformsApplied per evento, ambiguityWarnings per evento) è scope F6 (TOOL-01). Documentato in D-48.
 - ⏳ **Pending:** Coverage v8 misurazione del modulo deferred a plan 02-12 (final gate F2 — D-55). Inspector non ha branch logic complessa (recordSnapshot no-op, recordError ha 1 if, lastErrors/clearErrors/getSnapshot lineari) → coverage atteso 100%.

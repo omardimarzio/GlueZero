@@ -1,8 +1,8 @@
-# SemBridge
+# GlueZero
 
 ## What This Is
 
-SemBridge è una **libreria JavaScript browser-side** (TypeScript-first, distribuita ESM) che funge da middleware client-side orientato agli eventi. Combina sei capacità in un unico runtime: broker pub/sub interno alla pagina, routing dichiarativo verso locale/HTTP/realtime/worker/cache, gateway unico verso il server, runtime multitasking via Web Worker, modello dati canonico con mapper bidirezionale tra nomi locali dei plugin e vocabolario canonico, e developer tooling (Event/Mapping/Route Inspector). È pensata per sviluppatori che costruiscono pagine/SPA modulari con plugin di terze parti che usano nomenclature locali eterogenee e devono interoperare senza accoppiamento diretto.
+GlueZero è una **libreria JavaScript browser-side** (TypeScript-first, distribuita ESM) che funge da middleware client-side orientato agli eventi. Combina sei capacità in un unico runtime: broker pub/sub interno alla pagina, routing dichiarativo verso locale/HTTP/realtime/worker/cache, gateway unico verso il server, runtime multitasking via Web Worker, modello dati canonico con mapper bidirezionale tra nomi locali dei plugin e vocabolario canonico, e developer tooling (Event/Mapping/Route Inspector). È pensata per sviluppatori che costruiscono pagine/SPA modulari con plugin di terze parti che usano nomenclature locali eterogenee e devono interoperare senza accoppiamento diretto.
 
 ## Core Value
 

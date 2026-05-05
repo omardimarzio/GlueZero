@@ -40,7 +40,7 @@ overrides_applied: 0
 |-----|--------|----------|
 | RT-01 SSE adapter | VERIFIED | `SseAdapter` 466 LOC (`sse-adapter.ts`) + 14 test (`sse-adapter.test.ts`). Manager dispatch `mode='sse'|'auto'` default SSE-first (D-107). EventSource wrapper + Last-Event-ID + custom event types. |
 | RT-02 WebSocket adapter | VERIFIED | `WebSocketAdapter` 586 LOC (`websocket-adapter.ts`) + 15 test. Envelope JSON + ping/pong + scheme switch + close codes RFC 6455 + bufferedAmount cap + wsSubprotocols. |
-| RT-03 connectRealtime/disconnectRealtime API | VERIFIED | `RealtimeBroker.connectRealtime/disconnectRealtime` consumer-facing API; `RealtimeChannelManager.connect/disconnect/disconnectByOwner/getDebugInfo/checkFreshnessAll`. Esportati da `index.ts` (subpath `@sembridge/gateway/sse-ws`). |
+| RT-03 connectRealtime/disconnectRealtime API | VERIFIED | `RealtimeBroker.connectRealtime/disconnectRealtime` consumer-facing API; `RealtimeChannelManager.connect/disconnect/disconnectByOwner/getDebugInfo/checkFreshnessAll`. Esportati da `index.ts` (subpath `@gluezero/gateway/sse-ws`). |
 | RT-04 source descriptor | VERIFIED | `SSE_SOURCE = Object.freeze({ type:'server', id:'realtime-channel', name:'sse' })` (`sse-adapter.ts:58-62`). `WS_SOURCE` analogo (`websocket-adapter.ts:77-81`). Source preservato end-to-end via `inner.publish(..., { source, id })` (W-1 closure). |
 | RT-05 Reconnection policy | VERIFIED | Full jitter D-109 (`reconnect-strategy.ts`); heartbeat 30s/staleTimeout 60s D-111; visibility detector D-110; runReconnectLoop orchestrator (`realtime-channel-manager.ts:453-527`); cycle-cap → `system.realtime.failed`. |
 | RT-06 Mapper server→canonical | VERIFIED (con caveat documentato) | D-114 invariato — adapter `publishFn → inner.publish` → pipeline §28 step 4-6 applica MapperEngine F2 senza logica F4. **Caveat smoke V1**: `mapper-canonicalization.test.ts` verifica solo passthrough (no inputMap automatic V1 — `realtime-inbound` route deferred V1.x). Il pattern adapter→pipeline è coperto; mapper inputMap richiede route F3 con `type: 'realtime-inbound'` deferred V1.x (PRD §17.5). Documentato in test header e DOC-04. |
@@ -124,7 +124,7 @@ Tutte le 6 risposte coerenti con default raccomandati (research) o documentate c
 |------|--------|----------|
 | `pnpm test` (gateway) | PASS | 222 passed / 3 skipped (225) — 1.94s |
 | `pnpm test` (monorepo) | PASS | 756 passed / 3 skipped (759) — core + mapper + routing + gateway |
-| `pnpm publint` | PASS | "All good!" — `@sembridge/gateway` |
+| `pnpm publint` | PASS | "All good!" — `@gluezero/gateway` |
 | `pnpm typecheck` | PASS | exit 0 |
 | `pnpm attw` | PASS | esm-only profile (riferito in 04-09 SUMMARY: 4/4 packages) |
 | `pnpm biome check` (sse-ws) | PASS | zero errors (riferito in 04-09 SUMMARY) |
@@ -195,12 +195,12 @@ Nessun HOLLOW_PROP, nessun DISCONNECTED, nessun STATIC.
 
 | Behavior | Command | Result | Status |
 |----------|---------|--------|--------|
-| Tutti i 222 gateway test passing | `pnpm --filter @sembridge/gateway test` | 222 passed / 3 skipped (225) | PASS |
+| Tutti i 222 gateway test passing | `pnpm --filter @gluezero/gateway test` | 222 passed / 3 skipped (225) | PASS |
 | Monorepo full pass | `pnpm test` | 756 passed / 3 skipped | PASS |
 | Build artifacts presenti | `ls packages/gateway/dist/sse-ws/` | `index.{js,d.ts}` + `augment.{js,d.ts}` + maps | PASS |
-| publint strict | `pnpm --filter @sembridge/gateway publint` | "All good!" | PASS |
-| typecheck | `pnpm --filter @sembridge/gateway typecheck` | exit 0 | PASS |
-| Coverage v8 sse-ws ≥85/75/88/87 | `pnpm --filter @sembridge/gateway test --coverage` | sse-ws 91.80/86.70/89.53/93.75 | PASS |
+| publint strict | `pnpm --filter @gluezero/gateway publint` | "All good!" | PASS |
+| typecheck | `pnpm --filter @gluezero/gateway typecheck` | exit 0 | PASS |
+| Coverage v8 sse-ws ≥85/75/88/87 | `pnpm --filter @gluezero/gateway test --coverage` | sse-ws 91.80/86.70/89.53/93.75 | PASS |
 | Anti-AP-3 grep `import.*reconnecting-websocket` | `grep -r "reconnecting-websocket" packages/gateway/src/sse-ws/ --include="*.ts" | grep -v "//"` | 0 hits | PASS |
 | Anti-AP-6 grep `startsWith('__')` runtime | grep source non-comment | 0 hits | PASS |
 | D-83 strict carryover | `git diff 9abf518 HEAD -- packages/{core,mapper,routing}/src/ packages/gateway/src/http/` | 0 lines | PASS |

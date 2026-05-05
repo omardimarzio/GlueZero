@@ -9,9 +9,9 @@ requires:
   - phase: 01-core-essenziale
     provides: BrokerConfig + PluginDescriptor interface (target del declaration merging F4)
   - phase: 03-routing-server-gateway-http
-    provides: BackpressurePolicyConfig riusato 1:1 da @sembridge/routing per RealtimeChannelDef.backpressure (D-115)
+    provides: BackpressurePolicyConfig riusato 1:1 da @gluezero/routing per RealtimeChannelDef.backpressure (D-115)
 provides:
-  - "Subpath @sembridge/gateway/sse-ws risolvibile (export configurato in package.json + tsup entry separati)"
+  - "Subpath @gluezero/gateway/sse-ws risolvibile (export configurato in package.json + tsup entry separati)"
   - "Tipi pubblici F4: RealtimeConfig, RealtimeChannelDef, RealtimeMode, RealtimeReconnectConfig, ReconnectDefaults, HeartbeatDefaults, VisibilityDefaults"
   - "Declaration merging BrokerConfig.realtime?: RealtimeConfig (chiusura placeholder F1 — D-102)"
   - "Declaration merging PluginDescriptor.realtimeChannels?: readonly RealtimeChannelDef[] (chiusura placeholder F1 in core/types/plugin.ts:50 — D-103)"
@@ -51,7 +51,7 @@ key-decisions:
   - "D-103 placeholder F1 chiuso: PluginDescriptor.realtimeChannels via decl merging (NON modifica core/types/plugin.ts)"
   - "D-104 buildUrl auth-agnostic: () => Promise<string> hook"
   - "D-107 mode union 'sse' | 'websocket' | 'auto' con fallbackThreshold 3 + globalCycleCap 5"
-  - "D-115 BackpressurePolicyConfig riusato 1:1 da @sembridge/routing senza nuove definizioni"
+  - "D-115 BackpressurePolicyConfig riusato 1:1 da @gluezero/routing senza nuove definizioni"
   - "W-4: eventTypes opzionale SSE-only (chiude SC-1 ROADMAP scenario meteo event: weather.update)"
   - "B-5: sseHeartbeatEventTypes default ['heartbeat'] per server SSE freshness senza topic spam"
   - "Q4: wsSubprotocols opt-in passthrough a new WebSocket(url, protocols)"
@@ -65,7 +65,7 @@ patterns-established:
 requirements-completed:
   - RT-01  # PluginDescriptor.realtimeChannels (placeholder F1 chiuso)
   - RT-02  # config-driven realtime declaration (BrokerConfig.realtime + channels[])
-  - RT-03  # subpath @sembridge/gateway/sse-ws risolvibile (build/export config)
+  - RT-03  # subpath @gluezero/gateway/sse-ws risolvibile (build/export config)
   - RT-05  # reconnect config override-abile (ReconnectDefaults + RealtimeReconnectConfig per-channel)
 
 # Metrics
@@ -73,7 +73,7 @@ duration: ~10min
 completed: 2026-05-04
 ---
 
-# Phase 4 Plan 01: Bootstrap @sembridge/gateway/sse-ws Summary
+# Phase 4 Plan 01: Bootstrap @gluezero/gateway/sse-ws Summary
 
 **Subpath SSE/WS scaffolding completo: types F4 (RealtimeConfig + RealtimeChannelDef + RealtimeMode + Defaults), declaration merging additive su BrokerConfig.realtime + PluginDescriptor.realtimeChannels (chiude placeholder F1 in core/types/plugin.ts:50), subpath exports + tsup multi-entry + vitest coverage exclude — pronto per Wave 2 (04-02..04-04 frame-parser/reconnect-strategy/visibility-detector).**
 
@@ -90,7 +90,7 @@ completed: 2026-05-04
 
 - **Placeholder F1 chiuso** in `packages/core/src/types/plugin.ts:50` ("F4 will add: realtimeChannels") tramite declaration merging additive in `packages/gateway/src/sse-ws/augment.ts` — ZERO modifiche a core/ runtime (D-83 strict)
 - **Tipi pubblici F4 dichiarati**: RealtimeConfig, RealtimeChannelDef, RealtimeMode ('sse'|'websocket'|'auto'), RealtimeReconnectConfig, ReconnectDefaults, HeartbeatDefaults, VisibilityDefaults — tutti exported come `type`-only via barrel
-- **Subpath @sembridge/gateway/sse-ws risolvibile**: package.json `exports["./sse-ws"]` + tsup entry separati emettono `dist/sse-ws/{index.js, augment.js, index.d.ts, augment.d.ts}` (build success 71ms ESM + 577ms DTS)
+- **Subpath @gluezero/gateway/sse-ws risolvibile**: package.json `exports["./sse-ws"]` + tsup entry separati emettono `dist/sse-ws/{index.js, augment.js, index.d.ts, augment.d.ts}` (build success 71ms ESM + 577ms DTS)
 - **F4PipelineStep type alias additive** per i 3 step §28 ingress realtime, consumer compone `PipelineStep | F2PipelineStep | F3PipelineStep | F4PipelineStep`
 - **Pattern S1 anti tree-shaking**: `__augmentSseWsLoaded` re-esportato dal barrel `sse-ws/index.ts` E dall'umbrella `gateway/src/index.ts` (double-safety, T-04-01-01 mitigation)
 - **8 test smoke decl merging** verificano coexistenza F1+F2+F3+F4 sullo stesso `BrokerConfig` (canonicalModel + routes + routing + gateway + realtime + runtime — Test 7 backward-compat)
@@ -113,7 +113,7 @@ Ogni task committato atomicamente:
 
 - `packages/gateway/src/sse-ws/augment.ts` (105 LOC) — TS declaration merging `BrokerConfig.realtime` + `PluginDescriptor.realtimeChannels`, F4PipelineStep type alias, `__augmentSseWsLoaded: true` marker
 - `packages/gateway/src/sse-ws/types/realtime-config.ts` (87 LOC) — `RealtimeConfig` interface root + `ReconnectDefaults`/`HeartbeatDefaults`/`VisibilityDefaults` sezioni
-- `packages/gateway/src/sse-ws/types/realtime-channel-def.ts` (125 LOC) — `RealtimeChannelDef` interface + `RealtimeMode` union + `RealtimeReconnectConfig` per-channel override; importa `BackpressurePolicyConfig` da `@sembridge/routing` (D-115 riuso F3)
+- `packages/gateway/src/sse-ws/types/realtime-channel-def.ts` (125 LOC) — `RealtimeChannelDef` interface + `RealtimeMode` union + `RealtimeReconnectConfig` per-channel override; importa `BackpressurePolicyConfig` da `@gluezero/routing` (D-115 riuso F3)
 - `packages/gateway/src/sse-ws/types/index.ts` (18 LOC) — barrel types-only re-export
 - `packages/gateway/src/sse-ws/index.ts` (33 LOC) — subpath barrel skeleton: side-effect import `__augmentSseWsLoaded` + type re-export aggregato
 - `packages/gateway/src/sse-ws/augment.test.ts` (135 LOC) — 8 test: marker, F4PipelineStep, BrokerConfig.realtime, defaults, PluginDescriptor.realtimeChannels, backward-compat F1+F2+F3, coexistenza augment, BackpressurePolicyConfig D-115
@@ -130,7 +130,7 @@ Ogni task committato atomicamente:
 Tutte le decisioni implementate sono lockate da 04-CONTEXT.md (D-101..D-120) e dal plan 04-01-PLAN.md frontmatter. Riepilogo applicato:
 
 - **D-83 / D-101 strict respected**: ZERO modifiche runtime a `packages/core/src/`, `packages/mapper/src/`, `packages/routing/src/`, `packages/gateway/src/http/`. Verificato via `git diff --name-only d090a1b^..2624c66` — solo file in `packages/gateway/src/sse-ws/` + 4 file di config gateway-level (package.json, tsup, vitest, index.ts). Il commento placeholder `// F4 will add: realtimeChannels` in `core/types/plugin.ts:50` NON è stato rimosso (anti-pattern AP-1 evitato).
-- **D-103 declaration merging additive** invece di modifica diretta a `core/types/plugin.ts`: il consumer importa `@sembridge/gateway/sse-ws` (o l'umbrella `@sembridge/gateway`) e ottiene `PluginDescriptor.realtimeChannels` tipizzato.
+- **D-103 declaration merging additive** invece di modifica diretta a `core/types/plugin.ts`: il consumer importa `@gluezero/gateway/sse-ws` (o l'umbrella `@gluezero/gateway`) e ottiene `PluginDescriptor.realtimeChannels` tipizzato.
 - **Pattern S1 double re-export**: `__augmentSseWsLoaded` re-esportato sia dal barrel `sse-ws/index.ts` (linea 18) sia dall'umbrella `gateway/src/index.ts` (linea 44) per double-safety anti tree-shaking aggressivo (Vite/webpack/esbuild).
 - **W-4 + B-5 + Q4 closures**: `eventTypes`, `sseHeartbeatEventTypes`, `wsSubprotocols` dichiarati come campi opzionali del `RealtimeChannelDef` — essenziali per:
   - W-4: chiusura SC-1 ROADMAP scenario meteo `event: weather.update` (custom SSE event types che derivano `BrokerEvent.topic` dal field `event:`)
@@ -145,20 +145,20 @@ Tutti gli artifact sono prodotti come specificati nel plan frontmatter `must_hav
 
 ## Issues Encountered
 
-- **Build warning TS5055 al primo run**: tentativo di build senza `clean` ha prodotto errore `Cannot write file 'dist/http/index.d.ts' because it would overwrite input file` (residuo di build precedente). Risolto eseguendo `pnpm --filter @sembridge/gateway clean && pnpm --filter @sembridge/gateway build`. Build success: 5 entry ESM + 5 DTS (29.16 KB index.js + 35.54 KB http/index.d.ts + 10.83 KB sse-ws/index.d.ts). Non è un'issue reale del plan — è una prassi di hygiene CI standard, già nota nel pattern F3.
+- **Build warning TS5055 al primo run**: tentativo di build senza `clean` ha prodotto errore `Cannot write file 'dist/http/index.d.ts' because it would overwrite input file` (residuo di build precedente). Risolto eseguendo `pnpm --filter @gluezero/gateway clean && pnpm --filter @gluezero/gateway build`. Build success: 5 entry ESM + 5 DTS (29.16 KB index.js + 35.54 KB http/index.d.ts + 10.83 KB sse-ws/index.d.ts). Non è un'issue reale del plan — è una prassi di hygiene CI standard, già nota nel pattern F3.
 
 ## Verification Output
 
 ```
-pnpm --filter @sembridge/gateway exec tsc --noEmit
+pnpm --filter @gluezero/gateway exec tsc --noEmit
 # exit 0, no output
 
-pnpm --filter @sembridge/gateway test
+pnpm --filter @gluezero/gateway test
 # Test Files  15 passed (15)
 # Tests       105 passed (105)
 # Duration    1.50s
 
-pnpm --filter @sembridge/gateway clean && pnpm --filter @sembridge/gateway build
+pnpm --filter @gluezero/gateway clean && pnpm --filter @gluezero/gateway build
 # ESM dist/sse-ws/index.js       228.00 B
 # ESM dist/sse-ws/augment.js     232.00 B
 # ESM dist/index.js              29.16 KB
@@ -187,7 +187,7 @@ Conteggio file invariati (snapshot pre-04-01):
 I plan paralleli di Wave 2 possono ora importare:
 
 ```ts
-// Type-only imports da @sembridge/gateway/sse-ws (subpath risolvibile)
+// Type-only imports da @gluezero/gateway/sse-ws (subpath risolvibile)
 import type {
   RealtimeChannelDef,
   RealtimeConfig,
@@ -196,7 +196,7 @@ import type {
   ReconnectDefaults,
   HeartbeatDefaults,
   VisibilityDefaults,
-} from '@sembridge/gateway/sse-ws'
+} from '@gluezero/gateway/sse-ws'
 
 // O internamente (file co-locati nel sotto-package):
 import type { RealtimeChannelDef } from './types/realtime-channel-def'
@@ -212,7 +212,7 @@ Nessun conflitto di scrittura sui file 04-01.
 
 ## Self-Check: PASSED
 
-- File `packages/gateway/src/sse-ws/augment.ts`: FOUND (105 LOC, contiene `declare module '@sembridge/core'` + `interface BrokerConfig { realtime?: RealtimeConfig }` + `interface PluginDescriptor { readonly realtimeChannels?: readonly RealtimeChannelDef[] }` + `export type F4PipelineStep` + `export const __augmentSseWsLoaded: true = true`)
+- File `packages/gateway/src/sse-ws/augment.ts`: FOUND (105 LOC, contiene `declare module '@gluezero/core'` + `interface BrokerConfig { realtime?: RealtimeConfig }` + `interface PluginDescriptor { readonly realtimeChannels?: readonly RealtimeChannelDef[] }` + `export type F4PipelineStep` + `export const __augmentSseWsLoaded: true = true`)
 - File `packages/gateway/src/sse-ws/types/realtime-config.ts`: FOUND (87 LOC, contiene `interface RealtimeConfig`)
 - File `packages/gateway/src/sse-ws/types/realtime-channel-def.ts`: FOUND (125 LOC, contiene `interface RealtimeChannelDef` + `export type RealtimeMode = 'sse' | 'websocket' | 'auto'` + `eventTypes?` + `sseHeartbeatEventTypes?` + `wsSubprotocols?`)
 - File `packages/gateway/src/sse-ws/types/index.ts`: FOUND (18 LOC, re-esporta tutti i types)
@@ -233,7 +233,7 @@ Nessun conflitto di scrittura sui file 04-01.
 
 - ✅ **Wave 2 unblocked**: plan 04-02 (frame-parser), 04-03 (reconnect-strategy), 04-04 (visibility-detector) possono iniziare in parallelo con file ownership disgiunta
 - ✅ **Tipi pubblici stabili**: i 7 tipi exported sono lockati per il resto della Phase 4 (modifica = breaking change → richiede explicit decision)
-- ✅ **Build pipeline pronta**: `pnpm --filter @sembridge/gateway build` produce subpath separati. Plan 04-09 (final gate F4) calibrerà coverage thresholds + size budget post-implementation.
+- ✅ **Build pipeline pronta**: `pnpm --filter @gluezero/gateway build` produce subpath separati. Plan 04-09 (final gate F4) calibrerà coverage thresholds + size budget post-implementation.
 - ⏭️ **Run-time deferred**: parseFrame, createReconnectStrategy, createVisibilityDetector, SseAdapter, WebSocketAdapter, RealtimeChannelManager, RealtimeBroker, createRealtimeBroker — tutti aggiunti in 04-02..04-08
 
 ---

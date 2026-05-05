@@ -7,19 +7,19 @@
 <domain>
 ## Phase Boundary
 
-Phase 3 consegna il **Routing Engine dichiarativo** + il **Server Gateway HTTP centralizzato** del progetto SemBridge:
+Phase 3 consegna il **Routing Engine dichiarativo** + il **Server Gateway HTTP centralizzato** del progetto GlueZero:
 
-1. **`@sembridge/routing`** — engine dichiarativo con `RouteDefinition` discriminata via `type`:
+1. **`@gluezero/routing`** — engine dichiarativo con `RouteDefinition` discriminata via `type`:
    - `'local'` — consegna ai subscriber locali (default per topic senza route)
    - `'http'` — converte topic `<entity>.<action>.requested` in fetch HTTP, pubblica `<entity>.<action>.loaded` o `<entity>.<action>.failed`
    - `'cache'` — DEFINIZIONE TYPE in F3, cache-first/network-first/cache-then-network — adapter implementativo a F6 (ROUTE-04 nota REQUIREMENTS.md: "Definizione type — implementazione cache adapter in F6")
    - `'composite'` — workflow check-cache → server → update-cache → publish (F3 implementa la struttura, l'adapter cache effettivo arriva con F6)
-2. **`@sembridge/gateway/http`** — Server Gateway HTTP centralizzato che applica policy uniformi a tutte le richieste fetch:
+2. **`@gluezero/gateway/http`** — Server Gateway HTTP centralizzato che applica policy uniformi a tutte le richieste fetch:
    - timeout, retry differenziato 4xx/5xx (con full jitter), dedupe via `dedupeKey`, backpressure, auth (Bearer hook + token refresh hook), cancellazione (AbortController), URL allowlist, idempotency token auto per metodi non-idempotenti
 3. **Resolver + Executor** — pipeline §28 step 7 (full dedupe/backpressure), 8 (resolve route), 9 (execute route), 10 (collect outcome). Ogni route HTTP usa il `MapperEngine` di F2 per `queryMap`/`bodyMap` (canonico→server) e per response server→canonico via `inputMap`.
 4. **Plugin descriptor extension** — `RouteDefinition[]` registrabili dichiarativamente nel descriptor o imperativamente via `broker.registerRoute(routeDef)`. Cascade su `unregisterPlugin` (LIFE-02 ext F3).
 
-**Pacchetto monorepo:** `@sembridge/routing` (engine, resolver, executor, route-handlers locali) + `@sembridge/gateway/http` (sub-modulo `http` che incapsula fetch + retry/timeout/dedupe/auth/idempotency/circuit-breaker). Entrambi placeholder già scaffold-ati in plan 01-01.
+**Pacchetto monorepo:** `@gluezero/routing` (engine, resolver, executor, route-handlers locali) + `@gluezero/gateway/http` (sub-modulo `http` che incapsula fetch + retry/timeout/dedupe/auth/idempotency/circuit-breaker). Entrambi placeholder già scaffold-ati in plan 01-01.
 
 **Pipeline §28 estesa in F3:** step 7 full (`event.dedupe.checked` con backpressure policy attiva — F1 base lo prevede, F3 lo riempie), step 8 NUOVO (`event.route.resolved`), step 9 NUOVO (`event.route.executed`), step 10 NUOVO (`event.outcome.collected`). I 5 step F1 e i 5 step F2 restano invariati. Step 11/12 (mapping consumer + final validation) di F2 vengono invocati DOPO step 10 per pubblicare l'outcome ai subscriber locali.
 
@@ -46,7 +46,7 @@ Il payload pubblicato come `<topic>.loaded` è SEMPRE canonico; F2 step 11 lo tr
 - #8 (ROUTE-09) — retry 4xx vs 5xx: NO retry su 4xx eccetto 408/429; retry SI su 5xx + 408 + 429 + network-error con backoff esponenziale + full jitter, rispetto a `Retry-After`
 
 **Scope-out (deferred a fasi successive):**
-- Realtime inbound SSE/WS (F4 — separato in `@sembridge/gateway/sse-ws`)
+- Realtime inbound SSE/WS (F4 — separato in `@gluezero/gateway/sse-ws`)
 - Cache adapter implementativo in-memory + IndexedDB (F6 — F3 definisce solo i tipi e il route handler `'cache'`/`'composite'`)
 - Worker route handler (F5 — `RouteDefinition` con `type: 'worker'` aggiunto in F5 via declaration merging)
 - Route Inspector full snapshot (F6 — F3 instrumenta solo i tap step 8/9/10 con metadata mínima, payload before/after a F6)
@@ -62,9 +62,9 @@ Il payload pubblicato come `<topic>.loaded` è SEMPRE canonico; F2 step 11 lo tr
 ### A. API Surface Routing
 
 - **D-60:** Il Broker espone come metodi pubblici: `registerRoute(routeDefinition)` e `unregisterRoute(routeId)` — coerente con il pattern `registerPlugin/registerCanonicalSchema/registerTransform/registerAlias` di F1+F2. Tutti i metodi accessibili tramite l'istanza `Broker` ritornata da `createBroker(config)`.
-- **D-61:** I plugin dichiarano `routes?: RouteDefinition[]` come campo opzionale del `PluginDescriptor` (estensione tipo via TS declaration merging — F1 plan 03 ha lasciato `unknown` placeholder, F3 risolve via re-declaration nel package `@sembridge/routing`). Le route dichiarate sono auto-registrate al `registerPlugin` con `ownerId = pluginId` (per cascade D-26 ext F3).
-- **D-62:** `RoutingConfig` opzionale in `BrokerConfig` (sezione `routes?: RouteDefinition[]`, `gateway?: GatewayConfig` — già placeholder `unknown` da plan 03); F3 sostituisce con tipi specifici via declaration merging in `@sembridge/routing/src/augment.ts` e `@sembridge/gateway/src/augment.ts`. Pattern non-breaking, identico a F2 D-56.
-- **D-63:** **`createSembridge(config)` aggregato pubblico — DEFERRED**. F3 NON crea ancora il factory aggregato `@sembridge/sembridge`. Si continua a usare `createMapperBroker(config)` di F2 estendendolo con un nuovo wrapper `createRouterBroker(config)` (composition wrapper che compone Mapper + Routing + Gateway). Il factory aggregato unificato viene introdotto in F6 quando la libreria è feature-complete (riduce churn API pubblica).
+- **D-61:** I plugin dichiarano `routes?: RouteDefinition[]` come campo opzionale del `PluginDescriptor` (estensione tipo via TS declaration merging — F1 plan 03 ha lasciato `unknown` placeholder, F3 risolve via re-declaration nel package `@gluezero/routing`). Le route dichiarate sono auto-registrate al `registerPlugin` con `ownerId = pluginId` (per cascade D-26 ext F3).
+- **D-62:** `RoutingConfig` opzionale in `BrokerConfig` (sezione `routes?: RouteDefinition[]`, `gateway?: GatewayConfig` — già placeholder `unknown` da plan 03); F3 sostituisce con tipi specifici via declaration merging in `@gluezero/routing/src/augment.ts` e `@gluezero/gateway/src/augment.ts`. Pattern non-breaking, identico a F2 D-56.
+- **D-63:** **`createSembridge(config)` aggregato pubblico — DEFERRED**. F3 NON crea ancora il factory aggregato `@gluezero/gluezero`. Si continua a usare `createMapperBroker(config)` di F2 estendendolo con un nuovo wrapper `createRouterBroker(config)` (composition wrapper che compone Mapper + Routing + Gateway). Il factory aggregato unificato viene introdotto in F6 quando la libreria è feature-complete (riduce churn API pubblica).
 
 ### B. Strategia routing engine (resolver + executor)
 
@@ -158,7 +158,7 @@ Il payload pubblicato come `<topic>.loaded` è SEMPRE canonico; F2 step 11 lo tr
   - step 11 `event.mapped.consumer` (F2 — applica `inputMap` consumer per ogni subscriber matched)
   - step 12 `event.final.validated` (F2)
   - step 13 `event.delivered` (F1)
-- **D-85:** **`PipelineStep` extension F3** — il package `@sembridge/routing/src/augment.ts` aggiunge i 3 nuovi step via TS declaration merging (pattern F2 D-49). `safeTapStep` di F1 viene riusato per i tap.
+- **D-85:** **`PipelineStep` extension F3** — il package `@gluezero/routing/src/augment.ts` aggiunge i 3 nuovi step via TS declaration merging (pattern F2 D-49). `safeTapStep` di F1 viene riusato per i tap.
 
 ### I. Cascade cleanup (LIFE-02 ext F3, chiusura PRD §39 #7)
 
@@ -196,11 +196,11 @@ Il payload pubblicato come `<topic>.loaded` è SEMPRE canonico; F2 step 11 lo tr
   Test usa `msw` 2.x come HTTP interceptor (no fetch reale, no network); riusa `createMapperHarness` di F2 esteso a `createRouterHarness` con `mockServer` setup.
 - **D-90:** **TEST-01 subset F3** — unit test deterministici per: dedupe (2 fetch identiche → 1 sola network call); retry (5xx → 3 retry, 4xx no retry, 408/429 retry, network error retry); timeout (fetch > timeout → abort + publish failed); concurrency latest-only (2 request consecutive → 1 abort, 1 published); URL allowlist (URL fuori → throw); idempotency (POST con retry → header `Idempotency-Key` invariato).
 - **D-91:** **TEST-03 subset F3** — robustness: server response con schema inatteso (response Valibot fail → publish failed con `'response.validation.failed'`); server 503 retry storm con full jitter (verifica distribuzione delay random); cascade abort con `unregisterPlugin` durante 10 fetch in volo (verifica tutte abort + cleanup deterministico).
-- **D-92:** **Coverage v8 F3** — riusa `@vitest/coverage-v8` installato in F2 plan 02-12; misura ≥ 90% sui file `@sembridge/routing/` e `@sembridge/gateway/http/`. Da fare in plan 03-XX dedicato (final gate F3 simile a 01-11 / 02-12).
+- **D-92:** **Coverage v8 F3** — riusa `@vitest/coverage-v8` installato in F2 plan 02-12; misura ≥ 90% sui file `@gluezero/routing/` e `@gluezero/gateway/http/`. Da fare in plan 03-XX dedicato (final gate F3 simile a 01-11 / 02-12).
 
 ### K. Estensione Type System
 
-- **D-93:** **Type re-export da `@sembridge/routing` e `@sembridge/gateway` a `@sembridge/core`** — pattern non-breaking F2 D-56. Il package `@sembridge/core` ha `BrokerConfig.routes/gateway` placeholder `unknown` (plan 01-03). F3 fornisce i tipi `RouteDefinition`, `RoutePolicies`, `GatewayConfig`, `RetryStrategy`, `BackpressureStrategy`, `AuthStrategy` da `@sembridge/routing`/`@sembridge/gateway` e li wire-in al `BrokerConfig` via TS declaration merging in `@sembridge/routing/src/augment.ts` e `@sembridge/gateway/src/augment.ts`.
+- **D-93:** **Type re-export da `@gluezero/routing` e `@gluezero/gateway` a `@gluezero/core`** — pattern non-breaking F2 D-56. Il package `@gluezero/core` ha `BrokerConfig.routes/gateway` placeholder `unknown` (plan 01-03). F3 fornisce i tipi `RouteDefinition`, `RoutePolicies`, `GatewayConfig`, `RetryStrategy`, `BackpressureStrategy`, `AuthStrategy` da `@gluezero/routing`/`@gluezero/gateway` e li wire-in al `BrokerConfig` via TS declaration merging in `@gluezero/routing/src/augment.ts` e `@gluezero/gateway/src/augment.ts`.
 - **D-94:** **`PluginDescriptor` augmentation F3** — aggiunge `routes?: RouteDefinition[]` al `PluginDescriptor` esistente via declaration merging (F2 D-57 pattern).
 - **D-95:** **`CanonicalSchema` augmentation F3** — aggiunge `requiresRoute?: boolean` per chiusura ROUTE-16 (D-67). Pattern declaration merging con F2.
 
@@ -229,8 +229,8 @@ Aree dove le scelte specifiche di implementazione sono lasciate alla discrezione
 - **Dispatch table storage interno** — la rappresentazione esatta del `Map<topicPattern, CompiledRoute[]>` (Map vs trie integrato vs hybrid)
 - **Strategy registry storage** — Map vs Object literal con namespace per `RetryStrategy`, `DedupeStrategy`, ...
 - **Gateway internals** — la decomposizione esatta dei moduli `http-gateway.ts` (potrebbe diventare `http-client.ts` + `policy-pipeline.ts` + ...)
-- **`@sembridge/gateway/http` vs `@sembridge/gateway`** — se il sub-modulo HTTP merita un export path separato (`@sembridge/gateway/http`) o se basta `@sembridge/gateway` aggregato (researcher valuta in F3 research; F4 aggiungerà `@sembridge/gateway/sse-ws` quindi probabilmente sub-paths sono necessari)
-- **Naming convention** dei file `.ts`/`.test.ts` interni di `@sembridge/routing` e `@sembridge/gateway` — segui pattern F1/F2
+- **`@gluezero/gateway/http` vs `@gluezero/gateway`** — se il sub-modulo HTTP merita un export path separato (`@gluezero/gateway/http`) o se basta `@gluezero/gateway` aggregato (researcher valuta in F3 research; F4 aggiungerà `@gluezero/gateway/sse-ws` quindi probabilmente sub-paths sono necessari)
+- **Naming convention** dei file `.ts`/`.test.ts` interni di `@gluezero/routing` e `@gluezero/gateway` — segui pattern F1/F2
 - **Splitting in plan** — il planner decide quanti plan (atteso ~10-14 plan tipo F1/F2 visto lo scope ampio: routing + gateway + 16 ROUTE-* + 5 SEC-* + integration test) e wave structure. Ipotesi: Wave 1 (foundation types + RouteDefinition + augment), Wave 2 (resolver + dispatch table parallelizzato a strategy primitives), Wave 3 (executor + http-gateway), Wave 4 (auth/retry/dedupe/backpressure/idempotency parallelizzati per file ownership disgiunta), Wave 5 (RouterBroker composition + LIFE-02 cascade), Wave 6 (integration test + scenario meteo + final gate)
 
 </decisions>
@@ -285,7 +285,7 @@ Aree dove le scelte specifiche di implementazione sono lasciate alla discrezione
 ### Research (Phase 1 — riusato da F3)
 - `.planning/research/STACK.md` § HTTP — `fetch` nativo + Gateway custom (NO `ky`/`wretch`/`ofetch`); `msw` 2.x per integration test (D-68, D-89)
 - `.planning/research/STACK.md` § ID — `nanoid` per idempotency token (D-70)
-- `.planning/research/STACK.md` § Bundle size — size-limit budget per `@sembridge/gateway` < 6 KB gzip (target esplicito)
+- `.planning/research/STACK.md` § Bundle size — size-limit budget per `@gluezero/gateway` < 6 KB gzip (target esplicito)
 - `.planning/research/ARCHITECTURE.md` §2.4 — Adapter Pattern per Gateway/Worker/Realtime/Cache (D-68)
 - `.planning/research/ARCHITECTURE.md` §2.5 — Strategy Pattern per route policies (D-68)
 - `.planning/research/ARCHITECTURE.md` §2.6 — Chain of Responsibility per middleware (D-68 — pipeline policy)
@@ -317,7 +317,7 @@ Aree dove le scelte specifiche di implementazione sono lasciate alla discrezione
 - `packages/mapper/src/canonical-registry.ts` — `CanonicalSchema` (F3 estende con `requiresRoute?: boolean` via augment — D-95)
 - `packages/mapper/src/types/` — `InputMap`, `OutputMap`, `CanonicalSchema`, `TransformDescriptor` (F3 riusa per route mapping)
 - `packages/mapper/src/test-utils/` — `createMapperHarness` (F3 estende a `createRouterHarness` con `mockServer` setup — D-89)
-- `packages/mapper/src/augment.ts` — pattern augment via declaration merging (F3 lo replica in `@sembridge/routing/src/augment.ts` e `@sembridge/gateway/src/augment.ts`)
+- `packages/mapper/src/augment.ts` — pattern augment via declaration merging (F3 lo replica in `@gluezero/routing/src/augment.ts` e `@gluezero/gateway/src/augment.ts`)
 
 ### CLAUDE.md (vincoli operativi)
 - `CLAUDE.md` § Vincoli operativi — Modello `claude-opus-4-7-1` per tutti gli agenti GSD; lingua italiana; minimizzare interazioni; agent-swarm parallelizzato
@@ -352,12 +352,12 @@ Aree dove le scelte specifiche di implementazione sono lasciate alla discrezione
 - **TDD RED→GREEN**: ogni modulo `*.ts` ha test `*.test.ts` co-locato; commit pattern `test(03-XX): aggiunge test RED per <X>` poi `feat(03-XX): implementa <X>`.
 - **File ownership disgiunta tra plan paralleli**: pattern usato in plan 04/05/06 di F1 e plan 02-04/05/06 di F2 (Wave 3 / 4); applicabile a F3 per le 5-7 strategy implementations parallelizzabili (`retry-strategy.ts` || `dedupe-strategy.ts` || `backpressure-strategy.ts` || `auth-strategy.ts` || `idempotency-strategy.ts`).
 - **Tipo nominato per Rule 2 readability**: pattern usato in F1/F2 con `SnapshotFactory`/`CompiledFieldMapping`; applicabile in F3 per `CompiledRoute`, `RouteDispatchTable`, `PolicyChain`.
-- **Type-only barrel re-export**: `packages/core/src/index.ts` ha `export type * from './types'` (plan 03); F3 estende con `export type * from '@sembridge/routing'` e `export type * from '@sembridge/gateway'` se i tipi pubblici devono essere esposti dal core (verifica con planner).
+- **Type-only barrel re-export**: `packages/core/src/index.ts` ha `export type * from './types'` (plan 03); F3 estende con `export type * from '@gluezero/routing'` e `export type * from '@gluezero/gateway'` se i tipi pubblici devono essere esposti dal core (verifica con planner).
 - **Declaration merging per estensioni non-breaking**: pattern usato in plan 03 e F2 per `PipelineStep`, `BrokerConfig`, `PluginDescriptor`; F3 lo applica per `PipelineStep` extension (D-85), `PluginDescriptor.routes` (D-94), `CanonicalSchema.requiresRoute` (D-95), `BrokerConfig.routes`/`gateway` (D-93).
 - **Atomic commit chunks** per plan grandi: pattern usato in plan 09/10 di F1 e 02-10/11/12 di F2; applicabile a integration test F3 (scenario meteo HTTP, retry storm, cascade abort).
 - **Performance budget**: F1 ha verificato storm 24ms / wildcard 11ms; F2 ha mantenuto core 248 test invariati; F3 deve mantenere overhead routing minimo (target: < 5% di publish latency su route `'local'`, < 50ms aggiuntivi per route HTTP escluso fetch network).
 - **Composition wrapper pattern** (F2 D-49): F3 replica per `RouterBroker = wrap(MapperBroker)`. ZERO modifiche a `packages/core/` runtime e ZERO modifiche a `packages/mapper/` runtime.
-- **CI gates incrementali**: F2 plan 02-12 ha esteso publint + attw + size-limit a `@sembridge/mapper`. F3 deve estendere a `@sembridge/routing` (budget < 5 KB gzip) e `@sembridge/gateway` (budget < 6 KB gzip per HTTP-only sub-modulo, F4 estenderà con SSE/WS).
+- **CI gates incrementali**: F2 plan 02-12 ha esteso publint + attw + size-limit a `@gluezero/mapper`. F3 deve estendere a `@gluezero/routing` (budget < 5 KB gzip) e `@gluezero/gateway` (budget < 6 KB gzip per HTTP-only sub-modulo, F4 estenderà con SSE/WS).
 - **`msw` 2.x setup**: già installato come dev-dep root in F1 plan 01-02. F3 lo configura per i suoi integration test (no nuova dependency).
 
 ### Integration Points
@@ -367,7 +367,7 @@ Aree dove le scelte specifiche di implementazione sono lasciate alla discrezione
 - **`getDebugSnapshot()`**: F3 aggiunge sezione `routes: { count, byType, inFlightFetches, lastFailures }` (riusa pattern F2 D-48).
 - **`pipeline-harness.ts`**: F3 estende il test fixture con `defineRoute()`, `mockServer()`, `expectFetched()`, `expectRetryAttempts(N)`, `expectAborted(N)` helpers — riuso da `createMapperHarness` di F2.
 - **`AbortController` API surface F1**: F3 propaga il signal del subscriber alla fetch correlata (D-77).
-- **`@sembridge/mapper.MapperEngine`**: F3 lo riusa come dependency runtime per request build (canonical→server) e response parse (server→canonical). NON ricompila la pipeline mapping di F2.
+- **`@gluezero/mapper.MapperEngine`**: F3 lo riusa come dependency runtime per request build (canonical→server) e response parse (server→canonical). NON ricompila la pipeline mapping di F2.
 
 </code_context>
 
@@ -514,8 +514,8 @@ Il planner può accorpare/dividere — questa è una baseline orientativa.
 ## Deferred Ideas
 
 ### Non in scope F3 (da considerare in F4 o successive)
-- **Realtime SSE/WS adapter** — `@sembridge/gateway/sse-ws` (F4 — RT-01..RT-08, chiude PRD §39 #9 RT-07)
-- **Cache adapter implementativo** — in-memory + IndexedDB (F6 — riusa `@sembridge/gateway/http` per network fetch)
+- **Realtime SSE/WS adapter** — `@gluezero/gateway/sse-ws` (F4 — RT-01..RT-08, chiude PRD §39 #9 RT-07)
+- **Cache adapter implementativo** — in-memory + IndexedDB (F6 — riusa `@gluezero/gateway/http` per network fetch)
 - **Worker route handler** — `RouteDefinition` con `type: 'worker'` (F5 — chiude PRD §39 #11 WK-07)
 - **Route Inspector full snapshot** — payload before/after per evento route (F6 — TOOL-01/03)
 - **Metrics format** — F6 chiude PRD §39 #10 TOOL-05

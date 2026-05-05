@@ -1,4 +1,4 @@
-# Roadmap: SemBridge
+# Roadmap: GlueZero
 
 **Created:** 2026-04-28
 **Granularity:** coarse (allineata 1:1 con PRD §32)
@@ -13,11 +13,11 @@
 - [x] **Phase 3: Routing & Server Gateway HTTP** ✅ **COMPLETE** (14/14 plans, ready for verifier) — Routing engine dichiarativo (`local`/`http`/`cache`/`composite`) + gateway HTTP unico con retry/timeout/dedupe/auth. Closed: 2026-05-03.
 - [x] **Phase 4: Realtime inbound (SSE prioritario, WS opzionale)** ✅ **COMPLETE** (9/9 plans, ready for verifier) — Adapter SSE + WebSocket con reconnection policy unificata, normalizzazione canonica via mapper F2 invariato, auto-fallback SSE→WS, ping/pong applicativo D-111, visibility-aware behavior, cascade cleanup ext F4. Closed: 2026-05-04.
 - [x] **Phase 5: Worker Runtime** ✅ **COMPLETE** (7/7 plans, ready for verifier) — Worker Registry + Worker Pool bounded `min(hwc, 4)` cap 8 + WorkerBridge Comlink wrap + state machine atomico Pitfall 2C closure (D-133) + cancellation hybrid dedicated/cooperative (D-131, D-132) + progress events Comlink callback proxy throttled (D-135-D-138) + serialization WK-07 documentata (D-139-D-142, structuredClone default + transferable JSONPath opt-in) + composition wrapper Opzione B preserva D-83 strict. Closed: 2026-05-05.
-- [x] **Phase 6: Cache & Tooling avanzato** ✅ **COMPLETE** (11/11 plans, ready for verifier) — Cache layer in-memory LRU bounded `maxEntries=1000` (D-158) + scope user-aware (D-156/D-157) + cache-then-network ordering microtask (RESEARCH §15.6) + Event Inspector ring buffer 500 (D-167) + Route Inspector aggrega step 9+10 + MetricsCollector simil-OpenMetrics + naming `sembridge.<package>.<metric>{<labels>}` Prometheus + reservoir Algorithm R Vitter 1985 (D-165) + cardinality cap 100 + audit (D-166) + PauseController pauseTopic/resumeTopic/flushQueue + critical bypass (D-170) + getDebugSnapshot deep-clone via structuredClone (D-162) + tap registry chain MultiplexTap (D-159) + step 14 reale attivato (`event.observed` D-161) + createSemBridge chain completa F1+F2+F3+F4+F5+F6 (BLOCKER-2 fix). **Closes PRD §39 #10 (TOOL-05 metrics format)**. Closed: 2026-05-05.
+- [x] **Phase 6: Cache & Tooling avanzato** ✅ **COMPLETE** (11/11 plans, ready for verifier) — Cache layer in-memory LRU bounded `maxEntries=1000` (D-158) + scope user-aware (D-156/D-157) + cache-then-network ordering microtask (RESEARCH §15.6) + Event Inspector ring buffer 500 (D-167) + Route Inspector aggrega step 9+10 + MetricsCollector simil-OpenMetrics + naming `gluezero.<package>.<metric>{<labels>}` Prometheus + reservoir Algorithm R Vitter 1985 (D-165) + cardinality cap 100 + audit (D-166) + PauseController pauseTopic/resumeTopic/flushQueue + critical bypass (D-170) + getDebugSnapshot deep-clone via structuredClone (D-162) + tap registry chain MultiplexTap (D-159) + step 14 reale attivato (`event.observed` D-161) + createGlueZero chain completa F1+F2+F3+F4+F5+F6 (BLOCKER-2 fix). **Closes PRD §39 #10 (TOOL-05 metrics format)**. Closed: 2026-05-05.
 
 ---
 
-**MILESTONE v1.0 ✅ CHIUSA 2026-05-05** — 6/6 fasi PRD complete + 10/11 open issues PRD §39 closed (#2 deferred V1.x) + 91/91 REQ-IDs Complete + 8 pacchetti `@sembridge/*` ESM-only ready for `npm publish v1.0.0`.
+**MILESTONE v1.0 ✅ CHIUSA 2026-05-05** — 6/6 fasi PRD complete + 10/11 open issues PRD §39 closed (#2 deferred V1.x) + 91/91 REQ-IDs Complete + 8 pacchetti `@gluezero/*` ESM-only ready for `npm publish v1.0.0`.
 
 ## Phase Details
 
@@ -27,7 +27,7 @@
 
 **Scope (cross-cutting attivati in F1)**: pipeline §28 — implementati skeleton degli step 1 (ricezione), 2 (arricchimento metadata), 3 (validazione sintattica evento), 7 (dedupe/backpressure base via `dedupeKey` + `priority`), 13 (consegna). Validazione: `VAL-01`, `VAL-06`. Errori: `ERR-01`, `ERR-03`. Lifecycle: `LIFE-01`, `LIFE-02` (cascade unsubscribe). Test: `TEST-01` (subset core), `TEST-03` (storm + plugin malconfigurato). Packaging: `PKG-01..PKG-04`. Docs: `DOC-01` (skeleton API).
 
-**Package monorepo**: `@sembridge/core` (broker, event bus, topic registry, subscriber registry, plugin registry, lifecycle manager, EventTap interface)
+**Package monorepo**: `@gluezero/core` (broker, event bus, topic registry, subscriber registry, plugin registry, lifecycle manager, EventTap interface)
 
 **Stack chiave**: TypeScript 5.5+, tsup, Vitest + jsdom, Biome, Changesets, nanoid, EventBus in-house (no mitt/eventemitter3/RxJS), AbortSignal-first API
 
@@ -45,7 +45,7 @@ CORE-01, CORE-02, CORE-03, CORE-04, CORE-05, CORE-06, CORE-07, CORE-08, CORE-09,
 
 **Plans**: 11 plans
 - [x] 01-01-PLAN.md — Monorepo bootstrap (pnpm + 7 packages + tooling root) — completato 2026-04-28 (3 commits: 3a7d9fd, 3b46294, de3e16b)
-- [x] 01-02-PLAN.md — `@sembridge/core` package config (tsup + vitest + tsconfig + deps) — completato 2026-04-28 (2 commits: 6de9f41, d6004c7)
+- [x] 01-02-PLAN.md — `@gluezero/core` package config (tsup + vitest + tsconfig + deps) — completato 2026-04-28 (2 commits: 6de9f41, d6004c7)
 - [x] 01-03-PLAN.md — Public types (BrokerEvent, Subscription, PluginDescriptor, BrokerError, BrokerLogger, EventTap, BrokerConfig, DeepReadonly) — completato 2026-04-28 (3 commits: ebd126a, 7d4ff8a, 7b01f82)
 - [x] 01-04-PLAN.md — Utility batch A: broker-error + deep-freeze + logger + event-tap — completato 2026-04-28 (8 commits: a08cca7+e0f2a4e, 13dd13c+06212c7, 323b141+8c0bf5b, 2d3cac7+21e0939; 4 source + 4 test, 42/42 test passing)
 - [x] 01-05-PLAN.md — Utility batch B: topic-matcher + event-factory + event-validator — completato 2026-04-28 (6 commits RED+GREEN: c97bc56+8c24e77, 239d010+6cd21e7, d77398c+cf12502; 3 source + 3 test, 55 nuovi test, eseguito in parallelo a plan 06 via gsd-executor)
@@ -66,7 +66,7 @@ CORE-01, CORE-02, CORE-03, CORE-04, CORE-05, CORE-06, CORE-07, CORE-08, CORE-09,
 
 **Scope (cross-cutting estesi in F2)**: pipeline §28 — implementati gli step 4 (identificazione source), 5 (mapping output→canonico), 6 (validazione canonico), 11 (mapping canonico→consumer per ciascun subscriber), 12 (validazione finale). Validazione: `VAL-02`, `VAL-03`, `VAL-04`, `VAL-07`, `VAL-08`, `VAL-09`. Errori: estensione `ERR-02` per `mapping.error`. Test: `TEST-01` (mapping/reverse mapping/transform), `TEST-02` (plugin A → broker → plugin B con mapping diverso). Docs: `DOC-03`.
 
-**Package monorepo**: `@sembridge/mapper` (Canonical Vocabulary, Alias Registry, Transform Pipeline, Validate adapter); `@sembridge/validation` cross-cutting
+**Package monorepo**: `@gluezero/mapper` (Canonical Vocabulary, Alias Registry, Transform Pipeline, Validate adapter); `@gluezero/validation` cross-cutting
 
 **Stack chiave**: Valibot 1.x come default (~1-3 KB per schema usato) con adapter pluggable per Zod/Ajv; mapping pipeline pre-compilata; cycle detection con `visited: Set<(pluginId, fieldName)>`
 
@@ -99,7 +99,7 @@ MAP-01, MAP-02, MAP-03, MAP-04, MAP-05, MAP-06, MAP-07, MAP-08, MAP-09, MAP-10, 
 
 **Scope (cross-cutting estesi in F3)**: pipeline §28 — implementati step 7 (dedupe/backpressure full), 8 (resolve route), 9 (execute route http/local/cache/composite), 10 (collect outcome). Validazione: `VAL-05` (response server). Errori: `ERR-02` esteso a `<topic>.failed` e `network.error`. Sicurezza: `SEC-01..SEC-05`. Test: `TEST-01` (route HTTP, dedupe, retry/timeout), `TEST-02` (plugin → broker → server → broker → plugin), `TEST-03` (server con schema inatteso). Docs: `DOC-04`.
 
-**Package monorepo**: `@sembridge/routing` (engine, resolver, executor, handlers); `@sembridge/gateway` con sub-modulo `http` (fetch + retry/timeout/dedupe/auth/circuit/idempotency)
+**Package monorepo**: `@gluezero/routing` (engine, resolver, executor, handlers); `@gluezero/gateway` con sub-modulo `http` (fetch + retry/timeout/dedupe/auth/circuit/idempotency)
 
 **Stack chiave**: `fetch` nativo + Gateway HTTP custom (no `ky`/`wretch`/`ofetch` come dipendenza esposta); `msw` 2.x per integration test; idempotency token auto-generato per POST; full jitter `min(maxDelay, base * 2^attempt) * (0.5 + Math.random() * 0.5)`; default `concurrency: 'latest-only'` per topic UI-driven
 
@@ -116,7 +116,7 @@ ROUTE-01, ROUTE-02, ROUTE-03, ROUTE-04, ROUTE-05, ROUTE-06, ROUTE-07, ROUTE-08, 
   5. Server Gateway centralizza header auth (Bearer token via hook adapter, refresh token via hook configurabile); URL allowlist rifiuta endpoint non consentiti; backpressure (`queue bounded`, `drop`, `throttle`, `debounce`, `latest-only`, `merge/coalesce`) configurabile per route — eventi `priority: 'critical'` (es. `system.error`) non vengono mai droppati.
 
 **Plans**: 14 plans
-- [x] 03-01-PLAN.md — Bootstrap @sembridge/routing + @sembridge/gateway (subpath exports + sideEffects)
+- [x] 03-01-PLAN.md — Bootstrap @gluezero/routing + @gluezero/gateway (subpath exports + sideEffects)
 - [x] 03-02-PLAN.md — Public types F3 (RouteDefinition discriminated union, GatewayConfig, 7 Strategy interfaces, GatewayErrorCode)
 - [x] 03-03-PLAN.md — augment.ts routing (PluginDescriptor.routes + BrokerConfig.routes/gateway + CanonicalSchema.requiresRoute) + barrel + sideEffects
 - [x] 03-04-PLAN.md — augment.ts gateway (BrokerConfig.gateway) + http subpath barrel
@@ -148,7 +148,7 @@ ROUTE-01, ROUTE-02, ROUTE-03, ROUTE-04, ROUTE-05, ROUTE-06, ROUTE-07, ROUTE-08, 
 
 **Scope (cross-cutting estesi in F4)**: pipeline §28 — i messaggi server entrano alla pipeline al passo 1 (ingress) come fossero pubblicazioni esterne, attraversano canonicalizzazione e validazione regolari. Errori: `ERR-02` esteso a `system.realtime.disconnected`, `system.realtime.reconnecting`, `system.realtime.connected`. Test: `TEST-01` (realtime normalization), `TEST-02` (reconnect realtime), `TEST-03` (riconnessione ripetuta).
 
-**Package monorepo**: `@sembridge/gateway/realtime` (SSE adapter, WebSocket adapter, RealtimeChannelManager)
+**Package monorepo**: `@gluezero/gateway/realtime` (SSE adapter, WebSocket adapter, RealtimeChannelManager)
 
 **Stack chiave**: `EventSource` nativo + `WebSocket` nativo (no `reconnecting-websocket`, no `eventsource-polyfill`); `Last-Event-ID` per replay SSE; ping/pong applicativo per WebSocket + stale detection via timeout; exponential backoff full-jitter con cap 30s; visibility API integration per pausare reconnect aggressivo quando tab è hidden
 
@@ -165,7 +165,7 @@ RT-01, RT-02, RT-03, RT-04, RT-05, RT-06, RT-07, ERR-02 (extension: `system.real
   5. `connectRealtime(config)` accetta `{ mode: 'sse' | 'websocket', url, reconnect: { interval, maxAttempts, backoff, jitter, heartbeat, staleDetection } }`; `disconnectRealtime()` chiude il canale e libera tutte le risorse senza memory leak (verificato con `getDebugSnapshot()`).
 
 **Plans**: 9 plans
-- [x] 04-01-PLAN.md — Bootstrap @sembridge/gateway/sse-ws + augment + types F4 (Wave 1) — completato 2026-05-04 (2 commits: d090a1b feat scaffold + 2624c66 chore build/test config; 6 nuovi file 503 LOC + 4 modificati; 8 test smoke decl merging passed; 105/105 gateway suite; D-83 strict ✓; placeholder F1 in core/types/plugin.ts:50 chiuso via decl merging additive; subpath @sembridge/gateway/sse-ws risolvibile; RT-01/RT-02/RT-03/RT-05 type-level done)
+- [x] 04-01-PLAN.md — Bootstrap @gluezero/gateway/sse-ws + augment + types F4 (Wave 1) — completato 2026-05-04 (2 commits: d090a1b feat scaffold + 2624c66 chore build/test config; 6 nuovi file 503 LOC + 4 modificati; 8 test smoke decl merging passed; 105/105 gateway suite; D-83 strict ✓; placeholder F1 in core/types/plugin.ts:50 chiuso via decl merging additive; subpath @gluezero/gateway/sse-ws risolvibile; RT-01/RT-02/RT-03/RT-05 type-level done)
 - [x] 04-02-PLAN.md — frame-parser.ts (envelope JSON D-106 + isInternalTopic strict anti-AP-6) (Wave 2) — completato 2026-05-04 (2 commits TDD: 26cc3c2 RED test + edcbf3b GREEN feat; 3 nuovi file 332 LOC: types/frame-envelope.ts 50 + frame-parser.ts 140 + frame-parser.test.ts 142; 15/15 frame-parser test passed; 120/120 gateway suite + 654/654 monorepo full PASS; D-83 strict ✓ — zero modifiche fuori `gateway/src/sse-ws/`; PITFALL §11.7 chiusura Q1 anti-AP-6 verificato — `grep startsWith('__')` = 0 in source code; Q2 closure 04-CONTEXT — riuso ERR-02 ext F3 `network.error` per frame parse errors; building blocks pronti per consumer 04-06 websocket-adapter)
 - [x] 04-03-PLAN.md — reconnect-strategy.ts (full jitter D-109 + auto-fallback D-107 + consolidationMs Q3) (Wave 2) — completato 2026-05-04 (2 commits TDD: cfe6020 RED test + d3b3921 GREEN feat; 2 nuovi file 407 LOC: reconnect-strategy.ts 238 + reconnect-strategy.test.ts 169; 15/15 test deterministici passed con DI random+now; 135/135 gateway suite + 669/669 monorepo full PASS; tsc clean; D-83 strict ✓ — zero modifiche fuori `gateway/src/sse-ws/`; anti-AP-3 verificato — NO import `reconnecting-websocket` (vincolo PRD §31.3); RT-05/RT-07 building blocks pronti per consumer 04-05/04-06/04-07; threat T-04-03-01..04 mitigated come da CONTEXT)
 - [x] 04-04-PLAN.md — visibility-detector.ts (D-110 + DI guard Worker/SSR) (Wave 2) — completato 2026-05-04 (2 commits TDD: a74a9dc RED test + 1e1d34b GREEN feat; 2 nuovi file 275 LOC: visibility-detector.ts 125 + visibility-detector.test.ts 150; 11/11 test deterministici passed con mock Document custom; 146/146 gateway suite + 680/680 monorepo full PASS; tsc clean su 4 package; D-83 strict ✓ — zero modifiche fuori `gateway/src/sse-ws/`; anti-AP-5 verificato — 0 setInterval/setTimeout (event-driven puro); pattern listener tracking analog combine-signals.ts:62-86; DI guard 3-way undefined/null/Document mock; RT-05 closed; building block pronto per consumer 04-07 RealtimeChannelManager — single shared instance per orchestrare freshness check su visibilitychange→visible; threat T-04-04-02/03 mitigated)
@@ -193,7 +193,7 @@ RT-01, RT-02, RT-03, RT-04, RT-05, RT-06, RT-07, ERR-02 (extension: `system.real
 
 **Scope (cross-cutting estesi in F5)**: pipeline §28 — la route worker estende lo step 9 (execute route) con dispatch al worker. Errori: `ERR-02` esteso a `worker.error`. Test: `TEST-01` (route worker, lifecycle cleanup MessageChannel), `TEST-02` (plugin → broker → worker → broker → plugin), `TEST-03` (worker timeout).
 
-**Package monorepo**: `@sembridge/worker` (Worker Registry, Worker Pool, WorkerBridge, task tracker)
+**Package monorepo**: `@gluezero/worker` (Worker Registry, Worker Pool, WorkerBridge, task tracker)
 
 **Stack chiave**: `Comlink` 4.4.x per RPC typed (~1.1 KB gzipped) con astrazione `WorkerBridge` interna per swap futuro; `structuredClone` nativo come default serializer; `superjson` opt-in via adapter quando servono Date/Map/Set/BigInt fuori SCA; pool bounded `min(hardwareConcurrency, 4)`; validatore `assertSerializable` pre-postMessage in dev mode; state machine atomico task `{pending → done | timeout | error}` (transizioni esclusive con `taskId` lookup) per chiusura race condition timeout vs success
 
@@ -209,11 +209,11 @@ WK-01, WK-02, WK-03, WK-04, WK-05, WK-06, WK-07, ERR-02 (extension: `worker.erro
   4. Worker pool bounded `min(hardwareConcurrency, 4)` con riuso; `MessageChannel` chiusi esplicitamente al termine di ogni task (no leak); cancellazione task via `AbortSignal` propagato fino a `WorkerBridge.cancel(taskId)`; timeout configurabile per task — verificato con `getDebugSnapshot()` post-task: counter `workerTasks` torna a zero.
   5. Eventi `<topic>.progress` opzionali: il worker può emettere progress fraction (0..1) durante l'esecuzione, propagati come BrokerEvent canonici al subscriber.
 
-**Plans**: 7/7 complete (05-01 bootstrap @sembridge/worker + 05-02 assert-serializable + transferable-extractor + 05-03 task-tracker state machine atomico Pitfall 2C + 05-04 worker-bridge Comlink wrap + 05-05 worker-pool bounded + worker-registry + 05-06 worker-broker composition wrapper Opzione B + integration test 3-tier + 05-07 final gate F5: CI gates + DOC-05 README italiano 11 sezioni + JSDoc TypeDoc-ready 7 file + REQ matrix flip atomic WK-01..WK-07 → Complete + PRD §39 #11 CLOSED + ROADMAP/STATE/TRACKER closure)
+**Plans**: 7/7 complete (05-01 bootstrap @gluezero/worker + 05-02 assert-serializable + transferable-extractor + 05-03 task-tracker state machine atomico Pitfall 2C + 05-04 worker-bridge Comlink wrap + 05-05 worker-pool bounded + worker-registry + 05-06 worker-broker composition wrapper Opzione B + integration test 3-tier + 05-07 final gate F5: CI gates + DOC-05 README italiano 11 sezioni + JSDoc TypeDoc-ready 7 file + REQ matrix flip atomic WK-01..WK-07 → Complete + PRD §39 #11 CLOSED + ROADMAP/STATE/TRACKER closure)
 **Status**: ✅ COMPLETE — ready for verification (gsd-verifier Phase 5)
 **Closure date**: 2026-05-05
 **Test coverage**: 18 worker test files / 121 test passing Tier-1 jsdom (8 unit modules + 8 integration `__integration__/` D-151 #1-#6,#8,#9 + 2 broker/factory) + 6/6 browser smoke Tier-3 Playwright Chromium reale (`__browser__/playwright-worker-smoke.test.ts` D-150 + D-151 #7 transferable byteLength=0 verified). Cross-package zero regression: 248 core + 183 mapper + 103 routing + 222/225 gateway (3 skip MSW V1.x F4) + 121 worker = 877/880 monorepo full passing.
-**CI gates**: publint ✅ (all good), attw ESM-only ✅ (node16 🟢, bundler 🟢), size-limit ✅ (`@sembridge/worker` 26.45/32 KB gz — include all deps cross-package Comlink + valibot + nanoid + @sembridge/{core,routing,gateway/http}), biome ✅ (zero errors), typecheck tsc ✅ (zero errors), build tsup ESM-only ✅ (dist/index.js 50.92 KB + dist/augment.js 226 B + dts 64.83 KB)
+**CI gates**: publint ✅ (all good), attw ESM-only ✅ (node16 🟢, bundler 🟢), size-limit ✅ (`@gluezero/worker` 26.45/32 KB gz — include all deps cross-package Comlink + valibot + nanoid + @gluezero/{core,routing,gateway/http}), biome ✅ (zero errors), typecheck tsc ✅ (zero errors), build tsup ESM-only ✅ (dist/index.js 50.92 KB + dist/augment.js 226 B + dts 64.83 KB)
 **Coverage v8 worker subset**: 91.96% statements / 83.73% branches / 90.58% functions / 94.17% lines — supera floor 85/75/88/87 e target preliminary 90/80/90/90. Thresholds calibrate post-implementation a 91.5/83/90/93.5 (analog F4 04-09 commit 761e4ad pattern).
 **Open issues PRD §39 chiusi**: #11 (WK-07 — serializzazione messaggi worker — `structuredClone` (SCA) default + `assertSerializable` deep-walk PRE-postMessage dev-mode auto + transferable opt-in JSONPath + DOC-05 README italiano `packages/worker/README.md` 11 sezioni — Sezione 6 "Serialization contract WK-07" con tabella structuredClone supported types + tabella tipi NON supportati con strategia raccomandata + JSON.stringify NEVER warning + Pitfall 7.E transferable detached byteLength=0 + Sezione 11 Q&A 15 domande lockate Phase 5)
 **D-83 strict carryover**: ✓ verified zero modifiche runtime a `packages/{core,mapper,routing}/src/` + `packages/gateway/src/{http,sse-ws}/` per tutta F5 (`git diff main...HEAD` exit 0 lines)
@@ -230,7 +230,7 @@ WK-01, WK-02, WK-03, WK-04, WK-05, WK-06, WK-07, ERR-02 (extension: `worker.erro
 
 **Scope (cross-cutting estesi in F6)**: pipeline §28 — step 14 (logging/metrics/debug snapshot) attivato come implementazione reale dello `EventTap` predisposto in F1. Test: `TEST-01` (cache hit/miss, lifecycle cleanup), `TEST-02` (cache hit/miss flows). Docs: `DOC-02`, `DOC-05` (esempi end-to-end incluso scenario meteo §29 con cache + tooling), `DOC-06`. Tutti i `DOC-*` consolidati a fine F6 come deliverable PRD §41.
 
-**Package monorepo**: `@sembridge/cache` (MemoryCacheAdapter, policies); `@sembridge/devtools` (Event Inspector, Route Inspector, MetricsCollector, snapshot API). `@sembridge/cache-idb` rimandato a V1.x.
+**Package monorepo**: `@gluezero/cache` (MemoryCacheAdapter, policies); `@gluezero/devtools` (Event Inspector, Route Inspector, MetricsCollector, snapshot API). `@gluezero/cache-idb` rimandato a V1.x.
 
 **Stack chiave**: cache LRU + TTL + scope key in-memory; `size-limit` come CI gate (core < 8 KB gz, gateway < 6 KB, mapper < 5 KB); metrics in formato JSON-serializable simil-OpenMetrics (`{ counters, gauges, histograms }`); debug mode auto-off in production con guard `NODE_ENV`
 
@@ -247,7 +247,7 @@ CACHE-01, CACHE-02, CACHE-03, TOOL-01, TOOL-02, TOOL-03, TOOL-04, TOOL-05, TEST-
   5. Cache invalidation con scope user-aware: la chiave di cache include scope (es. `userId` o `tenantId`) per route auth, evitando cross-tenant leakage; TTL configurabile per route, invalidazione manuale via API (`broker.cache.invalidate(keyOrPattern)`) e automatica al passare del TTL — verificato da `TEST-02` (cache hit/miss flows) e da test di robustezza.
 
 **Plans**: 11 plans (post revision iter 1 split BLOCKER-3 — 06-08 → 06-08a/b + 06-09 → 06-09a/b)
-- [x] 06-01-PLAN.md — Bootstrap @sembridge/{cache,devtools,sembridge} (package.json + tsup ESM-only + vitest 3-tier + types/* + augment.ts) — Wave 1 sequential gate
+- [x] 06-01-PLAN.md — Bootstrap @gluezero/{cache,devtools,sembridge} (package.json + tsup ESM-only + vitest 3-tier + types/* + augment.ts) — Wave 1 sequential gate
 - [x] 06-02-PLAN.md — MemoryCacheAdapter LRU bounded `maxEntries=1000` (D-158) + stable-hash FNV-1a (D-155 riuso F3 D-74) — Wave 2 ∥ 06-04
 - [x] 06-03-PLAN.md — CacheHandler + CompositeHandler concretizza F3 D-77 placeholder + scope hybrid D-156/D-157 + cache-then-network ordering microtask — Wave 2-bis post 06-02
 - [x] 06-04-PLAN.md — MultiplexTap + tap registry chain D-159 + auto-wrap F1 single-tap backward-compat — Wave 2 ∥ 06-02
@@ -255,7 +255,7 @@ CACHE-01, CACHE-02, CACHE-03, TOOL-01, TOOL-02, TOOL-03, TOOL-04, TOOL-05, TEST-
 - [x] 06-06-PLAN.md — MetricsCollector + reservoir Algorithm R Vitter 1985 (D-165) + cardinality cap 100 (D-166) + Prometheus naming (D-163) + cumulative-only (D-164) — Wave 3 parallel
 - [x] 06-07-PLAN.md — PauseController + queue cap 1000 + critical bypass (D-170) + flushQueue audit (D-169) + pauseTopic block publish (D-168) — Wave 3 parallel
 - [x] 06-08a-PLAN.md — CacheBroker composition wrapper Opzione B + createCacheBroker factory + createCacheHarness + 4 integration test cache 3-tier + barrel cache FINAL append — Wave 4a sequential post 06-03
-- [x] 06-08b-PLAN.md — DevtoolsBroker composition wrapper + createDevtoolsBroker + createSemBridge **CHAIN COMPLETA F1+F2+F3+F4+F5+F6** (BLOCKER-2 fix) + barrel devtools FINAL cumulative (BLOCKER-1 fix single-writer) + 6 integration test devtools+sembridge 3-tier — Wave 4b sequential post 06-08a
+- [x] 06-08b-PLAN.md — DevtoolsBroker composition wrapper + createDevtoolsBroker + createGlueZero **CHAIN COMPLETA F1+F2+F3+F4+F5+F6** (BLOCKER-2 fix) + barrel devtools FINAL cumulative (BLOCKER-1 fix single-writer) + 6 integration test devtools+sembridge 3-tier — Wave 4b sequential post 06-08a
 - [x] 06-09a-PLAN.md — CI gates verification + size-limit budget calibration cache/devtools/sembridge + biome auto-format + coverage threshold calibration post-impl — Wave 5a sequential post 06-08b
 - [x] 06-09b-PLAN.md — Final gate F6 milestone v1.0 closure: DOC-02/05/06 italiano (~1748 LOC) con 7 Q&A enumerate WARNING-2 fix + JSDoc TypeDoc-ready 11 file public + REQ matrix flip + chiusura PRD §39 #10 (TOOL-05) + CHANGELOG v1.0.0 + ROADMAP/STATE/TRACKER closure — Wave 5b sequential post 06-09a — completato 2026-05-05 (4 commits: 3178103 DOC-02/05/06 + a4b2af2 JSDoc + ca1656d REQ flip + final closure)
 
@@ -263,8 +263,8 @@ CACHE-01, CACHE-02, CACHE-03, TOOL-01, TOOL-02, TOOL-03, TOOL-04, TOOL-05, TEST-
 
 - ✅ CACHE-01..03 + TOOL-01..05 + DOC-02/05/06 + ERR-02 ext + LIFE-02 ext + PIPE-01 ext + TEST-01/02 ext F6 → Complete
 - ✅ DOC-05 `packages/devtools/README.md` italiano 11 sezioni 368 LOC con sezione 6 "MetricsCollector — closes PRD §39 #10 (TOOL-05)" + 7 Q&A enumerate Q1-Q7 + anti-pattern cardinality explosion
-- ✅ DOC-02 `packages/sembridge/README.md` italiano 452 LOC con scenario meteo F1+F2+F3+F4+F5+F6 end-to-end + chain composition + Q&A 8 domande
-- ✅ DOC `packages/sembridge/EXAMPLES.md` italiano 519 LOC con 10 esempi consolidati cross-feature
+- ✅ DOC-02 `packages/gluezero/README.md` italiano 452 LOC con scenario meteo F1+F2+F3+F4+F5+F6 end-to-end + chain composition + Q&A 8 domande
+- ✅ DOC `packages/gluezero/EXAMPLES.md` italiano 519 LOC con 10 esempi consolidati cross-feature
 - ✅ DOC `packages/cache/README.md` italiano 409 LOC con cache adapter + LRU + 3 strategies + scope D-156 + Q&A 5
 - ✅ JSDoc TypeDoc-ready: 36 @example / 55 @see / 9 @throws preservati in dist/index.d.ts (target ≥27/30/9)
 - ✅ Coverage v8 cache 100/94.21/100/100, devtools 96.44/89.28/94.36/96.98, sembridge 100/100/100/100 (sopra hard floor target ≥90/80/90/90)
@@ -330,7 +330,7 @@ I 11 punti che il PRD §39 vieta esplicitamente di lasciare impliciti vengono ch
 | 7 | Unsubscribe automatico in `unregisterPlugin` | Cascade obbligatoria, test deterministico | F1 (LIFE-02) — **Closed in 01-08** |
 | 8 | Retry 4xx vs 5xx | No retry su 4xx (eccetto 408/429); retry su 5xx + network + 408/429 | F3 (ROUTE-09) |
 | 9 | Reconnection rules realtime | Exponential backoff + full jitter, cap 30s, eventi `system.realtime.*`, Last-Event-ID per SSE, ping app-level per WS | F4 (RT-07) — **Closed in 04-09** ✅ |
-| 10 | Format metriche | JSON simil-OpenMetrics `{ counters, gauges, histograms }` + naming `sembridge.<package>.<metric>{<labels>}` Prometheus dot.case + cumulative-only counters D-164 + reservoir Algorithm R Vitter 1985 D-165 + cardinality cap 100 D-166 | F6 (TOOL-05) — **Closed in 06-09b** ✅ |
+| 10 | Format metriche | JSON simil-OpenMetrics `{ counters, gauges, histograms }` + naming `gluezero.<package>.<metric>{<labels>}` Prometheus dot.case + cumulative-only counters D-164 + reservoir Algorithm R Vitter 1985 D-165 + cardinality cap 100 D-166 | F6 (TOOL-05) — **Closed in 06-09b** ✅ |
 | 11 | Serializzazione messaggi worker | structuredClone default, transferable opt-in, no functions, `assertSerializable` dev mode | F5 (WK-07) |
 
 ## Architectural Constraints (vincolanti per la roadmap)
@@ -339,7 +339,7 @@ I 11 punti che il PRD §39 vieta esplicitamente di lasciare impliciti vengono ch
 
 2. **Canonicalizzazione interna completa V1 (PRD §13.5)**: i dati transitano sempre canonicalizzati internamente tra Broker, Routing, Cache, Worker. La traduzione inversa `canonical → consumer` avviene solo all'ultimo miglio (step 11 della pipeline, una volta per consumer). Conseguenza: la cache (F6) memorizza payload canonici, lo stesso cache hit serve diversi consumer con `inputMap` differenti.
 
-3. **Monorepo `pnpm` workspaces dal giorno 1**: i 7 sotto-pacchetti (`@sembridge/core`, `mapper`, `gateway`, `worker`, `cache`, `devtools`, `routing` + bundle pubblico aggregato `@sembridge/sembridge`) sono già creati come scheletri in F1 e popolati dalle fasi successive. Il consumer importa `@sembridge/sembridge` o sotto-pacchetti specifici per tree-shaking esplicito.
+3. **Monorepo `pnpm` workspaces dal giorno 1**: i 7 sotto-pacchetti (`@gluezero/core`, `mapper`, `gateway`, `worker`, `cache`, `devtools`, `routing` + bundle pubblico aggregato `@gluezero/gluezero`) sono già creati come scheletri in F1 e popolati dalle fasi successive. Il consumer importa `@gluezero/gluezero` o sotto-pacchetti specifici per tree-shaking esplicito.
 
 4. **Profile model `claude-opus-4-7-1`**: tutti i sotto-agenti GSD (planner, builder, verifier, code-reviewer) usano questo modello — vincolo utente di sessione.
 
@@ -370,9 +370,9 @@ I 11 punti che il PRD §39 vieta esplicitamente di lasciare impliciti vengono ch
 ---
 
 *Roadmap created: 2026-04-28*
-*Last updated: 2026-05-05 — **Phase 6 COMPLETE 11/11 plan + MILESTONE v1.0 CHIUSA**. Phase 6 closure: CACHE-01..03 + TOOL-01..05 + DOC-02/05/06 + ERR-02/LIFE-02/PIPE-01/TEST-01-02 ext F6 → Complete. **PRD §39 #10 (TOOL-05 metrics format) → CLOSED 2026-05-05** — ULTIMA open issue v1.0 chiusa. CI gates F6: publint 8/8 ✅, attw ESM-only 8/8 ✅, size-limit 8/8 ✅ (cache 22.13/27 KB + devtools 22.27/27 KB + sembridge 34.80/42 KB), biome ✅, typecheck 8/8 ✅, build 8/8 ✅. Coverage v8 cache 100/94.21/100/100, devtools 96.44/89.28/94.36/96.98, sembridge 100/100/100/100 (sopra hard floor target ≥90/80/90/90). DOC-02/05/06 italiano ~1748 LOC (cache 409 + devtools 368 + sembridge 452 + EXAMPLES 519). JSDoc TypeDoc-ready: @example 36 / @see 55 / @throws 9 (sopra target ≥27/30/9). D-83 strict carryover ✓ verified `git diff main...HEAD packages/{core,mapper,routing,gateway,worker}/src/` exit 0 lines per tutta F6. 16 decisioni F6 D-155..D-170 lockate. **MILESTONE v1.0 chiusa** — 6/6 fasi PRD complete + 10/11 open issues PRD §39 closed (#2 deferred V1.x) + 91/91 REQ-IDs Complete + 8 pacchetti `@sembridge/*` ESM-only ready for `npm publish v1.0.0`.*
+*Last updated: 2026-05-05 — **Phase 6 COMPLETE 11/11 plan + MILESTONE v1.0 CHIUSA**. Phase 6 closure: CACHE-01..03 + TOOL-01..05 + DOC-02/05/06 + ERR-02/LIFE-02/PIPE-01/TEST-01-02 ext F6 → Complete. **PRD §39 #10 (TOOL-05 metrics format) → CLOSED 2026-05-05** — ULTIMA open issue v1.0 chiusa. CI gates F6: publint 8/8 ✅, attw ESM-only 8/8 ✅, size-limit 8/8 ✅ (cache 22.13/27 KB + devtools 22.27/27 KB + sembridge 34.80/42 KB), biome ✅, typecheck 8/8 ✅, build 8/8 ✅. Coverage v8 cache 100/94.21/100/100, devtools 96.44/89.28/94.36/96.98, sembridge 100/100/100/100 (sopra hard floor target ≥90/80/90/90). DOC-02/05/06 italiano ~1748 LOC (cache 409 + devtools 368 + sembridge 452 + EXAMPLES 519). JSDoc TypeDoc-ready: @example 36 / @see 55 / @throws 9 (sopra target ≥27/30/9). D-83 strict carryover ✓ verified `git diff main...HEAD packages/{core,mapper,routing,gateway,worker}/src/` exit 0 lines per tutta F6. 16 decisioni F6 D-155..D-170 lockate. **MILESTONE v1.0 chiusa** — 6/6 fasi PRD complete + 10/11 open issues PRD §39 closed (#2 deferred V1.x) + 91/91 REQ-IDs Complete + 8 pacchetti `@gluezero/*` ESM-only ready for `npm publish v1.0.0`.*
 
-*Previous update: 2026-05-05 — **Phase 5 COMPLETE 7/7 plan** (05-01..05-06 done + 05-07 final gate). 1 open issue PRD §39 chiuso: #11 WK-07 (serializzazione messaggi worker — `structuredClone` (SCA) default + `assertSerializable` deep-walk PRE-postMessage dev-mode auto + transferable opt-in JSONPath + DOC-05 `packages/worker/README.md` italiano 11 sezioni 429 LOC). CI gates: publint ✅, attw ESM-only ✅ (node16 + bundler 🟢), size-limit ✅ (`@sembridge/worker` 26.45/32 KB gz include all deps cross-package), biome ✅ (zero errors), typecheck ✅, build ✅. Coverage v8 worker subset 91.96% statements / 83.73% branches / 90.58% functions / 94.17% lines (above floor 85/75/88/87 + above target 90/80/90/90). Test totale: 121 worker (18 file Tier-1 jsdom + 6 browser smoke Tier-3 Playwright Chromium reale), 877/880 monorepo full (3 skip MSW V1.x F4). D-83 strict carryover ✓ verified `git diff main...HEAD packages/{core,mapper,routing}/src/ + packages/gateway/src/{http,sse-ws}/` exit 0 lines per tutta F5. **WK-01..WK-07 + ERR-02 ext + LIFE-02 ext F5 + TEST-01/02/03 ext F5 → Complete**. **Phase 4 COMPLETE & READY** (9/9). **Phase 3 COMPLETE & READY** (14/14). **Phase 2 COMPLETE & READY** (12/12). **Phase 1 COMPLETE & VERIFIED** (PASS HIGH).*
+*Previous update: 2026-05-05 — **Phase 5 COMPLETE 7/7 plan** (05-01..05-06 done + 05-07 final gate). 1 open issue PRD §39 chiuso: #11 WK-07 (serializzazione messaggi worker — `structuredClone` (SCA) default + `assertSerializable` deep-walk PRE-postMessage dev-mode auto + transferable opt-in JSONPath + DOC-05 `packages/worker/README.md` italiano 11 sezioni 429 LOC). CI gates: publint ✅, attw ESM-only ✅ (node16 + bundler 🟢), size-limit ✅ (`@gluezero/worker` 26.45/32 KB gz include all deps cross-package), biome ✅ (zero errors), typecheck ✅, build ✅. Coverage v8 worker subset 91.96% statements / 83.73% branches / 90.58% functions / 94.17% lines (above floor 85/75/88/87 + above target 90/80/90/90). Test totale: 121 worker (18 file Tier-1 jsdom + 6 browser smoke Tier-3 Playwright Chromium reale), 877/880 monorepo full (3 skip MSW V1.x F4). D-83 strict carryover ✓ verified `git diff main...HEAD packages/{core,mapper,routing}/src/ + packages/gateway/src/{http,sse-ws}/` exit 0 lines per tutta F5. **WK-01..WK-07 + ERR-02 ext + LIFE-02 ext F5 + TEST-01/02/03 ext F5 → Complete**. **Phase 4 COMPLETE & READY** (9/9). **Phase 3 COMPLETE & READY** (14/14). **Phase 2 COMPLETE & READY** (12/12). **Phase 1 COMPLETE & VERIFIED** (PASS HIGH).*
 
 *Previous update: 2026-05-04 — **Phase 5 In Progress 6/7 plan completi** (Wave 4 ✅ COMPLETE). 05-06 (composition wrapper Opzione B + factory + 8 integration test Tier-1 + 6 browser smoke Tier-3 Playwright Chromium). 121/121 worker test passing + 6/6 browser smoke; cross-package zero regression: core 248 + mapper 183 + routing 103 + gateway 222 (3 skip MSW V1.x F4) + worker 121 = 877/880 monorepo full. Opzione B research §7.2 verified. D-83 strict ✓. D-151 10 scenari coverage. WK-01..WK-07 + ERR-02 ext + LIFE-02 ext F5 + TEST-01/02/03 ext F5 → subset W4 done (full closure 05-07).*
 

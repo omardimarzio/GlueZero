@@ -60,7 +60,7 @@
 
 | Option | Description | Selected |
 |--------|-------------|----------|
-| Console-based + adapter slot (Recommended) | Default `console.{error,warn,info,debug,trace}` con namespace `[sembridge]`. API `setLogger(customLogger)` per swap (pino, winston, custom). Pro: zero dipendenze in core, swap facile. Contro: nessuno significativo per V1. | ✓ |
+| Console-based + adapter slot (Recommended) | Default `console.{error,warn,info,debug,trace}` con namespace `[gluezero]`. API `setLogger(customLogger)` per swap (pino, winston, custom). Pro: zero dipendenze in core, swap facile. Contro: nessuno significativo per V1. | ✓ |
 | Solo console, no adapter | Solo `console.*` hardcoded. Più semplice ma blocca integrazione con backend telemetry future. | |
 | Structured JSON di default | Output sempre JSON (`{level, ts, namespace, msg, ...meta}`) verso console. Più leggibile da log aggregator (DataDog, New Relic) ma meno DX in browser devtools. | |
 

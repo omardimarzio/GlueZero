@@ -68,15 +68,15 @@ metrics:
 
 # Phase 1 Plan 05: Utility Batch B Summary
 
-Implementati i 3 moduli foundation di `@sembridge/core` (`core/` directory) con il pattern TDD RED→GREEN per ogni task: `topic-matcher.ts` (validateTopic + validateTopicPattern + TopicTrie segmentato D-08..D-11/D-24, CORE-08/09), `event-factory.ts` (createBrokerEvent con default id nanoid + timestamp Date.now + source obbligatorio D-21..D-23, CORE-07), `event-validator.ts` (validateEvent via Valibot 1.3.1 schema BrokerEvent shape D-18, VAL-01/06). Ogni modulo ha test unit co-locato. File ownership disgiunta da plan 04 (utility batch A) e plan 06 (utility batch C, wave 3 parallelo) e da plan 07 (consumer). Coverage REQ-IDs: CORE-08 ✓, CORE-09 ✓, CORE-07 ✓, VAL-01 ✓, VAL-06 ✓.
+Implementati i 3 moduli foundation di `@gluezero/core` (`core/` directory) con il pattern TDD RED→GREEN per ogni task: `topic-matcher.ts` (validateTopic + validateTopicPattern + TopicTrie segmentato D-08..D-11/D-24, CORE-08/09), `event-factory.ts` (createBrokerEvent con default id nanoid + timestamp Date.now + source obbligatorio D-21..D-23, CORE-07), `event-validator.ts` (validateEvent via Valibot 1.3.1 schema BrokerEvent shape D-18, VAL-01/06). Ogni modulo ha test unit co-locato. File ownership disgiunta da plan 04 (utility batch A) e plan 06 (utility batch C, wave 3 parallelo) e da plan 07 (consumer). Coverage REQ-IDs: CORE-08 ✓, CORE-09 ✓, CORE-07 ✓, VAL-01 ✓, VAL-06 ✓.
 
 ## Objective Achieved
 
 L'obiettivo del plan 01-05 è raggiunto integralmente:
 
 - **6 file creati** in `packages/core/src/core/` (3 source + 3 test, 686 LOC totali)
-- **`pnpm --filter @sembridge/core test`** esce 0 e riporta `Test Files 9 passed (9) | Tests 134 passed (134)` in 733ms (suite cumulativa post-merge plan 04 + 05 + 06; per il solo plan 05 sono 55 test su 3 file: 32 topic-matcher + 12 event-factory + 11 event-validator)
-- **`pnpm --filter @sembridge/core typecheck`** esce 0 (no TS errors, isolatedDeclarations conforme)
+- **`pnpm --filter @gluezero/core test`** esce 0 e riporta `Test Files 9 passed (9) | Tests 134 passed (134)` in 733ms (suite cumulativa post-merge plan 04 + 05 + 06; per il solo plan 05 sono 55 test su 3 file: 32 topic-matcher + 12 event-factory + 11 event-validator)
+- **`pnpm --filter @gluezero/core typecheck`** esce 0 (no TS errors, isolatedDeclarations conforme)
 - **`pnpm biome check packages/core/src/core/`** esce 0 (18 file checked, no fixes applied)
 - **TDD pattern RED→GREEN** preservato: 3 commit `test(01-05): aggiunge test RED ...` precedono ogni commit `feat(01-05): implementa ...` corrispondente
 - **D-11 esplicito verificato**: test "matches `weather.*.failed` against `weather.alert.failed`" passa
@@ -115,7 +115,7 @@ L'obiettivo del plan 01-05 è raggiunto integralmente:
 - [x] Regex `validateTopicPattern` accetta `weather.*.failed` (D-11)
 - [x] `TopicTrie.match('weather.alert.failed')` ritorna subscribers di pattern `weather.*.failed` (D-11 esplicito) — test "matches `weather.*.failed` against `weather.alert.failed`" pass
 - [x] `TopicTrie.insert` idempotente (Set semantics) — test "insertion is idempotent" pass
-- [x] `pnpm --filter @sembridge/core test topic-matcher` esce 0
+- [x] `pnpm --filter @gluezero/core test topic-matcher` esce 0
 - [x] Output del test contiene `Test Files  1 passed (1) | Tests 32 passed (32)`
 - [x] Performance test 10000 subscriber + match < 50ms passa
 
@@ -126,7 +126,7 @@ L'obiettivo del plan 01-05 è raggiunto integralmente:
 - [x] Throw BrokerError code='event.source.missing' se né params.source né defaultSource forniti (D-23)
 - [x] Default `deliveryMode: 'async'`, `priority: 'normal'` (D-01 + standard)
 - [x] Campi opzionali NON aggiunti come `undefined` se non forniti — test "omits optional fields" verifica `'correlationId' in evt === false`
-- [x] `pnpm --filter @sembridge/core test event-factory` esce 0 con 12 test passing
+- [x] `pnpm --filter @gluezero/core test event-factory` esce 0 con 12 test passing
 
 ### Acceptance criteria Task 3 (event-validator)
 
@@ -135,19 +135,19 @@ L'obiettivo del plan 01-05 è raggiunto integralmente:
 - [x] Schema include picklist per `source.type` (5 valori), `deliveryMode` (4 valori), `priority` (4 valori incluso `'critical'`)
 - [x] Throw BrokerError code='event.validation.failed' con `details.issues` come array
 - [x] File test ha 11 test cases (target ≥ 11)
-- [x] `pnpm --filter @sembridge/core test event-validator` esce 0
+- [x] `pnpm --filter @gluezero/core test event-validator` esce 0
 
 ### Plan-wide verification
 
-- [x] `pnpm --filter @sembridge/core test` esce 0: `Test Files 9 passed | Tests 134 passed | Duration 733ms` (suite cumulativa wave 3 = plan 04 + 05 + 06)
-- [x] `pnpm --filter @sembridge/core typecheck` esce 0
+- [x] `pnpm --filter @gluezero/core test` esce 0: `Test Files 9 passed | Tests 134 passed | Duration 733ms` (suite cumulativa wave 3 = plan 04 + 05 + 06)
+- [x] `pnpm --filter @gluezero/core typecheck` esce 0
 - [x] `pnpm biome check packages/core/src/core/` esce 0 (18 files checked)
 - [x] File ownership disgiunta da plan 04 e 06 verificata (nessuna intersezione)
 
 ## Final test output
 
 ```
-> @sembridge/core@0.0.0 test
+> @gluezero/core@0.0.0 test
 > vitest run --passWithNoTests
 
  RUN  v4.1.5 packages/core
@@ -207,7 +207,7 @@ Nessun nuovo threat surface introdotto fuori dal `<threat_model>` del plan.
 
 ## Open Items
 
-- **Coverage v8 measurement** (ereditato da plan 04): install `@vitest/coverage-v8` (devDependency root) e ri-eseguire `pnpm --filter @sembridge/core test:coverage` al termine di Wave 3 per verificare il target ≥ 90% sui file `core/`. Non bloccante per F1 progress; surrogate confidence: 134 test passing su 9 moduli isolati con behavior coverage esplicito.
+- **Coverage v8 measurement** (ereditato da plan 04): install `@vitest/coverage-v8` (devDependency root) e ri-eseguire `pnpm --filter @gluezero/core test:coverage` al termine di Wave 3 per verificare il target ≥ 90% sui file `core/`. Non bloccante per F1 progress; surrogate confidence: 134 test passing su 9 moduli isolati con behavior coverage esplicito.
 - **Schema topic regex duplication** (`topic-matcher.ts` + `event-validator.ts`): accettata in F1 per tree-shaking ottimale e prevenzione dipendenza circolare. F2+ può consolidare via shared module se la regex evolve.
 - **Plugin source ownership enforcement** (T-05-02): deferred a F2 con plugin-scoped publish. createBrokerEvent in F1 enforce solo presenza, non identity.
 

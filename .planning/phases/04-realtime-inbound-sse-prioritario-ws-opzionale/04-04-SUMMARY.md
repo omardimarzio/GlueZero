@@ -5,7 +5,7 @@ subsystem: gateway/sse-ws
 tags: [realtime, visibility-api, di-guard, lifecycle, tdd]
 dependency_graph:
   requires:
-    - "@sembridge/gateway runtime (plan 04-01)"
+    - "@gluezero/gateway runtime (plan 04-01)"
     - "globalThis.document (browser/jsdom)"
   provides:
     - "createVisibilityDetector factory + VisibilityDetector interface + VisibilityState type"

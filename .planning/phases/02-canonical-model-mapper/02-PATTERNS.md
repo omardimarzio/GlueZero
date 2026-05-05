@@ -1,8 +1,8 @@
 # Phase 2: Canonical Model & Mapper — Pattern Map
 
 **Mappato:** 2026-04-29
-**Source phase:** Phase 1 (`@sembridge/core`) — frozen e delivered (commit `f7faadb`).
-**Target package:** `@sembridge/mapper` (placeholder scaffold-ato in plan 01-01, src vuoto).
+**Source phase:** Phase 1 (`@gluezero/core`) — frozen e delivered (commit `f7faadb`).
+**Target package:** `@gluezero/mapper` (placeholder scaffold-ato in plan 01-01, src vuoto).
 **File F2 attesi:** ~12 file source + ~12 file test + 1 augment + 1 barrel + 1 fixture (≈26 totali).
 **Analoghi F1 trovati:** 26/26 (full coverage — F2 estende moduli isomorfi a F1).
 **Lingua:** italiana per commenti, identificatori, REQ-IDs descrittivi. Codice/log keywords/error codes in inglese.
@@ -74,7 +74,7 @@ Ogni file F1 inizia con un commento header esplicativo che documenta:
 **Esempio canonico** (da `bus.ts:1-26`):
 
 ```ts
-// EventBus — il cuore del broker SemBridge (CORE-01, CORE-09, CORE-12, ERR-03).
+// EventBus — il cuore del broker GlueZero (CORE-01, CORE-09, CORE-12, ERR-03).
 //
 // Dispatch pub/sub con:
 //   - tap orchestration sui 5 step F1 della pipeline §28 (CORE-13, D-20)
@@ -136,17 +136,17 @@ import { createBrokerError, isBrokerError } from './broker-error'
 import { deepFreeze } from './deep-freeze'
 ```
 
-F2 segue la stessa struttura, con un livello in più: import da `@sembridge/core` (cross-package monorepo).
+F2 segue la stessa struttura, con un livello in più: import da `@gluezero/core` (cross-package monorepo).
 
 ```ts
 // External
 import * as v from 'valibot'
 
-// Cross-package types (da @sembridge/core)
-import type { BrokerEvent, BrokerError, PluginDescriptor } from '@sembridge/core'
+// Cross-package types (da @gluezero/core)
+import type { BrokerEvent, BrokerError, PluginDescriptor } from '@gluezero/core'
 
-// Cross-package runtime (da @sembridge/core)
-import { createBrokerError, isBrokerError } from '@sembridge/core'
+// Cross-package runtime (da @gluezero/core)
+import { createBrokerError, isBrokerError } from '@gluezero/core'
 
 // Local types
 import type { CanonicalSchema, InputMap, OutputMap } from '../types/canonical-schema'
@@ -165,11 +165,11 @@ import { CanonicalRegistry } from './canonical-registry'
 
 | File F2 | Analogo F1 | Match | Adattamento | Reuse |
 |---------|------------|-------|-------------|-------|
-| `types/canonical-schema.ts` | `types/broker-event.ts` (header + JSDoc + branded type pattern) | esatto (interface readonly + branded type per schema id) | Aggiungi `requires?: string[]` (D-36), `fields: Record<name, FieldDescriptor>`, `FieldDescriptor.required: boolean` (D-42), `default: T`, `onFailure: 'block' \| 'skip' \| 'fallback'` (D-44). Branded `CanonicalSchemaId` con `unique symbol` (pattern `EventId` da `broker-event.ts:54-61`). | `DeepReadonly<T>` da `@sembridge/core` per i payload canonici |
+| `types/canonical-schema.ts` | `types/broker-event.ts` (header + JSDoc + branded type pattern) | esatto (interface readonly + branded type per schema id) | Aggiungi `requires?: string[]` (D-36), `fields: Record<name, FieldDescriptor>`, `FieldDescriptor.required: boolean` (D-42), `default: T`, `onFailure: 'block' \| 'skip' \| 'fallback'` (D-44). Branded `CanonicalSchemaId` con `unique symbol` (pattern `EventId` da `broker-event.ts:54-61`). | `DeepReadonly<T>` da `@gluezero/core` per i payload canonici |
 | `types/input-output-map.ts` | `types/subscription.ts` (struttura semplice readonly) | esatto | `InputMap = Record<localField, MappingRule>`, `OutputMap = Record<localField, MappingRule>`, `MappingRule = { source?: string \| string[]; transform?: string; default?: unknown; derive?: DeriveDescriptor }`. **Nessun `unknown` lasciato — tutti i tipi specifici (D-32 chiude placeholder F1).** | — |
 | `types/transform.ts` | `types/logger.ts` (interface minimale 5 metodi) | role-match | `TransformFn = (input: unknown, ctx: TransformContext) => unknown`, `TransformDescriptor = { name: string; fn: TransformFn; description?: string }`. `TransformContext` esposto come readonly. | Pattern signature minimale + Record meta opzionale |
 | `types/validator-adapter.ts` | `types/tap.ts` (`EventTap` interface + JSDoc che spiega il vincolo architetturale) | esatto | `ValidatorAdapter` discriminated union return: `{ ok: true; value: T } \| { ok: false; issues: ValidationIssue[] }` (D-38). JSDoc spiega "F2 default = `valibotAdapter`; F2 V2 expandable to Zod/Ajv". | — |
-| `types/mapper-error.ts` (opzionale, candidato accorpa in `index.ts`) | `types/error.ts` | esatto | Definisci union `MappingErrorCode = 'mapping.cycle.detected' \| 'mapping.transform.failed' \| 'mapping.field.missing' \| 'mapping.canonical.validation.failed' \| 'mapping.consumer.validation.failed'` come literal union per type guard runtime. NON un nuovo `BrokerError` subclass — riusa `BrokerError` di F1 con `category: 'mapping'` (già definita in `types/error.ts:25` di F1). | `BrokerError`, `ErrorCategory` da `@sembridge/core` |
+| `types/mapper-error.ts` (opzionale, candidato accorpa in `index.ts`) | `types/error.ts` | esatto | Definisci union `MappingErrorCode = 'mapping.cycle.detected' \| 'mapping.transform.failed' \| 'mapping.field.missing' \| 'mapping.canonical.validation.failed' \| 'mapping.consumer.validation.failed'` come literal union per type guard runtime. NON un nuovo `BrokerError` subclass — riusa `BrokerError` di F1 con `category: 'mapping'` (già definita in `types/error.ts:25` di F1). | `BrokerError`, `ErrorCategory` da `@gluezero/core` |
 | `types/index.ts` (barrel tipi F2) | `types/index.ts` (F1 — riga 1-41) | esatto | `export type { CanonicalSchema, InputMap, OutputMap, TransformFn, ValidatorAdapter, ... } from ...`. Ogni export con JSDoc 1-liner + reference REQ-ID. | — |
 
 ### 2.2 Moduli runtime F2 (`packages/mapper/src/*.ts`)
@@ -182,7 +182,7 @@ import { CanonicalRegistry } from './canonical-registry'
 | `valibot-adapter.ts` | `core/event-validator.ts` (intero file — riga 1-66) | esatto | `export const valibotAdapter: ValidatorAdapter = { validate(schema, payload) { const r = v.safeParse(schema, payload); return r.success ? { ok: true, value: r.output } : { ok: false, issues: r.issues } } }`. Pattern identico a `validateEvent` ma senza throw (caller decide cosa fare con `{ ok: false }`). | `v.safeParse` + issue mapping. **Schema canonical Valibot** vive nel descriptor del consumer F2 — l'adapter è agnostico. |
 | `mapper-engine.ts` | `core/bus.ts` (`class EventBus`, riga 59-291) | esatto (è il "cuore" del package — analogo dell'EventBus per il mapper) | `class MapperEngine` con `private compiledMappings = new Map<pluginId, CompiledMapping>()`. Method: `compileMappings(descriptor): void` (chiamato post-`onRegister` da Broker — vedi placeholder commenti in `plugin-registry.ts:184-185` "F2 transforms"); cycle detection D-35 con `visited: Set<(pluginId, fieldName)>` (pattern `deep-freeze.ts:17` `WeakSet` cycle protection); `applyOutputMap(event, plugin): canonicalEvent` (step 5 pipeline §28); `applyInputMap(canonicalEvent, consumer): consumerEvent` (step 11 pipeline §28); `applyDefaults`, `applyDerive`, `applyTransform`. **Tap orchestration** (D-46) con `safeTapStep(tap, 'event.mapped.canonical', snap)` per i 5 nuovi step (pattern `bus.ts:79-116`). Usa `payloadBefore` + `payloadAfter` nel snapshot quando `debug: true` (riga `bus.ts:287`). | `EventBus.snap()` helper (riga 276-290), `safeTapStep` orchestration, cycle detection idiom WeakSet. |
 | `inspector.ts` | `core/event-tap.ts` (intero) + struttura `BrokerDebugSnapshot` (`broker.ts:59-66`) | esatto | `getMappingInspector()` ritorna `{ schemas: number, aliases: number, transforms: number, lastErrors: BrokerError[] }` (D-48). NON un EventTap parallelo — estende il tap esistente via declaration merging di `PipelineSnapshot.metadata`. F6 sostituirà con full snapshot. | `noopEventTap` shape per default; `BrokerDebugSnapshot` shape per inspector return type. |
-| `augment.ts` (TS declaration merging) | `types/tap.ts` riga 16-21 (commento sui future step F2) | esatto (questo è il file che CHIUDE i tolerant placeholder F1) | `declare module '@sembridge/core'` con augmentation di: `PipelineStep` (aggiunge 5 nuove literal D-50: `'event.source.resolved'`, `'event.mapped.canonical'`, `'event.canonical.validated'`, `'event.mapped.consumer'`, `'event.final.validated'`); `BrokerConfig.canonicalModel/aliasRegistry/transforms` (sostituisci `unknown` con tipi specifici da `@sembridge/mapper` — D-56); `PluginDescriptor.inputMap?: InputMap; outputMap?: OutputMap` (D-57). **File deve essere importato dal barrel `index.ts` per side-effect**, altrimenti TS non vede l'augmentation. | Pattern declaration merging documentato in `types/plugin.ts:48-51` (commenti "F2 will add: inputMap, outputMap"). |
+| `augment.ts` (TS declaration merging) | `types/tap.ts` riga 16-21 (commento sui future step F2) | esatto (questo è il file che CHIUDE i tolerant placeholder F1) | `declare module '@gluezero/core'` con augmentation di: `PipelineStep` (aggiunge 5 nuove literal D-50: `'event.source.resolved'`, `'event.mapped.canonical'`, `'event.canonical.validated'`, `'event.mapped.consumer'`, `'event.final.validated'`); `BrokerConfig.canonicalModel/aliasRegistry/transforms` (sostituisci `unknown` con tipi specifici da `@gluezero/mapper` — D-56); `PluginDescriptor.inputMap?: InputMap; outputMap?: OutputMap` (D-57). **File deve essere importato dal barrel `index.ts` per side-effect**, altrimenti TS non vede l'augmentation. | Pattern declaration merging documentato in `types/plugin.ts:48-51` (commenti "F2 will add: inputMap, outputMap"). |
 | `broker-mapper-wrapper.ts` (composition decorator) | `core/plugin-registry.ts` (`createPluginScopedBroker`, riga 60-98 Proxy pattern) | role-match | Decisione D-49 critica: NON modificare `bus.ts`. F2 introduce un wrapper sul Broker che: (a) intercetta `registerPlugin(descriptor)` per chiamare `mapper.compileMappings(descriptor)` post-`onRegister`; (b) wrappa `subscribe` per applicare `inputMap` del consumer (step 11/12) prima di consegnare al handler reale. Pattern Proxy come `createPluginScopedBroker` ma con scope diverso. **Alternativa preferita (verifica con planner):** estendi la `class Broker` di F1 via subclassing in F2 oppure passa `MapperEngine` come dependency injection nel constructor (richiede modifica minima a `broker.ts` — Rule 4 trade-off). Il planner valuterà. | `createPluginScopedBroker` Proxy idiom; `Reflect.get` + bind. |
 | `index.ts` (barrel public API F2) | `src/index.ts` di F1 (intero — riga 1-87) | esatto | Header JSDoc `@packageDocumentation` italiano. `export type * from './types'` (re-export tipi). `export { CanonicalRegistry, AliasRegistry, TransformPipeline, MapperEngine, valibotAdapter } from ...`. **Side-effect import `import './augment'`** per attivare declaration merging. | Header JSDoc structure (`index.ts:1-24`); ordine type-only re-export prima dei runtime export. |
 
@@ -217,11 +217,11 @@ import { CanonicalRegistry } from './canonical-registry'
 
 ---
 
-## 3. Stack & build (replica da `@sembridge/core`)
+## 3. Stack & build (replica da `@gluezero/core`)
 
 ### 3.1 `package.json` mapper (estendere placeholder esistente)
 
-File corrente `packages/mapper/package.json` (placeholder F1 — riga 1-18). F2 deve **mantenere il name `@sembridge/mapper`** + estendere replicando `packages/core/package.json` (verificato — riga 1-57):
+File corrente `packages/mapper/package.json` (placeholder F1 — riga 1-18). F2 deve **mantenere il name `@gluezero/mapper`** + estendere replicando `packages/core/package.json` (verificato — riga 1-57):
 
 | Campo | Valore F2 (replica F1) | Note |
 |-------|-------------------------|------|
@@ -233,10 +233,10 @@ File corrente `packages/mapper/package.json` (placeholder F1 — riga 1-18). F2 
 | `"files"` | `["dist", "README.md", "LICENSE"]` | publish surface |
 | `"sideEffects"` | `false` | ⚠️ verifica con planner: il file `augment.ts` ha side-effects (declaration merging registration). **Decisione: side-effects per `augment.ts`** → `"sideEffects": ["./dist/augment.js"]` (array invece di boolean). Permette tree-shaking del resto. |
 | `"engines.node"` | `">=20"` | identico F1 |
-| `"scripts"` | `build/test/test:watch/test:coverage/typecheck/clean` (pattern F1 riga 31-38) | identici a `@sembridge/core` |
-| `"dependencies"` | `valibot: 1.3.1` (versione locked F1); **NEW: `@sembridge/core: workspace:*`** | F2 dipende da F1 via workspace protocol pnpm |
+| `"scripts"` | `build/test/test:watch/test:coverage/typecheck/clean` (pattern F1 riga 31-38) | identici a `@gluezero/core` |
+| `"dependencies"` | `valibot: 1.3.1` (versione locked F1); **NEW: `@gluezero/core: workspace:*`** | F2 dipende da F1 via workspace protocol pnpm |
 | `"devDependencies"` | `tsup, typescript, vitest, jsdom` (versione locked F1) | identici a F1 |
-| `"size-limit"` | `[{ name: "@sembridge/mapper (gzip)", path: "dist/index.js", limit: "10 KB", gzip: true }]` | budget mapper più ampio del core (~10 KB vs 8 KB) |
+| `"size-limit"` | `[{ name: "@gluezero/mapper (gzip)", path: "dist/index.js", limit: "10 KB", gzip: true }]` | budget mapper più ampio del core (~10 KB vs 8 KB) |
 
 ### 3.2 `tsup.config.ts` (replica esatta da F1)
 
@@ -256,9 +256,9 @@ export default defineConfig({
   minify: false,
   target: 'es2022',
   platform: 'browser',
-  external: [/^node:/, '@sembridge/core'], // ⚠️ DIFF F1: external @sembridge/core (peer-like)
+  external: [/^node:/, '@gluezero/core'], // ⚠️ DIFF F1: external @gluezero/core (peer-like)
   banner: {
-    js: '/* @sembridge/mapper — MIT — https://github.com/<TBD>/sembridge */', // ⚠️ DIFF F1: name change
+    js: '/* @gluezero/mapper — MIT — https://github.com/<TBD>/sembridge */', // ⚠️ DIFF F1: name change
   },
 })
 ```
@@ -292,7 +292,7 @@ import { defineConfig } from 'vitest/config'
 
 export default defineConfig({
   test: {
-    name: '@sembridge/mapper', // ⚠️ DIFF F1
+    name: '@gluezero/mapper', // ⚠️ DIFF F1
     environment: 'jsdom',
     globals: false,
     include: ['src/**/*.test.ts'],
@@ -326,13 +326,13 @@ export default defineConfig({
 
 ### 3.6 Monorepo wiring
 
-File root `pnpm-workspace.yaml` (verificato esiste — 27 byte) include già `packages/*` glob. **Nessuna modifica root necessaria** — F2 fa solo `pnpm install` per linkare `@sembridge/mapper` al workspace.
+File root `pnpm-workspace.yaml` (verificato esiste — 27 byte) include già `packages/*` glob. **Nessuna modifica root necessaria** — F2 fa solo `pnpm install` per linkare `@gluezero/mapper` al workspace.
 
 ---
 
 ## 4. Pattern reuse opportunities (cross-cutting)
 
-### 4.1 Error handling (riusa interamente da `@sembridge/core`)
+### 4.1 Error handling (riusa interamente da `@gluezero/core`)
 
 **Pattern unico F1, F2 lo riusa SENZA reinventare:**
 
@@ -358,7 +358,7 @@ export function createBrokerError(params: CreateBrokerErrorParams): BrokerError 
 **F2 usage** (esempio cycle detection D-35):
 
 ```ts
-import { createBrokerError } from '@sembridge/core'
+import { createBrokerError } from '@gluezero/core'
 
 throw createBrokerError({
   code: 'mapping.cycle.detected',
@@ -371,7 +371,7 @@ throw createBrokerError({
 **F2 usage** (esempio transform failure D-44):
 
 ```ts
-import { createBrokerError } from '@sembridge/core'
+import { createBrokerError } from '@gluezero/core'
 
 try {
   return transform.fn(input, ctx)
@@ -401,7 +401,7 @@ export function safeTapStep(tap, step, snapshot, onError?) {
 **F2 usage** nei 5 nuovi step (D-50):
 
 ```ts
-import { safeTapStep } from '@sembridge/core'
+import { safeTapStep } from '@gluezero/core'
 
 // Step 5: event.mapped.canonical
 safeTapStep(this.tap, 'event.mapped.canonical', {
@@ -529,10 +529,10 @@ Pattern F1 plan 01-11 (final gate). F2 deve avere un plan equivalente (es. 02-09
 |------|------------|-----|
 | **Coverage v8** | `pnpm test:coverage` con thresholds 90/85/90/90 | Identico. **Open item ereditato:** install `@vitest/coverage-v8` come devDep root (D-55). |
 | **Build** | `pnpm build` produce `dist/index.js + index.d.ts` | Identico. |
-| **publint** | `pnpm ci:publint` (root) | Estendi a `@sembridge/mapper`: `pnpm --filter @sembridge/mapper exec publint`. |
-| **attw** | `pnpm ci:attw` (root, ESM-only profile) | Estendi a `@sembridge/mapper`. |
-| **size-limit** | `pnpm ci:size` (8 KB gzip per core) | Aggiungi entry `@sembridge/mapper (gzip): 10 KB`. |
-| **Smoke import test** | F1 verifica 6 entry pubbliche | F2 verifica le entry pubbliche di `@sembridge/mapper` (CanonicalRegistry, AliasRegistry, TransformPipeline, MapperEngine, valibotAdapter, types). |
+| **publint** | `pnpm ci:publint` (root) | Estendi a `@gluezero/mapper`: `pnpm --filter @gluezero/mapper exec publint`. |
+| **attw** | `pnpm ci:attw` (root, ESM-only profile) | Estendi a `@gluezero/mapper`. |
+| **size-limit** | `pnpm ci:size` (8 KB gzip per core) | Aggiungi entry `@gluezero/mapper (gzip): 10 KB`. |
+| **Smoke import test** | F1 verifica 6 entry pubbliche | F2 verifica le entry pubbliche di `@gluezero/mapper` (CanonicalRegistry, AliasRegistry, TransformPipeline, MapperEngine, valibotAdapter, types). |
 | **JSDoc copertura** | F1 plan 01-11 ha JSDoc su API pubblica runtime + tipi pubblici | F2 fa lo stesso (DOC-03). |
 | **README** | F1 ha `packages/core/README.md` (11 KB, scenario meteo, API pubblica, esempi) | F2 ha `packages/mapper/README.md` con scenario meteo D-53 esteso, API canonical/alias/transform, esempi mapping (PRD §14.2). |
 

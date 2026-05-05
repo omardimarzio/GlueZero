@@ -1,4 +1,4 @@
-# Stack Research — SemBridge
+# Stack Research — GlueZero
 
 **Domain:** Libreria JavaScript browser-side modulare (TypeScript-first, ESM) — broker pub/sub + routing dichiarativo + canonical model + gateway server + worker runtime + tooling
 **Researched:** 2026-04-28
@@ -10,7 +10,7 @@
 
 ## Executive summary
 
-Lo stack raccomandato per SemBridge è:
+Lo stack raccomandato per GlueZero è:
 
 - **Build:** `tsup` (singola libreria) o `unbuild` se si sceglie monorepo + multi-target
 - **Test:** `Vitest` con `@vitest/browser` (Playwright provider) per le suite che toccano Web Worker, fetch reali, SSE e WebSocket; `jsdom` o `happy-dom` per i test puramente unitari sul broker core
@@ -26,7 +26,7 @@ Lo stack raccomandato per SemBridge è:
 - **Lint/Format:** `Biome` (one-tool, fast). ESLint+Prettier solo se il team ha investimento storico in plugin ESLint specifici
 - **Versioning:** `Changesets` (single-package o monorepo, allineato a npm publish)
 - **Docs API:** `TypeDoc` con tema markdown per generazione automatica + esempi handwritten in `examples/`
-- **Repo:** **monorepo `pnpm` workspaces** con i sub-system del PRD §10 (`@sembridge/core`, `@sembridge/mapper`, `@sembridge/gateway`, `@sembridge/worker`, `@sembridge/cache`, `@sembridge/devtools`) + `@sembridge/sembridge` come bundle pubblico aggregato. Niente Turbo/Nx in V1: pnpm workspaces + script root sono sufficienti
+- **Repo:** **monorepo `pnpm` workspaces** con i sub-system del PRD §10 (`@gluezero/core`, `@gluezero/mapper`, `@gluezero/gateway`, `@gluezero/worker`, `@gluezero/cache`, `@gluezero/devtools`) + `@gluezero/gluezero` come bundle pubblico aggregato. Niente Turbo/Nx in V1: pnpm workspaces + script root sono sufficienti
 
 ---
 
@@ -86,9 +86,9 @@ pnpm add -Dw jsdom@^25.0.0 happy-dom@^16.0.0 \
   @vitest/browser@^2.0.0 playwright@^1.49.0 msw@^2.6.0
 
 # Runtime deps (per i package interni)
-pnpm add valibot@^1.0.0 nanoid@^5.0.0 --filter @sembridge/core
-pnpm add comlink@^4.4.1 --filter @sembridge/worker
-pnpm add idb@^8.0.0 --filter @sembridge/cache  # solo quando attivata persistenza
+pnpm add valibot@^1.0.0 nanoid@^5.0.0 --filter @gluezero/core
+pnpm add comlink@^4.4.1 --filter @gluezero/worker
+pnpm add idb@^8.0.0 --filter @gluezero/cache  # solo quando attivata persistenza
 ```
 
 > Le versioni `^x.y.z` indicate sono le ultime note al training; eseguire `pnpm outdated` o `npm view <pkg> version` prima dell'esecuzione effettiva. Confidence sulle versioni precise: MEDIO; confidence sulla scelta della libreria: ALTO.
@@ -107,7 +107,7 @@ pnpm add idb@^8.0.0 --filter @sembridge/cache  # solo quando attivata persistenz
 - Generazione `.d.ts` integrata via flag `dts: true`
 - Treeshaking via esbuild; output ESM compatibile con bundler downstream (Vite/Webpack/esbuild)
 - Watch mode veloce per dev
-- Build di SemBridge core stimata < 500ms
+- Build di GlueZero core stimata < 500ms
 
 **Contro:**
 - Minimo controllo sulla shape esatta del bundle rispetto a Rollup puro
@@ -117,7 +117,7 @@ pnpm add idb@^8.0.0 --filter @sembridge/cache  # solo quando attivata persistenz
 - **`unbuild`** (UnJS): ottimo per multi-target, integra `mkdist` per stub builds. Migliore se si fa monorepo pesante. **Trade-off:** meno popolare di tsup ma sta crescendo. Considerare per V1.x se si nota che tsup non gestisce bene il monorepo.
 - **Rollup puro** + plugin (`@rollup/plugin-typescript`, `rollup-plugin-dts`, `@rollup/plugin-node-resolve`): più verboso, controllo massimo, configurazione esplicita. Indicato se si vuole 100% controllo sulla bundle shape — overkill per una libreria nuova.
 - **Vite library mode** (`build.lib`): valido, ma porta dietro Vite anche per build production. Più indicato se si distribuisce un componente con asset bundling.
-- **Rolldown** (Rollup ng, Rust-based): nel 2026 sta uscendo dalla beta. Sarà la scelta naturale fra 12 mesi. Per V1 di SemBridge, in produzione, non ancora maturo. **Watch list: aggiornare la scelta se Rolldown raggiunge stabilità durante lo sviluppo.**
+- **Rolldown** (Rollup ng, Rust-based): nel 2026 sta uscendo dalla beta. Sarà la scelta naturale fra 12 mesi. Per V1 di GlueZero, in produzione, non ancora maturo. **Watch list: aggiornare la scelta se Rolldown raggiunge stabilità durante lo sviluppo.**
 
 **Configurazione consigliata `tsup.config.ts`:**
 
@@ -157,7 +157,7 @@ export default defineConfig({
 
 **Pro Vitest:**
 - API jest-like, zero learning curve
-- ESM-first, allineato con SemBridge ESM
+- ESM-first, allineato con GlueZero ESM
 - `vitest --workspace` per separare i tre livelli
 - Browser mode con provider Playwright è state-of-the-art 2025-2026
 - Test typecheck nativo via `vitest --typecheck`
@@ -215,7 +215,7 @@ Per una libreria che deve validare:
 **Quando Zod ha senso:**
 - Se i consumer hanno già Zod nel loro stack e si vuole risparmiarsi l'integrazione
 - Se servono feature avanzate Zod (`.brand`, `.lazy` complessi) che Valibot non copre 1:1
-- **Strategia hybrid raccomandata:** esporre un'astrazione `Schema` interna (interfaccia narrow `parse(input): Result<T>`) e fornire **adapter** per Valibot, Zod e schema JSON Schema → Ajv. SemBridge core rimane agnostico.
+- **Strategia hybrid raccomandata:** esporre un'astrazione `Schema` interna (interfaccia narrow `parse(input): Result<T>`) e fornire **adapter** per Valibot, Zod e schema JSON Schema → Ajv. GlueZero core rimane agnostico.
 
 **Quando Ajv ha senso:**
 - Solo se il PRD imponesse **JSON Schema strict** come formato canonico per gli schemi (PRD §21.3 dice "preferibilmente JSON Schema o equivalente tipizzato" — quindi non vincolante). Ajv è ottimo runtime ma footprint pesante.
@@ -244,7 +244,7 @@ Il PRD §17.8 / §18.1 / §22 / §23 richiede:
 - centralizzazione status HTTP non validi
 
 Nessun wrapper esistente copre **tutte** queste policy in modo che si integri pulitamente con il route engine event-driven. I wrapper esistenti (`ky`, `wretch`, `ofetch`) coprono il **70-80%** ma:
-- **`ky`** (Sindre Sorhus): retry, hooks, AbortController. Buono ma opinionato sull'API. Bundle ~3 KB. Richiederebbe wrappare `ky` in un layer SemBridge → indirezione inutile.
+- **`ky`** (Sindre Sorhus): retry, hooks, AbortController. Buono ma opinionato sull'API. Bundle ~3 KB. Richiederebbe wrappare `ky` in un layer GlueZero → indirezione inutile.
 - **`wretch`**: API fluente (`.url().get().json()`). Buono per chi scrive request manuali, meno ergonomico per route engine generato da config.
 - **`ofetch`** (UnJS): retry, body coercion, ottimo DX. Bundle ~5 KB. Lega a UnJS ecosystem.
 
@@ -353,7 +353,7 @@ const workerRoute: WorkerRoute = {
   task: 'generateReport',
 }
 
-// In SemBridge worker module
+// In GlueZero worker module
 import * as Comlink from 'comlink'
 
 const api = {
@@ -379,7 +379,7 @@ const result = await proxy.generateReport(canonicalPayload, /* progress callback
 
 **Rationale:**
 
-PRD §31.3 dice "polyfill devono essere separati dal core". Il PRD §18.6 elenca esplicitamente le policy di reconnection da supportare (retry interval, exponential backoff, max retry, heartbeats, stale connection detection, jitter). Tutte queste sono **policy applicative** che vivono naturalmente nell'adapter SemBridge, non in una libreria esterna.
+PRD §31.3 dice "polyfill devono essere separati dal core". Il PRD §18.6 elenca esplicitamente le policy di reconnection da supportare (retry interval, exponential backoff, max retry, heartbeats, stale connection detection, jitter). Tutte queste sono **policy applicative** che vivono naturalmente nell'adapter GlueZero, non in una libreria esterna.
 
 **Per SSE:**
 - `EventSource` API nativa è in **tutti i browser evergreen** (Chrome, Firefox, Safari, Edge — supporto > 95% globalmente nel 2025)
@@ -390,7 +390,7 @@ PRD §31.3 dice "polyfill devono essere separati dal core". Il PRD §18.6 elenca
 - API nativa `WebSocket` ovunque
 - Reconnection custom (PRD §18.6 elenca esplicitamente le policy): retry con backoff + jitter, heartbeat ping/pong, stale detection via timeout
 - Niente `reconnecting-websocket`: la libreria copre ~30% delle policy richieste e impone un'API che andrebbe wrappata
-- `partysocket` (PartyKit) è interessante ma orientato a PartyKit ecosystem — overkill per SemBridge
+- `partysocket` (PartyKit) è interessante ma orientato a PartyKit ecosystem — overkill per GlueZero
 
 **Adapter pattern raccomandato:**
 
@@ -475,7 +475,7 @@ class SuperjsonSerializer implements WorkerSerializer { /* opt-in */ }
 | `ulid` | ~1 KB | 26 char | Sì | Veloce | Lessicograficamente ordinabile |
 | crypto.randomUUID() | 0 (nativo) | 36 char | No | Veloce | Nativo, no deps. Solo se import lib non è già necessaria |
 
-**Raccomandazione SemBridge:**
+**Raccomandazione GlueZero:**
 
 - `BrokerEvent.id` → **nanoid** — 21 char è sufficiente per uniqueness in-page (collision probability ~1e-10 per 10M ID/h)
 - `correlationId` / `causationId` / `traceId` → nanoid stesso (entropia 126 bit OK)
@@ -507,13 +507,13 @@ class SuperjsonSerializer implements WorkerSerializer { /* opt-in */ }
 - Mature dal 2018, manutenuto attivamente
 
 **Alternative considerate:**
-- **`dexie`** (~30 KB) — feature-rich (query DSL, transactions, sync), ma overkill per uno strato cache adapter. Indicato se SemBridge dovesse esporre query API ricche
+- **`dexie`** (~30 KB) — feature-rich (query DSL, transactions, sync), ma overkill per uno strato cache adapter. Indicato se GlueZero dovesse esporre query API ricche
 - **`rxdb`** — orientato a sync/replication, troppo opinionato
 
 **Consiglio operativo:**
 - Tenere fuori dal core in V1
-- Esporre `CacheAdapter` interface in `@sembridge/cache` con `MemoryCacheAdapter` come default
-- Pubblicare `@sembridge/cache-idb` come package separato in V1.x
+- Esporre `CacheAdapter` interface in `@gluezero/cache` con `MemoryCacheAdapter` come default
+- Pubblicare `@gluezero/cache-idb` come package separato in V1.x
 
 **Confidence: MEDIO** sulla scelta `idb`. **ALTO** sull'approccio "opt-in via package separato".
 
@@ -573,7 +573,7 @@ class SuperjsonSerializer implements WorkerSerializer { /* opt-in */ }
 - `noUncheckedIndexedAccess: true` — fondamentale per una libreria che lavora con `Record<string, unknown>` (mapper, metadata)
 - `isolatedDeclarations: true` (TS 5.5+) — abilita generazione `.d.ts` parallela e veloce, future-proof per Rolldown/swc
 - `verbatimModuleSyntax: true` — coerenza ESM, niente `import` magico downcompiled in CJS quando non serve
-- `lib: WebWorker` — mantenere disponibili i tipi worker nel progetto generale; per il package `@sembridge/worker` valutare un tsconfig separato che fa il flip in `WebWorker` puro senza `DOM`
+- `lib: WebWorker` — mantenere disponibili i tipi worker nel progetto generale; per il package `@gluezero/worker` valutare un tsconfig separato che fa il flip in `WebWorker` puro senza `DOM`
 
 **Confidence: ALTO.**
 
@@ -598,7 +598,7 @@ class SuperjsonSerializer implements WorkerSerializer { /* opt-in */ }
 
 **Quando ESLint + Prettier vince:**
 - Se serve un plugin specifico (es. plugin custom interno azienda, plugin React/Vue, regole accessibility avanzate)
-- Per SemBridge (libreria pura, no UI framework, no React) Biome è ottimale
+- Per GlueZero (libreria pura, no UI framework, no React) Biome è ottimale
 
 **`biome.json` raccomandato:**
 
@@ -642,7 +642,7 @@ class SuperjsonSerializer implements WorkerSerializer { /* opt-in */ }
 - Workflow: `pnpm changeset` apre prompt → snippet `.md` in `.changeset/` → `pnpm changeset version` consuma snippet, bumpa versioni e aggiorna `CHANGELOG.md` → `pnpm changeset publish` pubblica su npm
 - Integrazione GitHub Actions `changesets/action` per PR automatiche di "Version Packages"
 - Granular: ogni package del monorepo può avere bump indipendente
-- Funziona con semver fixed o independent (consigliato: independent per monorepo SemBridge, eccetto major bumps coordinati)
+- Funziona con semver fixed o independent (consigliato: independent per monorepo GlueZero, eccetto major bumps coordinati)
 
 **Alternativa considerata:**
 - **`semantic-release`** — automatizza completamente da commit message convenzionali. Più aggressivo, meno controllo. Buono per CI puramente automatica, meno trasparente per chi legge il CHANGELOG.
@@ -666,7 +666,7 @@ class SuperjsonSerializer implements WorkerSerializer { /* opt-in */ }
 - **API Extractor** (Microsoft) — più rigoroso, genera "API report" JSON per audit di breaking change. Utile in V1.x quando la libreria stabilizza l'API pubblica e si vuole regression test su breaking changes
 - **Docusaurus / VitePress** — non sono generatori di API docs, ma static site builders. Si combinano con TypeDoc Markdown per il sito doc completo
 
-**Strategia documentazione SemBridge:**
+**Strategia documentazione GlueZero:**
 1. **API reference** (auto-generata) — TypeDoc Markdown → integrato in static site
 2. **Guide handwritten** — `docs/` MDX/Markdown: getting started, plugin guide, canonical model guide, route engine guide, debug tooling (PRD §41)
 3. **Esempi end-to-end** — `examples/` directory con app demo (incluso scenario meteo PRD §29)
@@ -685,47 +685,47 @@ class SuperjsonSerializer implements WorkerSerializer { /* opt-in */ }
 ```
 sembridge/
 ├── packages/
-│   ├── core/                  # @sembridge/core
+│   ├── core/                  # @gluezero/core
 │   │   └── src/
 │   │       ├── broker/        # Event Bus, Topic Registry, Subscriber Registry
 │   │       ├── event/         # BrokerEvent types, factories
 │   │       ├── plugin/        # Plugin Registry, lifecycle
 │   │       └── index.ts
-│   ├── mapper/                # @sembridge/mapper
+│   ├── mapper/                # @gluezero/mapper
 │   │   └── src/
 │   │       ├── canonical/     # Canonical Vocabulary Registry
 │   │       ├── alias/         # Alias Registry
 │   │       ├── transform/     # Transform pipeline
 │   │       ├── validate/      # Validation layer (Valibot adapter)
 │   │       └── index.ts
-│   ├── gateway/               # @sembridge/gateway
+│   ├── gateway/               # @gluezero/gateway
 │   │   └── src/
 │   │       ├── http/          # Fetch client, retry, timeout, dedupe, auth
 │   │       ├── sse/           # EventSource adapter
 │   │       ├── ws/            # WebSocket adapter
 │   │       └── index.ts
-│   ├── worker/                # @sembridge/worker
+│   ├── worker/                # @gluezero/worker
 │   │   └── src/
 │   │       ├── bridge/        # Comlink wrapper / RPC abstraction
 │   │       ├── pool/          # Worker pool
 │   │       ├── registry/      # Worker registry
 │   │       └── index.ts
-│   ├── cache/                 # @sembridge/cache
+│   ├── cache/                 # @gluezero/cache
 │   │   └── src/
 │   │       ├── memory/
 │   │       ├── policies/      # cache-first, network-first, etc
 │   │       └── index.ts
-│   ├── devtools/              # @sembridge/devtools
+│   ├── devtools/              # @gluezero/devtools
 │   │   └── src/
 │   │       ├── inspector/     # Event/Mapping/Route inspector
 │   │       ├── metrics/
 │   │       └── index.ts
-│   ├── routing/               # @sembridge/routing (route engine)
+│   ├── routing/               # @gluezero/routing (route engine)
 │   │   └── src/
 │   │       ├── engine/
 │   │       ├── handlers/      # local, http, worker, cache, composite, realtime-inbound
 │   │       └── index.ts
-│   └── sembridge/             # @sembridge/sembridge — bundle aggregato pubblico
+│   └── sembridge/             # @gluezero/gluezero — bundle aggregato pubblico
 │       └── src/index.ts       # re-export selezionato + createBroker()
 ├── examples/
 │   ├── weather-demo/          # PRD §29
@@ -744,7 +744,7 @@ sembridge/
 - I sub-system PRD §10 sono naturalmente separabili: core non deve conoscere worker/SSE/WebSocket
 - Tree-shaking esplicito: chi usa solo broker locale non importa gateway/worker
 - Test isolation: ogni package ha suite propria
-- Versioning: developer può rilasciare solo `@sembridge/cache` senza bump del core
+- Versioning: developer può rilasciare solo `@gluezero/cache` senza bump del core
 - DX: refactor cross-package via pnpm workspace protocol (`workspace:^`)
 
 **Cosa non fare:**
@@ -775,7 +775,7 @@ sembridge/
 | In-house EventBus | RxJS | Se in V2 si decide di esporre API observable + operator chain |
 | Comlink | RPC custom | Se Comlink causa problemi con cancellazione task complessa o transferable edge case |
 | EventSource nativo | fetch + ReadableStream | Se serve auth con custom Authorization header sul canale SSE |
-| WebSocket nativo | partysocket | Se SemBridge si integra con PartyKit ecosystem |
+| WebSocket nativo | partysocket | Se GlueZero si integra con PartyKit ecosystem |
 | structuredClone | superjson | Se contract worker include classi custom da preservare attraverso il boundary |
 | nanoid | crypto.randomUUID() | Se zero-deps è priorità assoluta |
 | Biome | ESLint + Prettier | Se serve plugin ESLint specifico (es. eslint-plugin-import-x con regole custom) |
@@ -814,7 +814,7 @@ sembridge/
 
 ## Stack Patterns by Variant
 
-**Se il developer vuole ridurre al minimo le dipendenze esterne (target < 20 KB gzipped per `@sembridge/sembridge`):**
+**Se il developer vuole ridurre al minimo le dipendenze esterne (target < 20 KB gzipped per `@gluezero/gluezero`):**
 - **Sostituire Comlink** con RPC custom su `postMessage` (~200 LoC)
 - **Sostituire nanoid** con `crypto.randomUUID()` nativo
 - **Sostituire Valibot** con validatore minimale custom (solo se schemi pubblici sono semplici — fattibile ma sconsigliato)
@@ -825,12 +825,12 @@ sembridge/
 - Stack raccomandato sopra (Comlink + nanoid + Valibot + idb opzionale)
 
 **Se il developer vuole offrire massima compatibilità ai consumer (es. integrarsi in app che usano Zod):**
-- Mantenere validation layer agnostic con adapter `@sembridge/validation-zod` come package separato in V1.x
+- Mantenere validation layer agnostic con adapter `@gluezero/validation-zod` come package separato in V1.x
 - Default Valibot per chi non specifica nulla
 
 **Se il progetto integra subito con framework UI (React/Vue):**
 - **Non** fare bridge React/Vue nel core (PRD §5: "non sostituire React/Vue/...")
-- Pubblicare `@sembridge/react` e `@sembridge/vue` come package separati con hook (`useSubscribe`, `usePublish`)
+- Pubblicare `@gluezero/react` e `@gluezero/vue` come package separati con hook (`useSubscribe`, `usePublish`)
 - Deferred: questi possono uscire in V1.x dopo che core stabilizza
 
 ---
@@ -864,7 +864,7 @@ sembridge/
 | Fetch + ≥1 canale realtime inbound (PRD §18) | fetch nativo + EventSource (SSE) + WebSocket | OK |
 | Validazione minima payload (PRD §21, VAL-01..06) | Valibot (con adapter pluggable) | OK |
 | Schema preferibilmente JSON Schema o equivalente tipizzato (PRD §21.3) | Valibot tipizzato (equivalente) + opzione Ajv via adapter | OK |
-| Debug e introspection (PRD §25) | `@sembridge/devtools` package + TypeDoc API ref | OK |
+| Debug e introspection (PRD §25) | `@gluezero/devtools` package + TypeDoc API ref | OK |
 | Lifecycle anti-leak (PRD §24) | EventBus in-house con AbortController-style unsubscribe handles | OK |
 | Test su pub/sub, mapping, route, worker (TEST-01) | Vitest + jsdom + browser mode + msw | OK |
 
@@ -934,6 +934,6 @@ Se una qualsiasi versione consigliata è > 1 anno indietro rispetto alla latest,
 
 ---
 
-*Stack research per: SemBridge — libreria browser-side TypeScript modulare (broker pub/sub + canonical model + gateway + worker + cache + tooling)*
+*Stack research per: GlueZero — libreria browser-side TypeScript modulare (broker pub/sub + canonical model + gateway + worker + cache + tooling)*
 *Researched: 2026-04-28*
 *Confidence complessivo: MEDIO-ALTO (rationale architetturale ALTO, versioni esatte MEDIO per indisponibilità tool live)*

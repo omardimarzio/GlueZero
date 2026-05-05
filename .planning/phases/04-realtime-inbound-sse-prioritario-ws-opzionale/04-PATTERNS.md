@@ -52,7 +52,7 @@ analog_coverage: full
 ### 2.1 `packages/gateway/src/sse-ws/augment.ts`
 
 - **Role:** Type augmentation (TS declaration merging)
-- **Closest analog:** `/Users/omarmarzio/programming/prova AI/SemBridge/packages/gateway/src/augment.ts` (intero file, 92 LOC) e `/Users/omarmarzio/programming/prova AI/SemBridge/packages/routing/src/augment.ts` (lines 59-119 + marker pattern lines 152-171).
+- **Closest analog:** `/Users/omarmarzio/programming/prova AI/GlueZero/packages/gateway/src/augment.ts` (intero file, 92 LOC) e `/Users/omarmarzio/programming/prova AI/GlueZero/packages/routing/src/augment.ts` (lines 59-119 + marker pattern lines 152-171).
 - **Key pattern:** declaration merging additivo del tipo `BrokerConfig` per aggiungere `realtime?: RealtimeConfig` E del tipo `PluginDescriptor` per aggiungere `realtimeChannels?: readonly RealtimeChannelDef[]`. Marker `__augmentSseWsLoaded` ri-esportato dal barrel per anti tree-shaking.
 
 **Excerpt da copiare/adattare** (basato su `gateway/src/augment.ts:53-92`):
@@ -61,7 +61,7 @@ analog_coverage: full
 import type { RealtimeChannelDef } from './types/realtime-channel-def'
 import type { RealtimeConfig } from './types/realtime-config'
 
-declare module '@sembridge/core' {
+declare module '@gluezero/core' {
   /**
    * F4 augmentation (D-103): aggiunge `realtime?: RealtimeConfig` a BrokerConfig.
    * Sezione complementare a `gateway` (F3) e `routes`/`routing` (F3 routing augment).
@@ -108,7 +108,7 @@ export const __augmentSseWsLoaded: true = true
 ### 2.2 `packages/gateway/src/sse-ws/types/realtime-config.ts`
 
 - **Role:** Configuration type
-- **Closest analog:** `/Users/omarmarzio/programming/prova AI/SemBridge/packages/gateway/src/http/types/gateway-config.ts` (struttura nested config con sezioni opzionali)
+- **Closest analog:** `/Users/omarmarzio/programming/prova AI/GlueZero/packages/gateway/src/http/types/gateway-config.ts` (struttura nested config con sezioni opzionali)
 - **Key pattern:** `RealtimeConfig` con sub-sezioni `defaults?: { reconnect?, heartbeat?, visibility? }` + `channels?: readonly RealtimeChannelDef[]` (pre-registrate al boot, pattern F3 `routes`).
 
 **Excerpt da copiare/adattare** (struttura analoga a `GatewayConfig`):
@@ -162,13 +162,13 @@ export interface RealtimeConfig {
 ### 2.3 `packages/gateway/src/sse-ws/types/realtime-channel-def.ts`
 
 - **Role:** Discriminated channel definition + factory type
-- **Closest analog:** `/Users/omarmarzio/programming/prova AI/SemBridge/packages/routing/src/types/route-definition.ts` (lines 38-70 — `RouteDefinitionBase` + `RouteHttpDefinition` pattern)
+- **Closest analog:** `/Users/omarmarzio/programming/prova AI/GlueZero/packages/routing/src/types/route-definition.ts` (lines 38-70 — `RouteDefinitionBase` + `RouteHttpDefinition` pattern)
 - **Key pattern:** `RealtimeChannelDef` con `mode: 'sse' | 'websocket' | 'auto'` discriminator (D-107), `name: string` come chiave indice manager (D-102), `buildUrl?: () => Promise<string>` hook auth-agnostic (D-104), `backpressure?: BackpressureStrategy` riuso F3 (D-115).
 
 **Excerpt da copiare/adattare** (struttura simil-`RouteDefinitionBase` di routing/src/types/route-definition.ts:38-43):
 
 ```ts
-import type { BackpressurePolicyConfig } from '@sembridge/routing'
+import type { BackpressurePolicyConfig } from '@gluezero/routing'
 
 /** Modalità di connessione realtime (D-107 — auto = SSE-first con fallback). */
 export type RealtimeMode = 'sse' | 'websocket' | 'auto'
@@ -218,7 +218,7 @@ export interface RealtimeChannelDef {
 ```
 
 **Integration points:**
-- `BackpressurePolicyConfig` importato da `@sembridge/routing` (riuso D-115). Verificare che il barrel di `@sembridge/routing` esporti `BackpressurePolicyConfig` — già confermato in `packages/routing/src/index.ts:83-93` (export type block).
+- `BackpressurePolicyConfig` importato da `@gluezero/routing` (riuso D-115). Verificare che il barrel di `@gluezero/routing` esporti `BackpressurePolicyConfig` — già confermato in `packages/routing/src/index.ts:83-93` (export type block).
 - Type usato dal Manager (`registerChannel`), dall'augment (`PluginDescriptor.realtimeChannels`), dalla public-factory (validation).
 
 ---
@@ -226,7 +226,7 @@ export interface RealtimeChannelDef {
 ### 2.4 `packages/gateway/src/sse-ws/types/frame-envelope.ts`
 
 - **Role:** Type del WS envelope
-- **Closest analog:** `/Users/omarmarzio/programming/prova AI/SemBridge/packages/gateway/src/http/types/http-strategies.ts` (HttpRequestSpec/HttpResponseSpec)
+- **Closest analog:** `/Users/omarmarzio/programming/prova AI/GlueZero/packages/gateway/src/http/types/http-strategies.ts` (HttpRequestSpec/HttpResponseSpec)
 - **Key pattern:** Plain readonly interface con il contract envelope D-106.
 
 **Excerpt da copiare/adattare:**
@@ -261,7 +261,7 @@ export type FrameParseResult =
 ### 2.5 `packages/gateway/src/sse-ws/frame-parser.ts` (+ `.test.ts`)
 
 - **Role:** Pure parser utility
-- **Closest analog:** `/Users/omarmarzio/programming/prova AI/SemBridge/packages/gateway/src/http/retry-after-parser.ts` (intero file, 80 LOC + test deterministici a coppia)
+- **Closest analog:** `/Users/omarmarzio/programming/prova AI/GlueZero/packages/gateway/src/http/retry-after-parser.ts` (intero file, 80 LOC + test deterministici a coppia)
 - **Key pattern:** Pure function senza state, narrow input → narrow output, error path = ritorna `{ ok: false, reason }` invece di throw (graceful), test TDD RED→GREEN deterministici.
 
 **Excerpt da copiare/adattare** (struttura identica a `parseRetryAfter` di retry-after-parser.ts:53-80):
@@ -363,7 +363,7 @@ describe('parseFrame (D-106)', () => {
 ### 2.6 `packages/gateway/src/sse-ws/reconnect-strategy.ts` (+ `.test.ts`)
 
 - **Role:** State machine factory (full jitter + auto-fallback)
-- **Closest analog:** `/Users/omarmarzio/programming/prova AI/SemBridge/packages/gateway/src/http/strategies/circuit-breaker.ts` (state machine 3-state + factory) + `/Users/omarmarzio/programming/prova AI/SemBridge/packages/gateway/src/http/strategies/retry-strategy.ts` (full jitter formula lines 144-156)
+- **Closest analog:** `/Users/omarmarzio/programming/prova AI/GlueZero/packages/gateway/src/http/strategies/circuit-breaker.ts` (state machine 3-state + factory) + `/Users/omarmarzio/programming/prova AI/GlueZero/packages/gateway/src/http/strategies/retry-strategy.ts` (full jitter formula lines 144-156)
 - **Key pattern:** Factory `createReconnectStrategy(options)` che ritorna interface con `nextDelayMs(attempt)`, `recordFailure()`, `recordSuccess()`, `shouldFallback()`, `getMode()`. State machine `sse → ws → sse → ws` con `globalCycleCap` (D-107) + reset criteria (D-109 §6.2 `consolidationMs`).
 
 **Excerpt da copiare/adattare** (mash-up `circuit-breaker.ts:38-180` + `retry-strategy.ts:144-156`):
@@ -558,7 +558,7 @@ describe('createReconnectStrategy (D-107, D-109)', () => {
 ### 2.7 `packages/gateway/src/sse-ws/visibility-detector.ts` (+ `.test.ts`)
 
 - **Role:** State machine + DOM event listener wrapper
-- **Closest analog:** `/Users/omarmarzio/programming/prova AI/SemBridge/packages/gateway/src/http/strategies/circuit-breaker.ts` (factory + state) + `/Users/omarmarzio/programming/prova AI/SemBridge/packages/gateway/src/http/combine-signals.ts` (DOM event listener registration + cleanup pattern lines 64-86)
+- **Closest analog:** `/Users/omarmarzio/programming/prova AI/GlueZero/packages/gateway/src/http/strategies/circuit-breaker.ts` (factory + state) + `/Users/omarmarzio/programming/prova AI/GlueZero/packages/gateway/src/http/combine-signals.ts` (DOM event listener registration + cleanup pattern lines 64-86)
 - **Key pattern:** Factory che astrae `document.addEventListener('visibilitychange', ...)` con cleanup garantito + DI guard per environment senza `document` (Node/jsdom — RESEARCH §5.3).
 
 **Excerpt da copiare/adattare** (composite di `combine-signals.ts:62-86` per cleanup + `circuit-breaker.ts:104-111` per state):
@@ -661,16 +661,16 @@ export function createVisibilityDetector(opts: VisibilityDetectorOptions): Visib
 ### 2.8 `packages/gateway/src/sse-ws/sse-adapter.ts` (+ `.test.ts`)
 
 - **Role:** Network adapter (EventSource wrapper)
-- **Closest analog:** `/Users/omarmarzio/programming/prova AI/SemBridge/packages/gateway/src/http/http-gateway.ts` (lines 100-298 — fetch lifecycle + abort cascade + classifyError + inFlight registry + finally cleanup)
+- **Closest analog:** `/Users/omarmarzio/programming/prova AI/GlueZero/packages/gateway/src/http/http-gateway.ts` (lines 100-298 — fetch lifecycle + abort cascade + classifyError + inFlight registry + finally cleanup)
 - **Key pattern:** Class che incapsula `EventSource`, gestisce lifecycle (connect/disconnect/reconnect), propaga AbortController, integra `ReconnectStrategy`, applica `BackpressureStrategy` PRIMA di `broker.publish`. Last-Event-ID auto-handled da EventSource (RESEARCH §3.2 — unique adv di SSE).
 
 **Excerpt — pattern abort cascade da http-gateway.ts:160-171 + 263-265:**
 
 ```ts
-import type { BrokerEvent } from '@sembridge/core'
-import { createBrokerError } from '@sembridge/core'
+import type { BrokerEvent } from '@gluezero/core'
+import { createBrokerError } from '@gluezero/core'
 import { nanoid } from 'nanoid'
-import type { BackpressureStrategy } from '@sembridge/gateway/http' // riuso F3 D-115
+import type { BackpressureStrategy } from '@gluezero/gateway/http' // riuso F3 D-115
 import type { RealtimeChannelDef } from './types/realtime-channel-def'
 import { createReconnectStrategy, type ReconnectStrategy } from './reconnect-strategy'
 
@@ -907,7 +907,7 @@ export class WebSocketAdapter {
 ### 2.10 `packages/gateway/src/sse-ws/realtime-channel-manager.ts` (+ `.test.ts`)
 
 - **Role:** N-channel registry + cascade cleanup + visibility orchestration
-- **Closest analog:** `/Users/omarmarzio/programming/prova AI/SemBridge/packages/routing/src/route-resolver.ts` (per-owner registry pattern, `unregisterByOwner`) + `/Users/omarmarzio/programming/prova AI/SemBridge/packages/gateway/src/http/http-gateway.ts:283-298` (`abortInFlightByOwner` cascade D-86)
+- **Closest analog:** `/Users/omarmarzio/programming/prova AI/GlueZero/packages/routing/src/route-resolver.ts` (per-owner registry pattern, `unregisterByOwner`) + `/Users/omarmarzio/programming/prova AI/GlueZero/packages/gateway/src/http/http-gateway.ts:283-298` (`abortInFlightByOwner` cascade D-86)
 - **Key pattern:** `Map<channelName, ChannelEntry>` con `ownerId` per cascade D-112. Visibility detector singleton attivato al primo `connect`, deactivated all'ultimo `disconnect`.
 
 **Excerpt — pattern abortInFlightByOwner di http-gateway.ts:283-298:**
@@ -1034,14 +1034,14 @@ export class RealtimeChannelManager {
 ### 2.11 `packages/gateway/src/sse-ws/realtime-broker.ts` (+ `.test.ts`)
 
 - **Role:** Composition wrapper top-level (estende `RouterBroker`)
-- **Closest analog:** `/Users/omarmarzio/programming/prova AI/SemBridge/packages/routing/src/router-broker-wrapper.ts` (intero file, 629 LOC — composition, publish override, registerPlugin/unregisterPlugin override, cascade cleanup)
+- **Closest analog:** `/Users/omarmarzio/programming/prova AI/GlueZero/packages/routing/src/router-broker-wrapper.ts` (intero file, 629 LOC — composition, publish override, registerPlugin/unregisterPlugin override, cascade cleanup)
 - **Key pattern:** `RealtimeBroker` compone `RouterBroker` (D-101 — chain F1 → F2 → F3 → F4). API publica: `connectRealtime(def)`, `disconnectRealtime(name?)`. Override `unregisterPlugin` per cascade D-112.
 
 **Excerpt — pattern composition di router-broker-wrapper.ts:105-226 (constructor + composition):**
 
 ```ts
-import { RouterBroker, type RouterBrokerConfig } from '@sembridge/routing'
-import type { Subscription, PluginDescriptor } from '@sembridge/core'
+import { RouterBroker, type RouterBrokerConfig } from '@gluezero/routing'
+import type { Subscription, PluginDescriptor } from '@gluezero/core'
 import { RealtimeChannelManager } from './realtime-channel-manager'
 import type { RealtimeConfig } from './types/realtime-config'
 import type { RealtimeChannelDef } from './types/realtime-channel-def'
@@ -1188,7 +1188,7 @@ export class RealtimeBroker {
 ```
 
 **Integration points:**
-- `RouterBroker` import diretto da `@sembridge/routing` (workspace dep già in `packages/gateway/package.json:53`).
+- `RouterBroker` import diretto da `@gluezero/routing` (workspace dep già in `packages/gateway/package.json:53`).
 - Test: harness analogo a `router-harness.ts` con sezione `realtime` aggiunta.
 
 ---
@@ -1196,7 +1196,7 @@ export class RealtimeBroker {
 ### 2.12 `packages/gateway/src/sse-ws/public-factory.ts` (+ `.test.ts`)
 
 - **Role:** Public factory + Valibot config validation
-- **Closest analog:** `/Users/omarmarzio/programming/prova AI/SemBridge/packages/gateway/src/http/public-factory.ts` (intero file, 87 LOC) + `/Users/omarmarzio/programming/prova AI/SemBridge/packages/routing/src/public-factory.ts` (lines 32-78 — looseObject pass-through preserve sezioni F4-F6)
+- **Closest analog:** `/Users/omarmarzio/programming/prova AI/GlueZero/packages/gateway/src/http/public-factory.ts` (intero file, 87 LOC) + `/Users/omarmarzio/programming/prova AI/GlueZero/packages/routing/src/public-factory.ts` (lines 32-78 — looseObject pass-through preserve sezioni F4-F6)
 - **Key pattern:** `createRealtimeBroker(config)` con safeParse Valibot + `Error('Invalid RealtimeBrokerConfig: ...')` su fail (D-30 no singleton).
 
 **Excerpt — replica diretta di gateway/src/http/public-factory.ts:21-86:**
@@ -1264,16 +1264,16 @@ export { RealtimeBroker }
 ### 2.13 `packages/gateway/src/sse-ws/index.ts`
 
 - **Role:** Subpath barrel export
-- **Closest analog:** `/Users/omarmarzio/programming/prova AI/SemBridge/packages/gateway/src/http/index.ts` (intero file, 148 LOC)
+- **Closest analog:** `/Users/omarmarzio/programming/prova AI/GlueZero/packages/gateway/src/http/index.ts` (intero file, 148 LOC)
 - **Key pattern:** Side-effect import augment PRIMA degli export, poi type re-exports raggruppati con JSDoc, poi runtime exports.
 
 **Excerpt — replica struttura gateway/src/http/index.ts:1-148:**
 
 ```ts
 /**
- * `@sembridge/gateway/sse-ws` — Subpath SSE/WebSocket realtime adapter.
+ * `@gluezero/gateway/sse-ws` — Subpath SSE/WebSocket realtime adapter.
  *
- * Phase 4 di SemBridge V1. Espone:
+ * Phase 4 di GlueZero V1. Espone:
  * - **`RealtimeBroker`** — composition wrapper di RouterBroker (D-101)
  * - **`createRealtimeBroker`** — factory pubblica con Valibot validation
  * - **`RealtimeChannelManager`** — N-channel registry (D-102)
@@ -1316,7 +1316,7 @@ export { createRealtimeBroker } from './public-factory'
 ```
 
 **Integration points:**
-- Subpath `@sembridge/gateway/sse-ws` configurato in `package.json` exports (vedi 2.21).
+- Subpath `@gluezero/gateway/sse-ws` configurato in `package.json` exports (vedi 2.21).
 - Umbrella `packages/gateway/src/index.ts` ri-esporta `export * from './sse-ws'` (vedi 2.24).
 
 ---
@@ -1324,15 +1324,15 @@ export { createRealtimeBroker } from './public-factory'
 ### 2.14 `packages/gateway/src/sse-ws/test-utils/realtime-harness.ts`
 
 - **Role:** Integration test harness factory
-- **Closest analog:** `/Users/omarmarzio/programming/prova AI/SemBridge/packages/routing/src/test-utils/router-harness.ts` (intero file 80+ LOC visualizzato)
+- **Closest analog:** `/Users/omarmarzio/programming/prova AI/GlueZero/packages/routing/src/test-utils/router-harness.ts` (intero file 80+ LOC visualizzato)
 - **Key pattern:** `createRealtimeHarness({ schemas?, channels?, ... })` ritorna `{ broker, mockServer, collect, expectConnected, expectReconnect, reset }` — pattern collect array + mock SSE/WS server.
 
 **Excerpt — extension di `router-harness.ts:34-80`:**
 
 ```ts
-import type { CanonicalSchema, TransformFn } from '@sembridge/mapper'
-import type { GatewayConfig } from '@sembridge/gateway/http'
-import type { RouteDefinition } from '@sembridge/routing'
+import type { CanonicalSchema, TransformFn } from '@gluezero/mapper'
+import type { GatewayConfig } from '@gluezero/gateway/http'
+import type { RouteDefinition } from '@gluezero/routing'
 import { vi } from 'vitest'
 import { createRealtimeBroker, type RealtimeBroker } from '../public-factory'
 import type { RealtimeChannelDef } from '../types/realtime-channel-def'
@@ -1379,7 +1379,7 @@ export function createRealtimeHarness(opts: RealtimeHarnessOptions = {}): Realti
 ### 2.15-2.18 `packages/gateway/src/sse-ws/test-utils/{mock-event-source,mock-websocket,sse-server,ws-server}.ts`
 
 - **Role:** Test mock implementations
-- **Closest analog:** `/Users/omarmarzio/programming/prova AI/SemBridge/packages/routing/src/test-utils/msw-server.ts` (esiste — usato da `router-harness.ts:41`)
+- **Closest analog:** `/Users/omarmarzio/programming/prova AI/GlueZero/packages/routing/src/test-utils/msw-server.ts` (esiste — usato da `router-harness.ts:41`)
 - **Key pattern:** Mock minimal con interface compatibile `EventSource`/`WebSocket` per dependency injection (RESEARCH §9.1 jsdom non supporta EventSource/WebSocket nativi).
 
 **Pattern di base** (un solo excerpt, replica per `MockWebSocket`):
@@ -1437,7 +1437,7 @@ export class MockEventSource implements Pick<EventSource, 'addEventListener' | '
 ### 2.19 `packages/gateway/src/sse-ws/__integration__/*.test.ts` (6 file)
 
 - **Role:** Integration test scenari D-119
-- **Closest analog:** `/Users/omarmarzio/programming/prova AI/SemBridge/packages/routing/src/__integration__/route-cascade-cleanup.test.ts` (struttura test, 120 LOC visualizzati)
+- **Closest analog:** `/Users/omarmarzio/programming/prova AI/GlueZero/packages/routing/src/__integration__/route-cascade-cleanup.test.ts` (struttura test, 120 LOC visualizzati)
 - **Key pattern:** `describe + beforeEach + afterEach` + `harness.reset()` + `await harness.flushAsync()` per async coordination.
 
 **File breakdown:**
@@ -1518,7 +1518,7 @@ describe('Cascade cleanup F4 (D-112, RT-04, F4 success criterion)', () => {
 ```
 
 **Integration points:**
-- `exports."./sse-ws"` consumed da consumer `import { createRealtimeBroker } from '@sembridge/gateway/sse-ws'`.
+- `exports."./sse-ws"` consumed da consumer `import { createRealtimeBroker } from '@gluezero/gateway/sse-ws'`.
 - `sideEffects` glob `**/augment.ts` già attivo — niente modifica.
 
 ---
@@ -1571,7 +1571,7 @@ coverage: {
     'src/sse-ws/test-utils/**', // non production code
   ],
   thresholds: {
-    // D-92 di F3 + D-117 di F4: ≥90% sui file `@sembridge/gateway/src/sse-ws/`.
+    // D-92 di F3 + D-117 di F4: ≥90% sui file `@gluezero/gateway/src/sse-ws/`.
     // V1 calibration: probabilmente serve abbassare branches a 80% (defensive try/catch
     // in lifecycle adapter — pattern lesson learned F2/F3 budget calibration).
     statements: 85,
@@ -1657,7 +1657,7 @@ export * from './sse-ws'
 
 ### 3.4 BackpressureStrategy reuse (D-115)
 
-**Pattern:** Riuso 1:1 di `BackpressureStrategy` di `@sembridge/gateway/http`. F4 applica al `'message'` event handler degli adapter PRIMA di `broker.publish`.
+**Pattern:** Riuso 1:1 di `BackpressureStrategy` di `@gluezero/gateway/http`. F4 applica al `'message'` event handler degli adapter PRIMA di `broker.publish`.
 
 **Riferimento canonico:**
 - `packages/gateway/src/http/strategies/backpressure-strategy.ts:121-323` (factory + 6 policy types + critical bypass)
@@ -1721,7 +1721,7 @@ sse-ws/index.ts (barrel)
   ├── ./sse-adapter      (deps: frame-parser?, reconnect-strategy)
   ├── ./websocket-adapter (deps: frame-parser, reconnect-strategy)
   ├── ./realtime-channel-manager (deps: sse-adapter, websocket-adapter, visibility-detector)
-  ├── ./realtime-broker        (deps: realtime-channel-manager, @sembridge/routing RouterBroker)
+  ├── ./realtime-broker        (deps: realtime-channel-manager, @gluezero/routing RouterBroker)
   └── ./public-factory          (deps: realtime-broker, valibot)
 ```
 
@@ -1729,23 +1729,23 @@ sse-ws/index.ts (barrel)
 
 | New module | Imports from | Notes |
 |------------|--------------|-------|
-| `sse-ws/augment.ts` | `@sembridge/core` (BrokerConfig, PluginDescriptor) | declaration merging targets |
-| `sse-ws/types/realtime-channel-def.ts` | `@sembridge/routing` (BackpressurePolicyConfig) | riuso F3 D-115 |
-| `sse-ws/sse-adapter.ts` | `@sembridge/core` (BrokerError, BrokerEvent), `nanoid`, `@sembridge/gateway/http` (BackpressureStrategy interface) | publish via DI publishFn |
-| `sse-ws/realtime-broker.ts` | `@sembridge/routing` (RouterBroker, RouterBrokerConfig), `@sembridge/core` (PluginDescriptor, Subscription) | composition di RouterBroker |
+| `sse-ws/augment.ts` | `@gluezero/core` (BrokerConfig, PluginDescriptor) | declaration merging targets |
+| `sse-ws/types/realtime-channel-def.ts` | `@gluezero/routing` (BackpressurePolicyConfig) | riuso F3 D-115 |
+| `sse-ws/sse-adapter.ts` | `@gluezero/core` (BrokerError, BrokerEvent), `nanoid`, `@gluezero/gateway/http` (BackpressureStrategy interface) | publish via DI publishFn |
+| `sse-ws/realtime-broker.ts` | `@gluezero/routing` (RouterBroker, RouterBrokerConfig), `@gluezero/core` (PluginDescriptor, Subscription) | composition di RouterBroker |
 | `sse-ws/public-factory.ts` | `valibot`, `./realtime-broker` | identico pattern F3 |
 
 ### 4.3 Where new modules are exported
 
 | New module | Exported via |
 |------------|--------------|
-| `RealtimeBroker` class | `@sembridge/gateway/sse-ws` (subpath) + `@sembridge/gateway` (umbrella) |
-| `createRealtimeBroker` factory | `@sembridge/gateway/sse-ws` (primary import path consigliato) |
-| `RealtimeChannelDef`, `RealtimeConfig` | `@sembridge/gateway/sse-ws` |
-| `parseFrame`, `isInternalTopic` | `@sembridge/gateway/sse-ws` (utility per consumer avanzati) |
-| `createReconnectStrategy`, `createVisibilityDetector` | `@sembridge/gateway/sse-ws` (state machine primitives) |
-| `SseAdapter`, `WebSocketAdapter` | `@sembridge/gateway/sse-ws` (consumer avanzati: test, custom integration) |
-| `__augmentSseWsLoaded`, `F4PipelineStep` | `@sembridge/gateway/sse-ws` (anti tree-shaking + tap step type) |
+| `RealtimeBroker` class | `@gluezero/gateway/sse-ws` (subpath) + `@gluezero/gateway` (umbrella) |
+| `createRealtimeBroker` factory | `@gluezero/gateway/sse-ws` (primary import path consigliato) |
+| `RealtimeChannelDef`, `RealtimeConfig` | `@gluezero/gateway/sse-ws` |
+| `parseFrame`, `isInternalTopic` | `@gluezero/gateway/sse-ws` (utility per consumer avanzati) |
+| `createReconnectStrategy`, `createVisibilityDetector` | `@gluezero/gateway/sse-ws` (state machine primitives) |
+| `SseAdapter`, `WebSocketAdapter` | `@gluezero/gateway/sse-ws` (consumer avanzati: test, custom integration) |
+| `__augmentSseWsLoaded`, `F4PipelineStep` | `@gluezero/gateway/sse-ws` (anti tree-shaking + tap step type) |
 
 ### 4.4 PluginDescriptor.realtimeChannels integration (D-103)
 

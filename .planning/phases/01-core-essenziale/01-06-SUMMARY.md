@@ -55,15 +55,15 @@ metrics:
 
 # Phase 1 Plan 06: Utility Batch C Summary
 
-Implementati i 2 moduli del batch C delle utility foundation di `@sembridge/core` con pattern TDD RED→GREEN per ogni task: `topic-registry.ts` (CORE-03 — `Set<string>` di topic noti con observer pattern `onRegistered`) e `lifecycle.ts` (CORE-05 — `VALID_TRANSITIONS` map + `transitionState` validator secondo state machine D-25). File ownership disgiunta da plan 04 e plan 05 (eseguibile in parallelo). Coverage REQ-IDs: CORE-03 ✓, CORE-05 ✓, D-25 ✓.
+Implementati i 2 moduli del batch C delle utility foundation di `@gluezero/core` con pattern TDD RED→GREEN per ogni task: `topic-registry.ts` (CORE-03 — `Set<string>` di topic noti con observer pattern `onRegistered`) e `lifecycle.ts` (CORE-05 — `VALID_TRANSITIONS` map + `transitionState` validator secondo state machine D-25). File ownership disgiunta da plan 04 e plan 05 (eseguibile in parallelo). Coverage REQ-IDs: CORE-03 ✓, CORE-05 ✓, D-25 ✓.
 
 ## Objective Achieved
 
 L'obiettivo del plan 01-06 è raggiunto integralmente:
 
 - **4 file creati** in `packages/core/src/core/` (2 source + 2 test, 310 LOC totali)
-- **`pnpm --filter @sembridge/core test`** esce 0 e riporta `Test Files  7 passed (7) | Tests 111 passed (111)` in 476 ms (4 plan04 + 1 plan05 topic-matcher in flight + 2 plan06)
-- **`pnpm --filter @sembridge/core typecheck`** esce 0 (no TS errors)
+- **`pnpm --filter @gluezero/core test`** esce 0 e riporta `Test Files  7 passed (7) | Tests 111 passed (111)` in 476 ms (4 plan04 + 1 plan05 topic-matcher in flight + 2 plan06)
+- **`pnpm --filter @gluezero/core typecheck`** esce 0 (no TS errors)
 - **`pnpm biome check packages/core/src/core/`** esce 0 (14 file checked, no fixes applied)
 - **TDD pattern RED→GREEN** preservato: 2 commit `test(01-06): aggiunge test RED ...` precedono i corrispondenti commit `feat(01-06): implementa ...`
 - **Threat T-06-01** mitigato (`list()` ritorna `[...this.topics].sort()` — copia, no leak Set interno; verificato dal test "list returns a fresh array on each call")
@@ -99,7 +99,7 @@ L'obiettivo del plan 01-06 è raggiunto integralmente:
 - [x] `onRegistered` ritorna funzione unsubscribe (verificato dal test 6)
 - [x] Listener throwing non propaga (try/catch swallow — verificato dal test 7)
 - [x] File test ha 8 test cases (≥ 7 richiesti dal plan)
-- [x] `pnpm --filter @sembridge/core test topic-registry` esce 0 → `Test Files  1 passed | Tests  8 passed`
+- [x] `pnpm --filter @gluezero/core test topic-registry` esce 0 → `Test Files  1 passed | Tests  8 passed`
 
 ### Acceptance criteria Task 2 (lifecycle)
 - [x] File `packages/core/src/core/lifecycle.ts` esporta `transitionState(reg, target, logger): void` e `VALID_TRANSITIONS`
@@ -109,11 +109,11 @@ L'obiettivo del plan 01-06 è raggiunto integralmente:
 - [x] Errore include `details.from`, `details.to`, `details.pluginId`
 - [x] Logger invocato con `error(msg, meta)` PRIMA del throw — meta contiene `{ error }` (verificato esplicitamente)
 - [x] File test ha 29 test cases (11 transizioni valide + 7 invalide + 1 integrità + 3 error-shape + 7 destroyed-terminal — copre la matrice D-25)
-- [x] `pnpm --filter @sembridge/core test lifecycle` esce 0 → `Test Files  1 passed | Tests 29 passed`
+- [x] `pnpm --filter @gluezero/core test lifecycle` esce 0 → `Test Files  1 passed | Tests 29 passed`
 
 ### Plan-wide verification
-- [x] `pnpm --filter @sembridge/core test` esce 0: `Test Files 7 passed | Tests 111 passed | Duration 476 ms`
-- [x] `pnpm --filter @sembridge/core typecheck` esce 0
+- [x] `pnpm --filter @gluezero/core test` esce 0: `Test Files 7 passed | Tests 111 passed | Duration 476 ms`
+- [x] `pnpm --filter @gluezero/core typecheck` esce 0
 - [x] `pnpm biome check packages/core/src/core/` esce 0 (14 file checked, no fixes applied)
 - [x] File ownership disgiunta da plan 04 e plan 05 (verificato: nessuna intersezione)
 
@@ -122,7 +122,7 @@ NOTA: alla fine di plan 06 sono presenti 7 Test Files passed perché plan 05 (pa
 ## Final test output
 
 ```
-> @sembridge/core@0.0.0 test
+> @gluezero/core@0.0.0 test
 > vitest run --passWithNoTests
 
  RUN  v4.1.5 packages/core

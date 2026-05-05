@@ -7,10 +7,10 @@ depends_on: [06-08b]
 files_modified:
   - packages/cache/vitest.config.ts
   - packages/devtools/vitest.config.ts
-  - packages/sembridge/vitest.config.ts
+  - packages/gluezero/vitest.config.ts
   - packages/cache/package.json
   - packages/devtools/package.json
-  - packages/sembridge/package.json
+  - packages/gluezero/package.json
   - package.json
 autonomous: true
 requirements:
@@ -24,17 +24,17 @@ must_haves:
   truths:
     - "Tutti CI gates passing su F6: lint biome zero errors + typecheck tsc clean su 8 pacchetti + build tsup ESM-only + test jsdom + coverage v8 ≥90/80/90/90 sui source F6 (calibrate post-impl + 0.5% safety floor — pattern F4 04-09 commit 761e4ad + F5 05-07 commit 1347d0b)"
     - "publint OK su 3 pacchetti F6 (cache + devtools + sembridge) + attw ESM-only OK (node16 OK + bundler OK)"
-    - "size-limit budget @sembridge/{cache,devtools,sembridge} rispettato — calibrato post-impl con +20% headroom (lesson learned F3 03-14 commit 9922a36 — pre-impl estimate sotto-stima sistematicamente)"
+    - "size-limit budget @gluezero/{cache,devtools,sembridge} rispettato — calibrato post-impl con +20% headroom (lesson learned F3 03-14 commit 9922a36 — pre-impl estimate sotto-stima sistematicamente)"
     - "Biome auto-format + auto-organize-imports applied su tutti i file F6 modificati packages/{cache,devtools,sembridge}/src/ — zero behavior change verified via test re-run"
     - "Coverage threshold calibration in vitest.config.ts (cache + devtools + sembridge) post-implementation a measured floor − 0.5% safety"
     - "Vincolo D-83 strict (CRITICO): zero modifiche packages/{core,mapper,routing,gateway,worker}/src/ per tutto il plan 06-09a"
   artifacts:
     - path: "packages/cache/vitest.config.ts"
-      provides: "Coverage thresholds calibrate post-impl @sembridge/cache (statements/branches/functions/lines a measured-0.5%)"
+      provides: "Coverage thresholds calibrate post-impl @gluezero/cache (statements/branches/functions/lines a measured-0.5%)"
     - path: "packages/devtools/vitest.config.ts"
-      provides: "Coverage thresholds calibrate post-impl @sembridge/devtools"
-    - path: "packages/sembridge/vitest.config.ts"
-      provides: "Coverage thresholds calibrate post-impl @sembridge/sembridge"
+      provides: "Coverage thresholds calibrate post-impl @gluezero/devtools"
+    - path: "packages/gluezero/vitest.config.ts"
+      provides: "Coverage thresholds calibrate post-impl @gluezero/gluezero"
     - path: "package.json"
       provides: "size-limit array F6 budget aggiunto (cache 10 KB / devtools 16 KB / sembridge 100 KB) — calibrato post-impl + 20% headroom"
   key_links:
@@ -43,9 +43,9 @@ must_haves:
       via: "post-impl measured floor"
       pattern: "thresholds:"
     - from: "package.json"
-      to: "size-limit budget @sembridge/{cache,devtools,sembridge}"
+      to: "size-limit budget @gluezero/{cache,devtools,sembridge}"
       via: "post-impl measured + 20% headroom"
-      pattern: "@sembridge/cache.*gzip\\|@sembridge/devtools.*gzip\\|@sembridge/sembridge.*gzip"
+      pattern: "@gluezero/cache.*gzip\\|@gluezero/devtools.*gzip\\|@gluezero/gluezero.*gzip"
 ---
 
 <objective>
@@ -57,7 +57,7 @@ Wave 5a sequential gate (post 06-08b — depends_on completion devtools wrapper 
 
 2. **Coverage thresholds calibration** post-implementation in `packages/{cache,devtools,sembridge}/vitest.config.ts` — pattern F3 03-14 / F4 04-09 / F5 05-07 verbatim: thresholds a `measured - 0.5%` safety floor.
 
-3. **size-limit budget calibration** in root `package.json` — entries `@sembridge/{cache,devtools,sembridge}` con `limit: <measured + 20% headroom>` (lesson learned F3 commit 9922a36 routing 19.15/24 KB raised — pre-impl estimate sotto-stima sistematicamente).
+3. **size-limit budget calibration** in root `package.json` — entries `@gluezero/{cache,devtools,sembridge}` con `limit: <measured + 20% headroom>` (lesson learned F3 commit 9922a36 routing 19.15/24 KB raised — pre-impl estimate sotto-stima sistematicamente).
 
 4. **publint validation** 3 package F6 (cache + devtools + sembridge) — verify `package.json` exports/types/main puntano a `dist/` correttamente.
 
@@ -89,8 +89,8 @@ Output: 6-8 file modificati (3 vitest.config.ts + 4 package.json + biome whitesp
 @packages/cache/vitest.config.ts
 @packages/devtools/package.json
 @packages/devtools/vitest.config.ts
-@packages/sembridge/package.json
-@packages/sembridge/vitest.config.ts
+@packages/gluezero/package.json
+@packages/gluezero/vitest.config.ts
 @package.json
 
 <interfaces>
@@ -98,8 +98,8 @@ F5 05-07 ha prodotto 1 commit di calibration (pattern target):
 
 ```
 test(05-07): coverage thresholds calibration post-impl + size-limit budget F5 + biome cleanup
-- @sembridge/worker subset 91.5%/83%/90%/93.5% (above target ≥90/80/90/90)
-- size-limit @sembridge/worker 18 KB measured + 20% headroom = 22 KB
+- @gluezero/worker subset 91.5%/83%/90%/93.5% (above target ≥90/80/90/90)
+- size-limit @gluezero/worker 18 KB measured + 20% headroom = 22 KB
 - biome auto-format zero behavior change
 ```
 
@@ -122,7 +122,7 @@ F6 06-09a applica stesso pattern adattato a 3 package (cache + devtools + sembri
 
 <task type="auto">
   <name>Task 1: CI gates verification + coverage thresholds calibration + size-limit budget + biome cleanup</name>
-  <files>packages/cache/vitest.config.ts, packages/devtools/vitest.config.ts, packages/sembridge/vitest.config.ts, packages/cache/package.json, packages/devtools/package.json, packages/sembridge/package.json, package.json</files>
+  <files>packages/cache/vitest.config.ts, packages/devtools/vitest.config.ts, packages/gluezero/vitest.config.ts, packages/cache/package.json, packages/devtools/package.json, packages/gluezero/package.json, package.json</files>
   <read_first>
     - packages/worker/package.json (analog F5 05-07 scripts CI gates ext)
     - packages/worker/vitest.config.ts (analog F5 coverage thresholds calibrate post-impl 91.5/83/90/93.5)
@@ -136,20 +136,20 @@ F6 06-09a applica stesso pattern adattato a 3 package (cache + devtools + sembri
 **1.1 — Run CI gates su monorepo full + measure coverage:**
 
 ```bash
-cd "/Users/omarmarzio/programming/prova AI/SemBridge"
+cd "/Users/omarmarzio/programming/prova AI/GlueZero"
 pnpm install
 pnpm -r typecheck
 pnpm -r build
 pnpm -r test --passWithNoTests
-pnpm -F @sembridge/cache test:coverage
-pnpm -F @sembridge/devtools test:coverage
-pnpm -F @sembridge/sembridge test:coverage
+pnpm -F @gluezero/cache test:coverage
+pnpm -F @gluezero/devtools test:coverage
+pnpm -F @gluezero/gluezero test:coverage
 ```
 
 Atteso: zero errori. Annota i numeri reali coverage v8 sui sub-modulo F6:
-- @sembridge/cache: statements/branches/functions/lines (atteso ≥90/80/90/90)
-- @sembridge/devtools: statements/branches/functions/lines (atteso ≥90/80/90/90)
-- @sembridge/sembridge: statements/branches/functions/lines (atteso ≥90/80/90/90)
+- @gluezero/cache: statements/branches/functions/lines (atteso ≥90/80/90/90)
+- @gluezero/devtools: statements/branches/functions/lines (atteso ≥90/80/90/90)
+- @gluezero/gluezero: statements/branches/functions/lines (atteso ≥90/80/90/90)
 
 **1.2 — Calibrate vitest.config.ts thresholds post-implementation (pattern F3 03-14 / F4 04-09 / F5 05-07):**
 
@@ -166,7 +166,7 @@ coverage: {
 }
 ```
 
-Stessa cosa per `packages/devtools/vitest.config.ts` e `packages/sembridge/vitest.config.ts`.
+Stessa cosa per `packages/devtools/vitest.config.ts` e `packages/gluezero/vitest.config.ts`.
 
 **1.3 — size-limit budget calibration (Task 1.1 lesson learned F3 carryover):**
 
@@ -177,20 +177,20 @@ Run `pnpm size-limit` per misurare bundle reali. Aggiorna `package.json` root co
   "size-limit": [
     // Existing F1-F5 entries...
     {
-      "name": "@sembridge/cache (gzip)",
+      "name": "@gluezero/cache (gzip)",
       "path": "packages/cache/dist/index.js",
       "limit": "<measured + 20% headroom> KB",
       "gzip": true
     },
     {
-      "name": "@sembridge/devtools (gzip)",
+      "name": "@gluezero/devtools (gzip)",
       "path": "packages/devtools/dist/index.js",
       "limit": "<measured + 20% headroom> KB",
       "gzip": true
     },
     {
-      "name": "@sembridge/sembridge (gzip)",
-      "path": "packages/sembridge/dist/index.js",
+      "name": "@gluezero/gluezero (gzip)",
+      "path": "packages/gluezero/dist/index.js",
       "limit": "<measured + 20% headroom> KB",
       "gzip": true
     }
@@ -203,7 +203,7 @@ Run `pnpm size-limit` per measure reale bundle gzip. Se measured > limit pre-imp
 **1.4 — publint + attw validation 3 package F6:**
 
 ```bash
-cd "/Users/omarmarzio/programming/prova AI/SemBridge"
+cd "/Users/omarmarzio/programming/prova AI/GlueZero"
 pnpm dlx publint packages/cache
 pnpm dlx publint packages/devtools
 pnpm dlx publint packages/sembridge
@@ -217,7 +217,7 @@ Atteso: publint OK (zero error/warn) + attw "node16 OK + bundler OK" (no FalseCJ
 **1.5 — Biome auto-format su tutti i source F6:**
 
 ```bash
-pnpm biome check --write packages/cache/src/ packages/devtools/src/ packages/sembridge/src/
+pnpm biome check --write packages/cache/src/ packages/devtools/src/ packages/gluezero/src/
 ```
 
 Verifica zero behavior change — solo whitespace + import ordering. Re-run `pnpm -r test` per assert no regression.
@@ -225,15 +225,15 @@ Verifica zero behavior change — solo whitespace + import ordering. Re-run `pnp
 **Commit 1 (atomic):**
 
 ```bash
-git add packages/cache/vitest.config.ts packages/devtools/vitest.config.ts packages/sembridge/vitest.config.ts packages/cache/package.json packages/devtools/package.json packages/sembridge/package.json package.json packages/cache/src/ packages/devtools/src/ packages/sembridge/src/
+git add packages/cache/vitest.config.ts packages/devtools/vitest.config.ts packages/gluezero/vitest.config.ts packages/cache/package.json packages/devtools/package.json packages/gluezero/package.json package.json packages/cache/src/ packages/devtools/src/ packages/gluezero/src/
 git commit -m "test(06-09a): coverage thresholds calibration post-impl + size-limit budget F6 + biome cleanup
 
 Coverage v8 calibrate post-implementation (analog F4 04-09 + F5 05-07):
-- @sembridge/cache subset <measured>%/<measured>%/<measured>%/<measured>% (above target ≥90/80/90/90)
-- @sembridge/devtools subset <measured>%/<measured>%/<measured>%/<measured>% (above target ≥90/80/90/90)
-- @sembridge/sembridge subset <measured>%/<measured>%/<measured>%/<measured>% (above target ≥90/80/90/90)
+- @gluezero/cache subset <measured>%/<measured>%/<measured>%/<measured>% (above target ≥90/80/90/90)
+- @gluezero/devtools subset <measured>%/<measured>%/<measured>%/<measured>% (above target ≥90/80/90/90)
+- @gluezero/gluezero subset <measured>%/<measured>%/<measured>%/<measured>% (above target ≥90/80/90/90)
 
-size-limit budget @sembridge/{cache,devtools,sembridge} added with measured + 20% headroom
+size-limit budget @gluezero/{cache,devtools,sembridge} added with measured + 20% headroom
 (lesson learned F3 commit 9922a36 — pre-impl estimate sotto-stima sistematicamente).
 
 Biome auto-format su 30+ file packages/{cache,devtools,sembridge}/src/ (zero behavior change,
@@ -249,7 +249,7 @@ Co-Authored-By: Claude Opus 4.7 <noreply@anthropic.com>"
 ```
   </action>
   <verify>
-    <automated>cd "/Users/omarmarzio/programming/prova AI/SemBridge" && pnpm -r typecheck 2>&1 | tail -3 && pnpm -r build 2>&1 | tail -3 && pnpm -r test --passWithNoTests 2>&1 | tail -5 && pnpm size-limit 2>&1 | tail -10 && DIFF=$(git diff main...HEAD -- packages/core/src/ packages/mapper/src/ packages/routing/src/ packages/gateway/src/ packages/worker/src/ | wc -l); echo "D-83 strict diff lines $DIFF (atteso 0)"</automated>
+    <automated>cd "/Users/omarmarzio/programming/prova AI/GlueZero" && pnpm -r typecheck 2>&1 | tail -3 && pnpm -r build 2>&1 | tail -3 && pnpm -r test --passWithNoTests 2>&1 | tail -5 && pnpm size-limit 2>&1 | tail -10 && DIFF=$(git diff main...HEAD -- packages/core/src/ packages/mapper/src/ packages/routing/src/ packages/gateway/src/ packages/worker/src/ | wc -l); echo "D-83 strict diff lines $DIFF (atteso 0)"</automated>
   </verify>
   <done>
     - vitest config thresholds calibrate per cache + devtools + sembridge
@@ -267,7 +267,7 @@ Co-Authored-By: Claude Opus 4.7 <noreply@anthropic.com>"
 <verification>
 - 1 commit atomico CI gate calibration
 - Coverage v8 cache + devtools + sembridge subset measured + thresholds calibrate post-impl
-- size-limit budget @sembridge/{cache,devtools,sembridge} rispettato (measured + 20% headroom)
+- size-limit budget @gluezero/{cache,devtools,sembridge} rispettato (measured + 20% headroom)
 - publint + attw OK 3 package F6
 - Biome auto-format zero behavior change
 - Cross-package zero regression full monorepo
@@ -276,7 +276,7 @@ Co-Authored-By: Claude Opus 4.7 <noreply@anthropic.com>"
 
 <success_criteria>
 - [x] CI gates ALL GREEN (publint 7/7 + attw ESM-only + biome + typecheck + build + test 3-tier + coverage v8) ✅
-- [x] size-limit budget @sembridge/{cache,devtools,sembridge} measured + 20% headroom ✅
+- [x] size-limit budget @gluezero/{cache,devtools,sembridge} measured + 20% headroom ✅
 - [x] Coverage thresholds calibrate post-impl in vitest.config.ts ✅
 - [x] Biome auto-format zero behavior change ✅
 - [x] D-83 strict acceptance gate verified ✅

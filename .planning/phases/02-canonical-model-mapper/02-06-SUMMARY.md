@@ -120,13 +120,13 @@ TDD pattern RED→GREEN come F1 (D-52). Due commit atomici sequenziali separati 
 
 | Comando | Risultato |
 |---------|-----------|
-| `pnpm --filter @sembridge/mapper test valibot-adapter` (post Task RED) | FAIL (atteso — TDD RED gate; `Failed to resolve import "./valibot-adapter"`) |
-| `pnpm --filter @sembridge/mapper test valibot-adapter` (post Task GREEN) | Exit 0; **Test Files 1 passed (1) — Tests 10 passed (10)** |
-| `pnpm --filter @sembridge/mapper test` (full mapper suite) | Exit 0; **4 file/51 test passing** (alias-registry + canonical-registry + transform-pipeline + valibot-adapter) |
-| `pnpm --filter @sembridge/mapper typecheck` | Exit 0 (no errori TS, `isolatedDeclarations` enforcement OK) |
-| `pnpm --filter @sembridge/core test` | Exit 0; **24 file/248 test passing** (no regression Phase 1) |
+| `pnpm --filter @gluezero/mapper test valibot-adapter` (post Task RED) | FAIL (atteso — TDD RED gate; `Failed to resolve import "./valibot-adapter"`) |
+| `pnpm --filter @gluezero/mapper test valibot-adapter` (post Task GREEN) | Exit 0; **Test Files 1 passed (1) — Tests 10 passed (10)** |
+| `pnpm --filter @gluezero/mapper test` (full mapper suite) | Exit 0; **4 file/51 test passing** (alias-registry + canonical-registry + transform-pipeline + valibot-adapter) |
+| `pnpm --filter @gluezero/mapper typecheck` | Exit 0 (no errori TS, `isolatedDeclarations` enforcement OK) |
+| `pnpm --filter @gluezero/core test` | Exit 0; **24 file/248 test passing** (no regression Phase 1) |
 | Acceptance grep checks (6/6) | PASSED — file esistono, exports valibotAdapter, implementa ValidatorAdapter, usa v.safeParse, mappa issues |
-| `valibot` in `dependencies` (NON devDependencies) | OK — `packages/mapper/package.json:39-42` `dependencies: { @sembridge/core: workspace:*, valibot: 1.3.1 }` |
+| `valibot` in `dependencies` (NON devDependencies) | OK — `packages/mapper/package.json:39-42` `dependencies: { @gluezero/core: workspace:*, valibot: 1.3.1 }` |
 | File ownership disgiunta vs Wave 3 paralleli | OK — solo `packages/mapper/src/valibot-adapter{.ts,.test.ts}` modificati, nessun overlap con 02-03/02-04/02-05 |
 
 ## Threat Coverage
@@ -174,7 +174,7 @@ cd509f3 feat(02-06): implementa valibotAdapter (REQ VAL-03/VAL-04/VAL-07 — D-3
 - ✅ **Closed:** D-37 implementato (Valibot 1.x come default validator)
 - ✅ **Closed:** D-38 implementato (adapter pluggable — V2 può aggiungere Zod/Ajv senza breaking change)
 - ✅ **Ready:** plan 02-07 (`MapperEngine`) può importare `import { valibotAdapter } from './valibot-adapter'` come default per `validator: ValidatorAdapter` config
-- ✅ **Ready:** plan 02-09 (`augment.ts`) può ri-esportare `valibotAdapter` dal barrel principale `@sembridge/mapper/index.ts`
+- ✅ **Ready:** plan 02-09 (`augment.ts`) può ri-esportare `valibotAdapter` dal barrel principale `@gluezero/mapper/index.ts`
 - ⏳ **Pending:** plan 02-07 (`MapperEngine`) consumerà `valibotAdapter` ai passi 6 (canonical validation) e 12 (final validation per consumer) della pipeline §28 (D-39)
 - ⏳ **Pending:** plan 02-12 (final gate F2) misurerà coverage v8 ≥ 90% sul file `valibot-adapter.ts`. Stima attuale: ~95% (10 test coprono tutti i branch happy/fail/edge)
 

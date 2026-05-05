@@ -12,23 +12,23 @@ tags:
 dependency-graph:
   requires:
     - phase: 03-02
-      provides: "@sembridge/gateway/http types — GatewayConfig + 7 Strategy interfaces + GatewayErrorCode + isGatewayErrorCode"
+      provides: "@gluezero/gateway/http types — GatewayConfig + 7 Strategy interfaces + GatewayErrorCode + isGatewayErrorCode"
     - phase: 03-03
-      provides: "@sembridge/routing augment per BrokerConfig.routes/routing (parallelo simmetrico)"
+      provides: "@gluezero/routing augment per BrokerConfig.routes/routing (parallelo simmetrico)"
     - phase: 02
-      provides: "@sembridge/mapper barrel (CanonicalSchema/CanonicalSchemaId per test coexistenza)"
+      provides: "@gluezero/mapper barrel (CanonicalSchema/CanonicalSchemaId per test coexistenza)"
     - phase: 01
-      provides: "@sembridge/core BrokerConfig (interface — augmentable D-93)"
+      provides: "@gluezero/core BrokerConfig (interface — augmentable D-93)"
   provides:
-    - "BrokerConfig.gateway? augmentation visibile dopo import '@sembridge/gateway' (D-93)"
-    - "@sembridge/gateway/http subpath barrel con 18 type re-export pubblici (GatewayConfig + 4 sub-types + 7 Strategy + 2 spec + 1 context + 1 middleware + 1 error code) + isGatewayErrorCode runtime"
-    - "@sembridge/gateway umbrella barrel con `export * from './http'` + side-effect __augmentGatewayLoaded"
+    - "BrokerConfig.gateway? augmentation visibile dopo import '@gluezero/gateway' (D-93)"
+    - "@gluezero/gateway/http subpath barrel con 18 type re-export pubblici (GatewayConfig + 4 sub-types + 7 Strategy + 2 spec + 1 context + 1 middleware + 1 error code) + isGatewayErrorCode runtime"
+    - "@gluezero/gateway umbrella barrel con `export * from './http'` + side-effect __augmentGatewayLoaded"
     - "dist/augment.js separato dal bundle index.js (sideEffects array preserva entry — Pattern S1)"
     - "dist/http/index.js entry separato (subpath exports — bundle budget 8 KB gzip dedicato)"
   affects:
     - "03-08+ (HttpGateway runtime): consuma BrokerConfig.gateway tipato per istanziare gateway al boot"
     - "03-12 (RouterBroker): legge BrokerConfig.gateway per dependency injection in HttpGateway"
-    - "ogni plan downstream F3 che importa @sembridge/gateway eredita la declaration merging di BrokerConfig.gateway"
+    - "ogni plan downstream F3 che importa @gluezero/gateway eredita la declaration merging di BrokerConfig.gateway"
     - "Phase 4 SSE/WS (riservato): aggiunger un terzo entry `sse-ws/index` alla tsup config + export `./sse-ws` al package.json"
 tech-stack:
   added: []
@@ -47,7 +47,7 @@ key-files:
     - "packages/gateway/src/index.ts"
     - "packages/gateway/tsup.config.ts"
 key-decisions:
-  - "Augment minimale gateway: SOLO BrokerConfig.gateway? (1 declare module, 1 field) — coerente con 03-03 routing che augmenta routes/routing/gateway su `@sembridge/core` e requiresRoute su `@sembridge/mapper` da package routing. Niente cross-augment di interface non-pertinenti al package."
+  - "Augment minimale gateway: SOLO BrokerConfig.gateway? (1 declare module, 1 field) — coerente con 03-03 routing che augmenta routes/routing/gateway su `@gluezero/core` e requiresRoute su `@gluezero/mapper` da package routing. Niente cross-augment di interface non-pertinenti al package."
   - "Marker const con nome distinto __augmentGatewayLoaded (non __augmentLoaded come mapper/routing) per consentire ai consumer di distinguere i 3 augment durante debug. Pattern S1 invariato."
   - "tsup entry list passata a object form (`entry: { index: ..., 'http/index': ..., augment: ... }`) anziché array per emettere `dist/augment.js` come file dedicato (path referenziato da package.json sideEffects)."
   - "package.json già aveva sideEffects array completo da plan 03-01 (`./dist/augment.js`, `./src/augment.ts`, `**/augment.js`, `**/augment.ts` — quadruplice safety) e exports `./http` corretti — niente modifiche al package.json necessarie."
@@ -87,8 +87,8 @@ metrics:
 ### Task 1 — augment.ts + augment.test.ts (5 test)
 
 - **`augment.ts` (~95 LOC)** con 3 JSDoc entries documentati:
-  - Header file con riferimenti completi a D-83/D-93, motivazione separazione da `@sembridge/routing` (ciclo workspace), threat coverage T-03-04-01/T-03-04-02.
-  - `declare module '@sembridge/core'` con `BrokerConfig.gateway?: GatewayConfig` (D-93, SEC-01..05) + JSDoc che cita coexistenza con plan 03-03 routing augment.
+  - Header file con riferimenti completi a D-83/D-93, motivazione separazione da `@gluezero/routing` (ciclo workspace), threat coverage T-03-04-01/T-03-04-02.
+  - `declare module '@gluezero/core'` con `BrokerConfig.gateway?: GatewayConfig` (D-93, SEC-01..05) + JSDoc che cita coexistenza con plan 03-03 routing augment.
   - `__augmentGatewayLoaded: true` marker const (Pattern S1 — T-03-04-01 mitigation diretta) con nome distinto da `__augmentLoaded` di mapper/routing per debug-friendliness.
 - **`augment.test.ts` (~95 LOC, 5 test)** — replica pattern F2/F3-routing:
   1. Runtime side-effect import safe (`__augmentGatewayLoaded === true`)
@@ -116,14 +116,14 @@ metrics:
 
 | Target | Field | Type | Decisione | REQ-ID coperti (a livello tipo) |
 |--------|-------|------|-----------|-------------------------------|
-| `@sembridge/core::BrokerConfig` | `gateway?` | `GatewayConfig` | D-93 | SEC-01..05 (auth/refresh/idempotency/url-allowlist a livello config), ROUTE-06 (gateway centralizzato — type contract), ROUTE-07 (auth headers — type contract) |
+| `@gluezero/core::BrokerConfig` | `gateway?` | `GatewayConfig` | D-93 | SEC-01..05 (auth/refresh/idempotency/url-allowlist a livello config), ROUTE-06 (gateway centralizzato — type contract), ROUTE-07 (auth headers — type contract) |
 
 NB: i REQ-ID restano `[ ]` in `REQUIREMENTS.md` (non marcati `[x]` qui) perché l'implementazione runtime arriva nei plan 03-08+ (`HttpGateway`/auth-strategy/idempotency-strategy/url-allowlist). Questo plan offre soltanto la **type surface** sopra cui i plan downstream costruiscono.
 
 ## Build verification
 
 ```bash
-$ pnpm --filter @sembridge/gateway build
+$ pnpm --filter @gluezero/gateway build
 ESM dist/augment.js        229.00 B
 ESM dist/http/index.js     583.00 B
 ESM dist/index.js          661.00 B
@@ -141,7 +141,7 @@ DTS dist/gateway-config-CmwbOUe6.d.ts 3.67 KB
 
 `dist/augment.js` content (post-tree-shake-guard verification):
 ```js
-/* @sembridge/gateway — MIT — https://github.com/<TBD>/sembridge */
+/* @gluezero/gateway — MIT — https://github.com/<TBD>/sembridge */
 // src/augment.ts
 var __augmentGatewayLoaded = true;
 export { __augmentGatewayLoaded };
@@ -149,7 +149,7 @@ export { __augmentGatewayLoaded };
 
 `dist/index.js` ri-esporta correttamente il marker (umbrella barrel verified):
 ```js
-/* @sembridge/gateway — MIT — https://github.com/<TBD>/sembridge */
+/* @gluezero/gateway — MIT — https://github.com/<TBD>/sembridge */
 // src/augment.ts
 var __augmentGatewayLoaded = true;
 // src/http/types/http-error.ts
@@ -161,19 +161,19 @@ export { __augmentGatewayLoaded, isGatewayErrorCode };
 ## Regression check D-83
 
 ```bash
-$ pnpm --filter @sembridge/core test
+$ pnpm --filter @gluezero/core test
 Test Files 24 passed (24) | Tests 248 passed (248)
 
-$ pnpm --filter @sembridge/mapper test
+$ pnpm --filter @gluezero/mapper test
 Test Files 16 passed (16) | Tests 183 passed (183)
 
-$ pnpm --filter @sembridge/routing test
+$ pnpm --filter @gluezero/routing test
 Test Files 1 passed (1) | Tests 9 passed (9)
 
-$ pnpm --filter @sembridge/gateway test
+$ pnpm --filter @gluezero/gateway test
 Test Files 1 passed (1) | Tests 5 passed (5)
 
-$ pnpm --filter @sembridge/gateway exec tsc --noEmit
+$ pnpm --filter @gluezero/gateway exec tsc --noEmit
 # exit 0 — 0 errori
 ```
 
@@ -215,7 +215,7 @@ Ogni task committed atomicamente:
 
 **1. [Rule 1 - Bug] JSDoc breaking syntax con `*/` interno**
 
-- **Found during:** Task 2 build esecuzione (`pnpm --filter @sembridge/gateway build` exit 1)
+- **Found during:** Task 2 build esecuzione (`pnpm --filter @gluezero/gateway build` exit 1)
 - **Issue:** Il JSDoc `/** Literal union dei 11 codici errore HTTP Gateway F3 (D-80, D-87) — gateway.*/auth.*/circuit.*/etc. */` aveva `*/` interno (gateway.**/auth**) che chiudeva prematuramente il commento, causando syntax error esbuild + TS errors propagati (TS1005, TS1003, TS1161, TS1109, TS1434, TS2304).
 - **Fix:** sostituito il pattern abbreviato con elenco esplicito dei codici letterali, evitando `*/` interno.
 - **Files modified:** `packages/gateway/src/http/index.ts` (1 riga JSDoc)
@@ -238,29 +238,29 @@ Solo il bug JSDoc auto-fixed (vedi Deviations Rule 1 sopra). Nessun altro issue 
 ## Verification Output
 
 ```bash
-$ pnpm --filter @sembridge/gateway test -- --run augment.test.ts
+$ pnpm --filter @gluezero/gateway test -- --run augment.test.ts
 Test Files 1 passed (1) | Tests 5 passed (5) | Duration 734ms
 
-$ pnpm --filter @sembridge/gateway build
+$ pnpm --filter @gluezero/gateway build
 ESM dist/augment.js 229 B + dist/http/index.js 583 B + dist/index.js 661 B + DTS clean
 
-$ pnpm --filter @sembridge/gateway exec tsc --noEmit
+$ pnpm --filter @gluezero/gateway exec tsc --noEmit
 # exit 0
 
-$ pnpm --filter @sembridge/core test
+$ pnpm --filter @gluezero/core test
 Tests 248 passed (248)
 
-$ pnpm --filter @sembridge/mapper test
+$ pnpm --filter @gluezero/mapper test
 Tests 183 passed (183)
 
-$ pnpm --filter @sembridge/routing test
+$ pnpm --filter @gluezero/routing test
 Tests 9 passed (9)
 
 $ test -f packages/gateway/dist/index.js && test -f packages/gateway/dist/http/index.js && test -f packages/gateway/dist/augment.js
 # all 3 dist files present
 
-$ grep "declare module '@sembridge/core'" packages/gateway/src/augment.ts
-declare module '@sembridge/core' {
+$ grep "declare module '@gluezero/core'" packages/gateway/src/augment.ts
+declare module '@gluezero/core' {
 
 $ grep "__augmentGatewayLoaded" packages/gateway/src/augment.ts | wc -l
 6 (header doc references + export const literal)
@@ -295,8 +295,8 @@ Bundle runtime quasi-zero: l'unico runtime è `isGatewayErrorCode` (~150 B) + Se
 
 ## Note per i plan downstream
 
-- **Plan 03-08** (HttpGateway runtime + public-factory): consuma `BrokerConfig.gateway?: GatewayConfig` da questo augment per leggere config al boot. Importa `GatewayConfig`, `AuthStrategyConfig`, `AllowlistEntry`, `DefaultsConfig`, `CircuitBreakerConfig` direttamente da `@sembridge/gateway/http` (subpath dedicato). Implementa `createHttpGateway(config: GatewayConfig)` factory + `HttpGateway` class.
-- **Plan 03-09..03-12** (Strategy default implementations): implementano le 7 Strategy interfaces esposte dal `./http` barrel. Pattern import: `import type { RetryStrategy } from '@sembridge/gateway/http'` + `export class ExponentialBackoffWithJitter implements RetryStrategy { ... }`.
+- **Plan 03-08** (HttpGateway runtime + public-factory): consuma `BrokerConfig.gateway?: GatewayConfig` da questo augment per leggere config al boot. Importa `GatewayConfig`, `AuthStrategyConfig`, `AllowlistEntry`, `DefaultsConfig`, `CircuitBreakerConfig` direttamente da `@gluezero/gateway/http` (subpath dedicato). Implementa `createHttpGateway(config: GatewayConfig)` factory + `HttpGateway` class.
+- **Plan 03-09..03-12** (Strategy default implementations): implementano le 7 Strategy interfaces esposte dal `./http` barrel. Pattern import: `import type { RetryStrategy } from '@gluezero/gateway/http'` + `export class ExponentialBackoffWithJitter implements RetryStrategy { ... }`.
 - **Plan 03-12** (RouterBroker constructor): legge `config.gateway` (typed via questo augment) per dependency injection in `HttpGateway` istanza. Cascade: `RouterBroker.unregisterPlugin` invoca `this.gateway.cancelInFlightByOwner(pluginId)` (D-86 LIFE-02 ext).
 - **Plan 03-14** (size-limit gate): aggiungere config `size-limit` per `dist/http/index.js` (budget 8 KB gzip — RESEARCH line 13) + `dist/augment.js` (budget 1 KB gzip).
 - **Phase 4** (SSE/WS adapter): aggiungerà entry `'sse-ws/index': 'src/sse-ws/index.ts'` al `tsup.config.ts` + nuovo augment `BrokerConfig.realtime?` da `packages/gateway/src/sse-ws/augment.ts` (pattern simmetrico a questo plan). Side-effect import + sideEffects array già configurati per `**/augment.js` glob (quadruplice safety) — coprirà automaticamente anche `dist/sse-ws/augment.js`.

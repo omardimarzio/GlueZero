@@ -212,10 +212,10 @@ DTS dist/sse-ws/augment.d.ts 118 B
 
 | Package | Tests | Note |
 |---------|-------|------|
-| @sembridge/core | 248 passed | invariato |
-| @sembridge/mapper | 183 passed | invariato |
-| @sembridge/routing | 103 passed | invariato |
-| @sembridge/gateway | 222 passed + 3 skip | +34 test (12 broker + 6 factory + 13 integration + 1 Tier-3 attivo + 2 Tier-2/3 skip) |
+| @gluezero/core | 248 passed | invariato |
+| @gluezero/mapper | 183 passed | invariato |
+| @gluezero/routing | 103 passed | invariato |
+| @gluezero/gateway | 222 passed + 3 skip | +34 test (12 broker + 6 factory + 13 integration + 1 Tier-3 attivo + 2 Tier-2/3 skip) |
 | **Totale** | **756 passed + 3 skip** | **vs pre-04-08: 725 → +34 nuovi test** |
 
 ## Decisioni architetturali
@@ -230,7 +230,7 @@ T-04-08-09 (Logic flaw — source.type='server' lost se RouterBroker.publish non
 
 ### W-3 closure: harness senza monkey-patch
 
-L'harness `createRealtimeHarness` collect events via subscribe wildcard a 4 pattern di profondità (`'*'`, `'*.*'`, `'*.*.*'`, `'*.*.*.*'`). Il F1 topic-matcher (`packages/core/src/core/topic-matcher.ts:115-138`) supporta `*` come segment wildcard ma il match avviene per profondità esatta — l'harness copre eventi 1-4 segmenti che è sufficiente per i topic standard SemBridge (`'orders'`, `'system.warn'`, `'system.realtime.connected'`, `'system.realtime.connected.x'`). NIENTE monkey-patch di `broker.publish` — il path `manager.publishFn → inner.publish` ORIGINALE resta intatto e la pipeline §28 (step 1-13 F1, +F2 step 4-6, +F3 step 8-10) viene esercitata interamente.
+L'harness `createRealtimeHarness` collect events via subscribe wildcard a 4 pattern di profondità (`'*'`, `'*.*'`, `'*.*.*'`, `'*.*.*.*'`). Il F1 topic-matcher (`packages/core/src/core/topic-matcher.ts:115-138`) supporta `*` come segment wildcard ma il match avviene per profondità esatta — l'harness copre eventi 1-4 segmenti che è sufficiente per i topic standard GlueZero (`'orders'`, `'system.warn'`, `'system.realtime.connected'`, `'system.realtime.connected.x'`). NIENTE monkey-patch di `broker.publish` — il path `manager.publishFn → inner.publish` ORIGINALE resta intatto e la pipeline §28 (step 1-13 F1, +F2 step 4-6, +F3 step 8-10) viene esercitata interamente.
 
 ### B-3 closure: zero placeholder presence-only
 
@@ -294,7 +294,7 @@ D-83 strict ✅ verified via `git diff packages/{core,mapper,routing}/src/ packa
 
 ## Hand-off note per 04-09 (final gate)
 
-Il subpath `@sembridge/gateway/sse-ws` è pronto per:
+Il subpath `@gluezero/gateway/sse-ws` è pronto per:
 1. **publint --strict**: verifica package.json compatibility (sideEffects glob già configurato per `**/augment.{js,ts}`).
 2. **attw --pack --profile=esm-only**: verifica .d.ts ESM-only correctness.
 3. **size-limit**: misurare bundle size del subpath `dist/sse-ws/index.js` (~78 KB ESM minified target).

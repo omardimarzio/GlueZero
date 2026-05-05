@@ -97,7 +97,7 @@ Il **`runReconnectLoop` privato** (B-4 closure + B-NEW-1 signature fix) orchestr
 ✓ Test 16: checkFreshnessAll() invoca disconnect su canali stale
 ```
 
-**Output `pnpm --filter @sembridge/gateway test src/sse-ws/realtime-channel-manager.test.ts`:**
+**Output `pnpm --filter @gluezero/gateway test src/sse-ws/realtime-channel-manager.test.ts`:**
 ```
 Test Files  1 passed (1)
      Tests  16 passed (16)
@@ -108,9 +108,9 @@ Test Files  1 passed (1)
 
 **Monorepo full:** core 248/248 + mapper 183/183 + routing 103/103 + gateway 191/191 = **725/725 tests** PASS.
 
-**Typecheck:** `pnpm --filter @sembridge/gateway exec tsc --noEmit` exit 0 (clean su core, mapper, routing, gateway).
+**Typecheck:** `pnpm --filter @gluezero/gateway exec tsc --noEmit` exit 0 (clean su core, mapper, routing, gateway).
 
-**Build:** `pnpm --filter @sembridge/gateway build` ESM + DTS success in 70ms + 603ms.
+**Build:** `pnpm --filter @gluezero/gateway build` ESM + DTS success in 70ms + 603ms.
 
 ## TDD RED→GREEN
 
@@ -215,8 +215,8 @@ Il `RealtimeBroker` di plan 04-08 dovrà:
 - [x] `publishSystem('system.realtime.failed', { reason: 'cycle-cap-exceeded' ... })` su `isPermanentlyFailed()` (Test 14)
 - [x] Rebinding adapter su `shouldFallback()` — `entry.adapter = new WebSocketAdapter` (Test 13)
 - [x] File test contiene 16 test (≥10 richiesti)
-- [x] `pnpm --filter @sembridge/gateway test` exit 0 (191/191)
-- [x] `pnpm --filter @sembridge/gateway exec tsc --noEmit` exit 0
+- [x] `pnpm --filter @gluezero/gateway test` exit 0 (191/191)
+- [x] `pnpm --filter @gluezero/gateway exec tsc --noEmit` exit 0
 - [x] Cronologia git mostra ≥2 commit 04-07 (RED + GREEN)
 
 **Deviazioni:** Nessuna. Plan eseguito esattamente come scritto, con auto-fix Rule 2 minor: aggiunto `try { adapter.disconnect } catch {}` swallow nelle disconnect/disconnectByOwner per coverage T-04-07-03 (memory leak adapter throw — il plan menziona "deferred V1.x", ma il try/catch è un mitigation parziale a costo zero).

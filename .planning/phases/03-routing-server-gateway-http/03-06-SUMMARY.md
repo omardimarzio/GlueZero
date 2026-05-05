@@ -13,11 +13,11 @@ tags:
 dependency-graph:
   requires:
     - phase: 03-02
-      provides: "@sembridge/routing types (RouteDefinition discriminated, RouteOutcome ok|error, CompiledRoute)"
+      provides: "@gluezero/routing types (RouteDefinition discriminated, RouteOutcome ok|error, CompiledRoute)"
     - phase: 03-05
       provides: "RouteResolver + CompiledRoute interface (definition, ownerId, priority, requestBuilder)"
     - phase: 01
-      provides: "@sembridge/core (createBrokerError factory, BrokerEvent, EventTap, PipelineStep, PipelineSnapshot)"
+      provides: "@gluezero/core (createBrokerError factory, BrokerEvent, EventTap, PipelineStep, PipelineSnapshot)"
   provides:
     - "RouteExecutor class con execute/abortInFlight/abortInFlightByOwner/inFlightCount (D-65 dispatch by type)"
     - "RouteExecutorDeps interface (httpHandler DI + resolveSubRoute + tap + onCacheDeferred)"
@@ -39,7 +39,7 @@ tech-stack:
     - "Dependency Injection per httpHandler (file ownership separato Wave 4): plan 03-06 dichiara la firma; plan 03-08 fornisce la vera implementazione del gateway HTTP. Permette test isolati con mock"
     - "AbortController registry: Map<eventId, {controller, ownerId, routeId}> con finally cleanup per O(1) lookup + cascade abort by ownerId"
     - "Composite handler factory closure pattern: cacheWarnEmitted flag chiuso nella closure → warning UNA SOLA volta per istanza handler (Q3 opzione b — alias HTTP-only finché F6 non collega cache adapter)"
-    - "EventTap emit inline con try/catch swallow (replica pattern F2 emitF2Tap di broker-mapper-wrapper.ts:325): safeTapStep di @sembridge/core NON è esposto al barrel pubblico, quindi inline pattern preserva D-83 strict (no cross-package internal coupling)"
+    - "EventTap emit inline con try/catch swallow (replica pattern F2 emitF2Tap di broker-mapper-wrapper.ts:325): safeTapStep di @gluezero/core NON è esposto al barrel pubblico, quindi inline pattern preserva D-83 strict (no cross-package internal coupling)"
     - "Conditional spread `...(deps.onCacheDeferred !== undefined && { onCacheDeferred })` per exactOptionalPropertyTypes: true (mai undefined assignment esplicito)"
     - "Sub-route resolve via DI (resolveSubRoute callback): il composite handler non ha riferimento diretto al RouteResolver; il RouterBroker wrapper plan 03-12 fa il binding"
 key-files:
@@ -55,7 +55,7 @@ key-files:
 key-decisions:
   - "**httpHandler via Dependency Injection** (file ownership separato Wave 4): plan 03-06 dichiara la firma `(event, route, signal) => Promise<RouteOutcome>`; plan 03-08 fornirà la vera implementazione del gateway HTTP nel route-handlers/http-handler.ts. Permette plan 03-06/07/08 di parallelizzarsi su file disgiunti senza dipendenza forte di build order."
   - "**Composite handler factory closure** invece di class: createCompositeHandler ritorna una funzione con `cacheWarnEmitted` chiuso nella closure. Test 5 verifica esplicitamente warn=1 dopo 3 invocazioni successive → semantica `una sola volta per istanza handler`."
-  - "**EventTap emit inline** (try/catch swallow) invece di import da `safeTapStep` di core: `safeTapStep` non è esposto al barrel `@sembridge/core` (`packages/core/src/index.ts`). Esportarlo violerebbe D-83 strict (modifica a packages/core/). Replica del pattern F2 `emitF2Tap` (broker-mapper-wrapper.ts:325) — try/catch swallow inline. Auditabile via grep nel package routing."
+  - "**EventTap emit inline** (try/catch swallow) invece di import da `safeTapStep` di core: `safeTapStep` non è esposto al barrel `@gluezero/core` (`packages/core/src/index.ts`). Esportarlo violerebbe D-83 strict (modifica a packages/core/). Replica del pattern F2 `emitF2Tap` (broker-mapper-wrapper.ts:325) — try/catch swallow inline. Auditabile via grep nel package routing."
   - "**Test 8 default branch via cast** invece di estensione tipo: route.type='worker' è F5 future. Il test usa `as unknown as CompiledRoute` per forzare un type literale non coperto dal switch — verifica difensiva del default branch (T-03-06-03 mitigation)."
   - "**`finally` cleanup inFlight** garantisce che ogni `execute()` rimuova l'entry indipendentemente dal branch (success/error/throw). Mitiga T-03-06-02 (DoS — Map unbounded). Cleanup avviene PRIMA dell'emitTap perché lo step 9 cattura outcome già nel local snapshot."
   - "**Sub-route signal sharing nel composite**: il composite delega l'http step via `httpHandler(e, subRoute, signal)` dove `signal = getOrCreateController(e.id, subRoute).signal`. Lo stesso eventId del composite condivide il controller con il sub-step → abortInFlight(compositeEventId) cancella anche il sub-http (no doppia entry)."
@@ -167,7 +167,7 @@ Implementare il dispatch by type del routing engine F3 (D-65, ROUTE-02..05) post
 
 Vedi frontmatter `key-decisions`. Highlights:
 1. **httpHandler via Dependency Injection** — plan 03-06 dichiara la firma `(event, route, signal) => Promise<RouteOutcome>`; plan 03-08 fornirà l'implementazione vera nel route-handlers/http-handler.ts. Permette parallelizzazione Wave 4 con file ownership disgiunta.
-2. **EventTap emit inline (try/catch swallow)** invece di import `safeTapStep` da `@sembridge/core`: `safeTapStep` NON è esposto al barrel pubblico (esporlo modificherebbe core, violando D-83). Replica pattern F2 `emitF2Tap` (broker-mapper-wrapper.ts:325).
+2. **EventTap emit inline (try/catch swallow)** invece di import `safeTapStep` da `@gluezero/core`: `safeTapStep` NON è esposto al barrel pubblico (esporlo modificherebbe core, violando D-83). Replica pattern F2 `emitF2Tap` (broker-mapper-wrapper.ts:325).
 3. **Composite handler factory closure** con `cacheWarnEmitted` flag chiuso nella closure: warning emit-once per istanza handler. Test 5 verifica spy chiamato 1 volta su 3 invocazioni successive.
 4. **Sub-route signal sharing nel composite**: il composite condivide il controller con il sub-http step (stesso eventId via `getOrCreateController`). `abortInFlight(compositeEventId)` cancella anche il sub-http senza doppia entry.
 
@@ -175,10 +175,10 @@ Vedi frontmatter `key-decisions`. Highlights:
 
 ### Auto-fixed Issues
 
-**1. [Rule 1 - Bug] Plan importava `safeTapStep`/`startStep` da `@sembridge/core` ma sono interni**
+**1. [Rule 1 - Bug] Plan importava `safeTapStep`/`startStep` da `@gluezero/core` ma sono interni**
 
 - **Found during:** Task 2 GREEN (route-executor.ts).
-- **Issue:** Il plan task ction istruisce `import { ... safeTapStep, startStep } from '@sembridge/core'`. Verificato: `packages/core/src/index.ts` NON esporta queste funzioni — sono solo in `packages/core/src/core/event-tap.ts`. Esporle modificherebbe `packages/core/`, violando vincolo D-83 strict.
+- **Issue:** Il plan task ction istruisce `import { ... safeTapStep, startStep } from '@gluezero/core'`. Verificato: `packages/core/src/index.ts` NON esporta queste funzioni — sono solo in `packages/core/src/core/event-tap.ts`. Esporle modificherebbe `packages/core/`, violando vincolo D-83 strict.
 - **Fix:** Replicato il pattern try/catch swallow inline nel metodo privato `emitTap()` di RouteExecutor — pattern identico a F2 `emitF2Tap` (broker-mapper-wrapper.ts:325). Costruzione PipelineSnapshot inline con `performance.now() - startTime` per `durationMs`. Auditabile via grep `safeTapStep` (zero match nel package routing).
 - **Files modified:** `packages/routing/src/route-executor.ts` (metodo privato `emitTap` + import lista pulita).
 - **Commit:** `520a93f` (GREEN executor).
@@ -228,7 +228,7 @@ Vedi frontmatter `key-decisions`. Highlights:
 
 ## API Surface Esposta
 
-Nuovi export pubblici (saranno aggiunti al barrel `@sembridge/routing/src/index.ts` in plan 03-12+ insieme al RouterBroker):
+Nuovi export pubblici (saranno aggiunti al barrel `@gluezero/routing/src/index.ts` in plan 03-12+ insieme al RouterBroker):
 
 - **Class:** `RouteExecutor`
 - **Interfaces:** `RouteExecutorDeps`, `CompositeHandlerDeps`

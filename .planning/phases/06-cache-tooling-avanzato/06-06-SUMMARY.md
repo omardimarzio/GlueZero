@@ -10,14 +10,14 @@ tags:
   - tdd
   - phase-6-w3
 requires:
-  - "@sembridge/devtools (06-01 bootstrap + types)"
-  - "@sembridge/core (EventTap interface)"
+  - "@gluezero/devtools (06-01 bootstrap + types)"
+  - "@gluezero/core (EventTap interface)"
 provides:
   - "createMetricsCollector — counters/gauges/histograms simil-OpenMetrics"
   - "createReservoir / reservoirAdd / computeSummary — Algorithm R Vitter 1985 inline"
   - "createCardinalityTracker / flatLabels — cap distinct combinations + audit"
 affects:
-  - "Closes PRD §39 #10 (TOOL-05 metrics format) — schema { counters, gauges, histograms } + naming sembridge.<package>.<metric>{<labels>}"
+  - "Closes PRD §39 #10 (TOOL-05 metrics format) — schema { counters, gauges, histograms } + naming gluezero.<package>.<metric>{<labels>}"
   - "Threat T-06-06-01 (cardinality explosion) mitigated"
   - "Threat T-06-06-02 (histogram unbounded growth) mitigated"
   - "Threat T-06-06-05 (Math.random predictability in test) mitigated"
@@ -39,7 +39,7 @@ key-files:
     - packages/devtools/src/metrics-collector.test.ts
   modified: []
 decisions:
-  - "D-163 applied: naming dot.case sembridge.<package>.<metric>{<labels>} Prometheus-friendly"
+  - "D-163 applied: naming dot.case gluezero.<package>.<metric>{<labels>} Prometheus-friendly"
   - "D-164 applied: cumulative-only counters + getMetricsDelta(prev) helper opzionale"
   - "D-165 applied: histograms via reservoir Algorithm R Vitter 1985 inline (~50 LOC zero deps), default 1024 samples per metric — t-digest 0.1.2 RIGETTATO (RESEARCH §8.1)"
   - "D-166 applied: cap default 100 distinct label combinations per base name + onCardinalityOverflow audit hook"
@@ -60,7 +60,7 @@ requirements:
 
 ## Cosa è stato fatto
 
-Plan 06-06 (Wave 3 building block B, parallel con 06-05 ∥ 06-07 file ownership disgiunta) ha implementato il MetricsCollector di SemBridge in TDD strict, con 3 file source production-ready (~370 LOC totali con JSDoc) + 3 file test (45 test deterministici Tier-1 jsdom).
+Plan 06-06 (Wave 3 building block B, parallel con 06-05 ∥ 06-07 file ownership disgiunta) ha implementato il MetricsCollector di GlueZero in TDD strict, con 3 file source production-ready (~370 LOC totali con JSDoc) + 3 file test (45 test deterministici Tier-1 jsdom).
 
 ### Componenti
 
@@ -133,8 +133,8 @@ Plan 06-06 (Wave 3 building block B, parallel con 06-05 ∥ 06-07 file ownership
 - [x] D-83 strict — `git diff packages/{core,mapper,routing,gateway,worker}/` empty ✓
 - [x] **`packages/devtools/src/index.ts` INVARIATO** — BLOCKER-1 fix, barrel append in 06-08b Wave 4b ✓
 - [x] File ownership disgiunta da 06-05 (event/route inspector) e 06-07 (pause-controller) ✓
-- [x] Build `pnpm -F @sembridge/devtools build` ✅ (1.13 KB ESM)
-- [x] Typecheck `pnpm -F @sembridge/devtools typecheck` ✅
+- [x] Build `pnpm -F @gluezero/devtools build` ✅ (1.13 KB ESM)
+- [x] Typecheck `pnpm -F @gluezero/devtools typecheck` ✅
 - [x] Closes PRD §39 #10 (TOOL-05) annotation in commit message ✓
 
 ## Deviations from Plan
@@ -150,7 +150,7 @@ Plan 06-06 (Wave 3 building block B, parallel con 06-05 ∥ 06-07 file ownership
 
 ### Deferred Issues
 
-- **Pre-existing typecheck failure** in `@sembridge/gateway` per missing `@sembridge/routing/dist` build → out-of-scope (NOT caused by 06-06). Logged in `.planning/phases/06-cache-tooling-avanzato/deferred-items.md` per 06-09a final gate.
+- **Pre-existing typecheck failure** in `@gluezero/gateway` per missing `@gluezero/routing/dist` build → out-of-scope (NOT caused by 06-06). Logged in `.planning/phases/06-cache-tooling-avanzato/deferred-items.md` per 06-09a final gate.
 
 ## Note per il consumer (06-08 wiring)
 
@@ -162,13 +162,13 @@ Il MetricsCollector creato in questo plan è **standalone**: NON dipende dal bro
 
 Esempio uso atteso post-06-08:
 ```ts
-const broker = createSemBridge({
+const broker = createGlueZero({
   devtools: { histogramSamples: 1024, maxLabelCombinations: 100 }
 })
 // ... use broker ...
 const snap = broker.getMetrics()
-// snap.counters['sembridge.cache.hits_total{route_id="weather"}']: 42
-// snap.histograms['sembridge.http.duration_ms{route_id="weather"}']: { count, sum, p50, p90, p99 }
+// snap.counters['gluezero.cache.hits_total{route_id="weather"}']: 42
+// snap.histograms['gluezero.http.duration_ms{route_id="weather"}']: { count, sum, p50, p90, p99 }
 ```
 
 ## Self-Check: PASSED

@@ -19,7 +19,7 @@ requirements_progress:
 key_files_modified:
   - packages/cache/vitest.config.ts (coverage thresholds calibration 99.5/93.5/99.5/99.5)
   - packages/devtools/vitest.config.ts (coverage thresholds calibration 95.94/88.78/93.86/96.48)
-  - packages/sembridge/vitest.config.ts (coverage thresholds calibration 99.5/99.5/99.5/99.5)
+  - packages/gluezero/vitest.config.ts (coverage thresholds calibration 99.5/99.5/99.5/99.5)
   - package.json (size-limit + 3 entries F6 + ci:publint/attw esteso 8 packages + ci:gate:f6)
   - 28 file packages/{cache,devtools,sembridge}/src/ (biome auto-format safe fix)
 metrics:
@@ -88,7 +88,7 @@ biome_warnings_unsafe_remaining: 33
 
 ### Coverage v8 — file source `packages/{cache,devtools,sembridge}/src/`
 
-#### `@sembridge/cache`
+#### `@gluezero/cache`
 
 | File                           | Stmts | Branch | Funcs | Lines | Uncovered |
 | ------------------------------ | ----- | ------ | ----- | ----- | --------- |
@@ -99,7 +99,7 @@ biome_warnings_unsafe_remaining: 33
 
 Thresholds calibrate post-impl: 99.5 / 93.5 / 99.5 / 99.5 (measured - 0.5% safety floor).
 
-#### `@sembridge/devtools`
+#### `@gluezero/devtools`
 
 | File                           | Stmts  | Branch | Funcs  | Lines  | Uncovered |
 | ------------------------------ | ------ | ------ | ------ | ------ | --------- |
@@ -113,11 +113,11 @@ Thresholds calibrate post-impl: 99.5 / 93.5 / 99.5 / 99.5 (measured - 0.5% safet
 
 Thresholds calibrate post-impl: 95.94 / 88.78 / 93.86 / 96.48 (measured - 0.5% safety floor).
 
-#### `@sembridge/sembridge`
+#### `@gluezero/gluezero`
 
 | File                           | Stmts | Branch | Funcs | Lines |
 | ------------------------------ | ----- | ------ | ----- | ----- |
-| `sem-bridge.ts` (factory)      | 100%  | 100%   | 100%  | 100%  |
+| `glue-zero.ts` (factory)      | 100%  | 100%   | 100%  | 100%  |
 | **Aggregate**                  | **100%** | **100%** | **100%** | **100%** |
 
 Thresholds calibrate post-impl: 99.5 / 99.5 / 99.5 / 99.5 (measured - 0.5% safety floor).
@@ -128,16 +128,16 @@ Thresholds calibrate post-impl: 99.5 / 99.5 / 99.5 / 99.5 (measured - 0.5% safet
 
 | Package                    | Size gz   | Budget   | Headroom | Status |
 | -------------------------- | --------- | -------- | -------- | ------ |
-| `@sembridge/core`          | 6.17 KB   | 8 KB     | 30%      | ✅      |
-| `@sembridge/mapper`        | 11.66 KB  | 12 KB    | 3%       | ✅      |
-| `@sembridge/routing`       | 19.97 KB  | 24 KB    | 20%      | ✅      |
-| `@sembridge/gateway/http`  | 6.83 KB   | 8 KB     | 17%      | ✅      |
-| `@sembridge/worker`        | 26.83 KB  | 32 KB    | 19%      | ✅      |
-| `@sembridge/cache` (F6)    | 22.13 KB  | 27 KB    | 22%      | ✅      |
-| `@sembridge/devtools` (F6) | 22.27 KB  | 27 KB    | 21%      | ✅      |
-| `@sembridge/sembridge` (F6)| 34.80 KB  | 42 KB    | 21%      | ✅      |
+| `@gluezero/core`          | 6.17 KB   | 8 KB     | 30%      | ✅      |
+| `@gluezero/mapper`        | 11.66 KB  | 12 KB    | 3%       | ✅      |
+| `@gluezero/routing`       | 19.97 KB  | 24 KB    | 20%      | ✅      |
+| `@gluezero/gateway/http`  | 6.83 KB   | 8 KB     | 17%      | ✅      |
+| `@gluezero/worker`        | 26.83 KB  | 32 KB    | 19%      | ✅      |
+| `@gluezero/cache` (F6)    | 22.13 KB  | 27 KB    | 22%      | ✅      |
+| `@gluezero/devtools` (F6) | 22.27 KB  | 27 KB    | 21%      | ✅      |
+| `@gluezero/gluezero` (F6)| 34.80 KB  | 42 KB    | 21%      | ✅      |
 
-**Note:** `@sembridge/sembridge` aggregato barrel re-export 7 sub-package (NON tree-shaken in misurazione size-limit perché include all deps cross-package). Bundle effettivo `dist/index.js` puro re-exports = ~2 KB raw / ~1 KB gz, ma size-limit con tutto il grafo di dipendenze trasitive risolto = 34.80 KB gz. Pattern lesson learned analog F3 routing 19.57/24 KB raised + F5 worker 26.45/32 KB raised: STACK.md preventivi pre-implementation sotto-stimano sistematicamente per pacchetti compositi.
+**Note:** `@gluezero/gluezero` aggregato barrel re-export 7 sub-package (NON tree-shaken in misurazione size-limit perché include all deps cross-package). Bundle effettivo `dist/index.js` puro re-exports = ~2 KB raw / ~1 KB gz, ma size-limit con tutto il grafo di dipendenze trasitive risolto = 34.80 KB gz. Pattern lesson learned analog F3 routing 19.57/24 KB raised + F5 worker 26.45/32 KB raised: STACK.md preventivi pre-implementation sotto-stimano sistematicamente per pacchetti compositi.
 
 ### publint + attw 8/8 monorepo
 
@@ -154,7 +154,7 @@ Thresholds calibrate post-impl: 99.5 / 99.5 / 99.5 / 99.5 (measured - 0.5% safet
 
 4. **D-83 strict carryover dalla F5 alla F6** verificato: 0 lines diff su `packages/{core,mapper,routing,gateway,worker}/src/` per tutto il plan 06-09a. Le sole modifiche a vitest.config.ts/package.json scripts F6 sono OK SE strettamente di calibration thresholds post-impl (e lo sono — analog F4 04-09 + F5 05-07).
 
-5. **Deferred-items.md 06-06 risolto inline:** typecheck `@sembridge/gateway` + DTS chain `routing↔gateway` falliva quando `dist/` era stale. Soluzione: rebuild ordinato F1+F2 → `pnpm build:f3:cyclic` (workflow F3-aware DTS bootstrap) → F4-F6. Tutti gli 8 typecheck ora green. Documentato in commit message.
+5. **Deferred-items.md 06-06 risolto inline:** typecheck `@gluezero/gateway` + DTS chain `routing↔gateway` falliva quando `dist/` era stale. Soluzione: rebuild ordinato F1+F2 → `pnpm build:f3:cyclic` (workflow F3-aware DTS bootstrap) → F4-F6. Tutti gli 8 typecheck ora green. Documentato in commit message.
 
 ## Files modified (Task 1)
 
@@ -162,7 +162,7 @@ Thresholds calibrate post-impl: 99.5 / 99.5 / 99.5 / 99.5 (measured - 0.5% safet
 
 - `packages/cache/vitest.config.ts` (thresholds calibrate post-impl 99.5/93.5/99.5/99.5)
 - `packages/devtools/vitest.config.ts` (thresholds 95.94/88.78/93.86/96.48)
-- `packages/sembridge/vitest.config.ts` (thresholds 99.5/99.5/99.5/99.5)
+- `packages/gluezero/vitest.config.ts` (thresholds 99.5/99.5/99.5/99.5)
 - `package.json` (root size-limit + 3 entries F6 + ci:publint/attw esteso 8 pkg + ci:gate:f6 alias)
 
 ### Biome auto-format (28 file)
@@ -171,7 +171,7 @@ Thresholds calibrate post-impl: 99.5 / 99.5 / 99.5 / 99.5 (measured - 0.5% safet
 
 `packages/devtools/src/`: 1 integration test + 6 unit test + 6 source (cardinality-cap, devtools-broker, metrics-collector, pause-controller, route-inspector, tap-registry, augment, index).
 
-`packages/sembridge/src/`: 2 integration test + 2 source (sem-bridge factory, index).
+`packages/gluezero/src/`: 2 integration test + 2 source (sem-bridge factory, index).
 
 ## Commits prodotti (1 atomic)
 
@@ -181,7 +181,7 @@ Thresholds calibrate post-impl: 99.5 / 99.5 / 99.5 / 99.5 (measured - 0.5% safet
 
 **Auto-fix Rule 3 (blocking issue) — deferred-items.md 06-06 inline resolution:**
 
-Il deferred-items.md F6 segnalava typecheck `@sembridge/gateway` failure a causa di DTS routing↔gateway stale. Il PLAN 06-09a non prevedeva fix esplicito (era contemplato come "se critico per CI green, risolvi"). Auto-fix Rule 3 applicato: workflow di rebuild ordinato F1+F2 → `pnpm build:f3:cyclic` → F4-F6 risolve il deferred — tutti 8 typecheck ora green. Pattern coerente con build:f3 esistente (script già presente in package.json root). Zero modifiche `packages/{routing,gateway}/src/` (D-83 strict preservato). Documentato in lessons learned.
+Il deferred-items.md F6 segnalava typecheck `@gluezero/gateway` failure a causa di DTS routing↔gateway stale. Il PLAN 06-09a non prevedeva fix esplicito (era contemplato come "se critico per CI green, risolvi"). Auto-fix Rule 3 applicato: workflow di rebuild ordinato F1+F2 → `pnpm build:f3:cyclic` → F4-F6 risolve il deferred — tutti 8 typecheck ora green. Pattern coerente con build:f3 esistente (script già presente in package.json root). Zero modifiche `packages/{routing,gateway}/src/` (D-83 strict preservato). Documentato in lessons learned.
 
 **Auto-fix Rule 1 (style cleanup) — biome auto-format 28 file:**
 
@@ -193,7 +193,7 @@ Nessuna deviation Rule 4 architetturale (final gate è puramente verificativo + 
 
 - [x] `packages/cache/vitest.config.ts` thresholds 99.5/93.5/99.5/99.5 calibrate post-impl
 - [x] `packages/devtools/vitest.config.ts` thresholds 95.94/88.78/93.86/96.48
-- [x] `packages/sembridge/vitest.config.ts` thresholds 99.5/99.5/99.5/99.5
+- [x] `packages/gluezero/vitest.config.ts` thresholds 99.5/99.5/99.5/99.5
 - [x] `package.json` size-limit 3 nuove entries F6 (cache 27 KB / devtools 27 KB / sembridge 42 KB) + ci:gate:f6 alias
 - [x] Biome safe-fix applicato su 28 file F6 src
 - [x] Test 1166/1169 monorepo full passing (3 skip pre-existing, zero regression)

@@ -10,8 +10,8 @@ tags:
   - tdd
   - phase-6-w3
 requires:
-  - "@sembridge/devtools (06-01 bootstrap + types/pause-state.ts)"
-  - "@sembridge/core (BrokerEvent interface)"
+  - "@gluezero/devtools (06-01 bootstrap + types/pause-state.ts)"
+  - "@gluezero/core (BrokerEvent interface)"
 provides:
   - "createPauseController — pauseTopic/resumeTopic/flushQueue/intercept/isPaused/getSnapshot"
   - "PausePublishFn / PauseControllerOptions / PauseController types"
@@ -99,7 +99,7 @@ F3 `gateway/src/http/strategies/backpressure-strategy.ts:127-160` (D-75 queue-bo
 
 **Coverage v8 sul file `pause-controller.ts`:** 97.67% statements / 83.33% branches / 100% funcs / 100% lines — supera threshold richiesta ≥90/80/90/90 ✓.
 
-**Test totali package `@sembridge/devtools`:** 118/118 passing (9 file test).
+**Test totali package `@gluezero/devtools`:** 118/118 passing (9 file test).
 
 ## Acceptance gates verificati
 

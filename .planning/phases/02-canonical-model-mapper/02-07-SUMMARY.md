@@ -57,7 +57,7 @@ key-decisions:
   - "Consolidamento RED+GREEN in 2 commit invece di 6: il PLAN suggerisce 'Almeno 6 commit (3 RED + 3 GREEN)' come pattern atomico per chunk A/B/C. Tuttavia (a) Task 2 e Task 3 esplicitamente dichiarano 'NON ci sono modifiche al source mapper-engine.ts (la implementazione chunk A già copre transform/derive/onFailure)' e (b) i 26 test sono concettualmente un'unica suite per un'unica class. Ho quindi scelto 1 commit RED (con tutti i 26 test) + 1 commit GREEN (con il source unificato). Il TDD gate sequence (RED → GREEN) è preservato; la granularità dei chunk concettuali (A/B/C) è documentata via describe block nel test file. Pattern affine al plan 02-06 valibotAdapter (1 RED + 1 GREEN per 10 test)."
   - "validateCanonical V1 = structural pass: la firma del metodo è completa e accetta CanonicalSchemaId + payload, ma per F2 V1 ritorna sempre `{ ok: true, value: payload }` quando lo schema è registrato. Il check Valibot full-schema avviene quando il broker wrapper (plan 02-10) costruirà uno schema Valibot dinamicamente da FieldDescriptor.type, oppure quando il consumer passerà uno schema Valibot esplicito tramite descriptor extension (deferred a V1.x). Pronto-per: il broker wrapper può sostituire la struttura interna di validateCanonical senza breaking change al contract. Coerente con il PLAN <output>: 'validateCanonical ritorna structural pass per F2 V1'."
   - "MapperEngineStats.registeredAliases.scoped default 0 perché AliasRegistry V1 non espone una somma totale dei plugin scope. L'aggregation cross-plugin sarà fatta dal Mapping Inspector plan 02-08 via iterazione esplicita dei plugin attivi. Coerente con il PLAN snippet stats() commento."
-  - "MapperPluginDescriptor è dichiarato come tipo locale al modulo (extends F1 PluginDescriptor + 3 campi opzionali: canonicalSchemaId, outputMap, inputMap). Il plan 02-09 augment.ts farà declaration merging per aggiungere questi campi al PluginDescriptor pubblico di @sembridge/core, eliminando il bisogno del tipo locale. Pattern non-breaking documentato in JSDoc dell'export."
+  - "MapperPluginDescriptor è dichiarato come tipo locale al modulo (extends F1 PluginDescriptor + 3 campi opzionali: canonicalSchemaId, outputMap, inputMap). Il plan 02-09 augment.ts farà declaration merging per aggiungere questi campi al PluginDescriptor pubblico di @gluezero/core, eliminando il bisogno del tipo locale. Pattern non-breaking documentato in JSDoc dell'export."
 
 patterns-established:
   - "Pattern composition con dependency injection per engine pluggable: MapperEngineOptions con 4 dipendenze tipate (CanonicalRegistry, AliasRegistry, TransformPipeline, ValidatorAdapter) + logger. Applicabile a future estensioni F3 RoutingEngine, F5 WorkerEngine."
@@ -112,7 +112,7 @@ completed: 2026-04-30
 - D-44 / VAL-09 a runtime mapper: `TransformPipeline.apply(name, input, ctx, onFailure, defaultValue)` invocato dal `resolveValue` con onFailure derivato dal `FieldDescriptor.onFailure ?? 'block'` (Test 14-17 verificano i 3 path)
 - D-26 ext F2: `unregisterPluginMappings(pluginId)` cascade — Test 24 verifica idempotent return + passthrough post-unregister
 - D-49: zero modifiche a `packages/core/src/core/bus.ts` o altri file F1; il broker wrapper (plan 02-10) compone questo MapperEngine come dipendenza esterna
-- Cross-package import `import { createBrokerError } from '@sembridge/core'` + `import type { BrokerLogger, PluginDescriptor }` — coerente con pattern F2 plan 02-03/02-05
+- Cross-package import `import { createBrokerError } from '@gluezero/core'` + `import type { BrokerLogger, PluginDescriptor }` — coerente con pattern F2 plan 02-03/02-05
 - Header italiano + JSDoc IntelliSense in italiano + reference D-XX/REQ-ID/Threat-ID coerente con pattern F1 e plan 02-03/04/05/06
 - Auto-fix Biome applicato post-implementazione: lineWidth, organizeImports, conversione manuale `ReadonlyArray<T>` → `readonly T[]` (3 occorrenze)
 - 26 test cases covering 3 chunk concettuali del PLAN: chunk A (rename/nested/default/partial/required) Test 1-10, chunk B (transform/derive/onFailure) Test 11-19, chunk C (cycle/validation/cascade) Test 20-26
@@ -193,11 +193,11 @@ Test cases organizzati in 3 `describe` block (chunk A/B/C come da PLAN):
 
 | Comando | Risultato |
 |---------|-----------|
-| `pnpm --filter @sembridge/mapper test mapper-engine` (RED, post commit a840da5) | FAIL atteso: `Failed to resolve import "./mapper-engine"` |
-| `pnpm --filter @sembridge/mapper test mapper-engine` (post fix cycle detection, pre-commit GREEN) | Exit 0: **`Test Files 1 passed (1) | Tests 26 passed (26)`** Duration 375ms |
-| `pnpm --filter @sembridge/mapper test` (full mapper) | Exit 0: **`Test Files 5 passed (5) | Tests 77 passed (77)`** (11 canonical-registry + 16 alias-registry + 14 transform-pipeline + 10 valibot-adapter + 26 mapper-engine) |
-| `pnpm --filter @sembridge/mapper typecheck` | Exit 0 (isolatedDeclarations enforcement OK; ogni metodo pubblico ha return type esplicito) |
-| `pnpm --filter @sembridge/core test` (regression F1) | Exit 0: **24 file/248 test passing** (no regression) |
+| `pnpm --filter @gluezero/mapper test mapper-engine` (RED, post commit a840da5) | FAIL atteso: `Failed to resolve import "./mapper-engine"` |
+| `pnpm --filter @gluezero/mapper test mapper-engine` (post fix cycle detection, pre-commit GREEN) | Exit 0: **`Test Files 1 passed (1) | Tests 26 passed (26)`** Duration 375ms |
+| `pnpm --filter @gluezero/mapper test` (full mapper) | Exit 0: **`Test Files 5 passed (5) | Tests 77 passed (77)`** (11 canonical-registry + 16 alias-registry + 14 transform-pipeline + 10 valibot-adapter + 26 mapper-engine) |
+| `pnpm --filter @gluezero/mapper typecheck` | Exit 0 (isolatedDeclarations enforcement OK; ogni metodo pubblico ha return type esplicito) |
+| `pnpm --filter @gluezero/core test` (regression F1) | Exit 0: **24 file/248 test passing** (no regression) |
 | `pnpm biome check packages/mapper/src/mapper-engine*.ts` | Exit 0 dopo auto-fix lineWidth/organizeImports + manuale `ReadonlyArray<T>` → `readonly T[]` (3 occorrenze) |
 | Grep verifica acceptance | 8/8 PASSED (`export class MapperEngine`, `compileMappings`, `applyOutputMap`, `applyInputMap`, `unregisterPluginMappings`, `mapping.cycle.detected`, `mapping.field.missing`, file source + file test esistenti) |
 | Audit `any` literal | 0 occorrenze come tipo |
@@ -275,7 +275,7 @@ Nessun auth gate — task interamente automatico (file creation + typecheck/test
 - ✅ **Closed:** D-44 / VAL-09 a runtime mapper — `TransformPipeline.apply` invocato dal `resolveValue` con onFailure derivato dal `FieldDescriptor.onFailure ?? 'block'` (Test 14-17).
 - ✅ **Closed:** D-49 — zero modifiche a F1 (`bus.ts`, `broker.ts`, `plugin-registry.ts`); il MapperEngine è composition-friendly per il broker wrapper plan 02-10.
 - ✅ **Ready:** plan 02-08 (Mapping Inspector — extension EventTap per i 5 nuovi step F2) può consumare `engine.stats()` per popolare il `getDebugSnapshot().mappings` ed estendere `EventTap` per i 5 step F2 (event.source.resolved, event.mapped.canonical, event.canonical.validated, event.mapped.consumer, event.final.validated).
-- ✅ **Ready:** plan 02-09 (`augment.ts`) può fare declaration merging del `PluginDescriptor` di `@sembridge/core` per aggiungere `inputMap?`, `outputMap?`, `canonicalSchemaId?` come campi pubblici, eliminando il bisogno del tipo locale `MapperPluginDescriptor`.
+- ✅ **Ready:** plan 02-09 (`augment.ts`) può fare declaration merging del `PluginDescriptor` di `@gluezero/core` per aggiungere `inputMap?`, `outputMap?`, `canonicalSchemaId?` come campi pubblici, eliminando il bisogno del tipo locale `MapperPluginDescriptor`.
 - ✅ **Ready:** plan 02-10 (broker wrapper) può istanziare il `MapperEngine` come dipendenza, intercettare `registerPlugin` per chiamare `engine.compileMappings(descriptor)` post-`onRegister`, intercettare `subscribe` per applicare `engine.applyInputMap` per ciascun consumer (passo 11/12), wired la cascade `engine.unregisterPluginMappings(pluginId)` durante `unregisterPlugin`.
 - ⏳ **Pending:** `MAP-11` validation post-mapping con full Valibot schema integration — `validateCanonical` ritorna structural pass per F2 V1; full integration deferred a V1.x (broker wrapper plan 02-10 può sostituire la struttura interna senza breaking change al contract).
 - ⏳ **Pending:** Wave 4 paralleli plan 02-08 con file ownership confermata (questo plan tocca SOLO `mapper-engine.ts`/`mapper-engine.test.ts`, nessun overlap con futuri `mapping-inspector.ts`).

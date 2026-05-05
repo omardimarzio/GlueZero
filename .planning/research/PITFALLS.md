@@ -1,4 +1,4 @@
-# Pitfalls Research — SemBridge
+# Pitfalls Research — GlueZero
 
 **Domain:** Libreria browser-side di middleware event-driven con canonical model, gateway server unico, worker runtime e cache (TypeScript-first, ESM)
 **Researched:** 2026-04-28
@@ -227,7 +227,7 @@ POST `/api/orders` riceve 502 dal load balancer mentre l'ordine è già stato cr
 `maxAttempts: undefined` → retry per sempre. Memory leak di pending state, log noise infinito, batteria mobile drenata.
 
 **Sintomo / segnale d'allarme:**
-- 5.A: spike di 4xx in server log con `User-Agent` SemBridge, esattamente in tripletta con backoff esatto.
+- 5.A: spike di 4xx in server log con `User-Agent` GlueZero, esattamente in tripletta con backoff esatto.
 - 5.B: utenti segnalano "mi sono arrivate due email di conferma ordine".
 - 5.C: server load picco a intervalli regolari (ondate da backoff sincrono).
 - 5.D: tab del browser mangia 100% CPU su un singolo flusso.
@@ -662,7 +662,7 @@ Sourcemap con sources inline. Bundle production +200%. Esposizione codice sorgen
 - **Polyfill separati (PRD §31.3, PKG-03):** core targeta evergreen browsers. Polyfill in entry point dedicato `sembridge/polyfills`.
 - **Build pipeline:**
   - tsup o rollup per bundle.
-  - Output: `dist/index.js` (ESM), `dist/index.d.ts` (types). UMD opzionale `dist/sembridge.umd.js`.
+  - Output: `dist/index.js` (ESM), `dist/index.d.ts` (types). UMD opzionale `dist/gluezero.umd.js`.
   - Type-check separato dal bundle (`tsc --emitDeclarationOnly`).
 
 **Phase to address:**
@@ -714,7 +714,7 @@ Il PRD §39 elenca 11 punti che "non devono restare impliciti o non documentati 
 Aggiungere un alias a un campo canonico esistente: minor (additive). Cambiare il tipo: major (breaking). Aggiungere un campo canonico nuovo: minor. Rimuovere un campo: major. Senza policy esplicita, ogni release rischia di rompere plugin.
 
 **15.B — Plugin descriptor `version: string`: usarlo come?**
-Il descriptor ha `version`. È usato per cosa? Logging? Compatibility check con SemBridge core? Nessuno lo sa.
+Il descriptor ha `version`. È usato per cosa? Logging? Compatibility check con GlueZero core? Nessuno lo sa.
 
 **Strategia di prevenzione:**
 - **SemVer policy esplicita per il core:**
@@ -817,7 +817,7 @@ Un route HTTP punta a un endpoint third-party (es. CDN pubblico). Auth adapter a
   - Route HTTP ha `redirect: 'follow' | 'manual' | 'error'`. Default `'follow'` ma con re-validation della URL finale contro l'allowlist.
   - Helper di validazione documentato.
 - **CSP / SRI guidance:**
-  - Documentazione raccomanda Content-Security-Policy strict per la pagina che usa SemBridge.
+  - Documentazione raccomanda Content-Security-Policy strict per la pagina che usa GlueZero.
   - Subresource Integrity per CDN-loaded plugin (raccomandato).
 - **Realtime authentication:**
   - SSE/WS auth: token in query string è leakato in log → preferire header (per WS, subprotocol o auth message dopo connect).
@@ -858,13 +858,13 @@ Shortcut che sembrano ragionevoli ma creano problemi a lungo termine.
 
 ## Integration Gotchas
 
-Errori comuni quando si collega SemBridge a servizi esterni.
+Errori comuni quando si collega GlueZero a servizi esterni.
 
 | Integration | Errore comune | Approccio corretto |
 |-------------|---------------|---------------------|
 | Framework UI (React/Vue) | `subscribe` in render senza cleanup | `useEffect(() => { const sub = broker.subscribe(...); return () => sub.unsubscribe(); }, [])` o equivalent. Documentato negli esempi. |
 | Auth provider (es. Auth0, Cognito) | Token storage in localStorage | Cookie httpOnly o in-memory; auth adapter passa per `getToken()` callback async |
-| Realtime backend (es. Pusher, Ably, custom SSE) | Reconnect manuale + state custom | Usare gateway SemBridge (RT-01), reconnect policy unificata |
+| Realtime backend (es. Pusher, Ably, custom SSE) | Reconnect manuale + state custom | Usare gateway GlueZero (RT-01), reconnect policy unificata |
 | Worker bundler (esbuild/Vite) | `new Worker(new URL(...))` rotto post-build | Usare worker registry centrale + bundle-aware factory (WK-01) |
 | State manager (Redux, Zustand) | Subscribe diretto in store reducer | Subscriber separato che dispatch action; mai mutare store dentro handler |
 | Service Worker (push notifications) | Tentativo di registrare subscribe SW dentro page broker | V1 esclude SW bridge (PRD §18.7); documentare workaround per V1.x |
@@ -872,7 +872,7 @@ Errori comuni quando si collega SemBridge a servizi esterni.
 | Multi-tab (BroadcastChannel) | Assumere stato condiviso tra tab | Out of scope V1; documentare se richiesto |
 | Server response non-JSON | Parser JSON forzato | Route HTTP dichiara `responseType: 'json' | 'text' | 'blob' | 'arraybuffer'` |
 | Server response stream (NDJSON, chunked) | fetch().json() blocca fino al fine | Out of scope V1; usare SSE o WS per streaming |
-| CORS preflight | Aggiunti header custom che triggerano preflight involontariamente | Documentare quali header SemBridge aggiunge by default; pattern minimale |
+| CORS preflight | Aggiunti header custom che triggerano preflight involontariamente | Documentare quali header GlueZero aggiunge by default; pattern minimale |
 | Time-dependent transforms (`parseItalianDate`) | Timezone-dependent failures (test in CET passa, CI in UTC fallisce) | Trasformazioni date sempre con TZ esplicita; documentato nel transform contract |
 
 ---
@@ -1044,8 +1044,8 @@ Mapping puntuale tra pitfall e fase del PRD §32 che li deve indirizzare.
 
 ## Sources
 
-- **PRD interno:** `/Users/omarmarzio/programming/prova AI/SemBridge/prd.md` (sezioni §3, §11, §13, §14, §17, §18, §19, §20, §21, §22, §23, §24, §25, §26, §28, §31, §34, §39, §42).
-- **PROJECT.md:** `/Users/omarmarzio/programming/prova AI/SemBridge/.planning/PROJECT.md` (Active requirements CORE-*, MAP-*, ROUTE-*, RT-*, WK-*, CACHE-*, TOOL-*, VAL-*, ERR-*, TEST-*, PKG-*).
+- **PRD interno:** `/Users/omarmarzio/programming/prova AI/GlueZero/prd.md` (sezioni §3, §11, §13, §14, §17, §18, §19, §20, §21, §22, §23, §24, §25, §26, §28, §31, §34, §39, §42).
+- **PROJECT.md:** `/Users/omarmarzio/programming/prova AI/GlueZero/.planning/PROJECT.md` (Active requirements CORE-*, MAP-*, ROUTE-*, RT-*, WK-*, CACHE-*, TOOL-*, VAL-*, ERR-*, TEST-*, PKG-*).
 - Best practice consolidate del dominio:
   - Pub/sub & event emitter library design (mitt, eventemitter3, RxJS Subject patterns).
   - HTTP retry policies (Polly .NET, AWS SDK retry, Stripe idempotency, Google API client design).
@@ -1058,5 +1058,5 @@ Mapping puntuale tra pitfall e fase del PRD §32 che li deve indirizzare.
 - Sintesi e raccomandazioni: judgment basato su PRD + best practice di dominio, validati incrociando più fonti dove non specificato dal PRD.
 
 ---
-*Pitfalls research for: SemBridge — libreria browser-side di middleware event-driven con canonical model, gateway server, worker runtime, cache (TypeScript-first, ESM)*
+*Pitfalls research for: GlueZero — libreria browser-side di middleware event-driven con canonical model, gateway server, worker runtime, cache (TypeScript-first, ESM)*
 *Researched: 2026-04-28*

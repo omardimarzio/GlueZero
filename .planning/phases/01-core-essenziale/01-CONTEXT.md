@@ -18,7 +18,7 @@ Esiste un broker pub/sub in-page, testabile, che pubblica e consegna `BrokerEven
 - Logging configurabile con 6 livelli
 - `EventTap` interface instrumentata negli step di pipeline implementati in F1 (no-op default)
 - API factory `createBroker(config)` con sezioni di config solo per le aree F1 (le altre aree restano valid placeholder)
-- Setup monorepo `pnpm` workspaces + scaffold dei 7 package (anche se in F1 solo `@sembridge/core` ha codice)
+- Setup monorepo `pnpm` workspaces + scaffold dei 7 package (anche se in F1 solo `@gluezero/core` ha codice)
 - BrokerError factory (ERR-01)
 - Test setup con Vitest + jsdom + browser harness Playwright stub
 - Documentazione skeleton (README + API skeleton)
@@ -58,7 +58,7 @@ Esiste un broker pub/sub in-page, testabile, che pubblica e consegna `BrokerEven
 
 ### Logging
 
-- **D-12:** **Console-based logger di default** con namespace prefix `[sembridge]` e mapping livelli → metodi: `silent` no-op, `error` → `console.error`, `warn` → `console.warn`, `info` → `console.info`, `debug` → `console.debug`, `trace` → `console.debug` (con prefisso TRACE).
+- **D-12:** **Console-based logger di default** con namespace prefix `[gluezero]` e mapping livelli → metodi: `silent` no-op, `error` → `console.error`, `warn` → `console.warn`, `info` → `console.info`, `debug` → `console.debug`, `trace` → `console.debug` (con prefisso TRACE).
 - **D-13:** **Adapter slot tramite `setLogger(customLogger)`** che accetta un'implementazione conforme a `BrokerLogger` interface. Permette swap futuro a pino/winston/custom backend telemetry senza dipendenze in core.
 - **D-14:** `BrokerLogger.{error, warn, info, debug, trace}(message, meta?)` come surface minima. No structured JSON di default (mantiene DX in browser devtools).
 
@@ -66,7 +66,7 @@ Esiste un broker pub/sub in-page, testabile, che pubblica e consegna `BrokerEven
 
 Le seguenti decisioni tecniche sono prese internamente sulla base di PRD + research (riferimenti documentati). L'utente può sovrascrivere durante planning se necessario.
 
-- **D-15:** **Sub-package layout monorepo**: confermo i 7 sub-package proposti da STACK.md (`@sembridge/{core, mapper, gateway, routing, worker, cache, devtools}` + aggregato `@sembridge/sembridge`). In F1 viene scaffoldato l'intero workspace ma solo `@sembridge/core` riceve codice — gli altri restano placeholder con `package.json` e README. Rationale: separazione di concerns chiara, tree-shaking ottimale, possibilità di pubblicare incrementalmente. Riferimento: `STACK.md` §"Repository Structure".
+- **D-15:** **Sub-package layout monorepo**: confermo i 7 sub-package proposti da STACK.md (`@gluezero/{core, mapper, gateway, routing, worker, cache, devtools}` + aggregato `@gluezero/gluezero`). In F1 viene scaffoldato l'intero workspace ma solo `@gluezero/core` riceve codice — gli altri restano placeholder con `package.json` e README. Rationale: separazione di concerns chiara, tree-shaking ottimale, possibilità di pubblicare incrementalmente. Riferimento: `STACK.md` §"Repository Structure".
 - **D-16:** **Plugin handler error isolation**: handler sync che lancia eccezione → caught con try/catch e pubblicato come `system.error` con `BrokerError.category: 'plugin'`. Handler async che ritorna Promise rejected → `.catch()` automatico con stesso treatment. Nessun timeout di default su handler subscribe (i timeout si applicano a route remote, F3). Rationale: PRD §22.2 (errori isolati), Pitfall #9.
 - **D-17:** **Plugin id collision**: `registerPlugin({id: existingId})` throw `BrokerError.code: 'plugin.id.duplicate'`. Nessun overwrite silenzioso. Rationale: PRD §30.3 esplicito su collision id.
 - **D-18:** **Config validation**: `createBroker(config)` valida fail-fast all'init usando schemi Valibot — config invalida → throw con messaggio specifico del field. Rationale: catch errori di setup il più presto possibile, Pitfall #10.

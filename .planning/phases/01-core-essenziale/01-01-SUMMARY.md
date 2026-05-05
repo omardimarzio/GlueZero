@@ -62,8 +62,8 @@ key-files:
     - packages/cache/README.md
     - packages/devtools/package.json
     - packages/devtools/README.md
-    - packages/sembridge/package.json
-    - packages/sembridge/README.md
+    - packages/gluezero/package.json
+    - packages/gluezero/README.md
   modified: []
 decisions:
   - "Aggiunto flag `--if-present` agli script root build/test/test:watch/typecheck per evitare ERR_PNPM_RECURSIVE_RUN_NO_SCRIPT su placeholder senza scripts (pnpm 10.x è più strict del comportamento documentato in RESEARCH)."
@@ -83,7 +83,7 @@ Bootstrap del monorepo `pnpm` workspaces con TypeScript 6.0.3 strict + isolatedD
 
 ## Objective Achieved
 
-L'obiettivo del plan 01-01 è stato raggiunto integralmente: il workspace `pnpm` è inizializzato, i 7 sotto-pacchetti `@sembridge/{mapper, gateway, routing, worker, cache, devtools}` + aggregato `@sembridge/sembridge` esistono come placeholder privati, `packages/core/` è scaffoldato (riservato a Plan 02 per la configurazione completa), il tooling root (TS, Biome, Changesets, Vitest, tsup, ecc.) è installato con versioni esatte, `pnpm biome check .` esce 0 e `pnpm typecheck` esce 0.
+L'obiettivo del plan 01-01 è stato raggiunto integralmente: il workspace `pnpm` è inizializzato, i 7 sotto-pacchetti `@gluezero/{mapper, gateway, routing, worker, cache, devtools}` + aggregato `@gluezero/gluezero` esistono come placeholder privati, `packages/core/` è scaffoldato (riservato a Plan 02 per la configurazione completa), il tooling root (TS, Biome, Changesets, Vitest, tsup, ecc.) è installato con versioni esatte, `pnpm biome check .` esce 0 e `pnpm typecheck` esce 0.
 
 ## Tasks Executed
 
@@ -117,7 +117,7 @@ L'obiettivo del plan 01-01 è stato raggiunto integralmente: il workspace `pnpm`
 - `packages/worker/{package.json, README.md}` (Phase 5)
 - `packages/cache/{package.json, README.md}` (Phase 6)
 - `packages/devtools/{package.json, README.md}` (Phase 6)
-- `packages/sembridge/{package.json, README.md}` (Phase 2 — aggregato pubblico)
+- `packages/gluezero/{package.json, README.md}` (Phase 2 — aggregato pubblico)
 
 **Directory create:**
 - `packages/core/`, `packages/core/src/` (vuote, riservate a Plan 02)
@@ -148,7 +148,7 @@ Totale: **23 file committati**, **9 directory** create.
 - [x] 7 placeholder package hanno `package.json` privati e README; nessun `packages/core/package.json` (Plan 02)
 - [x] `tsconfig.base.json` contiene `isolatedDeclarations`, `verbatimModuleSyntax`, `noUncheckedIndexedAccess`, `exactOptionalPropertyTypes`
 - [x] `biome.json` riferisce schema 2.4.13 (NON 1.9.4 — anti-regressione)
-- [x] `.changeset/config.json` ignora i 7 placeholder (`@sembridge/{mapper,gateway,routing,worker,cache,devtools,sembridge}`)
+- [x] `.changeset/config.json` ignora i 7 placeholder (`@gluezero/{mapper,gateway,routing,worker,cache,devtools,sembridge}`)
 
 ## Deviations from Plan
 
@@ -194,7 +194,7 @@ Ignored build scripts: esbuild@0.27.7, esbuild@0.28.0, msw@2.13.6.
 Run "pnpm approve-builds" to pick which dependencies should be allowed to run scripts.
 ```
 
-Comportamento atteso di pnpm 10.x (default secure-by-default che richiede explicit approval per gli install scripts). Non bloccante in questa fase — esbuild è usato come dipendenza di tsup (build tool, non runtime), msw è usato per test mocking. La approvazione esplicita può essere fatta in Plan 02 quando `@sembridge/core` configura `tsup.config.ts` se serve runtime esbuild.
+Comportamento atteso di pnpm 10.x (default secure-by-default che richiede explicit approval per gli install scripts). Non bloccante in questa fase — esbuild è usato come dipendenza di tsup (build tool, non runtime), msw è usato per test mocking. La approvazione esplicita può essere fatta in Plan 02 quando `@gluezero/core` configura `tsup.config.ts` se serve runtime esbuild.
 
 ## Threat Surface Scan
 
@@ -206,7 +206,7 @@ Nessuna nuova trust boundary o surface security-relevant introdotta oltre a quel
 
 ## Ready For
 
-**Plan 02** (`@sembridge/core` package config): configurazione completa di `packages/core/` con `package.json` (runtime deps: nanoid, valibot), `tsconfig.json` (extends `../../tsconfig.base.json`), `tsup.config.ts`, `vitest.config.ts`, `.size-limit.json`. Stub iniziale di `src/index.ts` per validare il pipeline build/test/lint sul primo package reale.
+**Plan 02** (`@gluezero/core` package config): configurazione completa di `packages/core/` con `package.json` (runtime deps: nanoid, valibot), `tsconfig.json` (extends `../../tsconfig.base.json`), `tsup.config.ts`, `vitest.config.ts`, `.size-limit.json`. Stub iniziale di `src/index.ts` per validare il pipeline build/test/lint sul primo package reale.
 
 ## Self-Check: PASSED
 
@@ -226,7 +226,7 @@ Nessuna nuova trust boundary o surface security-relevant introdotta oltre a quel
 - FOUND: `packages/worker/package.json`, `packages/worker/README.md`
 - FOUND: `packages/cache/package.json`, `packages/cache/README.md`
 - FOUND: `packages/devtools/package.json`, `packages/devtools/README.md`
-- FOUND: `packages/sembridge/package.json`, `packages/sembridge/README.md`
+- FOUND: `packages/gluezero/package.json`, `packages/gluezero/README.md`
 
 **Commits verified:**
 - FOUND: `3a7d9fd` (feat(01-01): bootstrap pnpm 10.33.2 + monorepo root files)

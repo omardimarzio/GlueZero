@@ -12,7 +12,7 @@ provides:
   - Deep-clone via structuredClone D-162 (mutation safety)
   - Default NODE_ENV inline detection (uniformità cross-component WARNING-5 fix)
 requires:
-  - "@sembridge/core (EventTap, PipelineSnapshot, PipelineStep)"
+  - "@gluezero/core (EventTap, PipelineSnapshot, PipelineStep)"
   - "06-01 types (EventInspectorSnapshot, RouteInspectorEntry da inspector-entry.ts)"
   - "06-04 multiplex-tap + tap-registry (downstream consumer pattern)"
 affects:
@@ -138,7 +138,7 @@ Aggregazione campi:
 
 **1. [Rule 1 - Bug] Fix TS2591 `process` non in scope (devtools browser-package)**
 - **Trovato durante:** typecheck event-inspector.ts (Task 1 GREEN post-implementazione)
-- **Issue:** `typeof process !== 'undefined' && process.env != null` non type-checka in `@sembridge/devtools` (no `@types/node` come browser-package).
+- **Issue:** `typeof process !== 'undefined' && process.env != null` non type-checka in `@gluezero/devtools` (no `@types/node` come browser-package).
 - **Fix:** pattern carryover F5 `worker-bridge.ts:556` — accesso safe via `(globalThis as { process?: { env?: Record<string, string | undefined> } }).process` + access `proc.env['NODE_ENV']` (TS4111 index-signature).
 - **Files modificati:** `event-inspector.ts:91-99`, `route-inspector.ts:79-87` (pattern replicato per coerenza cross-Inspector + zero coupling).
 - **Commit:** incluso in `84912a0` (event-inspector) + `33948a6` (route-inspector).
@@ -187,6 +187,6 @@ Inoltre il `createDevtoolsBroker` composition wrapper (06-08b) potrà:
 - [x] Commit `33948a6` presente in git log
 - [x] `git diff packages/devtools/src/index.ts` = 0 (BLOCKER-1 fix verificato)
 - [x] `git diff packages/{core,mapper,routing,gateway,worker}` = 0 (D-83 strict ✓)
-- [x] `pnpm -F @sembridge/devtools test` = 57/57 passing
-- [x] `pnpm -F @sembridge/devtools typecheck` = 0 errori
+- [x] `pnpm -F @gluezero/devtools test` = 57/57 passing
+- [x] `pnpm -F @gluezero/devtools typecheck` = 0 errori
 - [x] Coverage v8 = 98.76/91.07/100/98.71 ≥ threshold 90/80/90/90

@@ -13,11 +13,11 @@ tags:
 dependency-graph:
   requires:
     - phase: 03-02
-      provides: "@sembridge/routing types (RouteDefinition discriminated, RoutePolicies, RoutingConfig, MultipleRoutesPolicy)"
+      provides: "@gluezero/routing types (RouteDefinition discriminated, RoutePolicies, RoutingConfig, MultipleRoutesPolicy)"
     - phase: 03-03
-      provides: "@sembridge/routing augment.ts (declaration merging BrokerConfig.routes/routing + PluginDescriptor.routes + CanonicalSchema.requiresRoute)"
+      provides: "@gluezero/routing augment.ts (declaration merging BrokerConfig.routes/routing + PluginDescriptor.routes + CanonicalSchema.requiresRoute)"
     - phase: 01
-      provides: "@sembridge/core (createBrokerError factory, isBrokerError type guard, TopicTrie pattern di F1 D-08 — copiato come internal mirror)"
+      provides: "@gluezero/core (createBrokerError factory, isBrokerError type guard, TopicTrie pattern di F1 D-08 — copiato come internal mirror)"
   provides:
     - "RouteResolver class con register/unregister/unregisterByOwner/resolve/compile/countByOwner/list (D-64 dispatch table pre-compilata)"
     - "CompiledRoute interface (id + readonly definition + ownerId + priority + requestBuilder pre-curried per http D-96)"
@@ -51,7 +51,7 @@ key-files:
     - "packages/routing/src/strategies/strategies.test.ts"
   modified: []
 key-decisions:
-  - "Mirror copy del TopicTrie F1 in packages/routing/src/internal/topic-trie.ts (~115 LOC) invece di esporre @sembridge/core/internal — evita cross-package internal coupling (RESEARCH Open Question Q1). Da rimuovere quando F1 esporrà subpath internal."
+  - "Mirror copy del TopicTrie F1 in packages/routing/src/internal/topic-trie.ts (~115 LOC) invece di esporre @gluezero/core/internal — evita cross-package internal coupling (RESEARCH Open Question Q1). Da rimuovere quando F1 esporrà subpath internal."
   - "RouteResolverOptions.strict default `false` (idempotent return existing su id duplicato) invece di `true` (throw): coerente con CanonicalRegistry F2 (strict opt-in tramite RegisterOptions.strict). Test 3 verifica idempotency."
   - "Conditional spread `...(requestBuilder !== undefined && { requestBuilder })` per il field opzionale — necessario con exactOptionalPropertyTypes: true (mai assegnare `requestBuilder: undefined`)."
   - "TS Index signature fix (Rule 1): `result['queryMap']` invece di `result.queryMap` per Record<string, unknown> con strict + noUncheckedIndexedAccess. Replica fix simile in mapper-engine.ts F2."
@@ -89,11 +89,11 @@ metrics:
 
 # Phase 3 Plan 05: RouteResolver + Multi-route Strategies + Cascade unregisterByOwner Summary
 
-**One-liner:** Dispatch table pre-compilata `Map<routeId, CompiledRoute>` + `TopicTrie<CompiledRoute>` mirror per O(segments) wildcard lookup + 3 multi-route policy (`first-match`/`priority-ordered`/`all`) + cascade `unregisterByOwner` per LIFE-02 ext F3, integralmente nel package `@sembridge/routing` senza modifiche a `core`/`mapper` runtime (D-83 strict).
+**One-liner:** Dispatch table pre-compilata `Map<routeId, CompiledRoute>` + `TopicTrie<CompiledRoute>` mirror per O(segments) wildcard lookup + 3 multi-route policy (`first-match`/`priority-ordered`/`all`) + cascade `unregisterByOwner` per LIFE-02 ext F3, integralmente nel package `@gluezero/routing` senza modifiche a `core`/`mapper` runtime (D-83 strict).
 
 ## Goal
 
-Implementare il primo modulo runtime di `@sembridge/routing` post-types/augment: `RouteResolver` come dispatch table pre-compilata D-64 (Pitfall #16 mitigation — niente compilation hot-path), 3 strategy D-66 per multi-route policy (chiusura PRD §39 #6 ROUTE-15), `unregisterByOwner` cascade D-86 per LIFE-02 ext F3 (chiusura PRD §39 #7 a livello modulo — il publish runtime al broker è plan 03-12).
+Implementare il primo modulo runtime di `@gluezero/routing` post-types/augment: `RouteResolver` come dispatch table pre-compilata D-64 (Pitfall #16 mitigation — niente compilation hot-path), 3 strategy D-66 per multi-route policy (chiusura PRD §39 #6 ROUTE-15), `unregisterByOwner` cascade D-86 per LIFE-02 ext F3 (chiusura PRD §39 #7 a livello modulo — il publish runtime al broker è plan 03-12).
 
 ## What Was Built
 
@@ -143,7 +143,7 @@ NB: Le 3 strategy sono state create in commit GREEN Task 1 perché dipendenza di
 ## Key Decisions
 
 Vedi frontmatter `key-decisions`. Highlights:
-1. **Mirror copy del TopicTrie F1** invece di subpath internal exposure (RESEARCH Q1 risolta lato consumer routing). Da rimuovere in F6+ se F1 esporrà `@sembridge/core/internal`.
+1. **Mirror copy del TopicTrie F1** invece di subpath internal exposure (RESEARCH Q1 risolta lato consumer routing). Da rimuovere in F6+ se F1 esporrà `@gluezero/core/internal`.
 2. **`strict` default `false`** (idempotent) coerente con CanonicalRegistry F2 — opt-in del throw via `{ strict: true }`.
 3. **`AmbiguousRouteEvent` come callback opt-in** anziché publish diretto al broker — il RouterBroker plan 03-12 farà il bind effettivo a `publish('routing.ambiguous', ...)`. Mantiene il RouteResolver puro (no broker dependency).
 4. **`priorityOrdered` ritorna [vincitore]** non sorted full array — semantica D-66: policy seleziona UNA route per route HTTP execution.
@@ -190,11 +190,11 @@ Vedi frontmatter `key-decisions`. Highlights:
 - **`requestBuilder` pre-curried**: il http-handler di plan 03-08+ riceverà `compiledRoute.requestBuilder` come closure pronta — dovrà invocare il `MapperEngine.mapToShape(canonicalPayload, compiledRoute.definition.request.queryMap)` di F2 per il vero mapping. Il thunk attuale serve solo come placeholder dimostrativo del pre-curry pattern.
 - **`onAmbiguousRoutes` wiring**: plan 03-12 RouterBroker wrapper farà il bind effettivo `(event) => broker.publish('routing.ambiguous', event)`.
 - **`unregisterByOwner` wiring cascade**: plan 03-12 LIFE-02 ext F3 chiamerà `routeResolver.unregisterByOwner(pluginId)` dentro `RouterBroker.unregisterPlugin` (cascade D-26 ext F3).
-- **`internal/topic-trie.ts` TODO**: rimuovere quando F1 esporrà subpath `@sembridge/core/internal` (Phase 6 candidate).
+- **`internal/topic-trie.ts` TODO**: rimuovere quando F1 esporrà subpath `@gluezero/core/internal` (Phase 6 candidate).
 
 ## API Surface Esposta
 
-Nuovi export pubblici (saranno aggiunti al barrel `@sembridge/routing/src/index.ts` in plan 03-06+ insieme al RouteExecutor):
+Nuovi export pubblici (saranno aggiunti al barrel `@gluezero/routing/src/index.ts` in plan 03-06+ insieme al RouteExecutor):
 - **Class:** `RouteResolver`
 - **Interfaces:** `CompiledRoute`, `RouteRegistration`, `AmbiguousRouteEvent`, `RouteResolverOptions`
 - **Functions (strategies):** `firstMatch`, `priorityOrdered`, `allBroadcast`

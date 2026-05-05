@@ -90,17 +90,17 @@ metrics:
 
 # Phase 1 Plan 08: Broker Class + Public API Summary
 
-Implementati i 4 moduli di chiusura del package `@sembridge/core` Phase 1: `PluginRegistry` (`plugin-registry.ts` 224 LOC) con auto-mount D-25 + cascade cleanup D-26 (chiusura PRD §39 #7 — LIFE-02), helper `createPluginScopedBroker` Proxy-based per enforcement D-26 punto 1 (subscription dentro hooks plugin auto-tagged con `ownerId`), `Broker` class (`broker.ts` 166 LOC) come composition root EventBus + PluginRegistry + TopicRegistry + logger + tap, `createBroker(config?)` factory (`public-factory.ts` 68 LOC) con validazione Valibot D-18 e D-30 no-singleton, e public API surface (`index.ts` 38 LOC) che esporta runtime + tipi pubblici. Pattern TDD RED→GREEN preservato: 2 commit RED + 2 commit GREEN. Coverage REQ-IDs: CORE-02 ✓, CORE-04 ✓, CORE-05 ✓, CORE-11 ✓, CORE-14 ✓, LIFE-01 ✓, LIFE-02 ✓ (più D-17, D-18, D-19, D-25, D-26, D-28, D-29, D-30).
+Implementati i 4 moduli di chiusura del package `@gluezero/core` Phase 1: `PluginRegistry` (`plugin-registry.ts` 224 LOC) con auto-mount D-25 + cascade cleanup D-26 (chiusura PRD §39 #7 — LIFE-02), helper `createPluginScopedBroker` Proxy-based per enforcement D-26 punto 1 (subscription dentro hooks plugin auto-tagged con `ownerId`), `Broker` class (`broker.ts` 166 LOC) come composition root EventBus + PluginRegistry + TopicRegistry + logger + tap, `createBroker(config?)` factory (`public-factory.ts` 68 LOC) con validazione Valibot D-18 e D-30 no-singleton, e public API surface (`index.ts` 38 LOC) che esporta runtime + tipi pubblici. Pattern TDD RED→GREEN preservato: 2 commit RED + 2 commit GREEN. Coverage REQ-IDs: CORE-02 ✓, CORE-04 ✓, CORE-05 ✓, CORE-11 ✓, CORE-14 ✓, LIFE-01 ✓, LIFE-02 ✓ (più D-17, D-18, D-19, D-25, D-26, D-28, D-29, D-30).
 
 ## Objective Achieved
 
 L'obiettivo del plan 01-08 è raggiunto integralmente:
 
 - **5 file creati** + 1 file modificato (`packages/core/src/index.ts` upgraded da type-only re-export a public API surface completa)
-- **`pnpm --filter @sembridge/core test`** esce 0 e riporta `Test Files 12 passed (12) | Tests 191 passed (191)` in 622-797 ms (suite cumulativa post-Wave-5 = 10 file Wave 4 + 2 nuovi: `plugin-registry.test.ts` 19 test + `public-factory.test.ts` 13 test)
-- **`pnpm --filter @sembridge/core typecheck`** esce 0 (no TS errors, isolatedDeclarations conforme)
+- **`pnpm --filter @gluezero/core test`** esce 0 e riporta `Test Files 12 passed (12) | Tests 191 passed (191)` in 622-797 ms (suite cumulativa post-Wave-5 = 10 file Wave 4 + 2 nuovi: `plugin-registry.test.ts` 19 test + `public-factory.test.ts` 13 test)
+- **`pnpm --filter @gluezero/core typecheck`** esce 0 (no TS errors, isolatedDeclarations conforme)
 - **`pnpm biome check packages/core/src/`** esce 0 (35 file checked, 0 errori, 0 warning)
-- **`pnpm --filter @sembridge/core build`** produce `dist/index.js` 23.14 KB + `dist/index.d.ts` 6.44 KB + `dist/index.js.map` 80.04 KB
+- **`pnpm --filter @gluezero/core build`** produce `dist/index.js` 23.14 KB + `dist/index.d.ts` 6.44 KB + `dist/index.js.map` 80.04 KB
 - **Smoke test imports**: `Object.keys(m).sort()` ritorna `["Broker", "createBroker", "createBrokerError", "createConsoleLogger", "isBrokerError", "silentLogger"]` — superset rispetto al minimo richiesto `["Broker", "createBroker", "createBrokerError", "isBrokerError"]`
 - **TDD pattern RED→GREEN** preservato: 2 commit `test(01-08): aggiunge test RED ...` precedono i corrispondenti commit `feat(01-08): implementa ...`
 - **Cascade D-26 punto 1 enforcement** verificato sia in unit (plugin-registry.test.ts test 'CASCADE D-26 point 1') sia in integration (public-factory.test.ts test 'Plugin scoped subscribe → cascade unsubscribe on unregisterPlugin')
@@ -151,7 +151,7 @@ NOTA: il PLAN dichiarava Task 2 con `tdd="false"`, ma per coerenza col pattern p
 - [x] Cascade ordine D-26: bus.unsubscribeByOwner(pluginId) → abortController.abort() → onDestroy — verificato 3 test (CASCADE point 1, AbortController fires, signal.aborted timing)
 - [x] **D-26 point 1 esercitato in pratica**: subscription via scoped broker auto-tagged + rimosse — verificato test 'CASCADE D-26 point 1' (5 sub registrate da onMount via ctx.broker, post-unregister bus.getStats().topics.length === 0)
 - [x] File test ha 19 test cases (target ≥ 15)
-- [x] `pnpm --filter @sembridge/core test plugin-registry` esce 0 → 19/19 test passing
+- [x] `pnpm --filter @gluezero/core test plugin-registry` esce 0 → 19/19 test passing
 - [x] signal.aborted === false durante onUnmount, true durante onDestroy — verificato test esplicito
 - [x] `grep -q "import { createPluginScopedBroker, PluginRegistry } from './plugin-registry'" packages/core/src/core/plugin-registry.test.ts` (post Biome Organize Imports il named import order è alfabetico)
 
@@ -165,25 +165,25 @@ NOTA: il PLAN dichiarava Task 2 con `tdd="false"`, ma per coerenza col pattern p
 - [x] createBroker accetta tutte le 8 sezioni F2-F6 placeholder (CORE-14) — verificato test
 - [x] File `packages/core/src/index.ts` esporta: `createBroker`, `Broker`, `isBrokerError`, `createBrokerError`, `createConsoleLogger`, `silentLogger` runtime + tipi pubblici via `export type` — verificato grep
 - [x] File `packages/core/src/public-factory.test.ts` ha 13 test cases per: empty config, independent instances (D-30), valid logLevel, invalid logLevel, F2-F6 placeholders, all F1 runtime fields, end-to-end pub/sub, getDebugSnapshot shape, enableDebug/disableDebug, getTopicRegistry, registerPlugin/unregisterPlugin lifecycle, plugin scoped LIFE-02 cascade, setLogger
-- [x] `pnpm --filter @sembridge/core test` esce 0 con `Test Files 12 passed`
-- [x] `pnpm --filter @sembridge/core build` esce 0 → dist/index.js 23.14 KB + dist/index.d.ts 6.44 KB
+- [x] `pnpm --filter @gluezero/core test` esce 0 con `Test Files 12 passed`
+- [x] `pnpm --filter @gluezero/core build` esce 0 → dist/index.js 23.14 KB + dist/index.d.ts 6.44 KB
 - [x] Smoke import `dist/index.js` espone Broker, createBroker, createBrokerError, isBrokerError (più createConsoleLogger, silentLogger)
 
 ### Plan-wide verification
 
 - [x] 5 file source + 2 file test esistenti
-- [x] `pnpm --filter @sembridge/core test` esce 0 con `Test Files 12 passed | Tests 191 passed`
-- [x] `pnpm --filter @sembridge/core build` esce 0; produce `dist/index.js` + `dist/index.d.ts`
-- [x] `pnpm --filter @sembridge/core typecheck` esce 0
+- [x] `pnpm --filter @gluezero/core test` esce 0 con `Test Files 12 passed | Tests 191 passed`
+- [x] `pnpm --filter @gluezero/core build` esce 0; produce `dist/index.js` + `dist/index.d.ts`
+- [x] `pnpm --filter @gluezero/core typecheck` esce 0
 - [x] `pnpm biome check packages/core/src/` esce 0 (35 file checked)
 - [x] Smoke import `dist/index.js` espone superset richiesto
 - [ ] Coverage v8 ≥ 90% — **NON MISURATA** (open item ereditato da plan 04: missing dep `@vitest/coverage-v8`); surrogate confidence: 191 test passing su 12 moduli isolati con behavior coverage esplicito su tutta la surface F1 Phase 1
-- [x] `package.json#exports` permette `import { createBroker } from '@sembridge/core'` (verificato dal smoke test)
+- [x] `package.json#exports` permette `import { createBroker } from '@gluezero/core'` (verificato dal smoke test)
 
 ## Final test output
 
 ```
-> @sembridge/core@0.0.0 test
+> @gluezero/core@0.0.0 test
 > vitest run --passWithNoTests
 
  RUN  v4.1.5 packages/core
@@ -342,7 +342,7 @@ Nessun nuovo threat surface introdotto fuori dal `<threat_model>` del plan.
 ## Open Items
 
 Open item ereditato da plan 04 (non risolto in plan 08):
-- **Coverage v8 measurement**: install `@vitest/coverage-v8` (devDependency root) e ri-eseguire `pnpm --filter @sembridge/core test:coverage` al termine di Wave 5 per verificare il target ≥ 90% sui file `core/` + `public-factory.ts`. Non bloccante per F1 progress; surrogate confidence: 191 test passing su 12 moduli isolati con behavior coverage esplicito sull'intera surface F1.
+- **Coverage v8 measurement**: install `@vitest/coverage-v8` (devDependency root) e ri-eseguire `pnpm --filter @gluezero/core test:coverage` al termine di Wave 5 per verificare il target ≥ 90% sui file `core/` + `public-factory.ts`. Non bloccante per F1 progress; surrogate confidence: 191 test passing su 12 moduli isolati con behavior coverage esplicito sull'intera surface F1.
 
 Open item nuovo (Phase 2/3 follow-up, non bloccante):
 - **PluginContext.broker declaration merging**: l'approccio strutturale di plan 08 richiede al consumer un `ctx.broker as { subscribe: (p, h) => Subscription }` cast. Plan F2 (canonical mapper) o F3 (routing) possono applicare declaration merging non-breaking sull'interface `PluginContext` per esporre `broker: PluginScopedBroker` direttamente, eliminando il cast. Documented in decisions frontmatter (decision #1).
@@ -376,7 +376,7 @@ L'API pubblica del Broker consumata da plan 09/10 è tutta presente:
 - `broker.getDebugSnapshot(): BrokerDebugSnapshot` — D-28 debug introspection
 - `broker.enableDebug()` / `broker.disableDebug()` — D-29 toggle
 - `broker.setLogger(logger)` — D-13 adapter slot
-- `import * from '@sembridge/core'` — public API surface index.ts
+- `import * from '@gluezero/core'` — public API surface index.ts
 
 ## Self-Check: PASSED
 

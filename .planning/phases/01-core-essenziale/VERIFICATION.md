@@ -138,7 +138,7 @@ Verifica dei 27 REQ-IDs assegnati a Phase 1.
 ### Gate 1: Test Suite
 
 ```
-> @sembridge/core@0.0.0 test
+> @gluezero/core@0.0.0 test
 > vitest run --passWithNoTests
 
  RUN  v4.1.5
@@ -153,7 +153,7 @@ Verifica dei 27 REQ-IDs assegnati a Phase 1.
 ### Gate 2: Typecheck
 
 ```
-> @sembridge/core@0.0.0 typecheck
+> @gluezero/core@0.0.0 typecheck
 > tsc --noEmit
 ```
 
@@ -170,7 +170,7 @@ Checked 48 files in 28ms. No fixes applied.
 ### Gate 4: Build
 
 ```
-> @sembridge/core@0.0.0 build
+> @gluezero/core@0.0.0 build
 > tsup
 
 ESM dist/index.js     27.47 KB
@@ -185,7 +185,7 @@ DTS dist/index.d.ts 19.43 KB
 ### Gate 5: publint
 
 ```
-Running publint v0.3.18 for @sembridge/core...
+Running publint v0.3.18 for @gluezero/core...
 Linting...
 All good!
 ```
@@ -195,7 +195,7 @@ All good!
 ### Gate 6: attw (Are The Types Wrong)
 
 ```
-@sembridge/core v0.0.0
+@gluezero/core v0.0.0
 - typescript@6.0.3
 - tsup@8.5.1
 (ignoring resolutions: 'node10', 'node16-cjs')
@@ -295,7 +295,7 @@ Scan effettuato sui file modificati in F1 (`packages/core/src/**/*.ts` 22 source
 |----------|---------|--------|--------|
 | Bundle ESM si importa correttamente | `node --input-type=module -e "import('./packages/core/dist/index.js')..."` | 6 keys esposti | PASS |
 | Build produce dist files | `ls packages/core/dist/` | `index.js`, `index.d.ts`, `index.js.map` | PASS |
-| Test suite end-to-end | `pnpm --filter @sembridge/core test` | 24 file / 248 test passing | PASS |
+| Test suite end-to-end | `pnpm --filter @gluezero/core test` | 24 file / 248 test passing | PASS |
 | Bundle size sotto budget | `pnpm ci:size` | 6.14 KB / 8 KB | PASS |
 | Type-only import surface | `dist/index.d.ts` 19.43 KB JSDoc preservato | conforme | PASS |
 
@@ -313,7 +313,7 @@ Tutti gli spot-check passano.
 2. Coverage numerica non è un success criterion del ROADMAP né un PRD vincolo;
 3. STATE.md tratta esplicitamente questo come "task aperto da chiudere prima del closure di Phase 1" — può essere installato e misurato in parallelo a Phase 2.
 
-**Raccomandazione (non blocker):** installare `@vitest/coverage-v8` prima del kick-off di F2 e ri-eseguire `pnpm --filter @sembridge/core test:coverage` per validare i threshold. Se sotto soglia → aggiungere test mirati in F2 senza modifiche al codice F1.
+**Raccomandazione (non blocker):** installare `@vitest/coverage-v8` prima del kick-off di F2 e ri-eseguire `pnpm --filter @gluezero/core test:coverage` per validare i threshold. Se sotto soglia → aggiungere test mirati in F2 senza modifiche al codice F1.
 
 ### O2 — Nota di deviation Rule 1 (test topic-validation)
 

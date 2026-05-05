@@ -152,7 +152,7 @@ Backoff full jitter: `min(maxDelay=10000, baseDelay=300 * 2^attempt) * (0.5 + Ma
 - Step 7 base (F1) + backpressure full (F3) → step 8 NUOVO `event.route.resolved` → step 9 NUOVO `event.route.executed` → step 10 NUOVO `event.outcome.collected` → step 11/12 (F2) → step 13 (F1)
 
 **Sub-decision D-85 (PipelineStep extension):**
-- TS declaration merging via `@sembridge/routing/src/augment.ts` (pattern F2)
+- TS declaration merging via `@gluezero/routing/src/augment.ts` (pattern F2)
 
 ---
 
@@ -178,7 +178,7 @@ Backoff full jitter: `min(maxDelay=10000, baseDelay=300 * 2^attempt) * (0.5 + Ma
 
 **Sub-decision D-92 (coverage):**
 - Riusa `@vitest/coverage-v8` installato in F2 plan 02-12
-- ≥ 90% su `@sembridge/routing/` e `@sembridge/gateway/http/`
+- ≥ 90% su `@gluezero/routing/` e `@gluezero/gateway/http/`
 - Final gate F3 in plan 03-XX dedicato (analogo 01-11 / 02-12)
 
 ---
@@ -226,7 +226,7 @@ Aree dove le scelte di implementazione sono lasciate al planner/researcher:
 - Dispatch table storage interno (Map vs trie integrato vs hybrid)
 - Strategy registry storage (Map vs Object literal namespace)
 - Gateway internals decomposition (`http-gateway.ts` vs `http-client.ts` + `policy-pipeline.ts`)
-- `@sembridge/gateway/http` vs `@sembridge/gateway` export path (researcher valuterà in F3 research)
+- `@gluezero/gateway/http` vs `@gluezero/gateway` export path (researcher valuterà in F3 research)
 - Naming convention file `.ts`/`.test.ts` interni (segui pattern F1/F2)
 - Splitting in plan (atteso ~10-14 plan, wave structure planner-defined)
 
@@ -234,7 +234,7 @@ Aree dove le scelte di implementazione sono lasciate al planner/researcher:
 
 ## Deferred Ideas
 
-- Realtime SSE/WS adapter → F4 (`@sembridge/gateway/sse-ws`)
+- Realtime SSE/WS adapter → F4 (`@gluezero/gateway/sse-ws`)
 - Cache adapter implementativo (in-memory + IndexedDB) → F6
 - Worker route handler (`type: 'worker'`) → F5 (chiude PRD §39 #11 WK-07)
 - Route Inspector full snapshot (payload before/after per evento) → F6 (TOOL-01/03)

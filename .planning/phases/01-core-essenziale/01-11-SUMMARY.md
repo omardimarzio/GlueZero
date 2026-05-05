@@ -57,14 +57,14 @@ key-files:
     - packages/core/src/types/deep-readonly.ts
     - package.json
 decisions:
-  - "publint scope ridotto a `@sembridge/core` only: i 6 placeholder packages F2-F6 (`@sembridge/mapper`, `@sembridge/routing`, `@sembridge/gateway`, `@sembridge/worker`, `@sembridge/cache`, `@sembridge/devtools`) sono `private: true` e dichiarano `pkg.main: ./dist/index.js` ma non hanno ancora dist/. Lo script root `pnpm -r --filter='./packages/*' exec publint` falliva con `pkg.main is ./dist/index.js but the file does not exist.` su 3 di questi (gateway/devtools/cache). Deviation Rule 3 (blocking issue): scoping al solo package effettivamente publishable in F1 (`@sembridge/core`)."
-  - "attw flag `--profile=esm-only`: `@sembridge/core` è ESM-only V1 (RESEARCH §13, no dual-package hazard). attw default check fallisce con `CJSResolvesToESM` warning su `node10` + `node16-cjs`. Aggiunto `--profile=esm-only` per ignorare le righe CJS-resolution e reportare solo `node16 (from ESM)` + `bundler` (entrambi 🟢). Documenta esplicitamente l'intent: i CJS consumer dovranno usare dynamic import. Deviation Rule 3."
-  - "size-limit config nel ROOT package.json (non nel core/package.json): il PLAN cita ci:size come gate workspace-wide. La config `size-limit` di `@sembridge/core/package.json` (esistente preesistente) puntava a `dist/index.js` relativo al package; size-limit invocato dal root invece risolve `dist/index.js` rispetto al CWD root. Spostata la config nel root con path `packages/core/dist/index.js`. Mantenuta config locale del core per documentazione (può essere usata da `pnpm --filter @sembridge/core ...` se nuovi script verranno aggiunti in F1.x)."
+  - "publint scope ridotto a `@gluezero/core` only: i 6 placeholder packages F2-F6 (`@gluezero/mapper`, `@gluezero/routing`, `@gluezero/gateway`, `@gluezero/worker`, `@gluezero/cache`, `@gluezero/devtools`) sono `private: true` e dichiarano `pkg.main: ./dist/index.js` ma non hanno ancora dist/. Lo script root `pnpm -r --filter='./packages/*' exec publint` falliva con `pkg.main is ./dist/index.js but the file does not exist.` su 3 di questi (gateway/devtools/cache). Deviation Rule 3 (blocking issue): scoping al solo package effettivamente publishable in F1 (`@gluezero/core`)."
+  - "attw flag `--profile=esm-only`: `@gluezero/core` è ESM-only V1 (RESEARCH §13, no dual-package hazard). attw default check fallisce con `CJSResolvesToESM` warning su `node10` + `node16-cjs`. Aggiunto `--profile=esm-only` per ignorare le righe CJS-resolution e reportare solo `node16 (from ESM)` + `bundler` (entrambi 🟢). Documenta esplicitamente l'intent: i CJS consumer dovranno usare dynamic import. Deviation Rule 3."
+  - "size-limit config nel ROOT package.json (non nel core/package.json): il PLAN cita ci:size come gate workspace-wide. La config `size-limit` di `@gluezero/core/package.json` (esistente preesistente) puntava a `dist/index.js` relativo al package; size-limit invocato dal root invece risolve `dist/index.js` rispetto al CWD root. Spostata la config nel root con path `packages/core/dist/index.js`. Mantenuta config locale del core per documentazione (può essere usata da `pnpm --filter @gluezero/core ...` se nuovi script verranno aggiunti in F1.x)."
   - "Bundle size effettivo 6.14 KB gzip (budget 8 KB → ~76% utilizzato). Headroom 1.86 KB gzip per future micro-extension F1.x. Nota: il bundle ha incluso JSDoc nei tipi runtime (le firme tipi non hanno JSDoc inlined, solo i runtime export ne hanno via comment block — `tsup` non li strippa di default in build minified). Verifica empirica: post-JSDoc bundle 27.47 KB raw → 6.14 KB gzip; pre-JSDoc bundle ~23 KB raw → presumibilmente ~5.5 KB gzip. La crescita ~600 byte gz è dovuta ai docstring runtime (JSDoc su `createBroker`/Broker class methods) ma resta abbondantemente entro budget."
   - "JSDoc on public exports only: ho applicato JSDoc completo (descrizione + @param + @returns + @throws + @example dove utile) su `createBroker`, `Broker` class + 9 metodi pubblici, `createBrokerError`, `isBrokerError`, `createConsoleLogger`, `silentLogger`. Sui tipi pubblici (BrokerEvent, EventSource, Subscription, ecc.) JSDoc minimal (1-3 righe per type/interface). Razionale: il PLAN richiede skeleton sufficiente per TypeDoc generation in F6, non documentazione TSDoc completa. Lo scope `internal` (PluginRegistration, EventBusOptions, BrokerDebugSnapshot interno) NON ha JSDoc — coerente con lo scope public API surface."
   - "NO commit `chore(01-11): aggiunge devDeps publint + attw + size-limit`: le 4 devDeps richieste dal PLAN (`publint`, `@arethetypeswrong/cli`, `size-limit`, `@size-limit/preset-small-lib`) erano già presenti nel root package.json (installate in plan precedenti). Solo aggiornata la sezione `scripts` ci:* + aggiunta config `size-limit`. Risparmiati 1 commit."
   - "Coverage v8 finale ≥ 90% NON misurata: `@vitest/coverage-v8` non è una devDep installata nel workspace (vitest 4.x richiede plugin separato). Il PLAN cita `Coverage v8 finale ≥ 90%` come success criterion ma non come task action. Open item per F1.x se serve report formale; in alternativa la suite `24 Test Files / 248 Tests passing` fornisce evidenza qualitativa di copertura (ogni modulo runtime ha test dedicati: bus, broker, plugin-registry, factory, errors, logger, validation, deep-freeze, topic-trie + 4 robustness suite + 8 integration suite)."
-  - "NO npm publish in F1: il package `@sembridge/core` ha `version: 0.0.0` e `publishConfig: { access: 'public', provenance: true }` ma NON viene pubblicato in F1 (RESEARCH Open Q 4 — primo release fine F2 con canonical model + mapper). Build artifact `dist/` resta locale, verificato tramite smoke import `node -e \"import('./dist/index.js')\"`."
+  - "NO npm publish in F1: il package `@gluezero/core` ha `version: 0.0.0` e `publishConfig: { access: 'public', provenance: true }` ma NON viene pubblicato in F1 (RESEARCH Open Q 4 — primo release fine F2 con canonical model + mapper). Build artifact `dist/` resta locale, verificato tramite smoke import `node -e \"import('./dist/index.js')\"`."
 metrics:
   duration: "~30m wall-clock"
   completed: "2026-04-29T01:00:00+02:00"
@@ -81,7 +81,7 @@ metrics:
 
 # Phase 1 Plan 11: Build Verification + DOC-01 Final Gate Summary
 
-Final gate di Phase 1: aggiunto JSDoc esaustivo su tutta la public API runtime di `@sembridge/core` (createBroker factory, classe Broker + 9 metodi pubblici, createBrokerError/isBrokerError, createConsoleLogger/silentLogger), JSDoc minimal sui 17 tipi pubblici, README.md espanso da 42 a 271 righe coprendo l'intera surface F1 con esempio scenario meteo (PRD §29) end-to-end. Configurati i 3 CI gates `ci:publint`/`ci:attw`/`ci:size` scoped al solo `@sembridge/core` (publishable package F1). Bundle finale: **6.14 KB gzipped** (~76% del budget 8 KB), `dist/index.d.ts` 19.43 KB con JSDoc preserved per consumer IntelliSense + TypeDoc generation in F6.
+Final gate di Phase 1: aggiunto JSDoc esaustivo su tutta la public API runtime di `@gluezero/core` (createBroker factory, classe Broker + 9 metodi pubblici, createBrokerError/isBrokerError, createConsoleLogger/silentLogger), JSDoc minimal sui 17 tipi pubblici, README.md espanso da 42 a 271 righe coprendo l'intera surface F1 con esempio scenario meteo (PRD §29) end-to-end. Configurati i 3 CI gates `ci:publint`/`ci:attw`/`ci:size` scoped al solo `@gluezero/core` (publishable package F1). Bundle finale: **6.14 KB gzipped** (~76% del budget 8 KB), `dist/index.d.ts` 19.43 KB con JSDoc preserved per consumer IntelliSense + TypeDoc generation in F6.
 
 ## Objective Achieved
 
@@ -90,11 +90,11 @@ L'obiettivo del plan 01-11 è raggiunto integralmente:
 - **README espanso a 271 righe** (>80 richiesti) con sezioni: Installazione, Quick start, API pubblica (`createBroker` + `Broker` + helpers), Naming convention CORE-08, Plugin lifecycle CORE-04/CORE-05, Handler isolation CORE-12/ERR-03, EventTap pre-instrumented CORE-13, Delivery semantics D-01..D-03, Deep-freeze runtime D-04/D-05, BrokerError ERR-01, scenario meteo PRD §29 end-to-end (3 plugin: form/fetcher/card), Roadmap F2-F6, Vincoli architetturali, Phase 1 success criteria, Licenza
 - **JSDoc completo su public API runtime** (`createBroker`, `Broker.publish`, `Broker.subscribe`, `Broker.registerPlugin`, `Broker.unregisterPlugin`, `Broker.getTopicRegistry`, `Broker.setLogger`, `Broker.enableDebug`, `Broker.disableDebug`, `Broker.getDebugSnapshot`, `Broker constructor`, `createBrokerError`, `isBrokerError`, `createConsoleLogger`, `silentLogger`) con `@param` / `@returns` / `@throws` / `@example` dove appropriato
 - **JSDoc minimal sui 17 tipi pubblici** (BrokerEvent, EventSource, DeliveryMode, Priority, EventId, BrokerConfig, DeepReadonly, BrokerError, ErrorCategory, BrokerLogger, LogLevel, PluginContext, PluginDescriptor, PluginState, SubscribeOptions, Subscription, EventTap, PipelineSnapshot, PipelineStep) — 1-3 righe per type
-- **`pnpm --filter @sembridge/core build`** esce 0 — produce `dist/index.js` (27.47 KB ESM bundled), `dist/index.d.ts` (19.43 KB con JSDoc preserved), `dist/index.js.map` (88.68 KB sourcemap)
+- **`pnpm --filter @gluezero/core build`** esce 0 — produce `dist/index.js` (27.47 KB ESM bundled), `dist/index.d.ts` (19.43 KB con JSDoc preserved), `dist/index.js.map` (88.68 KB sourcemap)
 - **`pnpm typecheck` workspace** esce 0 (no TS errors)
 - **`pnpm biome check .` workspace** esce 0 (65 file checked, 0 errori 0 warning)
-- **`pnpm --filter @sembridge/core test`** esce 0 con `Test Files 24 passed (24) | Tests 248 passed (248)` in ~1.18s
-- **`pnpm ci:publint`** esce 0 — "All good!" su `@sembridge/core` (config `exports`, `types`, `sideEffects: false`, `files` corretti)
+- **`pnpm --filter @gluezero/core test`** esce 0 con `Test Files 24 passed (24) | Tests 248 passed (248)` in ~1.18s
+- **`pnpm ci:publint`** esce 0 — "All good!" su `@gluezero/core` (config `exports`, `types`, `sideEffects: false`, `files` corretti)
 - **`pnpm ci:attw --profile=esm-only`** esce 0 — `node16 (from ESM)` 🟢, `bundler` 🟢, ignored CJS rows
 - **`pnpm ci:size`** esce 0 — bundle 6.14 KB gzip vs budget 8 KB (~76%)
 - **Smoke test** `node -e "import('./dist/index.js').then(m => Object.keys(m).sort())"` espone `Broker, createBroker, createBrokerError, createConsoleLogger, isBrokerError, silentLogger` (6 runtime exports)
@@ -105,10 +105,10 @@ L'obiettivo del plan 01-11 è raggiunto integralmente:
 
 | #   | Name                                                                              | Commit    | Status |
 | --- | --------------------------------------------------------------------------------- | --------- | ------ |
-| 1   | Aggiorna README @sembridge/core (DOC-01)                                          | `947f37c` | done   |
+| 1   | Aggiorna README @gluezero/core (DOC-01)                                          | `947f37c` | done   |
 | 2   | JSDoc su API pubblica runtime (broker, factory, errors, logger)                   | `9d9873a` | done   |
 | 3   | JSDoc su types pubblici (broker-event, config, errors, logger, plugin, sub, tap)  | `31e6b70` | done   |
-| 4   | Configura CI gates publint/attw/size-limit per @sembridge/core                    | `f00d914` | done   |
+| 4   | Configura CI gates publint/attw/size-limit per @gluezero/core                    | `f00d914` | done   |
 
 ## Lista API pubbliche con JSDoc applicato
 
@@ -164,10 +164,10 @@ L'obiettivo del plan 01-11 è raggiunto integralmente:
 ### `pnpm ci:publint` → exit 0
 
 ```text
-> sembridge-monorepo@0.0.0 ci:publint
-> pnpm --filter @sembridge/core exec publint
+> gluezero-monorepo@0.0.0 ci:publint
+> pnpm --filter @gluezero/core exec publint
 
-Running publint v0.3.18 for @sembridge/core...
+Running publint v0.3.18 for @gluezero/core...
 Packing files with `pnpm pack`...
 Linting...
 All good!
@@ -176,7 +176,7 @@ All good!
 ### `pnpm ci:attw` → exit 0 (profile esm-only)
 
 ```text
-@sembridge/core v0.0.0
+@gluezero/core v0.0.0
 
 Build tools:
 - typescript@6.0.3
@@ -187,7 +187,7 @@ Build tools:
 (ignored per resolution) ⚠️ A require call resolved to an ESM JavaScript file...
 
 ┌───────────────────┬────────────────────────────────────────┬────────────────────────────────┐
-│                   │ "@sembridge/core"                      │ "@sembridge/core/package.json" │
+│                   │ "@gluezero/core"                      │ "@gluezero/core/package.json" │
 ├───────────────────┼────────────────────────────────────────┼────────────────────────────────┤
 │ node16 (from ESM) │ 🟢 (ESM)                               │ 🟢 (JSON)                      │
 ├───────────────────┼────────────────────────────────────────┼────────────────────────────────┤
@@ -202,14 +202,14 @@ Build tools:
 ### `pnpm ci:size` → exit 0
 
 ```text
-> sembridge-monorepo@0.0.0 ci:size
+> gluezero-monorepo@0.0.0 ci:size
 > size-limit
 
   Size limit: 8 kB
   Size:       6.14 kB with all dependencies, minified and gzipped
 ```
 
-### `pnpm --filter @sembridge/core build` → exit 0
+### `pnpm --filter @gluezero/core build` → exit 0
 
 ```text
 ESM Build start
@@ -221,10 +221,10 @@ DTS ⚡️ Build success in 342ms
 DTS dist/index.d.ts 19.43 KB
 ```
 
-### `pnpm --filter @sembridge/core test` → exit 0
+### `pnpm --filter @gluezero/core test` → exit 0
 
 ```text
- RUN  v4.1.5 /Users/omarmarzio/programming/prova AI/SemBridge/packages/core
+ RUN  v4.1.5 /Users/omarmarzio/programming/prova AI/GlueZero/packages/core
 
  Test Files  24 passed (24)
       Tests  248 passed (248)
@@ -264,18 +264,18 @@ Headroom 1.86 KB gzip per future micro-extension F1.x. La crescita rispetto al b
 
 ### Auto-fixed Issues
 
-**1. [Rule 3 - Blocking] CI publint scope ridotto a @sembridge/core**
+**1. [Rule 3 - Blocking] CI publint scope ridotto a @gluezero/core**
 
 - **Found during:** Task 2 — primo run `pnpm ci:publint`
-- **Issue:** Lo script root `pnpm -r --filter='./packages/*' exec publint` falliva con `ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL` perché 3 placeholder packages F2-F6 (`@sembridge/gateway`, `@sembridge/devtools`, `@sembridge/cache`) dichiarano `pkg.main: ./dist/index.js` ma non hanno ancora dist/. Sono `private: true` quindi non publishable, ma publint controlla comunque la shape.
-- **Fix:** Ridotto scope di `ci:publint` a `pnpm --filter @sembridge/core exec publint` (l'unico package effettivamente publishable in F1). Quando F2 aggiungerà `@sembridge/mapper` con dist/, lo script andrà esteso.
+- **Issue:** Lo script root `pnpm -r --filter='./packages/*' exec publint` falliva con `ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL` perché 3 placeholder packages F2-F6 (`@gluezero/gateway`, `@gluezero/devtools`, `@gluezero/cache`) dichiarano `pkg.main: ./dist/index.js` ma non hanno ancora dist/. Sono `private: true` quindi non publishable, ma publint controlla comunque la shape.
+- **Fix:** Ridotto scope di `ci:publint` a `pnpm --filter @gluezero/core exec publint` (l'unico package effettivamente publishable in F1). Quando F2 aggiungerà `@gluezero/mapper` con dist/, lo script andrà esteso.
 - **Files modified:** `package.json`
 - **Commit:** `f00d914`
 
 **2. [Rule 3 - Blocking] CI attw flag --profile=esm-only**
 
 - **Found during:** Task 2 — primo run `pnpm ci:attw`
-- **Issue:** attw default check fallisce con `CJSResolvesToESM` warning su `node10` + `node16-cjs` perché `@sembridge/core` è ESM-only V1 (no `"require"` field in `exports`).
+- **Issue:** attw default check fallisce con `CJSResolvesToESM` warning su `node10` + `node16-cjs` perché `@gluezero/core` è ESM-only V1 (no `"require"` field in `exports`).
 - **Fix:** Aggiunto `--profile=esm-only` a `ci:attw` per dichiarare esplicitamente l'intent ESM-only e ignorare le righe CJS-resolution. Risultato: `node16 (from ESM)` 🟢 + `bundler` 🟢 = exit 0. RESEARCH §13 conferma che V1 è ESM-only by design (no dual-package hazard).
 - **Files modified:** `package.json`
 - **Commit:** `f00d914`
@@ -284,7 +284,7 @@ Headroom 1.86 KB gzip per future micro-extension F1.x. La crescita rispetto al b
 
 - **Found during:** Task 2 — primo run `pnpm ci:size`
 - **Issue:** size-limit invocato dal root cercava la config nel root `package.json` (non trovata). La config preesistente in `packages/core/package.json` con path `dist/index.js` viene risolta relativa al CWD root → file not found.
-- **Fix:** Aggiunta config `size-limit` nel root con path `packages/core/dist/index.js`. Mantenuta config locale in core/package.json per future flessibilità (e.g. `pnpm --filter @sembridge/core size-limit` se serve un check standalone).
+- **Fix:** Aggiunta config `size-limit` nel root con path `packages/core/dist/index.js`. Mantenuta config locale in core/package.json per future flessibilità (e.g. `pnpm --filter @gluezero/core size-limit` se serve un check standalone).
 - **Files modified:** `package.json`
 - **Commit:** `f00d914`
 
@@ -328,7 +328,7 @@ I 5 criteri di Phase 1 sono tutti coperti dalla suite di test e documentati nel 
 | 01-10 robustness tests | done | +4 | +11 | storm/perf/fault/concurrent |
 | **01-11 build verify + DOC-01 (corrente)** | **done** | 24 | **248** | final gate |
 
-Phase 1 COMPLETA. Pronto-per: `/gsd-verify-work 1` e successivamente `/gsd-discuss-phase 2` (Canonical Model & Mapper in `@sembridge/mapper`).
+Phase 1 COMPLETA. Pronto-per: `/gsd-verify-work 1` e successivamente `/gsd-discuss-phase 2` (Canonical Model & Mapper in `@gluezero/mapper`).
 
 ## Self-Check: PASSED
 
@@ -348,7 +348,7 @@ Phase 1 COMPLETA. Pronto-per: `/gsd-verify-work 1` e successivamente `/gsd-discu
 - [x] `pnpm ci:publint` exit 0
 - [x] `pnpm ci:attw` exit 0
 - [x] `pnpm ci:size` exit 0 (6.14 KB / 8 KB budget)
-- [x] `pnpm --filter @sembridge/core test` 24 Test Files / 248 Tests passing
+- [x] `pnpm --filter @gluezero/core test` 24 Test Files / 248 Tests passing
 - [x] `pnpm typecheck` workspace exit 0
 - [x] `pnpm biome check .` workspace exit 0
 - [x] Smoke test bundle import OK (6 runtime exports esposti)

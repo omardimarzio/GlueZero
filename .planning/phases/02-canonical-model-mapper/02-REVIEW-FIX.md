@@ -83,7 +83,7 @@ cumulative_tally:
 - `inner.publish(topic, canonicalPayload, { ...options, id: preAllocatedEventId })` — `createBrokerEvent` di F1 (event-factory.ts:63) riusa `params.id ?? nanoid()`, quindi il `BrokerEvent.id` finale è uguale al `preAllocatedEventId`.
 - Subscribe-side (step 11/12) leggono `event.id` da `BrokerEvent` (già coerente con WR-C iter2) → tutti e 5 gli step F2 condividono lo stesso eventId.
 - JSDoc su `makeF2Snapshot` aggiornata con sezione "WR-01 iter3" che documenta il pattern.
-- Aggiunto `nanoid: 5.1.9` come dep diretta del pacchetto mapper (era transitiva via `@sembridge/core`).
+- Aggiunto `nanoid: 5.1.9` come dep diretta del pacchetto mapper (era transitiva via `@gluezero/core`).
 
 **TDD:** Esteso `weather-scenario.integration.test.ts` con verifica cross-step:
 - I 5 step F2 condividono lo stesso eventId reale (NOT `^f2:`).
@@ -169,9 +169,9 @@ Le 5 finding `IN-*` (info) della review iniziale + qualsiasi nuova finding info 
 | Tier | Check | Result |
 |------|-------|--------|
 | 1 | Re-read di ogni file modificato post-edit | PASS — no corruption |
-| 2 | `pnpm -F @sembridge/mapper exec tsc --noEmit` | PASS — clean (no errors) |
-| 2 | `pnpm -F @sembridge/mapper test` | PASS — **183/183** |
-| 2 | `pnpm -F @sembridge/core test` (D-49 regression) | PASS — 248/248 |
+| 2 | `pnpm -F @gluezero/mapper exec tsc --noEmit` | PASS — clean (no errors) |
+| 2 | `pnpm -F @gluezero/mapper test` | PASS — **183/183** |
+| 2 | `pnpm -F @gluezero/core test` (D-49 regression) | PASS — 248/248 |
 | 3 | Trace canonical-only path (BL-01) — plugin solo `canonicalSchemaId` preserva payload | PASS — Test scenario A verifica `received[0] === { foo: 'bar' }` |
 | 3 | Trace eventId pre-allocato → propagato ai 5 step F2 (WR-01) | PASS — weather-scenario verify `5 × snap.eventId === consumerSnap.eventId` |
 | 3 | README riga 211 ora `mapping.field.missing` (WR-02) | PASS |

@@ -4,7 +4,7 @@ plan: 01
 subsystem: worker-bootstrap
 tags: [scaffold, declaration-merging, types, build, test-setup, F5]
 provides:
-  - "@sembridge/worker package compilable + buildable"
+  - "@gluezero/worker package compilable + buildable"
   - "BrokerConfig.workers TS type via decl merging (D-122)"
   - "PluginDescriptor.workers TS type via decl merging (D-126)"
   - "WorkerDescriptor / RouteWorkerDefinition / WorkerConfig / ProgressPayload / TaskState / WorkerTaskOutcome public types"
@@ -12,9 +12,9 @@ provides:
   - "F5PipelineStep literal union (4 step §28)"
   - "__augmentWorkerLoaded marker (Pattern S1 anti tree-shake)"
 requires:
-  - "@sembridge/core BrokerConfig + PluginDescriptor F1"
-  - "@sembridge/routing RoutePolicies F3 (Pick subset D-143)"
-  - "@sembridge/gateway BackpressurePolicyConfig F3 (carryover D-130)"
+  - "@gluezero/core BrokerConfig + PluginDescriptor F1"
+  - "@gluezero/routing RoutePolicies F3 (Pick subset D-143)"
+  - "@gluezero/gateway BackpressurePolicyConfig F3 (carryover D-130)"
 affects:
   - "ROADMAP F5 progress: Wave 1 ✓"
   - "REQ progress: WK-01..WK-07 type-level scaffold + PKG-01..PKG-04 done"
@@ -22,7 +22,7 @@ tech-stack:
   added:
     - "comlink 4.4.2 (runtime dep, lockata D-125 + RESEARCH §2.1 + verified npm 2026-05-04)"
   patterns:
-    - "TS declaration merging additive (declare module '@sembridge/core')"
+    - "TS declaration merging additive (declare module '@gluezero/core')"
     - "Pattern S1 anti tree-shake (sideEffects glob + __augmentLoaded re-export)"
     - "Pattern S5 STRICT match internal topics (anti AP-6 carryover F4 D-111)"
     - "Pick<RoutePolicies, ...> subset enforce TS-level (D-143)"
@@ -79,9 +79,9 @@ metrics:
   completed_date: 2026-05-04
 ---
 
-# Phase 5 Plan 01: Bootstrap @sembridge/worker — SUMMARY
+# Phase 5 Plan 01: Bootstrap @gluezero/worker — SUMMARY
 
-Bootstrap del pacchetto `@sembridge/worker` come scaffold completo type-level: package.json + build/test config (tsup ESM-only + Vitest 3-tier ready) + tsconfig strict + augment.ts con declaration merging additive (BrokerConfig.workers + PluginDescriptor.workers + F5PipelineStep) + 6 type files (WorkerDescriptor / WorkerConfig / RouteWorkerDefinition / ProgressPayload / TaskState / INTERNAL_TOPICS_WORKER) + barrel pubblico. Wave 1 sequential gate per W2 (assert-serializable + transferable-extractor + task-tracker) e W3 (worker-bridge + worker-pool/registry). 8/8 smoke decl merging passing. D-83 strict ✓ verified zero modifiche runtime a `packages/{core,mapper,routing}/src/` e `packages/gateway/src/{http,sse-ws}/`.
+Bootstrap del pacchetto `@gluezero/worker` come scaffold completo type-level: package.json + build/test config (tsup ESM-only + Vitest 3-tier ready) + tsconfig strict + augment.ts con declaration merging additive (BrokerConfig.workers + PluginDescriptor.workers + F5PipelineStep) + 6 type files (WorkerDescriptor / WorkerConfig / RouteWorkerDefinition / ProgressPayload / TaskState / INTERNAL_TOPICS_WORKER) + barrel pubblico. Wave 1 sequential gate per W2 (assert-serializable + transferable-extractor + task-tracker) e W3 (worker-bridge + worker-pool/registry). 8/8 smoke decl merging passing. D-83 strict ✓ verified zero modifiche runtime a `packages/{core,mapper,routing}/src/` e `packages/gateway/src/{http,sse-ws}/`.
 
 ## Output Summary
 
@@ -109,13 +109,13 @@ Bootstrap del pacchetto `@sembridge/worker` come scaffold completo type-level: p
 
 | File | Cambiamento |
 |------|-------------|
-| `packages/worker/package.json` | Placeholder F1 → manifest pieno F5 (name @sembridge/worker, deps comlink/@sembridge/{core,mapper,routing,gateway}/nanoid/valibot, sideEffects glob, scripts build/test/typecheck/test:browser/test:coverage/clean) |
+| `packages/worker/package.json` | Placeholder F1 → manifest pieno F5 (name @gluezero/worker, deps comlink/@gluezero/{core,mapper,routing,gateway}/nanoid/valibot, sideEffects glob, scripts build/test/typecheck/test:browser/test:coverage/clean) |
 | `pnpm-lock.yaml` | Aggiornato con comlink 4.4.2 + workspace deps + devDeps W1 |
 
 ## Test Results
 
 ```
-RUN  v4.1.5 /Users/omarmarzio/programming/prova AI/SemBridge/packages/worker
+RUN  v4.1.5 /Users/omarmarzio/programming/prova AI/GlueZero/packages/worker
 Test Files  1 passed (1)
      Tests  8 passed (8)
   Start at  22:34:44
@@ -140,13 +140,13 @@ Test Files  1 passed (1)
 | Gate | Result |
 |------|--------|
 | `pnpm install` | OK (workspace coerente + comlink 4.4.2 + 8 packages + 1 cyclic warn pre-esistente routing↔gateway) |
-| `pnpm -F @sembridge/worker typecheck` | exit 0 |
-| `pnpm -F @sembridge/worker test --run` | 8/8 passing |
-| `pnpm -F @sembridge/worker build` | OK — `dist/{index,augment}.{js,d.ts}` prodotti |
-| `pnpm -F @sembridge/core typecheck` | exit 0 (zero regressione D-83) |
-| `pnpm -F @sembridge/mapper typecheck` | exit 0 (zero regressione D-83) |
-| `pnpm -F @sembridge/routing typecheck` | exit 0 (zero regressione D-83) |
-| `pnpm -F @sembridge/gateway typecheck` | exit 0 (zero regressione D-83) |
+| `pnpm -F @gluezero/worker typecheck` | exit 0 |
+| `pnpm -F @gluezero/worker test --run` | 8/8 passing |
+| `pnpm -F @gluezero/worker build` | OK — `dist/{index,augment}.{js,d.ts}` prodotti |
+| `pnpm -F @gluezero/core typecheck` | exit 0 (zero regressione D-83) |
+| `pnpm -F @gluezero/mapper typecheck` | exit 0 (zero regressione D-83) |
+| `pnpm -F @gluezero/routing typecheck` | exit 0 (zero regressione D-83) |
+| `pnpm -F @gluezero/gateway typecheck` | exit 0 (zero regressione D-83) |
 | Full monorepo test | 248+183+103+222+8 = **764 passing** (+3 skip MSW V1.x F4) |
 
 ## Build Artifacts
@@ -236,22 +236,22 @@ TDD gate sequence verified: chore (config bootstrap) → feat (type scaffold) �
 Wave 1 completa rilascia il seguente contratto stabile per Wave 2 parallel (05-02 ‖ 05-03):
 
 **Per plan 05-02 (assert-serializable + transferable-extractor):**
-- `import type { ProgressPayload } from '@sembridge/worker'` (D-136 schema)
-- `import type { RouteWorkerDefinition } from '@sembridge/worker'` (per `transferable: readonly string[]` JSONPath D-141)
-- `import { INTERNAL_TOPICS_WORKER, isInternalWorkerTopic } from '@sembridge/worker'` (filter STRICT match D-131/D-137)
+- `import type { ProgressPayload } from '@gluezero/worker'` (D-136 schema)
+- `import type { RouteWorkerDefinition } from '@gluezero/worker'` (per `transferable: readonly string[]` JSONPath D-141)
+- `import { INTERNAL_TOPICS_WORKER, isInternalWorkerTopic } from '@gluezero/worker'` (filter STRICT match D-131/D-137)
 
 **Per plan 05-03 (task-tracker state machine atomico):**
-- `import type { TaskState, WorkerTaskOutcome } from '@sembridge/worker'` (D-133 union + D-152 outcome shape)
-- `import type { F5PipelineStep } from '@sembridge/worker'` (per emitTapStep D-152)
+- `import type { TaskState, WorkerTaskOutcome } from '@gluezero/worker'` (D-133 union + D-152 outcome shape)
+- `import type { F5PipelineStep } from '@gluezero/worker'` (per emitTapStep D-152)
 
 **Per plan 05-04 (worker-bridge):**
-- `import type { WorkerDescriptor, WorkerType } from '@sembridge/worker'` (D-147 module/classic + D-148 URL pattern)
-- `import { isInternalWorkerTopic } from '@sembridge/worker'` (filter cancel/progress messages)
+- `import type { WorkerDescriptor, WorkerType } from '@gluezero/worker'` (D-147 module/classic + D-148 URL pattern)
+- `import { isInternalWorkerTopic } from '@gluezero/worker'` (filter cancel/progress messages)
 
 **Per plan 05-05 (worker-pool):**
-- `import type { WorkerDescriptor, WorkerMode } from '@sembridge/worker'` (D-127 mode + D-128 cap 8 + D-131 cancelGraceMs)
+- `import type { WorkerDescriptor, WorkerMode } from '@gluezero/worker'` (D-127 mode + D-128 cap 8 + D-131 cancelGraceMs)
 
-Tutti gli import type-only sono già esportati dal barrel `@sembridge/worker` via `src/index.ts`. Build artifacts `dist/` pronti per consumer test.
+Tutti gli import type-only sono già esportati dal barrel `@gluezero/worker` via `src/index.ts`. Build artifacts `dist/` pronti per consumer test.
 
 ## Threat Coverage
 

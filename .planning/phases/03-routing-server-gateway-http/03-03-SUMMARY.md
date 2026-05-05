@@ -11,13 +11,13 @@ tags:
 dependency-graph:
   requires:
     - phase: 03-02
-      provides: "RouteDefinition + RoutingConfig type contracts (26 type esportati da @sembridge/routing/types)"
+      provides: "RouteDefinition + RoutingConfig type contracts (26 type esportati da @gluezero/routing/types)"
     - phase: 02
-      provides: "@sembridge/mapper CanonicalSchema (interface — augmentable)"
+      provides: "@gluezero/mapper CanonicalSchema (interface — augmentable)"
     - phase: 01
-      provides: "@sembridge/core PluginDescriptor + BrokerConfig (interface — augmentable)"
+      provides: "@gluezero/core PluginDescriptor + BrokerConfig (interface — augmentable)"
   provides:
-    - "PluginDescriptor.routes? augmentation visibile dopo import '@sembridge/routing' (D-94, ROUTE-01)"
+    - "PluginDescriptor.routes? augmentation visibile dopo import '@gluezero/routing' (D-94, ROUTE-01)"
     - "BrokerConfig.routes? + BrokerConfig.routing? augmentation visibile (D-93)"
     - "CanonicalSchema.requiresRoute? augmentation visibile (D-95, ROUTE-16, chiusura PRD §39 #5)"
     - "F3PipelineStep literal union additivo (3 step: route.resolved/executed/outcome.collected, D-85)"
@@ -27,14 +27,14 @@ dependency-graph:
     - "03-04 (augment gateway): pattern simmetrico per BrokerConfig.gateway? (separato per evitare ciclo workspace)"
     - "03-05+ (route-resolver/executor): consuma RouteDefinition tipato da PluginDescriptor.routes"
     - "03-12 (RouterBroker): consuma BrokerConfig.routes/routing al boot + canonical-registry CanonicalSchema.requiresRoute"
-    - "ogni plan downstream F3 che importa @sembridge/routing eredita le declaration merging"
+    - "ogni plan downstream F3 che importa @gluezero/routing eredita le declaration merging"
 tech-stack:
   added: []
   patterns:
     - "TS declaration merging interface (Pattern B — pattern F2 D-49/D-56/D-57 replicato)"
     - "Side-effect import + sideEffects array (Pattern S1 — T-03-03-01 mitigation, replica F2 T-02-09-01)"
     - "F3PipelineStep literal union additivo (D-85 — pattern F2PipelineStep)"
-    - "Cross-package interface augment (declaration merging multiplo: @sembridge/core + @sembridge/mapper)"
+    - "Cross-package interface augment (declaration merging multiplo: @gluezero/core + @gluezero/mapper)"
     - "Multi-entry tsup config (src/index.ts + src/augment.ts → dist/index.js + dist/augment.js)"
 key-files:
   created:
@@ -44,12 +44,12 @@ key-files:
     - "packages/routing/src/index.ts"
     - "packages/routing/tsup.config.ts"
 key-decisions:
-  - "Demanda BrokerConfig.gateway? a packages/gateway/src/augment.ts (plan 03-04) per evitare ciclo workspace @sembridge/routing → @sembridge/gateway (gateway già dipende da routing)"
+  - "Demanda BrokerConfig.gateway? a packages/gateway/src/augment.ts (plan 03-04) per evitare ciclo workspace @gluezero/routing → @gluezero/gateway (gateway già dipende da routing)"
   - "Dichiarazione BrokerConfig.routing (RoutingConfig) invece di mero BrokerConfig.routes — espone multipleRoutesPolicy/emitAmbiguousWarning/requiresRouteTopics (D-66/D-67/D-100) come sezione tipata"
   - "Aggiunti 4 test extra oltre ai 5 base del plan: F3PipelineStep equalTypeOf assertion + backward-compat F1+F2 + coexistenza F2+F3 augmentations su PluginDescriptor + idem BrokerConfig (T-03-03-02 mitigation esplicita)"
   - "Type re-export espliciti in index.ts (4 blocchi) invece di `export type * from './types'` per discoverability migliore — barrel intermedio ./types/index.ts conservato"
 patterns-established:
-  - "Augment cross-package multi-target: declare module pattern replicabile in F4 (gateway/realtime → @sembridge/core BrokerConfig.realtime + augmentazioni cross-domain)"
+  - "Augment cross-package multi-target: declare module pattern replicabile in F4 (gateway/realtime → @gluezero/core BrokerConfig.realtime + augmentazioni cross-domain)"
   - "tsup multi-entry per side-effect file separato: pattern di riferimento per ogni augment file F4/F5/F6"
   - "Test compile-time con expectTypeOf().toHaveProperty + .toEqualTypeOf: pattern per verificare augmentation invariants senza affidarsi solo a runtime check"
 requirements-completed:
@@ -86,8 +86,8 @@ metrics:
 ### Task 1 — augment.ts + augment.test.ts (≥ 60 LOC, 9 test)
 
 - **`augment.ts` (172 LOC)** con 9 JSDoc entries documentati:
-  - `declare module '@sembridge/core'` con `PluginDescriptor.routes?: readonly RouteDefinition[]` (D-94, ROUTE-01) + `BrokerConfig.routes?` + `BrokerConfig.routing?: RoutingConfig` (D-93)
-  - `declare module '@sembridge/mapper'` con `CanonicalSchema.requiresRoute?: boolean` (D-95, ROUTE-16, chiusura PRD §39 #5)
+  - `declare module '@gluezero/core'` con `PluginDescriptor.routes?: readonly RouteDefinition[]` (D-94, ROUTE-01) + `BrokerConfig.routes?` + `BrokerConfig.routing?: RoutingConfig` (D-93)
+  - `declare module '@gluezero/mapper'` con `CanonicalSchema.requiresRoute?: boolean` (D-95, ROUTE-16, chiusura PRD §39 #5)
   - `F3PipelineStep` literal union additivo: `'event.route.resolved' | 'event.route.executed' | 'event.outcome.collected'` (D-85)
   - `__augmentLoaded: true` marker const (Pattern S1 — T-03-03-01 mitigation)
 - **`augment.test.ts` (148 LOC, 9 test)** — replica pattern F2 con 4 test extra rispetto al plan:
@@ -115,16 +115,16 @@ metrics:
 
 | Target | Field | Type | Decisione | Open issue chiusa |
 |--------|-------|------|-----------|-------------------|
-| `@sembridge/core::PluginDescriptor` | `routes?` | `readonly RouteDefinition[]` | D-94 | ROUTE-01 |
-| `@sembridge/core::BrokerConfig` | `routes?` | `readonly RouteDefinition[]` | D-93/D-62 | ROUTE-15 (parte) |
-| `@sembridge/core::BrokerConfig` | `routing?` | `RoutingConfig` | D-66/D-67/D-100 | ROUTE-15 + ROUTE-16 (config) |
-| `@sembridge/mapper::CanonicalSchema` | `requiresRoute?` | `boolean` | D-95 | PRD §39 #5 / ROUTE-16 |
-| `@sembridge/routing` (export) | `F3PipelineStep` | literal union 3 step | D-85 | (no — declaration merging type-alias non supportato) |
+| `@gluezero/core::PluginDescriptor` | `routes?` | `readonly RouteDefinition[]` | D-94 | ROUTE-01 |
+| `@gluezero/core::BrokerConfig` | `routes?` | `readonly RouteDefinition[]` | D-93/D-62 | ROUTE-15 (parte) |
+| `@gluezero/core::BrokerConfig` | `routing?` | `RoutingConfig` | D-66/D-67/D-100 | ROUTE-15 + ROUTE-16 (config) |
+| `@gluezero/mapper::CanonicalSchema` | `requiresRoute?` | `boolean` | D-95 | PRD §39 #5 / ROUTE-16 |
+| `@gluezero/routing` (export) | `F3PipelineStep` | literal union 3 step | D-85 | (no — declaration merging type-alias non supportato) |
 
 ## Build verification
 
 ```bash
-$ pnpm --filter @sembridge/routing build
+$ pnpm --filter @gluezero/routing build
 ESM dist/augment.js     215.00 B
 ESM dist/index.js       211.00 B
 ESM dist/augment.js.map 9.55 KB
@@ -138,7 +138,7 @@ DTS dist/augment-Cv2Ik9Ly.d.ts 19.81 KB
 
 `dist/augment.js` content:
 ```js
-/* @sembridge/routing — MIT — https://github.com/<TBD>/sembridge */
+/* @gluezero/routing — MIT — https://github.com/<TBD>/sembridge */
 // src/augment.ts
 var __augmentLoaded = true;
 export { __augmentLoaded };
@@ -149,13 +149,13 @@ export { __augmentLoaded };
 ## Regression check D-83
 
 ```bash
-$ pnpm --filter @sembridge/core test
+$ pnpm --filter @gluezero/core test
 Test Files 24 passed (24) | Tests 248 passed (248)
 
-$ pnpm --filter @sembridge/mapper test
+$ pnpm --filter @gluezero/mapper test
 Test Files 16 passed (16) | Tests 183 passed (183)
 
-$ pnpm --filter @sembridge/gateway exec tsc --noEmit
+$ pnpm --filter @gluezero/gateway exec tsc --noEmit
 # exit 0 — 0 errori
 ```
 
@@ -182,7 +182,7 @@ Ogni task committed atomicamente:
 
 ## Decisions Made
 
-1. **`BrokerConfig.gateway?: GatewayConfig` demandato a plan 03-04** (Rule 4 architectural avoidance): il plan testuale 03-03 menzionava di augmentare anche `BrokerConfig.gateway` da questo file, ma `@sembridge/gateway` già dipende da `@sembridge/routing` (workspace edge plan 03-02). Aggiungere `import type { GatewayConfig } from '@sembridge/gateway'` qui creerebbe un ciclo workspace. Soluzione: `BrokerConfig.gateway?` viene augmentato nel package gateway stesso (`packages/gateway/src/augment.ts`, plan 03-04 — pattern simmetrico). Note esplicite nel JSDoc di `augment.ts`. Questa è una clarification del plan, non una deviazione strutturale: il summary 03-02 conferma che plan 03-04 ha responsabilità di augmentare gateway.
+1. **`BrokerConfig.gateway?: GatewayConfig` demandato a plan 03-04** (Rule 4 architectural avoidance): il plan testuale 03-03 menzionava di augmentare anche `BrokerConfig.gateway` da questo file, ma `@gluezero/gateway` già dipende da `@gluezero/routing` (workspace edge plan 03-02). Aggiungere `import type { GatewayConfig } from '@gluezero/gateway'` qui creerebbe un ciclo workspace. Soluzione: `BrokerConfig.gateway?` viene augmentato nel package gateway stesso (`packages/gateway/src/augment.ts`, plan 03-04 — pattern simmetrico). Note esplicite nel JSDoc di `augment.ts`. Questa è una clarification del plan, non una deviazione strutturale: il summary 03-02 conferma che plan 03-04 ha responsabilità di augmentare gateway.
 2. **`BrokerConfig.routing?: RoutingConfig` invece di solo `BrokerConfig.routes?`**: il plan testuale 03-03 menzionava solo `routes?: readonly RouteDefinition[]`, ma il `RoutingConfig` di `./types/routing-config.ts` (definito plan 03-02) include `multipleRoutesPolicy`/`emitAmbiguousWarning`/`requiresRouteTopics` (D-66/D-67/D-100). Esposto come sezione separata `routing?` per consentire al `RouterBroker` (plan 03-12) di leggerla strutturatamente. Coerente con i pattern F2 (`canonicalModel`/`aliasRegistry`/`transforms` separati).
 3. **9 test invece dei 5 minimi del plan**: aggiunti backward-compat F1+F2 (test 6+7) e coexistenza F2+F3 augmentations sullo stesso interface (test 8+9 — T-03-03-02 mitigation esplicita). Rule 2 — funzionalità critica per garantire che l'augment F3 NON collida con F2.
 4. **Type re-export espliciti in index.ts (4 blocchi) invece di `export type * from './types'`**: il plan done criteria richiede esplicitamente `grep -c "export type" >= 4`. Mantenuti i 4 blocchi `export type { … } from './types/X'` per soddisfare il criterio + migliorare la discoverability (ogni blocco è documentato con il REQ-ID/decisione di pertinenza). Il barrel intermedio `./types/index.ts` resta come safety-net per consumer interni.
@@ -194,9 +194,9 @@ Ogni task committed atomicamente:
 **1. [Rule 4 - Architectural avoidance] Postponed `BrokerConfig.gateway?` augment a plan 03-04**
 
 - **Found during:** Task 1 lettura `RouteHttpRequestSpec`/`GatewayConfig`
-- **Issue:** Il plan testuale 03-03 chiede di augmentare `BrokerConfig.gateway?: GatewayConfig` da `packages/routing/src/augment.ts`. Ma `@sembridge/gateway` ha già `@sembridge/routing` come dependency workspace (plan 03-02 SUMMARY conferma). Importare `GatewayConfig` da `@sembridge/gateway` qui creerebbe un ciclo `routing → gateway → routing`.
+- **Issue:** Il plan testuale 03-03 chiede di augmentare `BrokerConfig.gateway?: GatewayConfig` da `packages/routing/src/augment.ts`. Ma `@gluezero/gateway` ha già `@gluezero/routing` come dependency workspace (plan 03-02 SUMMARY conferma). Importare `GatewayConfig` da `@gluezero/gateway` qui creerebbe un ciclo `routing → gateway → routing`.
 - **Decision:** L'augment di `BrokerConfig.gateway?` resta in `packages/gateway/src/augment.ts` (plan 03-04). La sezione viene chiusa simmetricamente dal package gateway, mantenendo il dependency boundary chiaro. Il plan 03-04 doveva comunque coprire questa augment (vedi 03-02-SUMMARY note: "Plan 03-04 augmenta gateway parallelamente").
-- **Rationale:** Coerente con il principio di separation-of-concerns dei package + evita anti-pattern dependency cycle workspace. Nessuna funzionalità persa: il consumer che importa `@sembridge/gateway` ottiene comunque `BrokerConfig.gateway?` augmented (coerente con il pattern F2 dove `@sembridge/mapper` augmenta `BrokerConfig.canonicalModel`).
+- **Rationale:** Coerente con il principio di separation-of-concerns dei package + evita anti-pattern dependency cycle workspace. Nessuna funzionalità persa: il consumer che importa `@gluezero/gateway` ottiene comunque `BrokerConfig.gateway?` augmented (coerente con il pattern F2 dove `@gluezero/mapper` augmenta `BrokerConfig.canonicalModel`).
 - **Files affected:** `packages/routing/src/augment.ts` (skip gateway import — JSDoc esplicita la decisione)
 - **No commit deviation:** è una clarification del plan, scope intatto.
 
@@ -216,22 +216,22 @@ Nessuno significativo. La decisione architetturale di non augmentare `BrokerConf
 ## Verification Output
 
 ```bash
-$ pnpm --filter @sembridge/routing test -- --run src/augment.test.ts
+$ pnpm --filter @gluezero/routing test -- --run src/augment.test.ts
 Test Files 1 passed (1) | Tests 9 passed (9) | Duration 363ms
 
-$ pnpm --filter @sembridge/routing build
+$ pnpm --filter @gluezero/routing build
 ESM dist/augment.js 215 B + dist/index.js 211 B + DTS clean
 
-$ pnpm --filter @sembridge/routing exec tsc --noEmit
+$ pnpm --filter @gluezero/routing exec tsc --noEmit
 # exit 0
 
-$ pnpm --filter @sembridge/core test
+$ pnpm --filter @gluezero/core test
 Tests 248 passed (248)
 
-$ pnpm --filter @sembridge/mapper test
+$ pnpm --filter @gluezero/mapper test
 Tests 183 passed (183)
 
-$ pnpm --filter @sembridge/gateway exec tsc --noEmit
+$ pnpm --filter @gluezero/gateway exec tsc --noEmit
 # exit 0
 
 $ grep -c "declare module" packages/routing/src/augment.ts
@@ -255,7 +255,7 @@ Bundle runtime invariato: zero codice runtime aggiuntivo oltre al marker `__augm
 ## Note per i plan downstream
 
 - **Plan 03-04** (augment gateway): replica pattern di questo plan ma augmenta SOLO `BrokerConfig.gateway?: GatewayConfig` (1 declare module). Side-effect import + sideEffects array già configurati da plan 03-01 nel package gateway.
-- **Plan 03-05** (route-resolver): può consumare `PluginDescriptor.routes` tipato dopo l'import di `@sembridge/routing` nei file consumer.
+- **Plan 03-05** (route-resolver): può consumare `PluginDescriptor.routes` tipato dopo l'import di `@gluezero/routing` nei file consumer.
 - **Plan 03-12** (RouterBroker constructor): legge `BrokerConfig.routes` array per pre-registrare le route al boot (D-93/D-62), `BrokerConfig.routing.multipleRoutesPolicy` per configurare resolver (D-66), `BrokerConfig.routing.requiresRouteTopics` per chiusura BLOCKER 4 (D-100). Cascade: legge `descriptor.routes` di plugin per auto-register on `registerPlugin` (D-94).
 - **Plan 03-12** (CanonicalRegistry binding): consuma `CanonicalSchema.requiresRoute` per check ROUTE-16 (D-67/D-95) — topic con schema requiresRoute=true senza route → BrokerError.
 - **Plan downstream** (cross-fase): tap consumer F3 dichiarano `step: PipelineStep | F2PipelineStep | F3PipelineStep` per coprire i 13 step (5 F1 + 5 F2 + 3 F3).

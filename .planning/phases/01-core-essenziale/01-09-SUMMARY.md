@@ -62,7 +62,7 @@ decisions:
   - "PipelineHarness `debug` parameter di default a `false` (non `true`) per riprodurre il behavior di production (snapshot non includono `payloadAfter`). Questa è una scelta deliberata: i test di event-tap.integration verificano esplicitamente sia il path debug:true (payloadAfter presente) sia debug:false (payloadAfter assente — privacy production). Test che richiedono deep-freeze runtime devono passare `debug: true` esplicito."
   - "PipelineHarness tap implementato come `EventTap` semplice (senza wrapper try/catch interno). Il bus.ts già wrappa ogni invocazione del tap in `safeTapStep` (D-20 — tap throws non rompono pipeline), quindi il tap test-only può essere ingenuo. La verifica D-20 isolation è coperta da event-tap.integration.test.ts test 'a tap that throws does NOT break the pipeline' che istanzia un Broker raw con un tap che throw esplicito (NON via PipelineHarness)."
   - "Pattern `flush()` (await `new Promise(r => queueMicrotask(r))`) ripetuto 2-3 volte nei test handler-isolation per drenare le code microtask multiple: dispatchAsync usa `queueMicrotask`, e handleHandlerError defer la publish di system.error con un secondo `queueMicrotask` (T-07-03 anti-recursion). 3 flush garantiscono drain completo (assumption A8 RESEARCH)."
-  - "I test integration import dalla path relativa `../test-utils/pipeline-harness` invece che da `@sembridge/core` (alias monorepo). Razionale: test internal usano il path relativo per evitare dipendenza dal build dist + per mantenere coerenza con il pattern già usato dai test unit (`./broker-error`, `../core/broker`, ecc.). Il vitest config `include: ['src/**/*.test.ts']` cattura sia `*.test.ts` (unit) sia `*.integration.test.ts` (questo plan) senza modifiche."
+  - "I test integration import dalla path relativa `../test-utils/pipeline-harness` invece che da `@gluezero/core` (alias monorepo). Razionale: test internal usano il path relativo per evitare dipendenza dal build dist + per mantenere coerenza con il pattern già usato dai test unit (`./broker-error`, `../core/broker`, ecc.). Il vitest config `include: ['src/**/*.test.ts']` cattura sia `*.test.ts` (unit) sia `*.integration.test.ts` (questo plan) senza modifiche."
   - "File ownership disgiunta da plan 10 (robustness tests parallelo): plan 09 possiede `*.integration.test.ts` (8 file). Plan 10 possiede `*.test.ts` non-integration (es. `storm.test.ts`, `wildcard-perf.test.ts`). Il vitest pattern `src/**/*.test.ts` cattura entrambi i pattern senza conflitto. Esecuzione parallela plan 09+10 sicura."
 metrics:
   duration: "~20m wall-clock"
@@ -85,10 +85,10 @@ Implementati la fixture condivisa `PipelineHarness` (`packages/core/src/test-uti
 L'obiettivo del plan 01-09 è raggiunto integralmente:
 
 - **9 file creati** (1 fixture in `test-utils/` + 8 integration test in `__integration__/`)
-- **`pnpm --filter @sembridge/core test`** esce 0 e riporta `Test Files 20 passed (20) | Tests 237 passed (237)` in ~1.42s (suite cumulativa post-Wave-6-A = 12 file pre-09 + 8 nuovi integration test = 20)
-- **`pnpm --filter @sembridge/core typecheck`** esce 0 (no TS errors, isolatedDeclarations conforme su tutti i file integration test)
+- **`pnpm --filter @gluezero/core test`** esce 0 e riporta `Test Files 20 passed (20) | Tests 237 passed (237)` in ~1.42s (suite cumulativa post-Wave-6-A = 12 file pre-09 + 8 nuovi integration test = 20)
+- **`pnpm --filter @gluezero/core typecheck`** esce 0 (no TS errors, isolatedDeclarations conforme su tutti i file integration test)
 - **`pnpm biome check packages/core/src/`** esce 0 (44 file checked, 0 errori, 0 warning — scope ora include `__integration__/` e `test-utils/`)
-- **`pnpm --filter @sembridge/core build`** produce `dist/index.js` 23.14 KB + `dist/index.d.ts` 6.44 KB **invariati** (tsup entry `src/index.ts` esclude correttamente `test-utils/` e `__integration__/` dal bundle pubblico — verificato con `grep -c "createPipelineHarness\|brokerEvent\|test-utils\|__integration__" packages/core/dist/*` → 0 hit)
+- **`pnpm --filter @gluezero/core build`** produce `dist/index.js` 23.14 KB + `dist/index.d.ts` 6.44 KB **invariati** (tsup entry `src/index.ts` esclude correttamente `test-utils/` e `__integration__/` dal bundle pubblico — verificato con `grep -c "createPipelineHarness\|brokerEvent\|test-utils\|__integration__" packages/core/dist/*` → 0 hit)
 - **TDD pattern** preservato per Task 1 (RED→GREEN ciclo); atomic chunks tematici per Task 2 come autorizzato dal prompt
 - **Tutti i 5 success criteria di Phase 1** coperti da test deterministici (mapping criterio→file in sezione "Phase 1 Success Criteria Coverage" sotto)
 - **PRD §39 #7 LIFE-02** verificata in pratica via test "deterministic LIFE-02": `getDebugSnapshot()` post-unregister == baseline pre-registrazione, dimostrando cascade D-26 punto 1 esercitato attraverso il scoped broker Proxy
@@ -173,7 +173,7 @@ NOTA Task 2: il PLAN dichiarava Task 2 come singolo `<task>` con 5 file. Ho appl
 - [x] `bus.integration.test.ts` ha test cases per: pub/sub e2e (criterion #1), unsubscribe stop delivery, idempotenza, FIFO async order — 4 test
 - [x] `wildcard.integration.test.ts` copre i 4 pattern wildcard del PRD §12.3 + D-11 multi-position — 5 test
 - [x] `topic-validation.integration.test.ts` rifiuta tutti i 7 topic invalidi e accetta i 4 topic validi — 11 it.each
-- [x] `pnpm --filter @sembridge/core test bus.integration wildcard.integration topic-validation` esce 0 → 3 file, 20 test passing
+- [x] `pnpm --filter @gluezero/core test bus.integration wildcard.integration topic-validation` esce 0 → 3 file, 20 test passing
 
 ### Acceptance criteria Task 2 (event-tap + plugin-lifecycle + plugin-cleanup + handler-isolation + deep-freeze)
 
@@ -183,15 +183,15 @@ NOTA Task 2: il PLAN dichiarava Task 2 come singolo `<task>` con 5 file. Ho appl
 - [x] Test cascade verifica: signal.aborted=true post-unregister, subscriptions removed, multiple plugin isolation — 3 test
 - [x] `handler-isolation.integration.test.ts` verifica: sync throw, async reject, system.error pubblicato con BrokerError category='plugin', broker continua dopo error — 4 test
 - [x] `deep-freeze.integration.test.ts` verifica: dev mode TypeError on mutation, production no error, nested mutation throws, enableDebug toggle works — 4 test
-- [x] `pnpm --filter @sembridge/core test integration` esce 0 con tutti i test passing — 8 file, 46 test
+- [x] `pnpm --filter @gluezero/core test integration` esce 0 con tutti i test passing — 8 file, 46 test
 - [x] Suite completa post-Wave-6-A: `Test Files 20 passed (20) | Tests 237 passed (237)`
 
 ### Plan-wide verification
 
 - [x] 9 file creati (1 fixture + 8 integration test)
-- [x] `pnpm --filter @sembridge/core test` esce 0 con `Test Files 20 passed | Tests 237 passed`
-- [x] `pnpm --filter @sembridge/core build` esce 0; produce `dist/index.js` 23.14 KB + `dist/index.d.ts` 6.44 KB **invariati** rispetto a Wave 5
-- [x] `pnpm --filter @sembridge/core typecheck` esce 0
+- [x] `pnpm --filter @gluezero/core test` esce 0 con `Test Files 20 passed | Tests 237 passed`
+- [x] `pnpm --filter @gluezero/core build` esce 0; produce `dist/index.js` 23.14 KB + `dist/index.d.ts` 6.44 KB **invariati** rispetto a Wave 5
+- [x] `pnpm --filter @gluezero/core typecheck` esce 0
 - [x] `pnpm biome check packages/core/src/` esce 0 (44 file checked, +9 vs 35 di Wave 5)
 - [x] `dist/` non contiene simboli `createPipelineHarness`, `brokerEvent`, `test-utils`, `__integration__` (verificato grep -c → 0/0)
 - [x] Tutti i 5 success criteria di Phase 1 (ROADMAP.md) coperti da test deterministici — vedi sezione "Phase 1 Success Criteria Coverage"
@@ -214,7 +214,7 @@ Tutti i 5 success criteria sono ora coperti da test deterministici end-to-end at
 ## Final test output
 
 ```
-> @sembridge/core@0.0.0 test
+> @gluezero/core@0.0.0 test
 > vitest run --passWithNoTests --run
 
  RUN  v4.1.5 packages/core

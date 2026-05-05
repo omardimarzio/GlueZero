@@ -24,7 +24,7 @@ dependency-graph:
     - pipeline-step-discriminated-union
   affects:
     - all-future-f1-plans
-    - "@sembridge/core-public-api"
+    - "@gluezero/core-public-api"
     - phase-2-canonical-model
     - phase-3-routing
     - phase-6-tooling
@@ -52,7 +52,7 @@ key-files:
 decisions:
   - "Inclusione di SubscribeOptions.once?: boolean — RESEARCH Open Question 1 risolta in favore: cost ~15 LOC in bus.ts (plan 07), valore DX significativo, nessun REQ-ID lo vieta."
   - "PluginContext.broker tipato unknown provvisoriamente in F1 plan 03 — RESEARCH usava import('../core/broker').Broker ma core/broker.ts NON esiste in plan 03 (creato in plan 08). Plan 08 risolverà via TypeScript declaration merging o re-typing per esporre la firma reale di Broker."
-  - "Aggiunto export type * from './types' a packages/core/src/index.ts — Rule 2 (auto-add missing critical functionality). Senza questo re-export i plan paralleli 04/05/06 non potrebbero importare i tipi via 'from @sembridge/core' e il dist/index.d.ts resterebbe vuoto (success criterion utente fallirebbe). Plan 08 aggiungerà i runtime export (createBroker, Broker, ConsoleLogger, ecc.) accanto a questo barrel di tipi."
+  - "Aggiunto export type * from './types' a packages/core/src/index.ts — Rule 2 (auto-add missing critical functionality). Senza questo re-export i plan paralleli 04/05/06 non potrebbero importare i tipi via 'from @gluezero/core' e il dist/index.d.ts resterebbe vuoto (success criterion utente fallirebbe). Plan 08 aggiungerà i runtime export (createBroker, Broker, ConsoleLogger, ecc.) accanto a questo barrel di tipi."
   - "PipelineStep — riformattato il blocco future-step da union-trailing-comments (rifiutato da Biome formatter) a comment-block pre-type. Stessa informazione, formato Biome-compliant. Sostanza F2/F3/F6 invariata: declaration merging ad-hoc per aggiungere 'event.source.resolved', 'event.mapped.canonical', 'event.canonical.validated', 'event.route.resolved', 'event.route.executed', 'event.outcome.collected', 'event.mapped.consumer', 'event.final.validated' (F2/F3) e 'event.observed' (F6)."
   - "DeepReadonly<T>: rama Array<T> usa shorthand `readonly DeepReadonly<U>[]` invece di `ReadonlyArray<DeepReadonly<U>>` per soddisfare Biome useConsistentArrayType (errore lint). Semantica identica."
 metrics:
@@ -66,16 +66,16 @@ metrics:
 
 # Phase 1 Plan 03: Public Types Summary
 
-Definiti tutti i tipi pubblici di `@sembridge/core` come interfacce TypeScript strict in `packages/core/src/types/` (9 file: broker-event, deep-readonly, subscription, plugin, error, logger, tap, config, index barrel). Il plan è **interface-first**: stabilisce i contratti che i moduli runtime dei plan 04-08 implementano. Nessun codice runtime — solo type definitions. Coverage REQ-IDs: CORE-06 ✓, CORE-07 (type-level) ✓, CORE-13 ✓, CORE-14 ✓, ERR-01 ✓, VAL-06 ✓.
+Definiti tutti i tipi pubblici di `@gluezero/core` come interfacce TypeScript strict in `packages/core/src/types/` (9 file: broker-event, deep-readonly, subscription, plugin, error, logger, tap, config, index barrel). Il plan è **interface-first**: stabilisce i contratti che i moduli runtime dei plan 04-08 implementano. Nessun codice runtime — solo type definitions. Coverage REQ-IDs: CORE-06 ✓, CORE-07 (type-level) ✓, CORE-13 ✓, CORE-14 ✓, ERR-01 ✓, VAL-06 ✓.
 
 ## Objective Achieved
 
 L'obiettivo del plan 01-03 è raggiunto integralmente:
 
 - **9 file types/** creati in `packages/core/src/types/` con tutti i 20 tipi pubblici (`BrokerEvent`, `EventSource`, `DeliveryMode`, `Priority`, `EventId`, `DeepReadonly`, `Subscription`, `SubscribeOptions`, `PluginDescriptor`, `PluginContext`, `PluginState`, `BrokerError`, `ErrorCategory`, `CreateBrokerErrorParams`, `BrokerLogger`, `LogLevel`, `EventTap`, `PipelineStep`, `PipelineSnapshot`, `BrokerConfig`) + 1 tipo interno non re-esportato (registration record del plugin registry).
-- **`pnpm --filter @sembridge/core typecheck`** esce 0 (no TS errors).
+- **`pnpm --filter @gluezero/core typecheck`** esce 0 (no TS errors).
 - **`pnpm biome check packages/core/src/types/`** esce 0 (no lint/format warnings).
-- **`pnpm --filter @sembridge/core build`** produce `dist/index.d.ts` (4.53 KB) con i 20 tipi pubblici esposti via `export type` consolidato; il tipo interno NON è leakato a `dist`.
+- **`pnpm --filter @gluezero/core build`** produce `dist/index.d.ts` (4.53 KB) con i 20 tipi pubblici esposti via `export type` consolidato; il tipo interno NON è leakato a `dist`.
 - **Tutti i campi readonly** dove richiesto dalla decisione D-04/D-07 (CORE-07 enforcement type-level).
 - **`DeepReadonly<T>`** è ricorsiva su Date/RegExp/Error (passthrough), Map/Set (Readonly varianti), Array (`readonly T[]`), object (mapped readonly).
 - **`PipelineStep`** enumera esattamente i 5 step F1 (`event.received`, `event.metadata.enriched`, `event.validated`, `event.dedupe.checked`, `event.delivered`) — D-20.
@@ -105,7 +105,7 @@ L'obiettivo del plan 01-03 è raggiunto integralmente:
 
 ## Files Modified
 
-- `packages/core/src/index.ts` — sostituito `export {}` placeholder con `export type * from './types'`. Decisione Rule 2: senza questa modifica i plan paralleli 04/05/06 non possono importare via `from '@sembridge/core'` e il `dist/index.d.ts` resta a 13B (placeholder). Plan 08 aggiungerà i runtime export (`createBroker`, `Broker`, ecc.) accanto a questo barrel di tipi.
+- `packages/core/src/index.ts` — sostituito `export {}` placeholder con `export type * from './types'`. Decisione Rule 2: senza questa modifica i plan paralleli 04/05/06 non possono importare via `from '@gluezero/core'` e il `dist/index.d.ts` resta a 13B (placeholder). Plan 08 aggiungerà i runtime export (`createBroker`, `Broker`, ecc.) accanto a questo barrel di tipi.
 
 ## Verification Results
 
@@ -121,7 +121,7 @@ L'obiettivo del plan 01-03 è raggiunto integralmente:
 - [x] `EventId` branded type (`string & { readonly [unique symbol]: true }`)
 - [x] `Subscription` con `unsubscribe(): void`, `readonly id`, `readonly topic`, `readonly active`
 - [x] `SubscribeOptions` include `signal?: AbortSignal`, `priority?: 'low' | 'normal' | 'high'`, `deliveryMode?: 'sync' | 'async'`, `once?: boolean`
-- [x] `pnpm --filter @sembridge/core typecheck` esce 0
+- [x] `pnpm --filter @gluezero/core typecheck` esce 0
 
 ### Acceptance criteria Task 2
 - [x] `BrokerError extends Error` con 8 campi readonly (`code`, `category`, `details?`, `originalError?`, `routeId?`, `topic?`, `eventId?` + `message` ereditato)
@@ -133,7 +133,7 @@ L'obiettivo del plan 01-03 è raggiunto integralmente:
 - [x] `PluginDescriptor` con `id: string` readonly + 4 hook opzionali (CORE-05)
 - [x] `PluginContext` con `id`, `logger: BrokerLogger`, `broker: unknown` (placeholder), `signal: AbortSignal`
 - [x] Registration record exported da `plugin.ts` MA NON re-exported da `types/index.ts`
-- [x] `pnpm --filter @sembridge/core typecheck` esce 0
+- [x] `pnpm --filter @gluezero/core typecheck` esce 0
 
 ### Acceptance criteria Task 3
 - [x] `PipelineStep` esattamente 5 valori F1 (`event.received | event.metadata.enriched | event.validated | event.dedupe.checked | event.delivered`)
@@ -144,16 +144,16 @@ L'obiettivo del plan 01-03 è raggiunto integralmente:
 - [x] `types/index.ts` re-esporta TUTTI i 20 tipi pubblici via `export type`
 - [x] `types/index.ts` NON re-esporta il registration record interno
 - [x] Tutti gli export usano `export type` (compatibile con `verbatimModuleSyntax: true`)
-- [x] `pnpm --filter @sembridge/core typecheck` esce 0
+- [x] `pnpm --filter @gluezero/core typecheck` esce 0
 - [x] `pnpm biome check packages/core/src/types/` esce 0
 
 ### Build verification (success criterion utente)
-- [x] `pnpm --filter @sembridge/core build` esce 0
+- [x] `pnpm --filter @gluezero/core build` esce 0
 - [x] `dist/index.d.ts` 4.53 KB (cresciuto da 13 B placeholder)
 - [x] `dist/index.d.ts` esporta i 20 tipi pubblici via `export type {...}` consolidato
 - [x] `dist/index.d.ts` NON contiene il registration record interno (verificato via `grep -L`)
 
-## Output finale `pnpm --filter @sembridge/core build`
+## Output finale `pnpm --filter @gluezero/core build`
 
 ```
 CLI Building entry: src/index.ts
@@ -203,7 +203,7 @@ export type { BrokerConfig, BrokerError, BrokerEvent, BrokerLogger, CreateBroker
 **3. [Rule 2 - Missing critical] Aggiunto `export type * from './types'` a `packages/core/src/index.ts`**
 
 - **Found during:** Task 3 — verifica build artifacts
-- **Issue:** Il plan 03 dichiarava `files_modified` solo i 9 file `types/*.ts`. Senza modificare `src/index.ts`, il `dist/index.d.ts` restava a 13 B placeholder (`export {}`) e i 20 tipi pubblici NON erano accessibili tramite `from '@sembridge/core'`. I plan paralleli 04/05/06 (Wave 3) NON potrebbero importare i tipi via package name come previsto da PROJECT.md / RESEARCH. Inoltre il success criterion utente "build produce dist/index.d.ts con i nuovi types esportati" non sarebbe stato soddisfatto.
+- **Issue:** Il plan 03 dichiarava `files_modified` solo i 9 file `types/*.ts`. Senza modificare `src/index.ts`, il `dist/index.d.ts` restava a 13 B placeholder (`export {}`) e i 20 tipi pubblici NON erano accessibili tramite `from '@gluezero/core'`. I plan paralleli 04/05/06 (Wave 3) NON potrebbero importare i tipi via package name come previsto da PROJECT.md / RESEARCH. Inoltre il success criterion utente "build produce dist/index.d.ts con i nuovi types esportati" non sarebbe stato soddisfatto.
 - **Fix:** Sostituito `export {}` con `export type * from './types'` in `packages/core/src/index.ts`. Re-export type-only del barrel. Plan 08 aggiungerà i runtime export (`createBroker`, `Broker`, `createBrokerError`, `ConsoleLogger`, ecc.) accanto a questo barrel di tipi senza breaking change.
 - **Rationale:** correctness requirement — il package non sarebbe utilizzabile dai plan paralleli senza questo re-export. Il plan 08 (Wave 4) era previsto per "espone l'API pubblica completa" — questa modifica espone solo i tipi (con un commento esplicito `Plan 08 aggiungerà i runtime export`), non tocca runtime.
 - **Files modified:** `packages/core/src/index.ts`
@@ -239,7 +239,7 @@ Nessuna nuova trust boundary o surface security-relevant introdotta oltre a quel
 - **Plan 05** (Utility batch B): `topic-matcher.ts` (Trie segmentato D-08/09/10/11), `event-factory.ts`, `event-validator.ts`
 - **Plan 06** (Utility batch C): `topic-registry.ts`, `subscriber-registry.ts`, `lifecycle.ts` (state machine D-25/26)
 
-Tutti i plan paralleli importeranno i tipi da `@sembridge/core/types` (via path interno) o `from '@sembridge/core'` (via barrel — funzionante post-plan-03 grazie a Rule 2 deviation).
+Tutti i plan paralleli importeranno i tipi da `@gluezero/core/types` (via path interno) o `from '@gluezero/core'` (via barrel — funzionante post-plan-03 grazie a Rule 2 deviation).
 
 ## Self-Check: PASSED
 

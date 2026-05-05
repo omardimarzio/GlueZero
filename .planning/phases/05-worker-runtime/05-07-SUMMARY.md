@@ -34,7 +34,7 @@ key_files_modified:
   - packages/worker/src/task-tracker.ts (JSDoc + 2 @example + @throws)
   - packages/worker/src/worker-pool.ts (JSDoc + 2 @example + 2 @throws)
   - packages/worker/src/worker-registry.ts (JSDoc + 2 @example + 3 @throws)
-  - package.json (+ size-limit entry @sembridge/worker 32 KB gz)
+  - package.json (+ size-limit entry @gluezero/worker 32 KB gz)
   - .planning/REQUIREMENTS.md (REQ matrix flip atomic)
   - .planning/ROADMAP.md (Phase 5 → ✅ COMPLETE 7/7)
   - .planning/STATE.md (current_phase status → phase_5_complete_ready_for_verifier)
@@ -70,7 +70,7 @@ d_83_strict_verified: true
 | Coverage v8           | `packages/worker/src/` 91.96% statements / 83.73% branches / 90.58% functions / 94.17% lines | ✅ above floor + target |
 | publint               | All good (0 errors, 0 warnings)                                                                | ✅                    |
 | attw                  | ESM-only (node16 🟢, bundler 🟢)                                                                | ✅                    |
-| size-limit            | `@sembridge/worker` 26.45 / 32 KB gz (include all deps cross-package)                          | ✅                    |
+| size-limit            | `@gluezero/worker` 26.45 / 32 KB gz (include all deps cross-package)                          | ✅                    |
 | DOC-05                | `packages/worker/README.md` italiano 11 sezioni 429 LOC                                       | ✅                    |
 | JSDoc                 | 7 file public + 23 @example / 30 @see / 21 @throws preservati in dist/index.d.ts             | ✅                    |
 | REQ matrix            | WK-01..WK-07 + ERR-02 ext + LIFE-02 ext + TEST-01/02/03 ext F5 → Complete                    | ✅                    |
@@ -116,13 +116,13 @@ Thresholds calibrate post-implementation in `packages/worker/vitest.config.ts`: 
 
 | Package                    | Size gz   | Budget | Status |
 | -------------------------- | --------- | ------ | ------ |
-| `@sembridge/core`          | 6.17 KB   | 8 KB   | ✅      |
-| `@sembridge/mapper`        | 11.66 KB  | 12 KB  | ✅      |
-| `@sembridge/routing`       | 19.57 KB  | 24 KB  | ✅      |
-| `@sembridge/gateway/http`  | 6.83 KB   | 8 KB   | ✅      |
-| `@sembridge/worker`        | 26.45 KB  | 32 KB  | ✅      |
+| `@gluezero/core`          | 6.17 KB   | 8 KB   | ✅      |
+| `@gluezero/mapper`        | 11.66 KB  | 12 KB  | ✅      |
+| `@gluezero/routing`       | 19.57 KB  | 24 KB  | ✅      |
+| `@gluezero/gateway/http`  | 6.83 KB   | 8 KB   | ✅      |
+| `@gluezero/worker`        | 26.45 KB  | 32 KB  | ✅      |
 
-Note: `@sembridge/worker` bundle gz include all deps cross-package (Comlink + valibot + nanoid + @sembridge/{core,routing,gateway/http}). Bundle effettivo `dist/index.js` senza deps esterni: ~14 KB gz. Pattern lesson learned analog F3 routing 19.57/24 KB raised: STACK.md preventivi pre-implementation sotto-stimano sistematicamente per pacchetti compositi.
+Note: `@gluezero/worker` bundle gz include all deps cross-package (Comlink + valibot + nanoid + @gluezero/{core,routing,gateway/http}). Bundle effettivo `dist/index.js` senza deps esterni: ~14 KB gz. Pattern lesson learned analog F3 routing 19.57/24 KB raised: STACK.md preventivi pre-implementation sotto-stimano sistematicamente per pacchetti compositi.
 
 ## REQ matrix flip detail
 
@@ -169,7 +169,7 @@ Note: `@sembridge/worker` bundle gz include all deps cross-package (Comlink + va
 
 1. **Composition wrapper Opzione B (RESEARCH §7.2) preserva D-83 strict** senza modificare `packages/routing/`. Pattern simmetrico a `RealtimeBroker` di F4 (plan 04-08). Verifica `git diff main...HEAD packages/{core,mapper,routing}/src/ + packages/gateway/src/{http,sse-ws}/` → 0 lines per tutta F5.
 
-2. **F3 BackpressureStrategy riusato 1:1** via `import { createBackpressureStrategy } from '@sembridge/gateway/http'` workspace dep — zero ridichiarazione, zero copia, zero modifiche F3 source. Pattern di estensione cross-fase robusto.
+2. **F3 BackpressureStrategy riusato 1:1** via `import { createBackpressureStrategy } from '@gluezero/gateway/http'` workspace dep — zero ridichiarazione, zero copia, zero modifiche F3 source. Pattern di estensione cross-fase robusto.
 
 3. **State machine atomico Pitfall 2C closure verificato deterministically** con fake timer in `__integration__/timeout-strict.test.ts`: NESSUN `.completed` dopo timeout fired + `tracker.tasksCompleted === 1`. Il counter `lateResponses` permette audit retroattivo.
 
@@ -177,7 +177,7 @@ Note: `@sembridge/worker` bundle gz include all deps cross-package (Comlink + va
 
 5. **MockWorker test util pattern carryover da F4** MockEventSource/MockWebSocket — `static byChannelName: Map<string, MockWorker>` indicizzata via query string `?_worker=<id>` permette deterministic test isolation. Pattern unificato cross-fase.
 
-6. **size-limit budget include all deps cross-package** — `@sembridge/worker` misurato 26.45 KB gz vs bundle effettivo `dist/index.js` ~14 KB gz: la differenza è Comlink + @sembridge/{core,routing,gateway/http}. Lesson learned: STACK.md preventivi pre-implementation sotto-stimano sistematicamente per pacchetti compositi (analog F3 routing 19.57/24 KB raised). Documentato in DOC-05.
+6. **size-limit budget include all deps cross-package** — `@gluezero/worker` misurato 26.45 KB gz vs bundle effettivo `dist/index.js` ~14 KB gz: la differenza è Comlink + @gluezero/{core,routing,gateway/http}. Lesson learned: STACK.md preventivi pre-implementation sotto-stimano sistematicamente per pacchetti compositi (analog F3 routing 19.57/24 KB raised). Documentato in DOC-05.
 
 7. **Coverage v8 calibrate al floor measurato arrotondato per difetto 0.5%** (analog F4 04-09 commit `761e4ad` pattern): 91.5/83/90/93.5 — preserva determinismo CI mentre lascia margine per future iterazioni V1.x. Hard floor inderogabile statements ≥ 85, branches ≥ 75, functions ≥ 88, lines ≥ 87.
 
@@ -187,7 +187,7 @@ Note: `@sembridge/worker` bundle gz include all deps cross-package (Comlink + va
 
 ### Task 1 (CI gates verification + coverage thresholds calibration)
 
-- `package.json` (+ size-limit entry `@sembridge/worker` 32 KB gz)
+- `package.json` (+ size-limit entry `@gluezero/worker` 32 KB gz)
 - `packages/worker/vitest.config.ts` (thresholds 91.5/83/90/93.5 calibrate post-impl)
 - `packages/worker/tsup.config.ts` (biome auto-format)
 - 25 file `packages/worker/src/**/*.ts` (biome auto-format — organize imports + format whitespace, zero behavior change)
@@ -217,8 +217,8 @@ Note: `@sembridge/worker` bundle gz include all deps cross-package (Comlink + va
 
 ## Commits prodotti (5 atomic)
 
-1. `1347d0b` test(05-07): coverage thresholds calibration post-implementation + size-limit budget @sembridge/worker
-2. `33d20a7` docs(05-07): DOC-05 README italiano @sembridge/worker — 11 sezioni + WK-07 closure (PRD §39 #11)
+1. `1347d0b` test(05-07): coverage thresholds calibration post-implementation + size-limit budget @gluezero/worker
+2. `33d20a7` docs(05-07): DOC-05 README italiano @gluezero/worker — 11 sezioni + WK-07 closure (PRD §39 #11)
 3. `e3b8770` docs(05-07): JSDoc API pubblica TypeDoc-ready su file F5 (@example/@see/@throws preservati in dts)
 4. `3f07f7a` docs(05-07): REQ matrix flip — WK-01..WK-07 + ERR-02/LIFE-02/TEST-01-02-03 ext F5 → Complete + PRD §39 #11 CLOSED
 5. (final closure commit) docs(05): close Phase 5 — WK-01..WK-07 complete + PRD §39 #11 closed + SUMMARY
@@ -227,7 +227,7 @@ Note: `@sembridge/worker` bundle gz include all deps cross-package (Comlink + va
 
 **Auto-fix Rule 3 (blocking issue) — size-limit budget calibration:**
 
-Il PLAN raccomandava budget preventivo 6-10 KB gz per `@sembridge/worker`. Misurato post-build: bundle effettivo `dist/index.js` ~14 KB gz, ma size-limit (default behavior bundling all deps cross-package) misura 26.45 KB gz. Auto-fix Rule 3: budget raised a 32 KB gz analog F3 routing 19.57/24 KB raised lesson learned (documented in DOC-05 + SUMMARY). Pattern coerente con `STACK.md V1 budget pre-implementation sottostimato sistematicamente per pacchetti compositi`.
+Il PLAN raccomandava budget preventivo 6-10 KB gz per `@gluezero/worker`. Misurato post-build: bundle effettivo `dist/index.js` ~14 KB gz, ma size-limit (default behavior bundling all deps cross-package) misura 26.45 KB gz. Auto-fix Rule 3: budget raised a 32 KB gz analog F3 routing 19.57/24 KB raised lesson learned (documented in DOC-05 + SUMMARY). Pattern coerente con `STACK.md V1 budget pre-implementation sottostimato sistematicamente per pacchetti compositi`.
 
 **Auto-fix Rule 1 (style fix) — biome auto-format su 25 file packages/worker/src:**
 

@@ -52,7 +52,7 @@ must_haves:
       provides: "Tier-1 integration test tap lifecycle events cache.hit/miss/evicted (D-161 step 14 readiness)"
   key_links:
     - from: "packages/cache/src/cache-broker.ts"
-      to: "@sembridge/routing RouterBroker"
+      to: "@gluezero/routing RouterBroker"
       via: "composition wrapper inner.RouterBroker (D-83 strict carryover)"
       pattern: "RouterBroker"
     - from: "packages/cache/src/cache-broker.ts"
@@ -84,7 +84,7 @@ Wave 4a sequential gate (post W2-bis 06-03): consumer dei moduli cache W2/W2-bis
 
 **Vincolo D-83 strict (CRITICO):** `git diff main...HEAD packages/{core,mapper,routing,gateway,worker}/src/` exit 0 — tutta F6 Wave 4a vive in `packages/cache/src/`.
 
-**File ownership Wave 4 disgiunta da 06-08b**: 06-08a tocca SOLO `packages/cache/`. 06-08b tocca SOLO `packages/devtools/` + `packages/sembridge/`. Sequential dependency 06-08b depends_on [06-08a] per ordering chain composition.
+**File ownership Wave 4 disgiunta da 06-08b**: 06-08a tocca SOLO `packages/cache/`. 06-08b tocca SOLO `packages/devtools/` + `packages/gluezero/`. Sequential dependency 06-08b depends_on [06-08a] per ordering chain composition.
 
 Output: 2 file source production-ready (~230 LOC totali) + 2 file test factory (~18 test) + harness ~50 LOC + 4 integration test (~13+ scenari Tier-1 jsdom) + barrel FINAL append.
 </objective>
@@ -116,7 +116,7 @@ Output: 2 file source production-ready (~230 LOC totali) + 2 file test factory (
 From packages/worker/src/worker-broker.ts (analog target VERBATIM):
 
 ```typescript
-import { RouterBroker, type RouterBrokerConfig } from '@sembridge/routing'
+import { RouterBroker, type RouterBrokerConfig } from '@gluezero/routing'
 
 export interface WorkerBrokerConfig extends RouterBrokerConfig {
   readonly workers?: WorkerConfig
@@ -184,8 +184,8 @@ GREEN cache-broker.ts (~150 LOC) — replica `packages/worker/src/worker-broker.
 Skeleton TS:
 
 ```typescript
-import type { EventTap } from '@sembridge/core'
-import { RouterBroker, type RouterBrokerConfig } from '@sembridge/routing'
+import type { EventTap } from '@gluezero/core'
+import { RouterBroker, type RouterBrokerConfig } from '@gluezero/routing'
 import { type CacheAdapter, createMemoryCacheAdapter } from './memory-cache-adapter'
 import { createCacheHandlerF6, type CacheHandlerF6 } from './cache-handler'
 import type { CacheConfig } from './types/cache-config'
@@ -303,7 +303,7 @@ Co-Authored-By: Claude Opus 4.7 <noreply@anthropic.com>"
 ```
   </action>
   <verify>
-    <automated>cd "/Users/omarmarzio/programming/prova AI/SemBridge" && pnpm -F @sembridge/cache test 2>&1 | tail -15 && pnpm -F @sembridge/cache build 2>&1 | tail -5</automated>
+    <automated>cd "/Users/omarmarzio/programming/prova AI/GlueZero" && pnpm -F @gluezero/cache test 2>&1 | tail -15 && pnpm -F @gluezero/cache build 2>&1 | tail -5</automated>
   </verify>
   <done>
     - cache-broker.ts ~150 LOC + .test.ts 12+ test
@@ -402,7 +402,7 @@ Co-Authored-By: Claude Opus 4.7 <noreply@anthropic.com>"
 ```
   </action>
   <verify>
-    <automated>cd "/Users/omarmarzio/programming/prova AI/SemBridge" && pnpm -F @sembridge/cache test 2>&1 | tail -20 && pnpm -F @sembridge/cache build 2>&1 | tail -5 && DIFF=$(git diff main...HEAD -- packages/core/src/ packages/mapper/src/ packages/routing/src/ packages/gateway/src/ packages/worker/src/ | wc -l); echo "D-83 strict diff lines $DIFF (atteso 0)"</automated>
+    <automated>cd "/Users/omarmarzio/programming/prova AI/GlueZero" && pnpm -F @gluezero/cache test 2>&1 | tail -20 && pnpm -F @gluezero/cache build 2>&1 | tail -5 && DIFF=$(git diff main...HEAD -- packages/core/src/ packages/mapper/src/ packages/routing/src/ packages/gateway/src/ packages/worker/src/ | wc -l); echo "D-83 strict diff lines $DIFF (atteso 0)"</automated>
   </verify>
   <done>
     - cache-harness.ts ~50 LOC fixture
@@ -446,5 +446,5 @@ Crea `.planning/phases/06-cache-tooling-avanzato/06-08a-SUMMARY.md` con:
 - Pattern carryover documentation (F5 worker-broker)
 - D-83 strict acceptance verified
 - Threat coverage T-06-08a-01..04
-- Building blocks pronti per 06-08b (DevtoolsBroker composition wrapper + createSemBridge chain completa)
+- Building blocks pronti per 06-08b (DevtoolsBroker composition wrapper + createGlueZero chain completa)
 </output>

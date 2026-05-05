@@ -95,15 +95,15 @@ Plan 03-12 (createRouterBroker) inietterà queste strategy nelle `HttpGatewayStr
 ## Test Results
 
 ```
-Test Files  12 passed (12) — @sembridge/gateway
+Test Files  12 passed (12) — @gluezero/gateway
      Tests  78 passed (78)
 ```
 
 **Suite delta vs baseline 03-09:**
-- @sembridge/gateway: 78/78 (60 baseline + 18 nuovi: 8 dedupe + 10 backpressure)
-- @sembridge/core: 248/248 (D-83 invariant — zero modifiche runtime)
-- @sembridge/mapper: 183/183 (D-83 invariant — zero modifiche runtime)
-- @sembridge/routing: 58/58 (D-83 invariant — zero modifiche runtime)
+- @gluezero/gateway: 78/78 (60 baseline + 18 nuovi: 8 dedupe + 10 backpressure)
+- @gluezero/core: 248/248 (D-83 invariant — zero modifiche runtime)
+- @gluezero/mapper: 183/183 (D-83 invariant — zero modifiche runtime)
+- @gluezero/routing: 58/58 (D-83 invariant — zero modifiche runtime)
 
 **Behavior coverage per task:**
 
@@ -184,7 +184,7 @@ Test Files  12 passed (12) — @sembridge/gateway
 - Core 248/248 test passing (invariant)
 - Mapper 183/183 test passing (invariant)
 - Routing 58/58 test passing (invariant)
-- Pattern composition wrapper rispettato: nuove strategy in @sembridge/gateway/http/strategies — extension package isolato
+- Pattern composition wrapper rispettato: nuove strategy in @gluezero/gateway/http/strategies — extension package isolato
 
 ## Verification
 

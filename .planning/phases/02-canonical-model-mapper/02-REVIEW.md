@@ -330,9 +330,9 @@ Iter 1 + iter 2 hanno chiuso 22 finding totali. Le seguenti restano fuori scope 
 | Tier | Check | Result |
 |------|-------|--------|
 | 1 | Re-read di ogni file iter2-modificato | PASS |
-| 2 | `pnpm -F @sembridge/mapper test` | PASS — 172/172 |
-| 2 | `pnpm -F @sembridge/core test` | PASS — 248/248 (no D-49 regression) |
-| 2 | `pnpm -F @sembridge/mapper exec tsc --noEmit` | PASS — clean |
+| 2 | `pnpm -F @gluezero/mapper test` | PASS — 172/172 |
+| 2 | `pnpm -F @gluezero/core test` | PASS — 248/248 (no D-49 regression) |
+| 2 | `pnpm -F @gluezero/mapper exec tsc --noEmit` | PASS — clean |
 | 3 | Trace `event.source.resolved` publisher path (broker-mapper-wrapper.ts:341-356) | PASS — emesso PRIMA di applyOutputMap |
 | 3 | Trace `event.source.resolved` subscriber path (broker-mapper-wrapper.ts:901-911) | PASS — emesso con `event.id` reale, prima di applyInputMap |
 | 3 | Trace alias-only path runtime (registerPlugin → compileMappings → applyOutputMap → applyAliasResolution) | PASS per scoped/global · **EDGE CASE rilevato** per "no maps, no aliases" → BL-01 |

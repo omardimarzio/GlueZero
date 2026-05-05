@@ -8,7 +8,7 @@ tags: [websocket, frame-parser, envelope, internal-topics, tdd, anti-AP-6, gatew
 requires:
   - phase: 04-realtime-inbound-sse-prioritario-ws-opzionale
     plan: 01
-    provides: "Subpath @sembridge/gateway/sse-ws risolvibile + types directory esistente per co-location di frame-envelope.ts"
+    provides: "Subpath @gluezero/gateway/sse-ws risolvibile + types directory esistente per co-location di frame-envelope.ts"
 provides:
   - "parseFrame(raw: unknown): FrameParseResult — pure function, NO throw, NO state, NO side-effect"
   - "FrameEnvelope interface (D-106 envelope JSON: { topic, data, id? })"
@@ -158,29 +158,29 @@ Entrambi i fix sono Rule 3 (blocking issue per il typecheck) e sono coerenti con
 - **TS strict `noPropertyAccessFromIndexSignature`**: tsconfig F4 wide (esteso da F3) include `noPropertyAccessFromIndexSignature: true` (best practice TypeScript). Il pattern `obj.topic` su `Record<string, unknown>` è rifiutato. Fix: bracket access `obj['topic']`. Risolto in <1min.
 - **TS strict `--isolatedDeclarations`**: tsconfig F4 wide include `isolatedDeclarations: true` (PATTERNS.md F1 D-15). `Object.freeze({...} as const)` non ha tipo inferibile cross-file → richiede annotation esplicita. Fix: `Readonly<{...}>` annotation. Risolto in <1min.
 
-Entrambi sono pattern noti nei plan F3 (`@sembridge/gateway` ha già queste regole su `http/`). Nessuna issue nuova rispetto al pattern Established.
+Entrambi sono pattern noti nei plan F3 (`@gluezero/gateway` ha già queste regole su `http/`). Nessuna issue nuova rispetto al pattern Established.
 
 ## Verification Output
 
 ```
 # 1. Test plan-specific (post GREEN)
-pnpm --filter @sembridge/gateway test src/sse-ws/frame-parser.test.ts --run
+pnpm --filter @gluezero/gateway test src/sse-ws/frame-parser.test.ts --run
 #  Test Files  1 passed (1)
 #       Tests  15 passed (15)
 #    Duration  379ms
 
 # 2. Typecheck gateway
-pnpm --filter @sembridge/gateway exec tsc --noEmit
+pnpm --filter @gluezero/gateway exec tsc --noEmit
 #  exit 0, no output
 
 # 3. Full gateway suite (105 baseline + 15 nuovi)
-pnpm --filter @sembridge/gateway test --run
+pnpm --filter @gluezero/gateway test --run
 #  Test Files  16 passed (16)
 #       Tests  120 passed (120)
 #    Duration  1.46s
 
 # 4. Build clean (zero regressioni su subpath bundles)
-pnpm --filter @sembridge/gateway clean && pnpm --filter @sembridge/gateway build
+pnpm --filter @gluezero/gateway clean && pnpm --filter @gluezero/gateway build
 #  ESM dist/index.js              29.16 KB
 #  ESM dist/http/index.js         29.00 KB
 #  ESM dist/sse-ws/index.js       228.00 B

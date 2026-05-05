@@ -10,7 +10,7 @@
 
 ## 1. Sintesi esecutiva
 
-SemBridge non è un event emitter, non è un client HTTP, non è un wrapper di Web Worker, non è un client GraphQL e non è uno state manager. È un **runtime di orchestrazione** che combina sei capacità in un unico runtime coerente: pub/sub locale, routing dichiarativo (local/http/realtime/worker/cache/composite), gateway server unico, worker runtime, canonical model + mapper bidirezionale, developer tooling.
+GlueZero non è un event emitter, non è un client HTTP, non è un wrapper di Web Worker, non è un client GraphQL e non è uno state manager. È un **runtime di orchestrazione** che combina sei capacità in un unico runtime coerente: pub/sub locale, routing dichiarativo (local/http/realtime/worker/cache/composite), gateway server unico, worker runtime, canonical model + mapper bidirezionale, developer tooling.
 
 Il valore differenziante centrale, articolato in PRD §13 e §40 e ribadito in `PROJECT.md` (Core Value), è il **canonical model con mapping bidirezionale**: due plugin sviluppati indipendentemente — con vocabolari locali eterogenei (`città`/`data` vs `location`/`day-prevision`) — devono interoperare senza accordo preventivo sui nomi dei campi. Tutte le altre capacità (routing, gateway, worker, cache, tooling) servono a sostenere questo valore o a costituire le precondizioni perché abbia senso.
 
@@ -101,7 +101,7 @@ Feature che la libreria DEVE avere o non è conforme al PRD. Estratte da §4.1, 
 
 ### 2.2 Differenziatori (Vantaggio competitivo vs alternative)
 
-Feature che distinguono SemBridge da event emitter generici, librerie HTTP, observable streams, worker bridges. Confronto sintetico in §3.
+Feature che distinguono GlueZero da event emitter generici, librerie HTTP, observable streams, worker bridges. Confronto sintetico in §3.
 
 | ID | Feature | Value Proposition | Complessità | Fase | Perché differenzia |
 |----|---------|-------------------|-------------|------|--------------------|
@@ -110,7 +110,7 @@ Feature che distinguono SemBridge da event emitter generici, librerie HTTP, obse
 | DIFF-03 | **Gateway server unico** (fetch + realtime in un punto) | Auth, retry, timeout, dedupe, header, refresh token, error handling: configurati una volta, applicati a tutto. La superficie di attacco e il punto di osservabilità sono unici. | ALTA | 3 + 4 | TanStack Query / urql / Apollo coprono parte HTTP; nessuno copre HTTP + realtime + worker dietro un'unica governance. |
 | DIFF-04 | **Worker integration come route type** | Eseguire un task pesante è dichiarativo: `type: 'worker'`, `task: 'generateReport'`. Il task correlation, timeout, error propagation, progress events sono nativi. | MEDIA | 5 | Comlink offre RPC con worker ma non integrazione con event bus, mapping canonico, retry, cache. |
 | DIFF-05 | **Multi-channel realtime astratto** (SSE / WebSocket) | Inbound server messages diventano eventi interni con `source: { type: 'server' }`, normalizzati attraverso il canonical model. Il consumer non sa se il dato è arrivato via SSE, WebSocket o fetch response. | MEDIA | 4 | Socket.IO / EventSource / `ws` sono tutti single-channel e senza semantica unificata col resto del sistema. |
-| DIFF-06 | **Tre Inspector integrati** (Event/Mapping/Route) | Debug è first-class, non un add-on. Ogni evento è ispezionabile lungo la pipeline §28.1 (14 step). | MEDIA | 1 base + 6 | Redux DevTools sono limitati allo state. RxJS marble debugging è offline. SemBridge offre runtime introspection cross-trasporto. |
+| DIFF-06 | **Tre Inspector integrati** (Event/Mapping/Route) | Debug è first-class, non un add-on. Ogni evento è ispezionabile lungo la pipeline §28.1 (14 step). | MEDIA | 1 base + 6 | Redux DevTools sono limitati allo state. RxJS marble debugging è offline. GlueZero offre runtime introspection cross-trasporto. |
 | DIFF-07 | **Pipeline evento documentata e deterministica** (PRD §28.1) | 14 step ordinati e ispezionabili: arricchimento metadata → validazione → identificazione source → mapping → dedupe → route resolution → consegna → mapping reverse → consegna consumer → log/metrics. Niente trasformazioni "magiche". | MEDIA | 1-3 | RxJS è imperativo lazy; Saga è generator-based; nessuno garantisce un ordine di pipeline standard documentato. |
 | DIFF-08 | **Plugin contract standard** (`BrokerPluginDescriptor` con subscribes/publishes/inputMap/outputMap/handlers/lifecycle) | Plugin di terzi pubblicabili con un manifest dichiarativo. Versionabili, smontabili, ispezionabili. | MEDIA | 1 base + 2 mapping | Nessun event emitter offre un plugin contract di questo livello. Effector "domains" sono affini ma legati allo stato, non agli eventi. |
 | DIFF-09 | **Composite route con cache-then-network** | Workflow check-cache → server → update-cache → publish è dichiarativo. Sostituisce codice imperativo che è la principale fonte di bug nelle SPA. | ALTA | 3 + 6 | TanStack Query offre stale-while-revalidate ma per dati, non per generic pubsub events. |
@@ -128,7 +128,7 @@ Estratte da PRD §5 e ribadite in `PROJECT.md` (Out of Scope). Queste **non vann
 |--------------|----------------------|------------------------|------------------|
 | **Framework UI completo** (sostituire React/Vue/Svelte/Angular) | Sembra naturale "se si gestiscono eventi e dati, perché non anche il rendering?" | Esce completamente dal dominio (orchestrazione → rendering = scope creep di 10×). Il PRD §5 lo esclude esplicitamente e §2 raccomanda "concettualmente indipendente da framework UI". | Integrazione plugin per framework esistenti: hook React/Vue/Svelte che wrappano `subscribe` con cleanup automatico. Non rendering proprio. |
 | **State manager globale stile Redux come unica via** | "Se ho il broker già centralizzato, lo uso anche come store" | Forzerebbe un pattern (single source of truth, reducer, immutability) sui consumer. Il PRD §5 lo esclude come "unica via". | I plugin gestiscono il proprio stato locale. La libreria offre cache opzionale (Fase 6). Un eventuale adapter Redux/Zustand è plugin di terze parti. |
-| **Esecuzione logica server-side** | "Il broker è anche server, no?" | La libreria è browser-side per definizione (PRD §1, §5). Mescolarla con backend = ambiguità di sicurezza, deployment, threading. | Server expone API HTTP/SSE/WS standard. SemBridge è solo client. Eventuali pacchetti companion server-side sono progetto separato. |
+| **Esecuzione logica server-side** | "Il broker è anche server, no?" | La libreria è browser-side per definizione (PRD §1, §5). Mescolarla con backend = ambiguità di sicurezza, deployment, threading. | Server expone API HTTP/SSE/WS standard. GlueZero è solo client. Eventuali pacchetti companion server-side sono progetto separato. |
 | **Motore BPMN / workflow visual designer** | "Visualizzare i flussi sarebbe figo" | Scope esplosivo. Modellazione workflow visiva è dominio per Camunda, n8n, etc. Il PRD §5 lo esclude. | Route dichiarative sono già una forma testuale di workflow. Eventualmente un visualizzatore read-only delle route registrate (Fase 6 tooling), non un editor. |
 | **Mapping semantico ambiguo automatico** (auto-resolve di alias senza configurazione) | "Se il broker conosce 'data' come alias di 'forecast_date', perché chiede al plugin di dichiararlo?" | PRD §14.7 spiega: `data` in italiano può significare `date` o "dati" generici. Resolve automatico = bug runtime nascosti. Il PRD §5 lo esclude. | Alias come "aiuto" + warning runtime in caso di ambiguità (TS-33 mapping inspector). Mapping esplicito del plugin prevale sempre (MAP-17). |
 | **Accesso DOM dai worker** | "Vorrei che il worker aggiornasse direttamente la UI" | Vincolo del browser, non aggirabile. PRD §5 e §19.5 lo escludono. | Worker emette eventi via message bridge; main thread sottoscrive e aggiorna DOM. Pattern già supportato dal route worker. |
@@ -143,69 +143,69 @@ Estratte da PRD §5 e ribadite in `PROJECT.md` (Out of Scope). Queste **non vann
 
 ## 3. Confronto con librerie comparabili
 
-Ogni libreria copre **parzialmente** lo spazio di SemBridge. Nessuna copre l'unione delle 6 capacità.
+Ogni libreria copre **parzialmente** lo spazio di GlueZero. Nessuna copre l'unione delle 6 capacità.
 
-> **Confidenza:** MEDIA. Conoscenza basata su API pubbliche stabili e pattern documentati. Versioni e dettagli specifici da verificare prima di decisioni di adozione (non rilevante per scelte di SemBridge stesso, è scelta di posizionamento).
+> **Confidenza:** MEDIA. Conoscenza basata su API pubbliche stabili e pattern documentati. Versioni e dettagli specifici da verificare prima di decisioni di adozione (non rilevante per scelte di GlueZero stesso, è scelta di posizionamento).
 
 ### 3.1 Event emitter "puri"
 
-| Libreria | Cosa fa bene | Cosa manca rispetto a SemBridge |
+| Libreria | Cosa fa bene | Cosa manca rispetto a GlueZero |
 |----------|--------------|-----------------------------------|
-| **mitt** | Minimale (~200 byte), API `on/off/emit`, zero dipendenze. Ottimo per pubsub interno semplicissimo. | No mapping, no route, no worker, no realtime, no validation, no debug tooling, no plugin contract, no lifecycle. È un componente che SemBridge potrebbe internamente *contenere*. |
+| **mitt** | Minimale (~200 byte), API `on/off/emit`, zero dipendenze. Ottimo per pubsub interno semplicissimo. | No mapping, no route, no worker, no realtime, no validation, no debug tooling, no plugin contract, no lifecycle. È un componente che GlueZero potrebbe internamente *contenere*. |
 | **EventEmitter3** | API Node.js-compat, performance buona, listener once, namespace via separatore. Diffuso. | Stessi gap di mitt. Non ha source descriptor, metadata, traceId, payload schema. |
 | **nanoevents** | Ancora più piccolo, type-safe in TS. | Stessi gap di mitt. |
 | **Postal.js** (storico) | Channels/topics gerarchici, wildcard, federation tra finestre. Inspirazione storica per pubsub-in-page. | Inattivo da anni; no realtime, no worker, no canonical model. |
 
-**Posizionamento SemBridge:** SemBridge non sostituisce mitt — l'event bus core (Fase 1, CORE-01..CORE-11 in PROJECT.md) è solo una piccola parte. Chi vuole "solo emit/subscribe" usa mitt; chi ha plugin di terze parti e backend reale sceglie SemBridge.
+**Posizionamento GlueZero:** GlueZero non sostituisce mitt — l'event bus core (Fase 1, CORE-01..CORE-11 in PROJECT.md) è solo una piccola parte. Chi vuole "solo emit/subscribe" usa mitt; chi ha plugin di terze parti e backend reale sceglie GlueZero.
 
 ### 3.2 Stream/Reactive libraries
 
-| Libreria | Cosa fa bene | Cosa manca rispetto a SemBridge |
+| Libreria | Cosa fa bene | Cosa manca rispetto a GlueZero |
 |----------|--------------|-----------------------------------|
-| **RxJS** | Operatori potenti (map/filter/throttle/debounce/retry/timeout/dedupe), schedulers, multicasting, async coordination. È il "coltellino svizzero" del flusso dati JS. Copre TS-26..TS-30 in modo elegante. | È una libreria di **primitive**, non un runtime di orchestrazione. Non offre canonical model, plugin contract, route registry, server gateway unico, worker integration, source descriptor. Costruire SemBridge sopra RxJS è possibile come implementation detail ma RxJS *non sostituisce* SemBridge. |
-| **most.js / xstream** | Stream più piccoli e veloci di RxJS in alcuni casi. | Stessi gap di RxJS rispetto al dominio SemBridge. |
-| **Effector** | State manager event-driven con domains, stores, effects. Eventi tipati, devtools ottimi, plugin pattern. | Focus stato, non integrazione backend. No canonical model semantic. No route http/worker/realtime nativi. Effector è complementare: SemBridge potrebbe avere un adapter Effector per chi lo usa come store. |
+| **RxJS** | Operatori potenti (map/filter/throttle/debounce/retry/timeout/dedupe), schedulers, multicasting, async coordination. È il "coltellino svizzero" del flusso dati JS. Copre TS-26..TS-30 in modo elegante. | È una libreria di **primitive**, non un runtime di orchestrazione. Non offre canonical model, plugin contract, route registry, server gateway unico, worker integration, source descriptor. Costruire GlueZero sopra RxJS è possibile come implementation detail ma RxJS *non sostituisce* GlueZero. |
+| **most.js / xstream** | Stream più piccoli e veloci di RxJS in alcuni casi. | Stessi gap di RxJS rispetto al dominio GlueZero. |
+| **Effector** | State manager event-driven con domains, stores, effects. Eventi tipati, devtools ottimi, plugin pattern. | Focus stato, non integrazione backend. No canonical model semantic. No route http/worker/realtime nativi. Effector è complementare: GlueZero potrebbe avere un adapter Effector per chi lo usa come store. |
 | **redux-saga** | Generator-based side-effect orchestration, take/put/call/race. Pattern noto per coordinare async in app Redux. | Vincolato a Redux. Non è un broker. No canonical model. No worker route nativi. Curva di apprendimento ripida. |
 | **redux-observable** | RxJS+Redux: epics intercettano action e producono nuove action (analoghe a route). | Stesso vincolo Redux + same gap RxJS. |
 
-**Posizionamento SemBridge:** RxJS è una *primitiva* tecnologica; SemBridge è un *framework di orchestrazione*. SemBridge potrebbe usare RxJS internamente per backpressure (TS-28) — è un dettaglio implementativo. RxJS+ky+mitt assemblati richiedono ad ogni team di reinventare canonical model, plugin contract, debug pipeline, gateway, route registry. SemBridge li offre out of the box.
+**Posizionamento GlueZero:** RxJS è una *primitiva* tecnologica; GlueZero è un *framework di orchestrazione*. GlueZero potrebbe usare RxJS internamente per backpressure (TS-28) — è un dettaglio implementativo. RxJS+ky+mitt assemblati richiedono ad ogni team di reinventare canonical model, plugin contract, debug pipeline, gateway, route registry. GlueZero li offre out of the box.
 
 ### 3.3 Worker bridges
 
-| Libreria | Cosa fa bene | Cosa manca rispetto a SemBridge |
+| Libreria | Cosa fa bene | Cosa manca rispetto a GlueZero |
 |----------|--------------|-----------------------------------|
-| **Comlink** (Google) | RPC-style bridge tra main thread e worker, proxy trasparente, transferable object support. Standard de facto per worker JS moderni. | Solo worker. No event bus, no canonical model, no route, no realtime, no debug pipeline. SemBridge potrebbe internamente usare Comlink come adapter per worker route (Fase 5). |
+| **Comlink** (Google) | RPC-style bridge tra main thread e worker, proxy trasparente, transferable object support. Standard de facto per worker JS moderni. | Solo worker. No event bus, no canonical model, no route, no realtime, no debug pipeline. GlueZero potrebbe internamente usare Comlink come adapter per worker route (Fase 5). |
 | **threads.js** | Worker pool, type-safe. Simile a Comlink. | Stesso gap Comlink. |
 | **workerpool** | Pool con autoscaling. | Stesso gap. |
 
-**Posizionamento SemBridge:** SemBridge integra il worker come *route type* (DIFF-04) col canonicalization e il debug. L'utente non istanzia worker manualmente — pubblica un topic e il broker gestisce instradamento, timeout, retry, error propagation, progress.
+**Posizionamento GlueZero:** GlueZero integra il worker come *route type* (DIFF-04) col canonicalization e il debug. L'utente non istanzia worker manualmente — pubblica un topic e il broker gestisce instradamento, timeout, retry, error propagation, progress.
 
 ### 3.4 HTTP / Data fetching
 
-| Libreria | Cosa fa bene | Cosa manca rispetto a SemBridge |
+| Libreria | Cosa fa bene | Cosa manca rispetto a GlueZero |
 |----------|--------------|-----------------------------------|
 | **TanStack Query** (React Query / Solid Query / Vue Query) | Caching, stale-while-revalidate, dedupe, retry, query invalidation, devtools eccellenti. Gold standard per data fetching declarativo. | Focus su query/mutation HTTP. Niente pubsub generico, niente realtime nativo (richiede subscribe esterna), niente worker, niente canonical model, niente plugin contract di terzi. Coerente con un framework UI. |
 | **urql** | Client GraphQL leggero con exchanges (analoghi a middleware route). | GraphQL-specific. No worker, no canonical model. |
-| **Apollo Client** | GraphQL completo, cache normalizzata, link chain (somiglianza con route composite di SemBridge). | GraphQL-specific. La cache normalizzata è interna ad Apollo, non un canonical model esposto ai plugin. Apollo Link è l'idea più vicina ai routing engines, limitata però al trasporto GraphQL. |
-| **ky / wretch / ofetch** | Wrapper HTTP migliori di `fetch`, retry, timeout, hooks. | Non sono broker. SemBridge potrebbe usare uno di questi *internamente* per il fetch client del gateway (Fase 3). |
+| **Apollo Client** | GraphQL completo, cache normalizzata, link chain (somiglianza con route composite di GlueZero). | GraphQL-specific. La cache normalizzata è interna ad Apollo, non un canonical model esposto ai plugin. Apollo Link è l'idea più vicina ai routing engines, limitata però al trasporto GraphQL. |
+| **ky / wretch / ofetch** | Wrapper HTTP migliori di `fetch`, retry, timeout, hooks. | Non sono broker. GlueZero potrebbe usare uno di questi *internamente* per il fetch client del gateway (Fase 3). |
 
-**Posizionamento SemBridge:** TanStack Query è la migliore combinazione "cache + dedupe + retry + devtools" per HTTP. SemBridge offre l'equivalente DICHIARATIVO via route HTTP/cache/composite (TS-08, ROUTE-04, ROUTE-05) **e** copre realtime e worker. Sono complementari: un team React può usare entrambi (TanStack per dati, SemBridge per orchestrazione + plugin di terze parti) o adottare solo SemBridge.
+**Posizionamento GlueZero:** TanStack Query è la migliore combinazione "cache + dedupe + retry + devtools" per HTTP. GlueZero offre l'equivalente DICHIARATIVO via route HTTP/cache/composite (TS-08, ROUTE-04, ROUTE-05) **e** copre realtime e worker. Sono complementari: un team React può usare entrambi (TanStack per dati, GlueZero per orchestrazione + plugin di terze parti) o adottare solo GlueZero.
 
 ### 3.5 State managers
 
-| Libreria | Cosa fa bene | Cosa manca rispetto a SemBridge |
+| Libreria | Cosa fa bene | Cosa manca rispetto a GlueZero |
 |----------|--------------|-----------------------------------|
 | **Zustand** | Store minimale, hook-based, slices. | Focus stato locale; no broker pubsub, no integrazione backend, no canonical mapping. |
 | **Jotai** | Stato atomico, derivati. | Stesso gap. |
 | **Redux** (con toolkit) | Action/reducer/store, ecosystem maturo. | Stato single-source-of-truth, non pubsub aperto. PRD §5 lo esclude come "unica via". |
 
-**Posizionamento SemBridge:** Stato locale è scope dei plugin/componenti. Cache opzionale (Fase 6) è per dati persistenti tra event flow. SemBridge non compete con state managers — può integrarsi tramite plugin che bridge events → store updates.
+**Posizionamento GlueZero:** Stato locale è scope dei plugin/componenti. Cache opzionale (Fase 6) è per dati persistenti tra event flow. GlueZero non compete con state managers — può integrarsi tramite plugin che bridge events → store updates.
 
 ### 3.6 Pattern server-side che hanno influenzato il design
 
-Le idee centrali di SemBridge non sono nuove: sono pattern di **Enterprise Application Integration** (EAI) noti da decenni in sistemi server-side.
+Le idee centrali di GlueZero non sono nuove: sono pattern di **Enterprise Application Integration** (EAI) noti da decenni in sistemi server-side.
 
-| Sistema | Pattern correlato | Influenza su SemBridge |
+| Sistema | Pattern correlato | Influenza su GlueZero |
 |---------|-------------------|------------------------|
 | **Apache Camel** | Enterprise Integration Patterns: Message Channel, Message Translator, Content-Based Router, Splitter, Aggregator. DSL Java/XML/YAML per dichiarare route. | DIFF-02 (routing dichiarativo) e DIFF-01 (canonical model + translator) sono direttamente l'EIP "Canonical Data Model" e "Message Translator" di Camel, portati nel browser. |
 | **Spring Integration** | EIP framework Spring: channels, gateways, transformers, service activators. | Stessa influenza di Camel; Spring Integration formalizza il "Gateway" e il "Channel Adapter" che corrispondono a TS-03 (gateway server) e ai route adapter. |
@@ -213,25 +213,25 @@ Le idee centrali di SemBridge non sono nuove: sono pattern di **Enterprise Appli
 | **MuleSoft** | Integration platform con flow + canonical data model. | Conferma del valore del canonical model in dominio EAI. |
 | **MQTT brokers (Mosquitto, EMQ)** | Topic con wildcard, QoS, retained messages. | Naming convention dot-separated + wildcard (TS-21, TS-22) si ispira a MQTT (anche se MQTT usa `/`). |
 | **AsyncAPI** | Specifica per API event-driven analoga a OpenAPI per REST. | Riferimento per topic schema e payload schema (TS-37..TS-41). Eventualmente in roadmap futura: export AsyncAPI dei topic registrati. |
-| **CloudEvents (CNCF)** | Spec di event envelope con id, source, type, time, datacontenttype, subject, data. | `BrokerEvent` (TS-19) è ispirato concettualmente a CloudEvents. SemBridge potrebbe esportare/importare CloudEvents come format option. |
+| **CloudEvents (CNCF)** | Spec di event envelope con id, source, type, time, datacontenttype, subject, data. | `BrokerEvent` (TS-19) è ispirato concettualmente a CloudEvents. GlueZero potrebbe esportare/importare CloudEvents come format option. |
 
-**Posizionamento SemBridge:** Porta i pattern EAI maturi (canonical data model, message translator, content-based router, gateway) **nel browser**, in JavaScript, con TypeScript types e developer tooling moderni. Non c'è equivalente client-side maturo nello spazio JS.
+**Posizionamento GlueZero:** Porta i pattern EAI maturi (canonical data model, message translator, content-based router, gateway) **nel browser**, in JavaScript, con TypeScript types e developer tooling moderni. Non c'è equivalente client-side maturo nello spazio JS.
 
 ---
 
 ## 4. Casi d'uso reali
 
-Tipi di applicazioni che traggono **valore concreto** da SemBridge. Casi astratti ("event-driven app generica") sono esclusi.
+Tipi di applicazioni che traggono **valore concreto** da GlueZero. Casi astratti ("event-driven app generica") sono esclusi.
 
 ### 4.1 Casi d'uso ad ALTA affinità (ROI alto)
 
-| Caso d'uso | Perché SemBridge è la scelta giusta | Feature chiave usate |
+| Caso d'uso | Perché GlueZero è la scelta giusta | Feature chiave usate |
 |------------|--------------------------------------|----------------------|
 | **Dashboard modulari con plugin di terze parti** (es. monitoring/observability dashboards, BI tools tipo Grafana plugin model) | Plugin sviluppati da team/vendor diversi devono mostrare dati con vocabolari diversi (CPU, cpu_pct, cpuLoad). Canonical model garantisce interoperabilità. Realtime per metriche. | DIFF-01, DIFF-02, DIFF-05, DIFF-06 |
 | **CMS modulari / Page builder con widget di terzi** (es. headless CMS con marketplace di plugin) | Widget content-aware (form, gallery, mappa, prodotto) con propri schemi. Canonical model = vocabolario condiviso del sito (location, customer, product). Plugin contract standardizzato. | DIFF-01, DIFF-08, TS-14 |
 | **Digital twin / SCADA browser-side** (interfacce industriali con stream di sensori e attuatori) | Migliaia di eventi/sec via WebSocket; nomenclature di sensori vendor-specifiche; backpressure obbligatoria. | DIFF-03, DIFF-05, TS-28 (backpressure), DIFF-04 (worker per aggregazioni) |
 | **IoT control panels** (smart home, fleet management, energia) | Devices con vocabolari proprietari, comandi via REST + telemetria via MQTT/SSE/WS. Mapping fra payload device e modello canonico dell'app. | DIFF-01, DIFF-03, DIFF-05 |
-| **Low-code platforms client-side** (form builder, automation con regole utente) | Configurazione runtime delle route (utente disegna flusso → genera definizione route SemBridge). Canonical model permette di sostituire un nodo con un altro. | DIFF-02, DIFF-08 |
+| **Low-code platforms client-side** (form builder, automation con regole utente) | Configurazione runtime delle route (utente disegna flusso → genera definizione route GlueZero). Canonical model permette di sostituire un nodo con un altro. | DIFF-02, DIFF-08 |
 | **Applicazioni white-label con integrazioni multiple** (un'app rebranded venduta a clienti diversi con backend diversi) | Stesso UI, backend diverso per cliente: il canonical model + adapter route astrae le differenze API. | DIFF-01, DIFF-03 |
 | **Editor collaborativi browser-side** (con worker per parsing/diff e realtime per sync) | Worker per CRDT/diff; realtime per presence; broker per coordinare componenti UI (sidebar, editor, comments). | DIFF-04, DIFF-05, DIFF-02 |
 | **Marketplace integration apps** (app che orchestrano API multiple: Shopify + Stripe + Mailchimp + …) | Vocabolari API enormemente eterogenei (customer/buyer/contact/recipient = stessa entità). Canonical model è il salvatore. | DIFF-01, DIFF-03 |
@@ -249,7 +249,7 @@ Tipi di applicazioni che traggono **valore concreto** da SemBridge. Casi astratt
 
 - **Landing page statiche / siti vetrina** — overkill assoluto.
 - **App single-page senza plugin di terze parti, con ≤3 endpoint REST** — `fetch` + un event emitter è sufficiente.
-- **Mobile-only apps** — SemBridge è browser-side; per React Native o Capacitor i moduli realtime/worker hanno semantica diversa (rivalutare).
+- **Mobile-only apps** — GlueZero è browser-side; per React Native o Capacitor i moduli realtime/worker hanno semantica diversa (rivalutare).
 
 ---
 
@@ -444,7 +444,7 @@ Convenzioni che emergono dalle librerie comparabili e dovrebbero ispirare l'API 
 
 ### 9.2 API ergonomics — pattern da librerie mainstream
 
-| Pattern | Esempio in libreria nota | Applicazione SemBridge |
+| Pattern | Esempio in libreria nota | Applicazione GlueZero |
 |---------|--------------------------|------------------------|
 | **`subscribe` restituisce funzione unsubscribe** | RxJS `Subscription`, mitt `off`, browser `addEventListener` con AbortController | `const unsub = broker.subscribe(...); unsub();` + handle id alternativo |
 | **Opzioni `{ once: true }`** | EventEmitter, RxJS `take(1)`, addEventListener `{ once: true }` | `broker.subscribe(topic, h, { once: true })` |
@@ -497,11 +497,11 @@ broker.flushQueue(topic?)
 
 ---
 
-## 10. Confronto: perché SemBridge e non "RxJS+ky+mitt assemblati"
+## 10. Confronto: perché GlueZero e non "RxJS+ky+mitt assemblati"
 
 Domanda esplicita del downstream consumer: cosa giustifica una libreria nuova vs comporre primitive esistenti?
 
-| Dimensione | Stack composto (RxJS + ky + mitt + Comlink + EventSource) | SemBridge |
+| Dimensione | Stack composto (RxJS + ky + mitt + Comlink + EventSource) | GlueZero |
 |------------|------------------------------------------------------------|-----------|
 | **Canonical model + mapping bidirezionale** | Da implementare a mano per ogni progetto. ~1000-3000 LOC + tooling debug. | Built-in (DIFF-01). |
 | **Plugin contract standard** | Da definire ad-hoc. Ogni progetto reinventa subscribes/publishes/inputMap. | Built-in (TS-14, DIFF-08). |
@@ -515,7 +515,7 @@ Domanda esplicita del downstream consumer: cosa giustifica una libreria nuova vs
 | **Debugging in produzione** | Distribuito tra N tool. | Centralizzato con `getDebugSnapshot`. |
 | **Lifecycle leak prevention** | Da gestire manualmente per ogni libreria. | Built-in (TS-07). |
 
-**Conclusione:** lo stack composto vince per progetti piccoli o senza plugin di terzi. SemBridge vince quando: (a) plugin di terze parti con vocabolari eterogenei, (b) dashboard/IoT/digital twin con realtime + worker + cache, (c) team multipli che devono interoperare senza accordi sui nomi dei campi, (d) richiesta esplicita di osservabilità centralizzata.
+**Conclusione:** lo stack composto vince per progetti piccoli o senza plugin di terzi. GlueZero vince quando: (a) plugin di terze parti con vocabolari eterogenei, (b) dashboard/IoT/digital twin con realtime + worker + cache, (c) team multipli che devono interoperare senza accordi sui nomi dei campi, (d) richiesta esplicita di osservabilità centralizzata.
 
 ---
 
@@ -536,7 +536,7 @@ Non bloccanti per la roadmap ma da chiudere durante l'esecuzione delle fasi:
 
 ### Fonti autoritative consultate
 
-- `prd.md` (root del progetto SemBridge) — documento di prodotto integrale, §1-§42. Fonte primaria.
+- `prd.md` (root del progetto GlueZero) — documento di prodotto integrale, §1-§42. Fonte primaria.
 - `.planning/PROJECT.md` — sintesi GSD del progetto, sezione "Active requirements" e "Out of Scope".
 
 ### Conoscenza pregressa applicata (confidenza MEDIA, non riverificata in questa sessione causa restrizioni di tooling)
@@ -555,5 +555,5 @@ Non bloccanti per la roadmap ma da chiudere durante l'esecuzione delle fasi:
 
 ---
 
-*Ricerca feature per: SemBridge — middleware client-side event-driven con canonical model + gateway unificato*
+*Ricerca feature per: GlueZero — middleware client-side event-driven con canonical model + gateway unificato*
 *Data ricerca: 2026-04-28*

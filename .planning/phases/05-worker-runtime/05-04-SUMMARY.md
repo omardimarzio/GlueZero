@@ -10,7 +10,7 @@ completed: 2026-05-04
 duration_minutes: ~30
 dependency_graph:
   requires:
-    - 05-01 (bootstrap @sembridge/worker types + augment)
+    - 05-01 (bootstrap @gluezero/worker types + augment)
     - 05-02 (assertSerializable + extractTransferables building blocks)
     - 05-03 (TaskTracker state machine atomico — non consumato direttamente da bridge)
   provides:
@@ -18,7 +18,7 @@ dependency_graph:
     - MockWorker test util — Tier-1 jsdom Worker mock
     - ComlinkAdapter DI interface per test injection
   affects:
-    - "@sembridge/worker entry point — barrel index.ts esporta WorkerBridge surface"
+    - "@gluezero/worker entry point — barrel index.ts esporta WorkerBridge surface"
 tech_stack:
   added: []
   patterns:
@@ -146,15 +146,15 @@ Pattern role-match con `gateway/sse-ws/test-utils/mock-event-source.ts` (carryov
 
 | Gate | Risultato |
 |------|-----------|
-| `pnpm -F @sembridge/worker test --run` | **15/15** worker-bridge passing — **87/87** full worker package suite (15 nuovi + 72 W1+W2+W3-B precedenti) |
-| `pnpm -F @sembridge/worker typecheck` | clean (zero errori) |
-| `pnpm -F @sembridge/worker build` | OK — `dist/index.js` 32.35 KB, `dist/index.d.ts` 44.97 KB, `WorkerBridge` 24x in dts |
-| `pnpm -F @sembridge/core typecheck` | clean (no regression) |
-| `pnpm -F @sembridge/mapper typecheck` | clean (no regression) |
-| `pnpm -F @sembridge/routing typecheck` | clean (no regression) |
-| `pnpm -F @sembridge/gateway typecheck` | clean (no regression) |
-| `pnpm -F @sembridge/core test --run` | 248/248 passing (no regression) |
-| `pnpm -F @sembridge/gateway test --run` | 222/225 passing (3 skip MSW V1.x F4) |
+| `pnpm -F @gluezero/worker test --run` | **15/15** worker-bridge passing — **87/87** full worker package suite (15 nuovi + 72 W1+W2+W3-B precedenti) |
+| `pnpm -F @gluezero/worker typecheck` | clean (zero errori) |
+| `pnpm -F @gluezero/worker build` | OK — `dist/index.js` 32.35 KB, `dist/index.d.ts` 44.97 KB, `WorkerBridge` 24x in dts |
+| `pnpm -F @gluezero/core typecheck` | clean (no regression) |
+| `pnpm -F @gluezero/mapper typecheck` | clean (no regression) |
+| `pnpm -F @gluezero/routing typecheck` | clean (no regression) |
+| `pnpm -F @gluezero/gateway typecheck` | clean (no regression) |
+| `pnpm -F @gluezero/core test --run` | 248/248 passing (no regression) |
+| `pnpm -F @gluezero/gateway test --run` | 222/225 passing (3 skip MSW V1.x F4) |
 
 ## Acceptance grep counts
 

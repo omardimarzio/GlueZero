@@ -66,15 +66,15 @@ metrics:
 
 # Phase 1 Plan 04: Utility Batch A Summary
 
-Implementati i 4 moduli runtime foundation di `@sembridge/core` (`core/` directory) con il pattern TDD RED→GREEN per ogni task: `broker-error.ts` (factory + type guard, ERR-01), `deep-freeze.ts` (runtime con cycle protection, D-04/D-05), `logger.ts` (console-based con 6 livelli + silent utility, CORE-10/D-12/D-14), `event-tap.ts` (no-op default + safe wrapper + snapshot factory, CORE-13/D-20). Ogni modulo ha test unit co-locato. File ownership disgiunta da plan 05 e 06 (eseguibili in parallelo) e da plan 07 (consumer). Coverage REQ-IDs: ERR-01 ✓, CORE-10 ✓, CORE-13 ✓, D-04 ✓, D-05 ✓, D-12 ✓, D-14 ✓, D-20 ✓.
+Implementati i 4 moduli runtime foundation di `@gluezero/core` (`core/` directory) con il pattern TDD RED→GREEN per ogni task: `broker-error.ts` (factory + type guard, ERR-01), `deep-freeze.ts` (runtime con cycle protection, D-04/D-05), `logger.ts` (console-based con 6 livelli + silent utility, CORE-10/D-12/D-14), `event-tap.ts` (no-op default + safe wrapper + snapshot factory, CORE-13/D-20). Ogni modulo ha test unit co-locato. File ownership disgiunta da plan 05 e 06 (eseguibili in parallelo) e da plan 07 (consumer). Coverage REQ-IDs: ERR-01 ✓, CORE-10 ✓, CORE-13 ✓, D-04 ✓, D-05 ✓, D-12 ✓, D-14 ✓, D-20 ✓.
 
 ## Objective Achieved
 
 L'obiettivo del plan 01-04 è raggiunto integralmente:
 
 - **8 file creati** in `packages/core/src/core/` (4 source + 4 test, 637 LOC totali)
-- **`pnpm --filter @sembridge/core test`** esce 0 e riporta `Test Files  4 passed (4) | Tests 42 passed (42)` in 449 ms
-- **`pnpm --filter @sembridge/core typecheck`** esce 0 (no TS errors)
+- **`pnpm --filter @gluezero/core test`** esce 0 e riporta `Test Files  4 passed (4) | Tests 42 passed (42)` in 449 ms
+- **`pnpm --filter @gluezero/core typecheck`** esce 0 (no TS errors)
 - **`pnpm biome check packages/core/src/core/`** esce 0 (8 file checked, no fixes applied)
 - **TDD pattern RED→GREEN** preservato: 4 commit `test(01-04): aggiunge test RED ...` precedono ogni commit `feat(01-04): implementa ...` corrispondente
 - **Threat T-04-01** mitigato (errori dal tap swallowed via `safeTapStep` try/catch)
@@ -96,14 +96,14 @@ L'obiettivo del plan 01-04 è raggiunto integralmente:
 
 - `packages/core/src/core/broker-error.ts` (45 LOC) — esporta `createBrokerError(params: CreateBrokerErrorParams): BrokerError` e `isBrokerError(value: unknown): value is BrokerError`. Pattern conditional assignment (`if (params.details) err.details = params.details`) per onorare `exactOptionalPropertyTypes: true`. Setta `Error.cause` (ES2022) quando `originalError` fornito.
 - `packages/core/src/core/deep-freeze.ts` (84 LOC) — esporta `deepFreeze<T>(value, options?: DeepFreezeOptions): T` e `interface DeepFreezeOptions`. Cycle protection via module-level `WeakSet<object>`. Default semantics (D-05): `skipDates: true`, `skipPromises: true`, `skipTypedArrays: true`, `skipMaps: false`, `skipSets: false`. Skip already-frozen (`Object.isFrozen` early return) per perf hot-path. TypedArray view non-freezable (rompe iteration).
-- `packages/core/src/core/logger.ts` (64 LOC) — esporta `createConsoleLogger(level: LogLevel = 'info'): BrokerLogger` e `silentLogger: BrokerLogger`. `LEVEL_ORDER` map per filtering O(1). Mapping D-12: `silent` no-op, `error→console.error`, `warn→console.warn`, `info→console.info`, `debug→console.debug`, `trace→console.debug` con prefisso label `TRACE` (NON `console.trace`). Namespace `[sembridge]` sempre come primo argomento. Meta opzionale come terzo argomento.
+- `packages/core/src/core/logger.ts` (64 LOC) — esporta `createConsoleLogger(level: LogLevel = 'info'): BrokerLogger` e `silentLogger: BrokerLogger`. `LEVEL_ORDER` map per filtering O(1). Mapping D-12: `silent` no-op, `error→console.error`, `warn→console.warn`, `info→console.info`, `debug→console.debug`, `trace→console.debug` con prefisso label `TRACE` (NON `console.trace`). Namespace `[gluezero]` sempre come primo argomento. Meta opzionale come terzo argomento.
 - `packages/core/src/core/event-tap.ts` (53 LOC) — esporta `noopEventTap: EventTap`, `safeTapStep(tap, step, snapshot, onError?)`, `startStep(): SnapshotFactory`, `type SnapshotFactory`. Threat T-04-01 mitigation: `safeTapStep` try/catch swallow errori dal tap. `startStep()` cattura `performance.now()` all'avvio e produce factory che genera `PipelineSnapshot` con `durationMs` calcolato monotonically. Pre-instrumentato F1 (vincolo critico ARCHITECTURE.md §3.2 — Inspector reale sostituirà no-op in F6 senza retrofit).
 
 **Test suites (4 file, 391 LOC, 42 test totali):**
 
 - `packages/core/src/core/broker-error.test.ts` (76 LOC, **9 test**): 4 `createBrokerError` (required fields, optional fields, ES2022 cause, omit unset optionals via `'x' in err === false`) + 5 `isBrokerError` (true on BrokerError, false on plain Error, false on null/undefined, false on plain object, false on string).
 - `packages/core/src/core/deep-freeze.test.ts` (99 LOC, **12 test**): nested object recursion, array elements, circular reference (no stack overflow), Date skip default, Date freeze opt-in, TypedArray skip default, Map freeze with values, Set freeze with elements, mutation throws TypeError in strict, null/undefined gracefully, primitives gracefully, perf <50ms su 1000 keys, idempotent already-frozen.
-- `packages/core/src/core/logger.test.ts` (124 LOC, **11 test**): 9 `createConsoleLogger` (info level filter, silent no-op, error level only, trace all-methods, `[sembridge]` namespace, meta as 3rd arg, 2 args without meta, trace uses console.debug+TRACE prefix D-12, default level info) + 2 `silentLogger` (no-throw, no console invocation).
+- `packages/core/src/core/logger.test.ts` (124 LOC, **11 test**): 9 `createConsoleLogger` (info level filter, silent no-op, error level only, trace all-methods, `[gluezero]` namespace, meta as 3rd arg, 2 args without meta, trace uses console.debug+TRACE prefix D-12, default level info) + 2 `silentLogger` (no-throw, no console invocation).
 - `packages/core/src/core/event-tap.test.ts` (92 LOC, **10 test**): 2 `noopEventTap` (no-throw, returns undefined) + 4 `safeTapStep` (correct args invocation, swallow errors D-20, invoke onError when provided, silent swallow without onError) + 3 `startStep` (factory produces PipelineSnapshot, durationMs ≥ 0, factory accepts extras for merge).
 
 ## Verification Results
@@ -111,7 +111,7 @@ L'obiettivo del plan 01-04 è raggiunto integralmente:
 ### Acceptance criteria Task 1 (broker-error)
 - [x] File `packages/core/src/core/broker-error.ts` esiste, esporta `createBrokerError` e `isBrokerError`
 - [x] File test esiste con ≥ 9 test cases (4 createBrokerError + 5 isBrokerError)
-- [x] `pnpm --filter @sembridge/core test broker-error` esce 0
+- [x] `pnpm --filter @gluezero/core test broker-error` esce 0
 - [x] `Test Files  1 passed` nell'output
 - [x] `createBrokerError` setta `Error.cause` (ES2022) quando `originalError` fornito (test verificato)
 - [x] `createBrokerError` NON aggiunge `details/originalError/routeId/topic/eventId` se non fornite (`'details' in err === false`)
@@ -121,19 +121,19 @@ L'obiettivo del plan 01-04 è raggiunto integralmente:
 - [x] File esporta `deepFreeze<T>(value, options?)` e `interface DeepFreezeOptions`
 - [x] Usa `WeakSet` per cycle protection (verificato grep `WeakSet`)
 - [x] File test ha ≥ 12 test cases (vedi sopra)
-- [x] `pnpm --filter @sembridge/core test deep-freeze` esce 0
+- [x] `pnpm --filter @gluezero/core test deep-freeze` esce 0
 - [x] Default `skipDates: true`, `skipMaps: false`, `skipSets: false`, `skipPromises: true`, `skipTypedArrays: true` verificati via test cases
 - [x] Performance test (1000 keys < 50ms) passa
 
 ### Acceptance criteria Task 3 (logger)
 - [x] File esporta `createConsoleLogger(level?: LogLevel): BrokerLogger` e `silentLogger: BrokerLogger`
 - [x] `LEVEL_ORDER` con tutti e 6 i livelli (silent=0..trace=5)
-- [x] PREFIX `[sembridge]` presente
+- [x] PREFIX `[gluezero]` presente
 - [x] Label `TRACE` presente (D-12 enforcement)
 - [x] File test ha ≥ 11 test cases (9 createConsoleLogger + 2 silentLogger)
-- [x] `pnpm --filter @sembridge/core test logger` esce 0
+- [x] `pnpm --filter @gluezero/core test logger` esce 0
 - [x] silent non invoca alcun console method, trace invoca tutti, info non invoca debug
-- [x] namespace `[sembridge]` presente nel primo arg
+- [x] namespace `[gluezero]` presente nel primo arg
 - [x] meta passato come terzo arg quando fornito
 
 ### Acceptance criteria Task 4 (event-tap)
@@ -141,14 +141,14 @@ L'obiettivo del plan 01-04 è raggiunto integralmente:
 - [x] `noopEventTap` implementa `EventTap` con `onPipelineStep: () => {}`
 - [x] `safeTapStep` ha `try {` + `catch (e)` (D-20 mitigation)
 - [x] File test ha ≥ 9 test cases (2 noopEventTap + 4 safeTapStep + 3 startStep — totale 10 in questo plan)
-- [x] `pnpm --filter @sembridge/core test event-tap` esce 0
-- [x] `pnpm --filter @sembridge/core test` (suite completa) esce 0 e riporta `Test Files  4 passed`
+- [x] `pnpm --filter @gluezero/core test event-tap` esce 0
+- [x] `pnpm --filter @gluezero/core test` (suite completa) esce 0 e riporta `Test Files  4 passed`
 - [x] errore lanciato dal tap NON propaga (D-20)
 - [x] `onError` callback invocato se fornito quando tap throws
 
 ### Plan-wide verification
-- [x] `pnpm --filter @sembridge/core test` esce 0: `Test Files 4 passed | Tests 42 passed | Duration 449 ms`
-- [x] `pnpm --filter @sembridge/core typecheck` esce 0
+- [x] `pnpm --filter @gluezero/core test` esce 0: `Test Files 4 passed | Tests 42 passed | Duration 449 ms`
+- [x] `pnpm --filter @gluezero/core typecheck` esce 0
 - [x] `pnpm biome check packages/core/src/core/` esce 0 (8 files checked)
 - [ ] Coverage v8 ≥ 90% — **NON MISURATA** (missing dep `@vitest/coverage-v8`); rimandata al merge wave / plan dedicato
 - [x] File ownership disgiunta da plan 05 e 06 (verificato: nessuna intersezione)
@@ -156,7 +156,7 @@ L'obiettivo del plan 01-04 è raggiunto integralmente:
 ## Final test output
 
 ```
-> @sembridge/core@0.0.0 test
+> @gluezero/core@0.0.0 test
 > vitest run --passWithNoTests
 
  RUN  v4.1.5 packages/core
@@ -211,7 +211,7 @@ Threat model del plan 04 confermato. Mitigazioni applicate:
 
 ## Open Items
 
-- **Coverage v8 measurement**: install `@vitest/coverage-v8` (devDependency root) e ri-eseguire `pnpm --filter @sembridge/core test:coverage` al termine di Wave 3 (post plan 06) per verificare il target ≥ 90% sui file `core/`. Non bloccante per F1 progress.
+- **Coverage v8 measurement**: install `@vitest/coverage-v8` (devDependency root) e ri-eseguire `pnpm --filter @gluezero/core test:coverage` al termine di Wave 3 (post plan 06) per verificare il target ≥ 90% sui file `core/`. Non bloccante per F1 progress.
 
 ## Ready For
 

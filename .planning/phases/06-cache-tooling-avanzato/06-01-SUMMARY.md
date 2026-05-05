@@ -13,15 +13,15 @@ tags:
   - vitest-3-tier
   - d-83-strict
 requires:
-  - "@sembridge/core (BrokerConfig, EventTap, BrokerEvent, PipelineSnapshot, PipelineStep) — F1"
-  - "@sembridge/mapper (augment.ts F2) — F2"
-  - "@sembridge/routing (RouteDefinition union F3) — F3"
-  - "@sembridge/gateway (HTTP gateway F3 + sse-ws F4) — F3+F4"
-  - "@sembridge/worker (augment.ts F5 pattern model) — F5"
+  - "@gluezero/core (BrokerConfig, EventTap, BrokerEvent, PipelineSnapshot, PipelineStep) — F1"
+  - "@gluezero/mapper (augment.ts F2) — F2"
+  - "@gluezero/routing (RouteDefinition union F3) — F3"
+  - "@gluezero/gateway (HTTP gateway F3 + sse-ws F4) — F3+F4"
+  - "@gluezero/worker (augment.ts F5 pattern model) — F5"
 provides:
-  - "@sembridge/cache scaffold compilabile ESM-only (BrokerConfig.cache via decl merging + F6CachePipelineStep + CacheAdapter contract + CacheConfig + CacheEntry + CacheStats type-level)"
-  - "@sembridge/devtools scaffold compilabile ESM-only (BrokerConfig.taps + BrokerConfig.devtools via decl merging + F6PipelineStep step 14 reale 'event.observed' + system audit + MetricsSnapshot + HistogramSummary + PauseAction + RouteInspectorEntry + DevtoolsConfig type-level)"
-  - "@sembridge/sembridge aggregato pubblico scaffold (SemBridgeConfig + SemBridgeFeatures opt-out + placeholder Wave 4 06-08)"
+  - "@gluezero/cache scaffold compilabile ESM-only (BrokerConfig.cache via decl merging + F6CachePipelineStep + CacheAdapter contract + CacheConfig + CacheEntry + CacheStats type-level)"
+  - "@gluezero/devtools scaffold compilabile ESM-only (BrokerConfig.taps + BrokerConfig.devtools via decl merging + F6PipelineStep step 14 reale 'event.observed' + system audit + MetricsSnapshot + HistogramSummary + PauseAction + RouteInspectorEntry + DevtoolsConfig type-level)"
+  - "@gluezero/gluezero aggregato pubblico scaffold (GlueZeroConfig + GlueZeroFeatures opt-out + placeholder Wave 4 06-08)"
   - "16 test smoke decl merging passing (8 cache + 8 devtools)"
   - "Pattern S1 anti tree-shake verified (__augmentCacheLoaded + __augmentDevtoolsLoaded preservati nel dist)"
   - "D-83 strict carryover acceptance gate passed (zero modifiche runtime F1-F5)"
@@ -38,13 +38,13 @@ tech-stack:
     - "nanoid 5.1.11 lockata (cache + devtools per Inspector entry id futuri)"
   patterns:
     - "Pattern S1 anti tree-shake (__augmentCacheLoaded + __augmentDevtoolsLoaded const literal + sideEffects glob in package.json)"
-    - "TS declaration merging via augment.ts (declare module '@sembridge/core' BrokerConfig.cache / BrokerConfig.taps / BrokerConfig.devtools — campi disgiunti F2-F5)"
+    - "TS declaration merging via augment.ts (declare module '@gluezero/core' BrokerConfig.cache / BrokerConfig.taps / BrokerConfig.devtools — campi disgiunti F2-F5)"
     - "F6CachePipelineStep + F6PipelineStep super-set additive literal union (workaround R4 type alias non merge-abile)"
     - "Coverage v8 thresholds 90/80/90/90 placeholder Wave 1 (calibration finale 06-09a — lesson learned F4-F5)"
     - "D-83 strict carryover acceptance gate (zero modifiche runtime F1-F5)"
 key-files:
   created:
-    - "packages/cache/package.json (manifest @sembridge/cache + workspace deps + sideEffects glob)"
+    - "packages/cache/package.json (manifest @gluezero/cache + workspace deps + sideEffects glob)"
     - "packages/cache/tsconfig.json (extends base + lib WebWorker)"
     - "packages/cache/tsup.config.ts (ESM-only 2 entries)"
     - "packages/cache/vitest.config.ts (Tier-1 jsdom + coverage v8)"
@@ -56,7 +56,7 @@ key-files:
     - "packages/cache/src/augment.ts (declare module BrokerConfig.cache + F6CachePipelineStep + __augmentCacheLoaded)"
     - "packages/cache/src/augment.test.ts (8 smoke decl merging)"
     - "packages/cache/src/index.ts (barrel S1 + type re-export)"
-    - "packages/devtools/package.json (manifest @sembridge/devtools + workspace deps senza gateway)"
+    - "packages/devtools/package.json (manifest @gluezero/devtools + workspace deps senza gateway)"
     - "packages/devtools/tsconfig.json"
     - "packages/devtools/tsup.config.ts"
     - "packages/devtools/vitest.config.ts"
@@ -69,12 +69,12 @@ key-files:
     - "packages/devtools/src/augment.ts (declare module BrokerConfig.taps + BrokerConfig.devtools + F6PipelineStep step 14 + __augmentDevtoolsLoaded)"
     - "packages/devtools/src/augment.test.ts (8 smoke decl merging)"
     - "packages/devtools/src/index.ts (barrel S1 + type re-export completo)"
-    - "packages/sembridge/package.json (aggregato deps su 7 sub-package workspace:*)"
-    - "packages/sembridge/tsconfig.json"
-    - "packages/sembridge/tsup.config.ts (single entry + external all sub-package)"
-    - "packages/sembridge/vitest.config.ts (placeholder Wave 4)"
-    - "packages/sembridge/src/types/sembridge-config.ts (SemBridgeConfig + SemBridgeFeatures opt-out)"
-    - "packages/sembridge/src/index.ts (Wave 1 placeholder + commented runtime exports per Wave 4)"
+    - "packages/gluezero/package.json (aggregato deps su 7 sub-package workspace:*)"
+    - "packages/gluezero/tsconfig.json"
+    - "packages/gluezero/tsup.config.ts (single entry + external all sub-package)"
+    - "packages/gluezero/vitest.config.ts (placeholder Wave 4)"
+    - "packages/gluezero/src/types/gluezero-config.ts (GlueZeroConfig + GlueZeroFeatures opt-out)"
+    - "packages/gluezero/src/index.ts (Wave 1 placeholder + commented runtime exports per Wave 4)"
   modified:
     - "pnpm-lock.yaml (workspace deps cache + devtools + sembridge)"
 decisions:
@@ -100,15 +100,15 @@ metrics:
 
 # Phase 6 Plan 01: Cache & Devtools Bootstrap Summary
 
-Bootstrap dei 3 pacchetti F6 (`@sembridge/cache`, `@sembridge/devtools`, `@sembridge/sembridge`) come scaffold compilabile ESM-only via tsup, con augment.ts decl merging additive disgiunta su `BrokerConfig.cache` (D-155/D-156/D-158), `BrokerConfig.taps` (D-159 multiplex registry), `BrokerConfig.devtools` (D-160/D-167/D-170), super-set literal union `F6CachePipelineStep` (4 lifecycle events D-161) + `F6PipelineStep` (step 14 reale 'event.observed' + 4 system audit), Pattern S1 anti tree-shake verificato (`__augmentCacheLoaded` + `__augmentDevtoolsLoaded` preservati nel dist) e D-83 strict carryover acceptance gate passato (`git diff main...HEAD packages/{core,mapper,routing,gateway,worker}/src/` exit 0 lines — zero modifiche runtime F1-F5).
+Bootstrap dei 3 pacchetti F6 (`@gluezero/cache`, `@gluezero/devtools`, `@gluezero/gluezero`) come scaffold compilabile ESM-only via tsup, con augment.ts decl merging additive disgiunta su `BrokerConfig.cache` (D-155/D-156/D-158), `BrokerConfig.taps` (D-159 multiplex registry), `BrokerConfig.devtools` (D-160/D-167/D-170), super-set literal union `F6CachePipelineStep` (4 lifecycle events D-161) + `F6PipelineStep` (step 14 reale 'event.observed' + 4 system audit), Pattern S1 anti tree-shake verificato (`__augmentCacheLoaded` + `__augmentDevtoolsLoaded` preservati nel dist) e D-83 strict carryover acceptance gate passato (`git diff main...HEAD packages/{core,mapper,routing,gateway,worker}/src/` exit 0 lines — zero modifiche runtime F1-F5).
 
 ## Task Completati
 
 | Task | Nome                                                                                                  | Commit  | Files |
 |------|-------------------------------------------------------------------------------------------------------|---------|-------|
-| 1    | Bootstrap @sembridge/cache — package.json + build/test config + augment + 4 type files                | 47eafb6 | 13    |
-| 2    | Bootstrap @sembridge/devtools — package.json + build/test config + augment + 5 type files             | 249e7b1 | 14    |
-| 3    | Bootstrap @sembridge/sembridge (aggregato) + cross-package typecheck full monorepo + audit acceptance | c45b20f | 7     |
+| 1    | Bootstrap @gluezero/cache — package.json + build/test config + augment + 4 type files                | 47eafb6 | 13    |
+| 2    | Bootstrap @gluezero/devtools — package.json + build/test config + augment + 5 type files             | 249e7b1 | 14    |
+| 3    | Bootstrap @gluezero/gluezero (aggregato) + cross-package typecheck full monorepo + audit acceptance | c45b20f | 7     |
 
 **Totale:** 3 task, 33 file creati, 4 file modificati (placeholder F1 → F6 popolati: 3 package.json + pnpm-lock.yaml).
 
@@ -145,15 +145,15 @@ TOTAL:       893 passing + 3 skipped (atteso dal plan: 893+/896 ✓)
 
 ### Build ESM-only
 ```
-pnpm -F @sembridge/cache build
+pnpm -F @gluezero/cache build
   ESM dist/index.js     219 B   + dist/index.d.ts   171 B
   ESM dist/augment.js   223 B   + dist/augment.d.ts 6.15 KB
 
-pnpm -F @sembridge/devtools build
+pnpm -F @gluezero/devtools build
   ESM dist/index.js     228 B   + dist/index.d.ts   4.24 KB
   ESM dist/augment.js   232 B   + dist/augment.d.ts 117 B (+ chunk 3.66 KB)
 
-pnpm -F @sembridge/sembridge build
+pnpm -F @gluezero/gluezero build
   ESM dist/index.js      68 B   + dist/index.d.ts   1.14 KB
 ```
 
@@ -221,7 +221,7 @@ Entrambi possono importare i type creati in 06-01 senza conflitti git index. Rou
 4. `external` tsup sembridge include TUTTI i workspace dep + valibot — coperto plan §3.3
 5. Vitest CLI run senza flag `--passWithNoTests` aggiunto manuale (script package.json già lo ha; pnpm -r test doppio-aggiunge → errore CLI vitest 4.x). Risolto eseguendo `pnpm -r test` senza extra flag — issue minore di run, non di scaffold.
 
-**CLAUDE.md compliance:** Lingua italiano nei commit message + descrizioni; codice/identificatori/path inglese. Modello opus inferito (esecuzione orchestrator). Boundary di sicurezza rispettato (lavoro solo dentro `/Users/omarmarzio/programming/prova AI/SemBridge/`).
+**CLAUDE.md compliance:** Lingua italiano nei commit message + descrizioni; codice/identificatori/path inglese. Modello opus inferito (esecuzione orchestrator). Boundary di sicurezza rispettato (lavoro solo dentro `/Users/omarmarzio/programming/prova AI/GlueZero/`).
 
 ## Self-Check: PASSED
 
@@ -231,8 +231,8 @@ Entrambi possono importare i type creati in 06-01 senza conflitti git index. Rou
 - `[ -f packages/cache/src/types/cache-adapter.ts ]` ✓ FOUND
 - `[ -f packages/devtools/src/augment.ts ]` ✓ FOUND
 - `[ -f packages/devtools/src/types/metrics.ts ]` ✓ FOUND
-- `[ -f packages/sembridge/src/index.ts ]` ✓ FOUND
-- `[ -f packages/sembridge/src/types/sembridge-config.ts ]` ✓ FOUND
+- `[ -f packages/gluezero/src/index.ts ]` ✓ FOUND
+- `[ -f packages/gluezero/src/types/gluezero-config.ts ]` ✓ FOUND
 
 **Commits exist:**
 - `git log --oneline | grep 47eafb6` ✓ FOUND (Task 1 cache)

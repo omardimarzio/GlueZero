@@ -205,19 +205,19 @@ Open issue PRD §39 #5 (ROUTE-16), #6 (ROUTE-15), #7 (LIFE-02 ext F3), #8 (ROUTE
 
 ## User Setup Required
 
-None — gli integration test girano via `pnpm --filter @sembridge/routing test` standalone. msw 2.13.6 è già installato come root devDep (vedi `package.json` workspace root).
+None — gli integration test girano via `pnpm --filter @gluezero/routing test` standalone. msw 2.13.6 è già installato come root devDep (vedi `package.json` workspace root).
 
 ## Acceptance Verification
 
 ```bash
-cd /Users/omarmarzio/programming/prova\ AI/SemBridge
-pnpm --filter @sembridge/routing test
+cd /Users/omarmarzio/programming/prova\ AI/GlueZero
+pnpm --filter @gluezero/routing test
 # RESULT: Test Files 16 passed (16) | Tests 103 passed (103)
 
-pnpm --filter @sembridge/routing exec vitest run src/__integration__/
+pnpm --filter @gluezero/routing exec vitest run src/__integration__/
 # RESULT: Test Files 6 passed (6) | Tests 16 passed (16)
 
-pnpm --filter @sembridge/routing exec tsc --noEmit
+pnpm --filter @gluezero/routing exec tsc --noEmit
 # RESULT: exit 0
 ```
 
@@ -236,7 +236,7 @@ Nessun nuovo threat surface introdotto. Gli integration test usano msw 2.x in No
 - **Plan 03-14 (Wave 9 — final gate)** può ora misurare:
   - Coverage v8 ≥85% sul package routing (16 nuovi test integration estendono la coverage path coperti)
   - DOC-04 con esempi end-to-end dei 6 file integration test (PRD §29 + retry policy + dedupe + concurrency + allowlist + cascade)
-  - publint + attw + size-limit estensione a `@sembridge/routing` e `@sembridge/gateway` (D-92)
+  - publint + attw + size-limit estensione a `@gluezero/routing` e `@gluezero/gateway` (D-92)
 
 - **F4 realtime (SSE/WS adapter)** — il pattern `createRouterHarness` è estendibile aggiungendo `mockSseServer(handlers)` / `mockWsServer(handlers)` helper. msw 2.x supporta WebSocket interception nativo (msw 2.0+).
 

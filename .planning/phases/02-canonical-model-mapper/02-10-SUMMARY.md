@@ -63,7 +63,7 @@ key-decisions:
   - "**15 test broker-mapper-wrapper invece di 12**: il PLAN richiede 12 test ma ho aggiunto 3 bonus — Test 9 (subscribe diretto con ownerId esplicito invece di ctx.broker), Test 13 (passthrough plugin senza outputMap, regression), Test 14 (publish con system source — no source-resolved). Test 9 in particolare era richiesto dall'acceptance ma il PLAN snippet non lo dettagliava esplicitamente. Coerente con D-51."
 
 patterns-established:
-  - "Pattern composition wrapper class+factory per package F2+: il package mapper espone `MapperBroker` (class) + `createMapperBroker(config)` (factory con Valibot validation) come surface pubblica primaria. Replicabile per @sembridge/{routing, gateway, worker, cache, devtools} con la propria class wrapper composition di Broker + engine specifico."
+  - "Pattern composition wrapper class+factory per package F2+: il package mapper espone `MapperBroker` (class) + `createMapperBroker(config)` (factory con Valibot validation) come surface pubblica primaria. Replicabile per @gluezero/{routing, gateway, worker, cache, devtools} con la propria class wrapper composition di Broker + engine specifico."
   - "Pattern wrap descriptor hooks per propagare ctx specializzato: il broker F2+ wrappa gli hook lifecycle del descriptor (onRegister/onMount/onUnmount/onDestroy) per sostituire ctx.broker con un Proxy specializzato. Generalizzabile a F3 (ctx con `route` API), F5 (ctx con `worker` API), F6 (ctx con `inspector` API)."
   - "Pattern Valibot v.looseObject + section-specific validation: il public-factory di un package downstream valida le proprie sezioni del BrokerConfig (es. F2 valida canonicalModel/aliasRegistry/transforms) e lascia pass-through le sezioni di altri package via v.looseObject. Pattern non-breaking applicabile a F3 (RoutingConfigSchema + routing/transport sections), F5 (WorkersConfigSchema), F6 (CacheConfigSchema)."
   - "Pattern cascade D-26 ext indipendente con try/catch swallow per ogni step: applicato a F2 mapper cascade. F3 estenderà con cascade routes; F5 con cascade workers; F6 con cascade cache entries. Ogni step indipendente — fallimento di uno NON blocca gli altri (T-02-10-03 generalizzato)."
@@ -91,7 +91,7 @@ completed: 2026-04-30
 
 # Phase 2 Plan 10: MapperBroker (Broker Integration) Summary
 
-**Implementato `MapperBroker` (composition wrapper di Broker F1) + `createMapperBroker(config)` (public factory) per `@sembridge/mapper`. Wira runtime tutti i moduli F2 (CanonicalRegistry, AliasRegistry, TransformPipeline, MapperEngine, MappingInspector) al Broker di F1 SENZA modificare `bus.ts`/`broker.ts`/`plugin-registry.ts` (D-49 confermato a 0 linee diff su packages/core/). Pipeline §28 estesa F2 (passi 4, 5, 6, 11, 12) implementata via hook al publish (canonicalize + canonical validation) e al subscribe (consumer mapping + final validation). Per i plugin che si sottoscrivono via `ctx.broker.subscribe` (Test 8 scenario meteo PRD §29), il MapperBroker wrappa gli hook lifecycle del descriptor per propagare un `ctx.broker` mapper-aware (D-51). Cascade D-26 ext F2 al `unregisterPlugin` pulisce alias scoped + transforms ownerId + mapper compiled + canonical schemas owned. Pattern TDD: 4 commit (2 RED + 2 GREEN). Pronto per consumption integration test plan 02-11 (PipelineHarness extension F2 + scenario meteo end-to-end).**
+**Implementato `MapperBroker` (composition wrapper di Broker F1) + `createMapperBroker(config)` (public factory) per `@gluezero/mapper`. Wira runtime tutti i moduli F2 (CanonicalRegistry, AliasRegistry, TransformPipeline, MapperEngine, MappingInspector) al Broker di F1 SENZA modificare `bus.ts`/`broker.ts`/`plugin-registry.ts` (D-49 confermato a 0 linee diff su packages/core/). Pipeline §28 estesa F2 (passi 4, 5, 6, 11, 12) implementata via hook al publish (canonicalize + canonical validation) e al subscribe (consumer mapping + final validation). Per i plugin che si sottoscrivono via `ctx.broker.subscribe` (Test 8 scenario meteo PRD §29), il MapperBroker wrappa gli hook lifecycle del descriptor per propagare un `ctx.broker` mapper-aware (D-51). Cascade D-26 ext F2 al `unregisterPlugin` pulisce alias scoped + transforms ownerId + mapper compiled + canonical schemas owned. Pattern TDD: 4 commit (2 RED + 2 GREEN). Pronto per consumption integration test plan 02-11 (PipelineHarness extension F2 + scenario meteo end-to-end).**
 
 ## Performance
 
@@ -249,15 +249,15 @@ Type exports estesi (5 nuovi):
 
 | Comando | Risultato |
 |---------|-----------|
-| `pnpm --filter @sembridge/mapper test broker-mapper-wrapper` (RED, post commit `b51e507`) | FAIL atteso: `Failed to resolve import "./broker-mapper-wrapper"` |
-| `pnpm --filter @sembridge/mapper test broker-mapper-wrapper` (GREEN, post commit `edfd0e0`) | Exit 0: **`Test Files 1 passed (1) | Tests 15 passed (15)`** Duration 424ms |
-| `pnpm --filter @sembridge/mapper test public-factory` (RED, post commit `3a840d0`) | FAIL atteso: `Failed to resolve import "./public-factory"` |
-| `pnpm --filter @sembridge/mapper test public-factory` (GREEN, post commit `a53c260`) | Exit 0: **`Test Files 1 passed (1) | Tests 8 passed (8)`** Duration 405ms |
-| `pnpm --filter @sembridge/mapper test` (full mapper suite) | Exit 0: **`Test Files 9 passed (9) | Tests 116 passed (116)`** (canonical-registry 11 + alias-registry 16 + transform-pipeline 14 + valibot-adapter 10 + mapper-engine 26 + inspector 10 + augment 6 + broker-mapper-wrapper 15 + public-factory 8) |
-| `pnpm --filter @sembridge/mapper typecheck` | Exit 0 (isolatedDeclarations enforcement OK; ogni metodo pubblico ha return type esplicito; conditional spread per exactOptionalPropertyTypes verificato post fix MapperPublishOptions = Parameters<Broker['publish']>[2]) |
-| `pnpm --filter @sembridge/mapper build` | Exit 0: dist/index.js (45.30 KB) + dist/augment.js (214 B) + dist/index.d.ts (46.96 KB) + dist/augment.d.ts (88 B) + dist/augment-CLfzFiyy.d.ts (9.43 KB shared types) |
-| `pnpm --filter @sembridge/core test` (regression F1) | Exit 0: **24 file/248 test passing** (no regression — D-49 confermato) |
-| `pnpm --filter @sembridge/core typecheck` | Exit 0 |
+| `pnpm --filter @gluezero/mapper test broker-mapper-wrapper` (RED, post commit `b51e507`) | FAIL atteso: `Failed to resolve import "./broker-mapper-wrapper"` |
+| `pnpm --filter @gluezero/mapper test broker-mapper-wrapper` (GREEN, post commit `edfd0e0`) | Exit 0: **`Test Files 1 passed (1) | Tests 15 passed (15)`** Duration 424ms |
+| `pnpm --filter @gluezero/mapper test public-factory` (RED, post commit `3a840d0`) | FAIL atteso: `Failed to resolve import "./public-factory"` |
+| `pnpm --filter @gluezero/mapper test public-factory` (GREEN, post commit `a53c260`) | Exit 0: **`Test Files 1 passed (1) | Tests 8 passed (8)`** Duration 405ms |
+| `pnpm --filter @gluezero/mapper test` (full mapper suite) | Exit 0: **`Test Files 9 passed (9) | Tests 116 passed (116)`** (canonical-registry 11 + alias-registry 16 + transform-pipeline 14 + valibot-adapter 10 + mapper-engine 26 + inspector 10 + augment 6 + broker-mapper-wrapper 15 + public-factory 8) |
+| `pnpm --filter @gluezero/mapper typecheck` | Exit 0 (isolatedDeclarations enforcement OK; ogni metodo pubblico ha return type esplicito; conditional spread per exactOptionalPropertyTypes verificato post fix MapperPublishOptions = Parameters<Broker['publish']>[2]) |
+| `pnpm --filter @gluezero/mapper build` | Exit 0: dist/index.js (45.30 KB) + dist/augment.js (214 B) + dist/index.d.ts (46.96 KB) + dist/augment.d.ts (88 B) + dist/augment-CLfzFiyy.d.ts (9.43 KB shared types) |
+| `pnpm --filter @gluezero/core test` (regression F1) | Exit 0: **24 file/248 test passing** (no regression — D-49 confermato) |
+| `pnpm --filter @gluezero/core typecheck` | Exit 0 |
 | Smoke import bundle | `Exports: AliasRegistry, CanonicalRegistry, MapperBroker, MapperEngine, MappingInspector, TransformPipeline, __augmentLoaded, createMapperBroker, isMappingErrorCode, valibotAdapter, wrapTap` (11 runtime exports) |
 | `pnpm exec biome check packages/mapper/src/{broker-mapper-wrapper,public-factory,index,mapper-engine}*.ts` | Exit 0 (no errors after auto-fix) |
 | Audit `git diff HEAD~4 -- packages/core/` | 0 lines diff — D-49 strict confermato |
@@ -286,7 +286,7 @@ Type exports estesi (5 nuovi):
   - Aggiungere il check al `applyOutputMap`/`applyInputMap` direttamente: già fatto (passthrough), ma il broker wrapper ha bisogno di decidere PRIMA se invocarli o saltare il flow F2 entirely (per non interferire con plugin F1 plain)
 - **Fix:** Aggiunti 3 metodi pubblici `MapperEngine`: `hasCompiled(pluginId)`, `hasInputMap(pluginId)`, `getCanonicalSchemaIdFor(pluginId)`. Tutti additive, nessun breaking change al contract pubblico esistente (compileMappings/applyOutputMap/applyInputMap/unregisterPluginMappings/validateCanonical/stats restano identici). I 26 test plan 02-07 invariati al re-run.
 - **Files modified:** `packages/mapper/src/mapper-engine.ts` (+45 LOC — 3 metodi + JSDoc)
-- **Verification:** `pnpm --filter @sembridge/mapper test mapper-engine` exit 0 (26/26 invariati); typecheck exit 0
+- **Verification:** `pnpm --filter @gluezero/mapper test mapper-engine` exit 0 (26/26 invariati); typecheck exit 0
 - **Commit:** `edfd0e0` (Task 1 GREEN)
 
 **2. [Rule 1 — Bug] MapperPublishOptions type definition fix**
@@ -385,7 +385,7 @@ Nessun auth gate — task interamente automatico (file creation + typecheck/test
 - ✅ **Closed:** D-30 (no singleton createMapperBroker) — Test 6 public-factory verifica `b1 !== b2`.
 - ✅ **Closed:** D-56 (Valibot validation sezioni F2) — `MapperBrokerConfigSchema` valida canonicalModel/aliasRegistry/transforms strutturalmente. Test 5 public-factory verifica throw `Invalid MapperBrokerConfig`.
 - ✅ **Ready:** plan 02-11 (PipelineHarness extension F2 + integration test scenario meteo PRD §29 D-53) può:
-  - Importare `createMapperBroker` dal barrel `@sembridge/mapper`
+  - Importare `createMapperBroker` dal barrel `@gluezero/mapper`
   - Estendere `PipelineHarness` di F1 con metodi `defineCanonicalSchema()`, `defineTransform()`, `expectMappingApplied()` come da `02-PATTERNS.md §2.4`
   - Verificare end-to-end scenario meteo: plugin form publica `weather.requested` con `città/data`, mapper produce internamente `{location, forecast_date}`, plugin widget consumer riceve `{location, 'day-prevision'}`
   - Verificare `byStep('event.mapped.canonical')` e `byStep('event.mapped.consumer')` (richiede tap orchestration F2 — il MapperBroker plan 02-10 NON wira ancora `wrapTap(config.runtime.tap, inspector)` runtime poiché `recordSnapshot` è no-op V1; plan 02-11 può aggiungere il wiring del tap utente per il PipelineHarness)

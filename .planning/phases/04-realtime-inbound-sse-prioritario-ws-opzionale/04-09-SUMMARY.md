@@ -12,7 +12,7 @@ tags:
   - PRD-39-issue-9
 dependency_graph:
   requires:
-    - 04-01-SUMMARY (bootstrap @sembridge/gateway/sse-ws + augment + types F4)
+    - 04-01-SUMMARY (bootstrap @gluezero/gateway/sse-ws + augment + types F4)
     - 04-02-SUMMARY (frame-parser.ts envelope JSON D-106 + isInternalTopic strict anti-AP-6)
     - 04-03-SUMMARY (reconnect-strategy.ts full jitter D-109 + auto-fallback D-107)
     - 04-04-SUMMARY (visibility-detector.ts D-110 DI guard Worker/SSR)
@@ -79,7 +79,7 @@ Final gate Phase 4 (analogo 03-14 per F3): chiude formalmente F4 con coverage v8
 ## Cosa è stato fatto
 
 **Task 1 — Coverage measurement + thresholds documentation:**
-- Run `pnpm --filter @sembridge/gateway test --coverage` — coverage v8 misurata realistic post-implementation
+- Run `pnpm --filter @gluezero/gateway test --coverage` — coverage v8 misurata realistic post-implementation
 - **Globale**: 87.27% statements / 80.23% branches / 88.75% functions / 89.32% lines
 - **sse-ws/ subset**: 91.80% statements / 86.70% branches / 89.53% functions / 93.75% lines (supera target ≥85/75/88/87)
 - Thresholds globali invariati (85/75/88/87) — documentati in `vitest.config.ts` con rationale
@@ -90,10 +90,10 @@ Final gate Phase 4 (analogo 03-14 per F3): chiude formalmente F4 con coverage v8
   - `frame-parser.ts`: `biome-ignore lint/complexity/useLiteralKeys` su `obj['topic']`/`obj['data']`/`obj['id']` (TS `noPropertyAccessFromIndexSignature` strict richiede bracket access su `Record<string,unknown>` — useLiteralKeys e TS strict sono in tensione)
   - `realtime-broker.ts`: `disconnectRealtime` rimosso `return this.manager.disconnect(name)` su void chain (`lint/correctness/noVoidTypeReturn`)
   - `visibility-detector.test.ts`: `forEach((fn) => fn(ev))` → `forEach((fn) => { fn(ev) })` (`lint/suspicious/useIterableCallbackReturn` — singolo error severity)
-- `pnpm --filter @sembridge/gateway typecheck` exit 0
-- `pnpm --filter @sembridge/gateway build` exit 0 — `dist/sse-ws/{index,augment}.{js,d.ts}` generati (49.13 KB ESM index)
-- `pnpm --filter @sembridge/gateway publint` exit 0 ("All good!")
-- `pnpm --filter @sembridge/gateway attw` exit 0 (esm-only profile passa per `@sembridge/gateway`, `@sembridge/gateway/http`, `@sembridge/gateway/sse-ws`)
+- `pnpm --filter @gluezero/gateway typecheck` exit 0
+- `pnpm --filter @gluezero/gateway build` exit 0 — `dist/sse-ws/{index,augment}.{js,d.ts}` generati (49.13 KB ESM index)
+- `pnpm --filter @gluezero/gateway publint` exit 0 ("All good!")
+- `pnpm --filter @gluezero/gateway attw` exit 0 (esm-only profile passa per `@gluezero/gateway`, `@gluezero/gateway/http`, `@gluezero/gateway/sse-ws`)
 - `pnpm test` exit 0 — **756/759 monorepo full** (248 core + 183 mapper + 103 routing + 222 gateway, 3 skip MSW V1.x)
 - D-83 strict carryover verificato: `git diff` da first commit Phase 4 (`d090a1b` parent `9abf518`) zero hits su `packages/{core,mapper,routing}/src/` + `packages/gateway/src/http/`
 - Commit: `3c01b73 style(04-09): biome auto-format on F4 sse-ws sources + 2 lint fixes`
@@ -189,22 +189,22 @@ Per file sse-ws/:
 - `visibility-detector.ts`: 100.00 / 91.30 / 100.00 / 100.00
 - `websocket-adapter.ts`: 88.98 / 81.60 / 80.95 / 90.09
 
-## Output `pnpm publint && pnpm attw` per @sembridge/gateway
+## Output `pnpm publint && pnpm attw` per @gluezero/gateway
 
 ```
-> @sembridge/gateway@0.0.0 publint
+> @gluezero/gateway@0.0.0 publint
 > publint --strict
-Running publint v0.3.18 for @sembridge/gateway...
+Running publint v0.3.18 for @gluezero/gateway...
 Linting...
 All good!
 ```
 
 ```
 attw esm-only profile per:
-- @sembridge/gateway: node16 ESM 🟢 / bundler 🟢 / node10 (ignored)
-- @sembridge/gateway/http: node16 ESM 🟢 / bundler 🟢
-- @sembridge/gateway/sse-ws: node16 ESM 🟢 / bundler 🟢
-- @sembridge/gateway/package.json: tutto 🟢
+- @gluezero/gateway: node16 ESM 🟢 / bundler 🟢 / node10 (ignored)
+- @gluezero/gateway/http: node16 ESM 🟢 / bundler 🟢
+- @gluezero/gateway/sse-ws: node16 ESM 🟢 / bundler 🟢
+- @gluezero/gateway/package.json: tutto 🟢
 ```
 
 ## LOC count totale aggiunto in F4 (cumulativo dal first commit Phase 4)
@@ -275,7 +275,7 @@ Tutti zero — D-83 strict ✓ verified.
 
 | Plan | Goal | Commits chiave |
 |------|------|---------------|
-| 04-01 | Bootstrap @sembridge/gateway/sse-ws + augment + types F4 | `d090a1b` feat scaffold + `2624c66` chore build/test config + `a3c3004` docs SUMMARY |
+| 04-01 | Bootstrap @gluezero/gateway/sse-ws + augment + types F4 | `d090a1b` feat scaffold + `2624c66` chore build/test config + `a3c3004` docs SUMMARY |
 | 04-02 | frame-parser.ts (envelope JSON D-106 + isInternalTopic strict anti-AP-6) | `26cc3c2` RED test + `edcbf3b` GREEN feat |
 | 04-03 | reconnect-strategy.ts (full jitter D-109 + auto-fallback D-107 + consolidationMs Q3) | `cfe6020` RED + `d3b3921` GREEN |
 | 04-04 | visibility-detector.ts (D-110 + DI guard Worker/SSR) | `a74a9dc` RED + `1e1d34b` GREEN |

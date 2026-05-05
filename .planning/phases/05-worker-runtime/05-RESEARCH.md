@@ -163,7 +163,7 @@ Tutti i directive rilevanti per F5:
 |-----------|-----------------|
 | **Modello opus per ogni sub-agent** | Spawn agenti GSD F5 con override esplicito `model: "opus"` (no sonnet/haiku anche per verifier/checker/synthesizer). Config `model_profile: "quality"` non sufficiente da solo. |
 | **Lingua italiana** | RESEARCH.md, PLAN.md F5, JSDoc descrittivi, commit message, descrizioni REQ-ID, success criteria → italiano. Codice/identificatori/nomi librerie/file/log keyword/error code → inglese. |
-| **Boundary di sicurezza** | F5 vive in `/Users/omarmarzio/programming/prova AI/SemBridge/packages/worker/` — area libera. Niente touch fuori boundary. |
+| **Boundary di sicurezza** | F5 vive in `/Users/omarmarzio/programming/prova AI/GlueZero/packages/worker/` — area libera. Niente touch fuori boundary. |
 | **Alta autonomia decisionale** | Tutti i 34 decisions sono lockate in CONTEXT.md → NON re-discutere. Procedi su default ragionevoli per Claude's Discretion. Chiedi solo per scope irreversibili (improbable in F5). |
 | **D-83 strict carryover** | F5 NON tocca runtime di `packages/{core,mapper,routing}/src/` né `packages/gateway/src/{http,sse-ws}/`. F5 vive SOLO in `packages/worker/src/`. Verifica `git diff` exit-zero su quei path. |
 | **Agent-swarm preferred** | Wave-based parallelization con file ownership disgiunta. Spawn multipli in singolo messaggio. |
@@ -173,7 +173,7 @@ Tutti i directive rilevanti per F5:
 
 ## 1. Executive Summary
 
-La Fase 5 introduce un singolo nuovo package runtime (`@sembridge/worker`) che ospita **6-7 moduli core + 1 augment + 1 composition wrapper + 1 final-gate** seguendo il pattern di composizione consolidato in F3 (D-83 strict) e F4 (D-101 ortogonale). Il `WorkerBroker` compone `RouterBroker` di F3 estendendo l'API pubblica con `registerWorker(descriptor)` / `unregisterWorker(id)` (PRD §16.2) e gestendo internamente un `WorkerRegistry` che indicizza N descriptor per `id`. La pipeline §28 step 9 (execute route) viene estesa via dispatch table extension — il placeholder `case 'worker'` lasciato in F3 (D-77) diventa una invocazione concreta di `bridge.dispatch(...)`.
+La Fase 5 introduce un singolo nuovo package runtime (`@gluezero/worker`) che ospita **6-7 moduli core + 1 augment + 1 composition wrapper + 1 final-gate** seguendo il pattern di composizione consolidato in F3 (D-83 strict) e F4 (D-101 ortogonale). Il `WorkerBroker` compone `RouterBroker` di F3 estendendo l'API pubblica con `registerWorker(descriptor)` / `unregisterWorker(id)` (PRD §16.2) e gestendo internamente un `WorkerRegistry` che indicizza N descriptor per `id`. La pipeline §28 step 9 (execute route) viene estesa via dispatch table extension — il placeholder `case 'worker'` lasciato in F3 (D-77) diventa una invocazione concreta di `bridge.dispatch(...)`.
 
 **Stack lockato (no choice — già fissato in CONTEXT.md + STACK.md):**
 - `comlink@4.4.2` (verificato registry 2026-05-04, released 2024-11-07) per RPC typed worker ↔ main thread
@@ -207,8 +207,8 @@ La Fase 5 introduce un singolo nuovo package runtime (`@sembridge/worker`) che o
 | Schema validation | `valibot` | 1.3.1 | LOCKED (riuso F2) | Per `WorkerBrokerConfig` safeParse + canonical schema progress `{value, message?, partialResult?}`. |
 | Worker transport | `Worker` (browser nativo) | spec WHATWG HTML | LOCKED (PRD §31.3) | NO `workerize`/`greenlet`/`threads.js`. ESM `{type:'module'}` default (D-147). |
 | Serialization | `structuredClone` (browser nativo, SCA) | spec WHATWG HTML | LOCKED (D-142) | Implicito via `postMessage`. NO `JSON.stringify`. NO `superjson` default (V1.x opt-in). |
-| Composition base | `RouterBroker` di `@sembridge/routing` | workspace:* | LOCKED (D-121, D-83 strict) | F5 estende, NON modifica. |
-| Mapper canonicalization | `MapperEngine` di `@sembridge/mapper` | workspace:* | LOCKED (D-153, D-114 carryover) | Riuso identico a F3/F4. |
+| Composition base | `RouterBroker` di `@gluezero/routing` | workspace:* | LOCKED (D-121, D-83 strict) | F5 estende, NON modifica. |
+| Mapper canonicalization | `MapperEngine` di `@gluezero/mapper` | workspace:* | LOCKED (D-153, D-114 carryover) | Riuso identico a F3/F4. |
 | Test framework | `vitest` | 4.1.5 | LOCKED (riuso F1-F4) | Tier-1 jsdom + Tier-3 browser. |
 | Browser-real test | `@vitest/browser` + `playwright` | 4.1.5 + 1.59.1 | LOCKED (D-150) | Per Worker reali (TEST-02/03). |
 
@@ -218,7 +218,7 @@ La Fase 5 introduce un singolo nuovo package runtime (`@sembridge/worker`) che o
 |-------------|------------------|-------------|
 | `greenlet` (npm) | Orientato a "single function in worker", non a API estese. Inadatto per worker con N task (PRD §19.6 cita parsing CSV, dedup massiva). | STACK.md §6 |
 | `workerize` / `workerize-loader` | Non più mantenuti attivamente (legati a Webpack vintage). | STACK.md §6 |
-| `threads.js` | Footprint ~5 KB, orientato Node+browser (overengineered per V1 browser-only SemBridge). | STACK.md §6 |
+| `threads.js` | Footprint ~5 KB, orientato Node+browser (overengineered per V1 browser-only GlueZero). | STACK.md §6 |
 | Custom RPC su `postMessage` | ~150-200 LOC interno; valido come escape hatch V1.x se Comlink mostra friction. V1 LOCKED Comlink (D-125 + STACK.md). | STACK.md §6 |
 | `jsonpath-plus` (npm, ~4-6 KB) | Over-engineering per D-141 wildcard subset (`[*]` solo). Researcher propone implementazione custom ~50-80 LOC zero-dep, allineata a `$derive` extractor di F2. | §6.4 sotto |
 | `superjson` (npm, ~5 KB) | Default structuredClone copre Date/Map/Set/ArrayBuffer/RegExp/Blob/ImageData/ImageBitmap (D-142 contract). `superjson` opt-in V1.x se BigInt/custom class needed (deferred). | STACK.md §8 |
@@ -230,11 +230,11 @@ La Fase 5 introduce un singolo nuovo package runtime (`@sembridge/worker`) che o
 ### 2.3 Cosa va INSTALLATO in F5
 
 ```bash
-# Plan 05-01 (bootstrap @sembridge/worker package):
-pnpm add comlink@^4.4.2 --filter @sembridge/worker
-pnpm add @sembridge/core@workspace:* @sembridge/mapper@workspace:* @sembridge/routing@workspace:* --filter @sembridge/worker
-pnpm add nanoid@^5.1.11 --filter @sembridge/worker  # per taskId
-pnpm add valibot@^1.3.1 --filter @sembridge/worker  # per safeParse config + canonical schema progress
+# Plan 05-01 (bootstrap @gluezero/worker package):
+pnpm add comlink@^4.4.2 --filter @gluezero/worker
+pnpm add @gluezero/core@workspace:* @gluezero/mapper@workspace:* @gluezero/routing@workspace:* --filter @gluezero/worker
+pnpm add nanoid@^5.1.11 --filter @gluezero/worker  # per taskId
+pnpm add valibot@^1.3.1 --filter @gluezero/worker  # per safeParse config + canonical schema progress
 
 # Dev deps (riuso devDependencies workspace root):
 # vitest@4.1.5, jsdom@29.1.0, @vitest/browser@4.1.5, playwright@1.59.1 — già installati F1-F4
@@ -308,7 +308,7 @@ Permette assertion `WorkerTasks<API>[]` per evitare typo in `tasks: [...]`. Impl
                                                                                        │ workerHandler(event, route, signal)
                                                                                        ▼
               ┌────────────────────────────────────────────────────────────────────────────────────────┐
-              │              @sembridge/worker — runtime F5 (D-83 strict, only here)                  │
+              │              @gluezero/worker — runtime F5 (D-83 strict, only here)                  │
               │ ┌──────────────────┐    register/get     ┌────────────────────┐                       │
               │ │ WorkerRegistry   │ ◄──────────────────│  WorkerHandler     │ ◄─ injected via       │
               │ │ Map<id, desc>    │                     │  (Strategy F3)     │    workerHandler dep  │
@@ -371,13 +371,13 @@ Permette assertion `WorkerTasks<API>[]` per evitare typo in `tasks: [...]`. Impl
 
 | Component | File | Responsibility | Owns | Depends on |
 |-----------|------|----------------|------|------------|
-| **WorkerBroker** | `packages/worker/src/worker-broker.ts` | Composition wrapper di `RouterBroker` (D-121). Override `registerPlugin/unregisterPlugin` per cascade `workers` (D-126 ext F5). API surface F1+F2+F3+F5: aggiunge `registerWorker/unregisterWorker`. | Inner `RouterBroker` + `WorkerRegistry` + `WorkerPool` + `TaskTracker` + `WorkerBridge` factory. | `@sembridge/routing` (RouterBroker, RouterEngine), `@sembridge/core` (PluginDescriptor, BrokerError), `comlink`. |
+| **WorkerBroker** | `packages/worker/src/worker-broker.ts` | Composition wrapper di `RouterBroker` (D-121). Override `registerPlugin/unregisterPlugin` per cascade `workers` (D-126 ext F5). API surface F1+F2+F3+F5: aggiunge `registerWorker/unregisterWorker`. | Inner `RouterBroker` + `WorkerRegistry` + `WorkerPool` + `TaskTracker` + `WorkerBridge` factory. | `@gluezero/routing` (RouterBroker, RouterEngine), `@gluezero/core` (PluginDescriptor, BrokerError), `comlink`. |
 | **createWorkerBroker (factory)** | `packages/worker/src/public-factory.ts` | Factory pubblico `createWorkerBroker(config: WorkerBrokerConfig)` con Valibot `safeParse` (D-122, pattern F4 D-30 / F3 D-87). | Validation + costruzione WorkerBroker con DI defaults. | `valibot`, WorkerBroker. |
-| **WorkerRegistry** | `packages/worker/src/worker-registry.ts` | `Map<workerId, RegisteredWorker>` con `register/unregister/get/listByOwner`. Validazione fail-fast `worker.task.unknown` al register (D-124). Cascade `unregisterByOwner` (D-126 ext F5, pattern http-gateway D-86). | Map + cascade abort. | `@sembridge/core` (BrokerError factory). |
+| **WorkerRegistry** | `packages/worker/src/worker-registry.ts` | `Map<workerId, RegisteredWorker>` con `register/unregister/get/listByOwner`. Validazione fail-fast `worker.task.unknown` al register (D-124). Cascade `unregisterByOwner` (D-126 ext F5, pattern http-gateway D-86). | Map + cascade abort. | `@gluezero/core` (BrokerError factory). |
 | **WorkerPool** | `packages/worker/src/worker-pool.ts` | Lazy spawn bounded (D-127, D-128, D-129). `acquireSlot(workerId): Promise<PoolSlot>` — round-robin / least-busy assignment. `releaseSlot` su task end. Backpressure delegated a F3 strategy (D-130). Respawn slot dopo terminate fallback (D-131). | Pool slots Map + queue + spawn lifecycle. | WorkerBridge factory, F3 BackpressureStrategy. |
 | **WorkerBridge** | `packages/worker/src/worker-bridge.ts` | Wrapper Comlink: `dispatch(taskName, payload, signal, onProgress): Promise<unknown>`. Crea Comlink proxy al primo dispatch (lazy D-129). Gestisce `Comlink.transfer(payload, transferList)`. Termine: `bridge.terminate()`. Astrazione interna per swap futuro RPC custom (V1.x). | Worker instance + Comlink proxy + transferable extraction integration. | `comlink`, AssertSerializable, TransferableExtractor, Worker (browser native). |
 | **TaskTracker** | `packages/worker/src/task-tracker.ts` | `Map<TaskId, TaskState>`. Stati: `'pending' \| 'done' \| 'timeout' \| 'cancelled' \| 'error'`. `markX()` con check-and-set atomico (single-threaded JS event loop). Late response post-non-pending → scartata + counter `workerLateResponses` (D-133, Pitfall 2C strict). | Map state + getDebugSnapshot. | nanoid (taskId gen). |
-| **AssertSerializable** | `packages/worker/src/assert-serializable.ts` | Deep-walk ricorsivo del payload pre-postMessage. Throw `BrokerError({ code: 'worker.serialization.failed.<sub>', category: 'worker', details: { fieldPath, fieldType }})` su funzioni / DOM nodes / classi custom non-SCA (D-139, D-140). Dev mode auto via `import.meta.env.DEV ?? process.env.NODE_ENV !== 'production'` o config override `'always'/'dev'/'off'`. | Deep traversal + path tracking. | `@sembridge/core` (createBrokerError). |
+| **AssertSerializable** | `packages/worker/src/assert-serializable.ts` | Deep-walk ricorsivo del payload pre-postMessage. Throw `BrokerError({ code: 'worker.serialization.failed.<sub>', category: 'worker', details: { fieldPath, fieldType }})` su funzioni / DOM nodes / classi custom non-SCA (D-139, D-140). Dev mode auto via `import.meta.env.DEV ?? process.env.NODE_ENV !== 'production'` o config override `'always'/'dev'/'off'`. | Deep traversal + path tracking. | `@gluezero/core` (createBrokerError). |
 | **TransferableExtractor** | `packages/worker/src/transferable-extractor.ts` | JSONPath-like extractor (`['payload.audioBuffer', 'payload.images[*].buffer']`). Implementazione zero-dep ~50-80 LOC. Supporta wildcard `[*]`. Ritorna `Transferable[]` per `Comlink.transfer(payload, transferList)`. (D-141) | Path parsing + iteration. | (zero deps). |
 | **WorkerHandler** | `packages/worker/src/worker-handler.ts` | Strategy F3 — funzione iniettata in `RouteExecutorDeps.workerHandler` (D-152). Riceve `(event: BrokerEvent, route: CompiledRoute, signal: AbortSignal): Promise<RouteOutcome>`. Orchestra: registry.get(workerId) → pool.acquireSlot → bridge.dispatch → tracker.markDone/markError → return RouteOutcome. | Orchestration logic. | WorkerRegistry, WorkerPool, WorkerBridge, TaskTracker. |
 | **augment.ts** | `packages/worker/src/augment.ts` | TypeScript declaration merging additive: estende `BrokerConfig` con `workers?: WorkerConfig`, `PluginDescriptor` con `workers?: WorkerDescriptor[]`, `RouteDefinition` union con `RouteWorkerDefinition` (D-126, D-122, D-152). Pattern F2 D-57 / F3 D-94 / F4 D-103 — già consolidato 3 volte. | Type extensions. | (zero runtime impact — pure type). |
@@ -386,11 +386,11 @@ Permette assertion `WorkerTasks<API>[]` per evitare typo in `tasks: [...]`. Impl
 
 | Boundary | F5 fa | F5 NON fa |
 |----------|-------|-----------|
-| `@sembridge/core` | Importa types `PluginDescriptor`, `Subscription`, `BrokerEvent`, `BrokerError`, `EventTap`, `PipelineSnapshot`, `PipelineStep`. Ri-esporta extension via augment.ts. | Modifica runtime di core/. **Vietato D-83 strict.** |
-| `@sembridge/mapper` | Riusa `MapperEngine` via RouterBroker delegation per canonicalizzazione progress (D-138) e canonical→output (D-153). | Modifica runtime mapper. **Vietato D-83.** |
-| `@sembridge/routing` | Compone `RouterBroker` (D-121). Importa `RouteExecutorDeps`, `CompiledRoute`, `RouteOutcome`. Estende `RouteDefinition` union via declaration merging (D-152). Riusa `BackpressureStrategy` F3 D-75 (D-130). | Modifica runtime routing/. **Vietato D-83 strict.** |
-| `@sembridge/gateway` (http subset) | Riusa pattern `abortInFlightByOwner` (concettuale, non importa modulo). | Importa `http/` subpath runtime. |
-| `@sembridge/gateway/sse-ws` (F4) | NESSUN coupling. F4 e F5 ortogonali — l'utente sceglie un entry point o compone esplicitamente `createWorkerBroker(createRealtimeBroker(config))`. | Importa F4 runtime. |
+| `@gluezero/core` | Importa types `PluginDescriptor`, `Subscription`, `BrokerEvent`, `BrokerError`, `EventTap`, `PipelineSnapshot`, `PipelineStep`. Ri-esporta extension via augment.ts. | Modifica runtime di core/. **Vietato D-83 strict.** |
+| `@gluezero/mapper` | Riusa `MapperEngine` via RouterBroker delegation per canonicalizzazione progress (D-138) e canonical→output (D-153). | Modifica runtime mapper. **Vietato D-83.** |
+| `@gluezero/routing` | Compone `RouterBroker` (D-121). Importa `RouteExecutorDeps`, `CompiledRoute`, `RouteOutcome`. Estende `RouteDefinition` union via declaration merging (D-152). Riusa `BackpressureStrategy` F3 D-75 (D-130). | Modifica runtime routing/. **Vietato D-83 strict.** |
+| `@gluezero/gateway` (http subset) | Riusa pattern `abortInFlightByOwner` (concettuale, non importa modulo). | Importa `http/` subpath runtime. |
+| `@gluezero/gateway/sse-ws` (F4) | NESSUN coupling. F4 e F5 ortogonali — l'utente sceglie un entry point o compone esplicitamente `createWorkerBroker(createRealtimeBroker(config))`. | Importa F4 runtime. |
 
 **Verifica D-83 strict carryover:** `git diff --stat packages/{core,mapper,routing}/src/ packages/gateway/src/{http,sse-ws}/` deve restituire **zero hits** alla fine di F5. Final gate plan 05-07 verifica.
 
@@ -416,7 +416,7 @@ const api = {
 }
 Comlink.expose(api)  // marshals all methods + properties
 
-// Main side (SemBridge WorkerBridge)
+// Main side (GlueZero WorkerBridge)
 const proxy = Comlink.wrap<typeof api>(workerInstance)
 const result = await proxy.parseCsv(rawCsv, Comlink.proxy(controller.signal), Comlink.proxy(onProgressCb))
 ```
@@ -425,7 +425,7 @@ const result = await proxy.parseCsv(rawCsv, Comlink.proxy(controller.signal), Co
 
 | API | Use in F5 | Note |
 |-----|-----------|------|
-| `Comlink.expose(api, port?)` | Worker authoring side (consumer del SemBridge) — DOC-05. | Default `port = self` (DedicatedWorkerGlobalScope). |
+| `Comlink.expose(api, port?)` | Worker authoring side (consumer del GlueZero) — DOC-05. | Default `port = self` (DedicatedWorkerGlobalScope). |
 | `Comlink.wrap<T>(port)` | `WorkerBridge.constructor` lazy al primo dispatch (D-129). | Ritorna `Remote<T>` proxy typed. |
 | `Comlink.proxy(value)` | Wrappare `AbortSignal` + `onProgress` callback come proxy invece di structured-clone (D-132, D-135). | Critico per cancellation cooperative — senza proxy, signal viene cloned (snapshot) e `addEventListener('abort')` non firerebbe più. |
 | `Comlink.transfer(value, transferList)` | `WorkerBridge.dispatch` quando `transferable` array configurato (D-141). | Marshalling esplicito per ArrayBuffer/MessagePort. |
@@ -465,7 +465,7 @@ controller.abort('worker.timeout')
 **Alternativa proposta da researcher (Claude's Discretion):** F5 può fornire helper `createWorkerSignalAdapter(controller)` lato worker che converte il proxy in un sync-like wrapper:
 
 ```ts
-// In @sembridge/worker (riusabile lato worker via import condizionale dal pacchetto)
+// In @gluezero/worker (riusabile lato worker via import condizionale dal pacchetto)
 export function createCheckpointFn(signal: Comlink.Remote<AbortSignal>): () => Promise<void> {
   return async () => {
     if (await signal.aborted) throw new DOMException('Aborted', 'AbortError')
@@ -615,7 +615,7 @@ async execute(event: BrokerEvent, route: CompiledRoute, signal: AbortSignal): Pr
 }
 ```
 
-NO ridichiarazione di `BackpressureStrategy` — F5 importa il type da `@sembridge/gateway/http` e l'helper `createBackpressureStrategy` (esposto plan 03-10 strategies/index.ts barrel).
+NO ridichiarazione di `BackpressureStrategy` — F5 importa il type da `@gluezero/gateway/http` e l'helper `createBackpressureStrategy` (esposto plan 03-10 strategies/index.ts barrel).
 
 ---
 
@@ -834,7 +834,7 @@ Il broker usa `postMessage` (algoritmo Structured Clone). Sono supportati:
 Sono **NON** supportati:
 **function | DOM Node | Symbol | class instance con prototype custom | Promise | WeakMap/WeakSet/WeakRef**
 
-In **dev mode** SemBridge esegue `assertSerializable` pre-postMessage. Su violation → throw `BrokerError({code:'worker.serialization.failed.<sub>', details:{fieldPath, fieldType}})` puntando esattamente al campo colpevole.
+In **dev mode** GlueZero esegue `assertSerializable` pre-postMessage. Su violation → throw `BrokerError({code:'worker.serialization.failed.<sub>', details:{fieldPath, fieldType}})` puntando esattamente al campo colpevole.
 
 In **production** il check è disabilitato per zero overhead. Override via `BrokerConfig.workers.assertSerializable: 'always' | 'dev' | 'off'`.
 
@@ -885,10 +885,10 @@ Il modulo `packages/worker/src/augment.ts` aggiunge `RouteWorkerDefinition` al `
 
 ```ts
 // packages/worker/src/augment.ts
-import type { RoutePolicies } from '@sembridge/routing'
+import type { RoutePolicies } from '@gluezero/routing'
 import type { WorkerDescriptor } from './types/worker-descriptor'
 
-declare module '@sembridge/core' {
+declare module '@gluezero/core' {
   interface BrokerConfig {
     /** F5 augmentation: configurazione runtime worker. */
     workers?: WorkerConfig
@@ -899,7 +899,7 @@ declare module '@sembridge/core' {
   }
 }
 
-declare module '@sembridge/routing' {
+declare module '@gluezero/routing' {
   /**
    * F5 augmentation: route worker subset di RoutePolicies (D-143).
    * Supporta: timeout + concurrency + backpressure + dedupe.
@@ -934,8 +934,8 @@ declare module '@sembridge/routing' {
 
 **Soluzione (consolidata in F4):** Il consumer dichiara il super-set localmente:
 ```ts
-import type { RouteDefinition as F3RouteDefinition } from '@sembridge/routing'
-import type { RouteWorkerDefinition } from '@sembridge/worker'
+import type { RouteDefinition as F3RouteDefinition } from '@gluezero/routing'
+import type { RouteWorkerDefinition } from '@gluezero/worker'
 type AllRoutes = F3RouteDefinition | RouteWorkerDefinition
 ```
 
@@ -947,7 +947,7 @@ F5 deve estendere `RouteExecutorDeps` per accettare un `workerHandler` analogo a
 
 ```ts
 // packages/worker/src/worker-broker.ts (semplificato)
-import { RouterBroker, RouterEngine, RouteExecutor, type RouteExecutorDeps } from '@sembridge/routing'
+import { RouterBroker, RouterEngine, RouteExecutor, type RouteExecutorDeps } from '@gluezero/routing'
 
 export class WorkerBroker {
   private readonly inner: RouterBroker
@@ -1091,7 +1091,7 @@ Pattern `safeTapStep` (try/catch swallow) coerente con F2/F3/F4. Tap optional vi
 
 | Wave | Plan | Focus | File ownership | Parallelizable? |
 |------|------|-------|----------------|-----------------|
-| **W1** | **05-01** | Bootstrap `@sembridge/worker` package | `package.json`, `tsconfig.json`, `tsup.config.ts`, `vitest.config.ts`, `src/types/*.ts` (worker-descriptor, worker-config, route-worker-definition, progress-payload, task-state), `src/index.ts` skeleton (barrel solo), `src/augment.ts` (declaration merging additive — augment.test.ts smoke) | NO (sequential — gating per W2) |
+| **W1** | **05-01** | Bootstrap `@gluezero/worker` package | `package.json`, `tsconfig.json`, `tsup.config.ts`, `vitest.config.ts`, `src/types/*.ts` (worker-descriptor, worker-config, route-worker-definition, progress-payload, task-state), `src/index.ts` skeleton (barrel solo), `src/augment.ts` (declaration merging additive — augment.test.ts smoke) | NO (sequential — gating per W2) |
 | **W2** | **05-02** | Building blocks A: `assert-serializable.ts` + `transferable-extractor.ts` | `src/assert-serializable.ts` + test, `src/transferable-extractor.ts` + test | YES (∥ 05-03) — file disgiunto |
 | **W2** | **05-03** | Building blocks B: `task-tracker.ts` (state machine atomico D-133) | `src/task-tracker.ts` + test | YES (∥ 05-02) — file disgiunto |
 | **W3** | **05-04** | Adapter A: `worker-bridge.ts` (Comlink wrap + AbortSignal proxy + integrato W2 building blocks) | `src/worker-bridge.ts` + test, `src/test-utils/mock-worker.ts` (per Tier-1 jsdom — riuso pattern `MockEventSource`) | YES (∥ 05-05) — file disgiunto |
@@ -1315,7 +1315,7 @@ export default defineConfig({
 | **T-05-04-02** Information Disclosure — BrokerError.details include payload sensibile | Info Disclosure | F5 segue pattern F3 D-78: `BrokerError.details` include solo `{taskId, fieldPath, fieldType}` — NIENTE payload value. |
 | **T-05-05-01** DoS — pool storm spawn 200 worker | DoS | D-128 cap hard 8 + `allowUnboundedPool` opt-in con warning. Backpressure F3 D-130 applica `queue-bounded max:1000` default. Critical bypass per `priority: 'critical'`. |
 | **T-05-05-02** DoS — task infinite (timeout: Infinity) | DoS | D-145 default 30s. `timeout: Infinity` opt-in con `console.warn` dev mode. State machine atomico garantisce respawn slot pool dopo terminate fallback (D-131). |
-| **T-05-06-01** Elevation of Privilege — worker accede a system globals (es. fetch arbitrary URL) | EoP | Boundary nativa Worker — DedicatedWorkerGlobalScope ha accesso limitato (no DOM, sì fetch). F5 NON injetta API beyond Comlink RPC. Author del worker è responsabile per non emettere `fetch` non autorizzati — fuori scope SemBridge per V1 (no sandbox-on-worker). |
+| **T-05-06-01** Elevation of Privilege — worker accede a system globals (es. fetch arbitrary URL) | EoP | Boundary nativa Worker — DedicatedWorkerGlobalScope ha accesso limitato (no DOM, sì fetch). F5 NON injetta API beyond Comlink RPC. Author del worker è responsabile per non emettere `fetch` non autorizzati — fuori scope GlueZero per V1 (no sandbox-on-worker). |
 | **T-05-07-01** Logic flaw — state machine race timeout/success (Pitfall 2C) | Logic flaw | D-133 strict — state machine atomico Pitfall 2C closure. Test Tier-1 deterministic. |
 | **T-05-07-02** Logic flaw — assertSerializable bypass via JSON.stringify pre-postMessage | Logic flaw | F5 NON usa `JSON.stringify`. `postMessage` invocato direttamente con payload SCA-validated. `assertSerializable` si applica PRE-`postMessage` (NON dopo) — bypass impossibile. |
 | **T-05-07-03** Logic flaw — cascade cleanup parziale lascia worker dangling | Logic flaw | `unregisterByOwner` (D-126) itera Map e chiama `bridge.terminate()` per ogni worker bound al ownerId. Try/catch isolato per non-fatal. Test `__integration__/cascade-cleanup.test.ts` asserisce zero leak. |
@@ -1429,10 +1429,10 @@ Tutte le 34 decisioni in 05-CONTEXT.md sono lockate. Eventuali tweak rientrano i
 **Missing dependencies with no fallback:** nessuno (tutto disponibile).
 
 **Missing dependencies da installare in plan 05-01:**
-- `comlink@^4.4.2` (D-125, da `pnpm add comlink --filter @sembridge/worker`)
+- `comlink@^4.4.2` (D-125, da `pnpm add comlink --filter @gluezero/worker`)
 - `nanoid@^5.1.11` workspace dep
 - `valibot@^1.3.1` workspace dep
-- workspace deps `@sembridge/core`, `@sembridge/mapper`, `@sembridge/routing`
+- workspace deps `@gluezero/core`, `@gluezero/mapper`, `@gluezero/routing`
 
 ---
 
@@ -1534,6 +1534,6 @@ Tutte le 34 decisioni in 05-CONTEXT.md sono lockate. Eventuali tweak rientrano i
 - `valibot@1.3.1` (registry, riuso F2)
 - `vitest@4.1.5` + `@vitest/browser@4.1.5` + `playwright@1.59.1` + `jsdom@29.1.0` (riuso F1-F4 workspace)
 
-**File creato:** `/Users/omarmarzio/programming/prova AI/SemBridge/.planning/phases/05-worker-runtime/05-RESEARCH.md`
+**File creato:** `/Users/omarmarzio/programming/prova AI/GlueZero/.planning/phases/05-worker-runtime/05-RESEARCH.md`
 
 **Pronto per:** `/gsd-plan-phase 5` (planner consumerà questo RESEARCH.md per produrre 7 PLAN.md F5 — 05-01 bootstrap, 05-02 assert+extractor, 05-03 task-tracker, 05-04 worker-bridge, 05-05 worker-pool, 05-06 broker+integration, 05-07 final-gate).

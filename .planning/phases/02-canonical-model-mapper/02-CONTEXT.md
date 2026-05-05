@@ -7,7 +7,7 @@
 <domain>
 ## Phase Boundary
 
-Phase 2 consegna il **Canonical Model + Mapper bidirezionale** del progetto SemBridge:
+Phase 2 consegna il **Canonical Model + Mapper bidirezionale** del progetto GlueZero:
 
 1. **Canonical Vocabulary Registry** — registry tipizzato con campi canonici, alias riconosciuti, schema versioning (`requires`).
 2. **Mapper bidirezionale** — pipeline pre-compilata locale → canonico (input) e canonico → consumer (output) per ogni plugin sottoscritto.
@@ -15,7 +15,7 @@ Phase 2 consegna il **Canonical Model + Mapper bidirezionale** del progetto SemB
 4. **Mapping Inspector** — estensione di `EventTap` (pre-instrumentato in F1) ai 5 nuovi step di pipeline §28 (step 4, 5, 6, 11, 12). Espone payload originale, canonico, finale, trasformazioni, warning, errori.
 5. **Validation adapter** — Valibot 1.x come default; adapter pluggable per Zod/Ajv (deferred a V2).
 
-**Pacchetto monorepo:** `@sembridge/mapper` (placeholder già scaffold-ato in plan 01-01).
+**Pacchetto monorepo:** `@gluezero/mapper` (placeholder già scaffold-ato in plan 01-01).
 
 **Pipeline §28 estesa in F2:** step 4 (identificazione source), 5 (mapping output→canonico), 6 (validazione canonico), 11 (mapping canonico→consumer), 12 (validazione finale). I 5 step F1 (`event.received`, `event.metadata.enriched`, `event.validated`, `event.dedupe.checked`, `event.delivered`) restano invariati.
 
@@ -41,7 +41,7 @@ Phase 2 consegna il **Canonical Model + Mapper bidirezionale** del progetto SemB
 ### A. API Surface Mapper
 
 - **D-31:** Il Broker espone come metodi pubblici: `registerCanonicalSchema(schemaDefinition)`, `registerTransform(name, fn)`, `registerAlias(localName, canonicalName, opts?)` — coerente con il pattern `registerPlugin/registerRoute` di F1. Tutti i metodi accessibili tramite l'istanza `Broker` ritornata da `createBroker(config)`.
-- **D-32:** I plugin dichiarano `inputMap?: InputMap` e `outputMap?: OutputMap` come campi opzionali del `PluginDescriptor` (estensione tipo via TS declaration merging — F1 plan 03 ha lasciato i tipi tolerant placeholder; F2 risolve via re-declaration nel package `@sembridge/mapper`).
+- **D-32:** I plugin dichiarano `inputMap?: InputMap` e `outputMap?: OutputMap` come campi opzionali del `PluginDescriptor` (estensione tipo via TS declaration merging — F1 plan 03 ha lasciato i tipi tolerant placeholder; F2 risolve via re-declaration nel package `@gluezero/mapper`).
 - **D-33:** `MapperConfig` opzionale in `BrokerConfig` (sezione `canonicalModel`, `aliasRegistry`, `transforms` — già placeholder `unknown` da plan 03); F2 sostituisce con tipi specifici.
 
 ### B. Strategia Canonicalizzazione
@@ -54,7 +54,7 @@ Phase 2 consegna il **Canonical Model + Mapper bidirezionale** del progetto SemB
 
 ### C. Validation Library
 
-- **D-37:** **Valibot 1.x come default** — già installato in F1 plan 02. Il MapperEngine riceve un `ValidatorAdapter` injectabile via config; default `valibotAdapter` esportato dal package `@sembridge/mapper`.
+- **D-37:** **Valibot 1.x come default** — già installato in F1 plan 02. Il MapperEngine riceve un `ValidatorAdapter` injectabile via config; default `valibotAdapter` esportato dal package `@gluezero/mapper`.
 - **D-38:** **Adapter pluggable** — `interface ValidatorAdapter { validate(schema, payload): { ok: true; value } | { ok: false; issues } }`. Adapter Zod/Ajv deferred a V2 (out of scope F2).
 - **D-39:** **Validation step injection** — F2 valida 3 volte nella pipeline:
   - step 3 `event.validated` (già F1) — validazione sintattica BrokerEvent shape
@@ -114,11 +114,11 @@ Phase 2 consegna il **Canonical Model + Mapper bidirezionale** del progetto SemB
 - **D-52:** **Pattern TDD RED→GREEN come F1** — ogni modulo (`canonical-registry.ts`, `alias-registry.ts`, `transform-pipeline.ts`, `mapper-engine.ts`, `valibot-adapter.ts`) ha unit test co-locato. Plan paralleli con file ownership disgiunta dove possibile (analogo plan 04/05/06).
 - **D-53:** **Integration test scenario meteo PRD §29 SENZA HTTP** — F2 verifica end-to-end: plugin form pubblica `weather.requested` con `città: "Roma", data: "30/04/2026"`, mapper produce internamente `{location: "Roma", forecast_date: "2026-04-30"}` (transforms `parseItalianDate` + `normalizeLocationName` registrati al boot), plugin widget consumer riceve `{location, day-prevision}` via `inputMap` bidirezionale. HTTP route deferred a F3.
 - **D-54:** **Cycle detection deterministic test** — registerPlugin con descriptor che dichiara mapping circolare → throw `mapping.cycle.detected` SUL register (NON a runtime publish), test assert exact error code + cycle path.
-- **D-55:** **Coverage v8 finale F2** — installare `@vitest/coverage-v8` come devDep root (open item ereditato da F1) e misurare ≥ 90% sui file `@sembridge/mapper/`. Da fare in plan 02-XX dedicato (final gate F2 simile a 01-11).
+- **D-55:** **Coverage v8 finale F2** — installare `@vitest/coverage-v8` come devDep root (open item ereditato da F1) e misurare ≥ 90% sui file `@gluezero/mapper/`. Da fare in plan 02-XX dedicato (final gate F2 simile a 01-11).
 
 ### J. Estensione Type System
 
-- **D-56:** **Type re-export da `@sembridge/mapper` a `@sembridge/core`** — il package `@sembridge/core` (plan 03) ha `BrokerConfig` con sezioni `canonicalModel/aliasRegistry/transforms` tipate `unknown`. F2 fornisce i tipi `CanonicalSchema`, `AliasRegistration`, `TransformDescriptor`, `InputMap`, `OutputMap` da `@sembridge/mapper` e li wire-in al `BrokerConfig` via TS declaration merging (in `@sembridge/mapper/src/augment.ts`). Pattern non-breaking.
+- **D-56:** **Type re-export da `@gluezero/mapper` a `@gluezero/core`** — il package `@gluezero/core` (plan 03) ha `BrokerConfig` con sezioni `canonicalModel/aliasRegistry/transforms` tipate `unknown`. F2 fornisce i tipi `CanonicalSchema`, `AliasRegistration`, `TransformDescriptor`, `InputMap`, `OutputMap` da `@gluezero/mapper` e li wire-in al `BrokerConfig` via TS declaration merging (in `@gluezero/mapper/src/augment.ts`). Pattern non-breaking.
 - **D-57:** **`PluginDescriptor` augmentation** — F2 aggiunge `inputMap?: InputMap`, `outputMap?: OutputMap` al `PluginDescriptor` esistente via declaration merging.
 
 ### K. Errori standard F2
@@ -137,7 +137,7 @@ Aree dove le scelte specifiche di implementazione sono lasciate alla discrezione
 - **Compile output structure** — la rappresentazione interna esatta del `CompiledFieldMapping` (Map vs Record vs object array)
 - **Transform registry storage** — Map vs Object literal con namespace (`{ name: 'parseItalianDate', fn: ... }`)
 - **Inspector data shape interno** — può evolvere; F6 lo definirà finalmente
-- **Naming convention** dei file `.ts`/`.test.ts` interni di `@sembridge/mapper` — segui pattern F1
+- **Naming convention** dei file `.ts`/`.test.ts` interni di `@gluezero/mapper` — segui pattern F1
 - **Splitting in plan** — il planner decide quanti plan (atteso ~6-10 plan tipo F1) e wave structure
 
 </decisions>
@@ -215,7 +215,7 @@ Aree dove le scelte specifiche di implementazione sono lasciate alla discrezione
 - **TDD RED→GREEN**: ogni modulo `*.ts` ha test `*.test.ts` co-locato; commit pattern `test(02-XX): aggiunge test RED per <X>` poi `feat(02-XX): implementa <X>`.
 - **File ownership disgiunta tra plan paralleli**: pattern usato in plan 04/05/06 di F1 (Wave 3); applicabile a F2 per `canonical-registry.ts` || `alias-registry.ts` || `transform-pipeline.ts`.
 - **Tipo nominato per Rule 2 readability**: pattern usato in F1 con `SnapshotFactory`; applicabile in F2 per tipi mapper interni.
-- **Type-only barrel re-export**: `packages/core/src/index.ts` ha `export type * from './types'` (plan 03); F2 estende con `export type * from '@sembridge/mapper'` se i tipi pubblici devono essere esposti dal core (verifica con planner).
+- **Type-only barrel re-export**: `packages/core/src/index.ts` ha `export type * from './types'` (plan 03); F2 estende con `export type * from '@gluezero/mapper'` se i tipi pubblici devono essere esposti dal core (verifica con planner).
 - **Declaration merging per estensioni non-breaking**: pattern usato in plan 03 per `PipelineStep` e `BrokerConfig`; F2 lo applica per `PipelineStep` extension (D-49) e `PluginDescriptor` extension (D-57).
 - **Atomic commit chunks** per plan grandi: pattern usato in plan 09/10 di F1; applicabile a integration test F2.
 - **Performance budget**: F1 ha verificato storm 24ms / wildcard 11ms; F2 deve mantenere overhead mapping minimo (target: < 10% di publish latency su payload medio).
