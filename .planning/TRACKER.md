@@ -1,12 +1,14 @@
 ---
 last_updated: 2026-05-05
-status: phase_6_complete_milestone_v1_0_ready_for_verifier
+status: phase_6_complete_verifier_pass_milestone_v1_0_ready_for_release
 project: SemBridge
 milestone: v1.0
 current_phase: 6_complete
 current_wave: 5b_complete_milestone_v1_0_chiusa
 current_plan: 06_09b_done_milestone_closed
 session_active: false
+verifier_verdict: PASS
+verifier_report: .planning/phases/06-cache-tooling-avanzato/06-VERIFICATION.md
 ---
 
 # TRACKER — SemBridge
@@ -34,20 +36,29 @@ session_active: false
 | Modello attivo | `claude-opus-4-7-1` (opus) — override esplicito su tutti i sub-agent |
 | Graphify watch | PID 8702 attivo (debounce 3s, log `graphify-out/.watch.log`) — bootstrap iniziale `/graphify .` ancora pending |
 
-## Ultimo step completato (auto-update 2026-05-05T22:00:00Z)
+## Ultimo step completato (auto-update 2026-05-05T19:30:19Z)
 
-- Plan: **06-09b** → 4 commits + final closure milestone v1.0
-- Commits: `3178103` DOC-02/05/06 (~1748 LOC italiano) + `a4b2af2` JSDoc TypeDoc-ready (@example 36 / @see 55 / @throws 9) + `ca1656d` REQ matrix flip atomic + (final closure docs commit con SUMMARY + ROADMAP + STATE + TRACKER + CHANGELOG)
+- Plan: **06-09b** → SUMMARY.md committed
+- Commit: `058b2dc docs(06-09b): Phase 6 closure + MILESTONE v1.0 ✅ CHIUSO — 6/6 fasi + 10/11 open issues + 91/91 REQ-IDs`
 - Phase progress: **11/11** plan completati con SUMMARY.md
-- Project progress: **64/64 plan (100% ✅)**
-- **Milestone v1.0 ✅ CHIUSA 2026-05-05**
+- Project progress: 64/64 plan (100%)
 
 
 ## Prossimo step
 
-**Milestone v1.0 ready for verifier + release**:
-1. `gsd-verifier 6` (verifica finale Phase 6)
-2. `npm publish v1.0.0` (release pubblica 8 pacchetti `@sembridge/*`)
+**Verifier PASS ✅ — milestone v1.0 ready for release:**
+- `gsd-verifier 6` ✅ verdict **PASS** (zero caveat actionable; report `.planning/phases/06-cache-tooling-avanzato/06-VERIFICATION.md`).
+- 12/12 REQ-IDs F6 Complete + 5 ext (ERR-02, LIFE-02, PIPE-01, TEST-01/02) + 4 PKG-* ext.
+- D-83 strict ✓ verified (zero diff `packages/{core,mapper,routing,gateway,worker}/src/`).
+- PRD §39 #10 (TOOL-05) closed esplicitamente in DOC-05 + REQUIREMENTS + ROADMAP + changeset.
+- Chain `createSemBridge` F1+F2+F3+F4+F5+F6: 29 hits factory in `packages/sembridge/src/sem-bridge.ts`.
+- CI gates 8/8 ✅ + size-limit budget rispettati + 288/288 test F6 passing.
+
+**Comando release manuale (richiede chiavi npm utente):**
+```bash
+pnpm changeset version  # consume .changeset/v1-0-0-release.md → bump 0.0.0 → 1.0.0 su 8 package
+pnpm release            # changeset publish + git tag v1.0.0
+```
 
 Nessun plan/wave attivo. La sessione di execute Phase 6 è chiusa con success criteria coperti:
 - ✅ Cache layer F6 + 3-strategy + scope hybrid
