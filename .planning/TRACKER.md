@@ -24,28 +24,33 @@ session_active: true
 | Campo | Valore |
 |-------|--------|
 | Fase | **Phase 6 — Cache & Tooling avanzato — IN ESECUZIONE** (W1 + W2 complete; ULTIMA fase v1.0) |
-| Wave | 6 — W2 ✅ done (06-02 + 06-04 parallel file ownership disgiunta verified) — next W2-bis sequential 06-03 |
-| Plan in esecuzione | 06-04 ✅ done — next: 06-03 (CacheHandler + CompositeHandler concretizza F3 D-77) |
-| Plan progress F6 | **3 / 11** — 06-01 + 06-02 + 06-04 done; pending 06-03 + 06-05..06-07 + 06-08a + 06-08b + 06-09a + 06-09b |
+| Wave | 6 — W2-bis ✅ done (06-03 sequential post W2 — CacheHandler + CompositeHandler concretizza F3 D-77) — next W3 ∥ parallel (06-05 + 06-06 + 06-07) |
+| Plan in esecuzione | 06-03 ✅ done — next: 06-05 ‖ 06-06 ‖ 06-07 (devtools wave 3 parallel file ownership disgiunta) |
+| Plan progress F6 | **4 / 11** — 06-01 + 06-02 + 06-04 + 06-03 done; pending 06-05..06-07 + 06-08a + 06-08b + 06-09a + 06-09b |
 | Plan progress F5 | **7 / 7 (✅ COMPLETE)** — 05-01..05-07 done |
 | Plan progress F4 | **9 / 9 (✅ COMPLETE)** — 04-01..04-09 done |
-| Plan progress globale | 52 / TBD (Phase 6 ancora da pianificare) |
+| Plan progress globale | 56 / 64 (88%) |
 | Mode GSD | yolo + auto_advance + parallelization (sequential exec, no worktree) |
 | Modello attivo | `claude-opus-4-7-1` (opus) — override esplicito su tutti i sub-agent |
 | Graphify watch | PID 8702 attivo (debounce 3s, log `graphify-out/.watch.log`) — bootstrap iniziale `/graphify .` ancora pending |
 
-## Ultimo step completato (auto-update 2026-05-05T19:35Z)
+## Ultimo step completato (auto-update 2026-05-05T19:46:50Z)
 
-- Plan: **06-04** → SUMMARY.md pending commit
-- Commit: `97379d4 feat(06-04): GREEN tap-registry runtime + auto-wrap F1 backward-compat (D-159)`
-- Phase progress: **3/11** plan completati con SUMMARY.md
-- Project progress: 56/64 plan (87%)
-- Wave 2 ✅ done (06-02 + 06-04 parallel file ownership disgiunta)
+- Plan: **06-03** → SUMMARY.md committed
+- Commit (TDD atomic): `7e7928f` test RED cache-handler + `4b9b05d` feat GREEN cache-handler + `488e770` test RED composite-handler + `a9993cc` feat GREEN composite-handler
+- File creati: 4 (cache-handler.ts/test.ts + composite-handler.ts/test.ts) + 1 modificato (cache/src/index.ts append W2-bis runtime exports)
+- Test: +33 (23 cache-handler + 10 composite-handler) tutti deterministici Tier-1 jsdom — totale @sembridge/cache = 71 passing; cross-package full monorepo 976 passing zero regression
+- Coverage v8 sui 2 file F6 W2-bis: cache-handler.ts 100/92.5/100/100, composite-handler.ts 100/100/100/100 (target ≥90/80/90/90 ✓)
+- D-83 strict ✓ verified: `git diff main packages/{core,mapper,routing,gateway,worker}/src/` exit 0 lines
+- D-77 carryover F3 (`cache.not-implemented` stub) **CONCRETIZZATO** — wiring runtime CacheBroker via composition wrapper deferred a 06-08a
+- REQ-IDs subset: CACHE-01..03 + PIPE-01 ext F6 (lifecycle events tap `event.cache.{lookup,hit,miss,evicted}`) — full closure 06-08a/06-08b/06-09b
+- Phase progress: **4/11** plan completati con SUMMARY.md
+- Project progress: 56/64 plan (88%)
 
 
 ## Prossimo step
 
-**Continue execute Phase 6 W2-bis sequential** — 06-03 (CacheHandler + CompositeHandler concretizza F3 D-77).
+**Continue execute Phase 6 W3 ∥ parallel (3-way)** — 06-05 (Event/RouteInspector) ‖ 06-06 (MetricsCollector + reservoir + cardinality cap) ‖ 06-07 (PauseController). File ownership disgiunta verified pre-plan-checker iter 2.
 
 ```
 Skill: gsd-execute-phase 6 --auto --no-transition
