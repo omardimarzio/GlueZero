@@ -1,11 +1,11 @@
 ---
 last_updated: 2026-05-05
-status: phase_6_executing_W3_06_06_done_next_06_07
+status: phase_6_executing_W3_complete_next_06_08a
 project: SemBridge
 milestone: v1.0
 current_phase: 6
-current_wave: 6_W3_06_05_06_06_done_next_06_07
-current_plan: 06_06_done_next_06_07
+current_wave: 6_W3_complete_next_W4a_06_08a
+current_plan: 06_07_done_next_06_08a
 session_active: true
 ---
 
@@ -23,30 +23,32 @@ session_active: true
 
 | Campo | Valore |
 |-------|--------|
-| Fase | **Phase 6 — Cache & Tooling avanzato — IN ESECUZIONE** (W1 + W2 + W2-bis complete; W3 in corso) |
-| Wave | 6 — W3 ∥ parallel in corso: 06-05 ✅ + 06-06 ✅ done — next 06-07 (PauseController) |
-| Plan in esecuzione | 06-06 ✅ done — next: 06-07 (PauseController D-168/D-170) |
-| Plan progress F6 | **6 / 11** — 06-01 + 06-02 + 06-04 + 06-03 + 06-05 + 06-06 done; pending 06-07 + 06-08a + 06-08b + 06-09a + 06-09b |
+| Fase | **Phase 6 — Cache & Tooling avanzato — IN ESECUZIONE** (W1 + W2 + W2-bis + W3 complete) |
+| Wave | 6 — W3 ✅ COMPLETE (06-05 + 06-06 + 06-07 done) — next W4a sequential gate 06-08a (CacheBroker composition) |
+| Plan in esecuzione | 06-07 ✅ done — next: 06-08a (CacheBroker composition wrapper + harness + 4 integration test) |
+| Plan progress F6 | **7 / 11** — 06-01 + 06-02 + 06-04 + 06-03 + 06-05 + 06-06 + 06-07 done; pending 06-08a + 06-08b + 06-09a + 06-09b |
 | Plan progress F5 | **7 / 7 (✅ COMPLETE)** — 05-01..05-07 done |
 | Plan progress F4 | **9 / 9 (✅ COMPLETE)** — 04-01..04-09 done |
-| Plan progress globale | 58 / 64 (90%) |
+| Plan progress globale | 59 / 64 (92%) |
 | Mode GSD | yolo + auto_advance + parallelization (sequential exec, no worktree) |
 | Modello attivo | `claude-opus-4-7-1` (opus) — override esplicito su tutti i sub-agent |
 | Graphify watch | PID 8702 attivo (debounce 3s, log `graphify-out/.watch.log`) — bootstrap iniziale `/graphify .` ancora pending |
 
-## Ultimo step completato (auto-update 2026-05-05T20:08Z)
+## Ultimo step completato (auto-update 2026-05-05T20:13:00Z)
 
-- Plan: **06-06** → SUMMARY.md committed (chiude PRD §39 #10 TOOL-05 metrics format)
-- Commit GREEN finali: `8322fe7` (metrics-collector) + 5 commit TDD precedenti
-- Files creati: 6 (3 source + 3 test) — 45 test deterministici Tier-1 jsdom passing
-- Coverage devtools globale: 98.7/89.71/100/99.29 (≥90/80/90/90 target)
-- Phase progress: **6/11** plan completati con SUMMARY.md
-- Project progress: 58/64 plan (90%)
+- Plan: **06-07** → SUMMARY.md pronto, RED+GREEN committed
+- Commit RED: `1a43290 test(06-07): add RED test for pause-controller (D-168/D-169/D-170 + critical bypass)`
+- Commit GREEN: `d79009b feat(06-07): GREEN pause-controller pauseTopic/resumeTopic/flushQueue (D-168/D-169/D-170)`
+- Coverage v8 sul file: 97.67/83.33/100/100 (≥90/80/90/90 ✓)
+- 16/16 test pause-controller passing (118/118 totali devtools)
+- Phase progress: **7/11** plan completati con SUMMARY.md
+- Project progress: 59/64 plan (92%)
+- Wave 3 ∥ parallel ✅ COMPLETE (06-05 inspector + 06-06 metrics + 06-07 pause)
 
 
 ## Prossimo step
 
-**Continue execute Phase 6 W3** — restano da completare: 06-07 (PauseController D-168/D-170 queue cap 1000 + critical bypass).
+**Continue execute Phase 6 W4a** — sequential gate: 06-08a (CacheBroker composition wrapper Opzione B D-83 strict + factory + harness + 4 integration test).
 
 ```
 Skill: gsd-execute-phase 6 --auto --no-transition
