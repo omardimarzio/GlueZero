@@ -8,12 +8,12 @@
   "baseBranch": "main",
   "updateInternalDependencies": "patch",
   "ignore": [
-    "@sembridge/mapper",
-    "@sembridge/gateway",
-    "@sembridge/routing",
-    "@sembridge/worker",
-    "@sembridge/cache",
-    "@sembridge/devtools",
-    "@sembridge/sembridge"
+    "@gluezero/mapper",
+    "@gluezero/gateway",
+    "@gluezero/routing",
+    "@gluezero/worker",
+    "@gluezero/cache",
+    "@gluezero/devtools",
+    "@gluezero/gluezero"
   ]
 }
