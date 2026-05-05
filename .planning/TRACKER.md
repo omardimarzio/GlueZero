@@ -1,12 +1,12 @@
 ---
 last_updated: 2026-05-05
-status: phase_6_executing_W5a_complete_next_06_09b
+status: phase_6_complete_milestone_v1_0_ready_for_verifier
 project: SemBridge
 milestone: v1.0
-current_phase: 6
-current_wave: 6_W5a_complete_next_W5b_06_09b
-current_plan: 06_09a_done_next_06_09b
-session_active: true
+current_phase: 6_complete
+current_wave: 5b_complete_milestone_v1_0_chiusa
+current_plan: 06_09b_done_milestone_closed
+session_active: false
 ---
 
 # TRACKER — SemBridge
@@ -23,37 +23,41 @@ session_active: true
 
 | Campo | Valore |
 |-------|--------|
-| Fase | **Phase 6 — Cache & Tooling avanzato — IN ESECUZIONE** (W1 + W2 + W2-bis + W3 + W4a + W4b + W5a complete) |
-| Wave | 6 — W5a ✅ COMPLETE (06-09a CI gates + coverage thresholds calibration + size-limit budget F6 + biome cleanup) — next W5b FINAL 06-09b (DOC italiani + REQ flip + CHANGELOG v1.0.0 milestone closure) |
-| Plan in esecuzione | 06-09a ✅ done — next: 06-09b (DOC + REQ flip + CHANGELOG) |
-| Plan progress F6 | **10 / 11** — 06-01 + 06-02 + 06-04 + 06-03 + 06-05 + 06-06 + 06-07 + 06-08a + 06-08b + 06-09a done; pending 06-09b |
+| Fase | **Phase 6 — Cache & Tooling avanzato — ✅ COMPLETE + MILESTONE v1.0 ✅ CHIUSA** (W1 + W2 + W2-bis + W3 + W4a + W4b + W5a + W5b done) |
+| Wave | 5b ✅ COMPLETE (06-09b final gate F6 + milestone v1.0 closure done — DOC-02/05/06 italiani + JSDoc TypeDoc-ready + REQ matrix flip + PRD §39 #10 chiuso + CHANGELOG v1.0.0 + ROADMAP/STATE/TRACKER closure) |
+| Plan in esecuzione | 06-09b ✅ done — milestone v1.0 chiusa, ready for `gsd-verifier 6` finale + `npm publish v1.0.0` |
+| Plan progress F6 | **11 / 11 (✅ COMPLETE)** — 06-01..06-09b all done with SUMMARY.md |
 | Plan progress F5 | **7 / 7 (✅ COMPLETE)** — 05-01..05-07 done |
 | Plan progress F4 | **9 / 9 (✅ COMPLETE)** — 04-01..04-09 done |
-| Plan progress globale | 62 / 64 (97%) |
+| Plan progress globale | **64 / 64 (100% ✅)** — milestone v1.0 chiusa |
 | Mode GSD | yolo + auto_advance + parallelization (sequential exec, no worktree) |
 | Modello attivo | `claude-opus-4-7-1` (opus) — override esplicito su tutti i sub-agent |
 | Graphify watch | PID 8702 attivo (debounce 3s, log `graphify-out/.watch.log`) — bootstrap iniziale `/graphify .` ancora pending |
 
-## Ultimo step completato (auto-update 2026-05-05T20:56:00Z)
+## Ultimo step completato (auto-update 2026-05-05T22:00:00Z)
 
-- Plan: **06-09a** → SUMMARY.md committed (in commit di chiusura corrente)
-- Commit Task 1: `8941276 test(06-09a): coverage thresholds calibration post-impl + size-limit budget F6 + biome cleanup`
-- Phase progress: **10/11** plan completati con SUMMARY.md
-- Project progress: 62/64 plan (97%)
-- CI gates ALL GREEN: typecheck 8/8 + build ESM-only 8/8 + test 1166/1169 monorepo full + publint 8/8 All good + attw ESM-only 8/8 (🟢) + size-limit 8/8 within budget + biome zero errors
-- Coverage v8 F6 measured: cache 100/94.21/100/100 + devtools 96.44/89.28/94.36/96.98 + sembridge 100/100/100/100 (above target ≥90/80/90/90)
-- Size-limit F6 calibrate measured + 20% headroom: cache 22.13/27 KB + devtools 22.27/27 KB + sembridge 34.80/42 KB
-- D-83 strict ✓ verified: 0 lines diff su packages/{core,mapper,routing,gateway,worker}/src/
-- Deferred-items.md 06-06 risolto inline (typecheck gateway green via build:f3:cyclic workflow)
+- Plan: **06-09b** → 4 commits + final closure milestone v1.0
+- Commits: `3178103` DOC-02/05/06 (~1748 LOC italiano) + `a4b2af2` JSDoc TypeDoc-ready (@example 36 / @see 55 / @throws 9) + `ca1656d` REQ matrix flip atomic + (final closure docs commit con SUMMARY + ROADMAP + STATE + TRACKER + CHANGELOG)
+- Phase progress: **11/11** plan completati con SUMMARY.md
+- Project progress: **64/64 plan (100% ✅)**
+- **Milestone v1.0 ✅ CHIUSA 2026-05-05**
 
 
 ## Prossimo step
 
-**Continue execute Phase 6 W5b FINAL** — milestone v1.0 closure: 06-09b (DOC italiani README per cache + devtools + sembridge + JSDoc TypeDoc-ready + REQ matrix flip CACHE-01..03 + TOOL-01..05 + DOC-02/05/06 + PRD §39 #10 closure + CHANGELOG v1.0.0 + ROADMAP F6 → ✅ Complete).
+**Milestone v1.0 ready for verifier + release**:
+1. `gsd-verifier 6` (verifica finale Phase 6)
+2. `npm publish v1.0.0` (release pubblica 8 pacchetti `@sembridge/*`)
 
-```
-Skill: gsd-execute-phase 6 --auto --no-transition
-```
+Nessun plan/wave attivo. La sessione di execute Phase 6 è chiusa con success criteria coperti:
+- ✅ Cache layer F6 + 3-strategy + scope hybrid
+- ✅ Event Inspector + Route Inspector + ring buffer 500
+- ✅ MetricsCollector simil-OpenMetrics (closes PRD §39 #10)
+- ✅ PauseController pauseTopic/resumeTopic/flushQueue
+- ✅ getDebugSnapshot deep-clone via structuredClone
+- ✅ DOC-02/05/06 italiano + JSDoc TypeDoc-ready
+- ✅ D-83 strict carryover ✓ verified per tutta F6
+- ✅ 91/91 REQ-IDs Complete + 10/11 open issues PRD §39 closed (#2 deferred V1.x)
 
 Wave structure F6 (8 sub-wave):
 - **W1** sequential: 06-01 (bootstrap @sembridge/{cache,devtools,sembridge})
@@ -110,6 +114,8 @@ Phase 4 closure highlights:
 - **Auto-advance attivo:** discuss → plan → execute → verify automatico senza chiedere conferma.
 
 ## Decisioni recenti rilevanti
+
+- **Plan 06-09b ESEGUITO ✓ (Wave 5b — Final gate F6 + MILESTONE v1.0 CHIUSA)** — Final gate F6 completato in 4 commit atomic: `3178103` DOC-02/05/06 consolidation finale italiano (4 README ~1748 LOC totali — WARNING-2 fix Q&A enumerate Q1-Q7) — packages/cache/README.md italiano 409 LOC con cache adapter + LRU + 3 strategies + scope D-156 + scenario cache-then-network + anti-pattern stampede + Q&A 5; packages/devtools/README.md italiano 368 LOC con sezione 6 "MetricsCollector — closes PRD §39 #10 (TOOL-05)" + 7 Q&A enumerate Q1-Q7 (Q1 dot.case rationale D-163, Q2 getMetricsDelta D-164, Q3 reservoir vs t-digest D-165, Q4 cardinality overflow D-166, Q5 Prometheus/OTel exporter V1.x, Q6 metriche standard out-of-the-box, Q7 custom metric V1.x) + anti-pattern cardinality explosion + structuredClone perf caveat; packages/sembridge/README.md italiano 452 LOC con guida integrazione plugin v1.0 + chain composition F1+F2+F3+F4+F5+F6 outermost devtools→cache→worker→realtime→router→mapper→broker + features opt-out + scenario meteo end-to-end + Q&A 8; packages/sembridge/EXAMPLES.md italiano 519 LOC con 10 esempi end-to-end consolidati cross-feature + scenario meteo full chain F1+F2+F3+F4+F5+F6. `a4b2af2` JSDoc API pubblica TypeDoc-ready su F6: 6 file public arricchiti con +3 @example (cache-broker stats consumption + cache-handler microtask ordering + cache-handler missing scope auth) + +2 @example (devtools-broker tap chain + pauseTopic admin) + +3 @example (metrics-collector counter/gauge/histogram observe) + +2 @example (pause-controller critical bypass + flushQueue audit) + +2 @example (sem-bridge multi-tenant + bare minimum) + 4 @throws sanitized error documentation. Preservation in dist/index.d.ts (post tsup ESM-only build): @example 36 / @see 55 / @throws 9 (sopra target ≥27/30/9 — pattern F5 05-07 commit e3b8770 23/30/21 carryover). `ca1656d` REQ matrix flip atomic in REQUIREMENTS.md: CACHE-01..03 + TOOL-01..05 → Complete con plan reference (06-02 + 06-03 + 06-05 + 06-06 + 06-07 + 06-08a + 06-08b + 06-09b) + DOC-02/05/06 → Complete (06-09b) + ERR-02 ext F6 (system.cache.scope-missing D-157 + system.queue.flushed D-169 + system.queue.overflow D-170 + system.metrics.cardinalityoverflow D-166 + sanitized error D-80 cache.network.failed/cache.strategy.unknown) → Complete + LIFE-02 ext F6 (cascade cache invalidate by ownerId D-156 prefix isolation 2-step idempotente) → Complete + PIPE-01 ext F6 (step 14 reale attivato `event.observed` D-161 — pipeline §28 14/14 step ora completa end-to-end) → Complete + TEST-01/02 ext F6 (100+ unit Tier-1 jsdom + 10 integration test 3-tier cache+devtools+sembridge — coverage v8 cache 100/94.21/100/100, devtools 96.44/89.28/94.36/96.98, sembridge 100/100/100/100) → Complete. Open Issues PRD §39 #10 (TOOL-05 metrics format) ✅ CLOSED 2026-05-05 — ULTIMA open issue v1.0 chiusa. Open #2 (cross-fase pipeline ordering) deferred V1.x — opt-in quando emergeranno consumer cross-fase reali. Final docs commit (questo + ROADMAP/STATE/TRACKER + 06-09b-SUMMARY.md + .changeset/v1-0-0-release.md). Test invariato 1166/1169 monorepo full (3 skip MSW V1.x F4 deferred — zero regression cross-package). CI gates F6: publint 8/8 ✅, attw ESM-only 8/8 ✅ (node16 🟢 + bundler 🟢), size-limit 8/8 ✅ (cache 22.13/27 KB + devtools 22.27/27 KB + sembridge 34.80/42 KB), biome ✅, typecheck 8/8 ✅, build 8/8 ✅. **D-83 strict carryover ✓ verified** `git diff main...HEAD packages/{core,mapper,routing,gateway,worker}/src/` exit 0 lines per tutta F6 (composition wrapper Opzione B preserva F1-F5 invariata). 16 decisioni F6 D-155..D-170 lockate. **MILESTONE v1.0 ✅ CHIUSA** — 6/6 fasi PRD complete + 10/11 open issues PRD §39 closed + 91/91 REQ-IDs Complete + 8 pacchetti `@sembridge/*` ESM-only ready for `npm publish v1.0.0`.
 
 - **Plan 06-09a ESEGUITO ✓ (Wave 5a — CI gates final F6)** — 1 commit atomic `8941276 test(06-09a): coverage thresholds calibration post-impl + size-limit budget F6 + biome cleanup`. Coverage v8 calibrate post-impl (analog F4 04-09 commit `761e4ad` + F5 05-07 commit `1347d0b` pattern, floor measurato arrotondato per difetto 0.5%): @sembridge/cache 100/94.21/100/100 (thresholds 99.5/93.5/99.5/99.5) + @sembridge/devtools 96.44/89.28/94.36/96.98 (thresholds 95.94/88.78/93.86/96.48) + @sembridge/sembridge 100/100/100/100 (thresholds 99.5/99.5/99.5/99.5). Hard floor inderogabile target ≥90/80/90/90 rispettato con margini ampi. Size-limit budget calibrate measured + 20% headroom (lesson learned F3 commit `9922a36` carryover): @sembridge/cache 22.13/27 KB + @sembridge/devtools 22.27/27 KB + @sembridge/sembridge 34.80/42 KB (with all deps cross-package). Biome auto-format safe-fix su 28 file packages/{cache,devtools,sembridge}/src/ (organize imports + format whitespace, zero behavior change verificato via re-run completo 1166/1169 monorepo full). 33 warnings unsafe rimasti non bloccanti (suggerimenti stilistici opzionali). CI gates ALL GREEN: typecheck 8/8 + build ESM-only 8/8 + test 1166/1169 monorepo full (3 skip MSW V1.x F4 deferred, zero regression cross-package) + publint 8/8 All good (3 nuovi F6: cache + devtools + sembridge) + attw ESM-only OK 8/8 (node16 🟢 + bundler 🟢) + size-limit 8/8 within budget. ci:publint + ci:attw scripts esteso a 8 packages (era 4 F1-F3); aggiunto `ci:gate:f6` alias. **Deferred-items.md 06-06 risolto inline** (Auto-fix Rule 3): typecheck `@sembridge/gateway` + DTS chain `routing↔gateway` falliva con dist stale. Soluzione: rebuild ordinato F1+F2 → `pnpm build:f3:cyclic` (workflow F3-aware DTS bootstrap esistente in package.json) → F4-F6. Tutti 8 typecheck ora green. **D-83 strict ✓ verified**: 0 lines diff su `packages/{core,mapper,routing,gateway,worker}/src/` per tutto il plan 06-09a. Building blocks pronti per 06-09b (DOC italiani README cache+devtools+sembridge + JSDoc TypeDoc-ready + REQ matrix flip CACHE-01..03 + TOOL-01..05 + DOC-02/05/06 + PRD §39 #10 closure + CHANGELOG v1.0.0 milestone closure).
 

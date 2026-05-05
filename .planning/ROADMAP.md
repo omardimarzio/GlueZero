@@ -13,7 +13,11 @@
 - [x] **Phase 3: Routing & Server Gateway HTTP** ✅ **COMPLETE** (14/14 plans, ready for verifier) — Routing engine dichiarativo (`local`/`http`/`cache`/`composite`) + gateway HTTP unico con retry/timeout/dedupe/auth. Closed: 2026-05-03.
 - [x] **Phase 4: Realtime inbound (SSE prioritario, WS opzionale)** ✅ **COMPLETE** (9/9 plans, ready for verifier) — Adapter SSE + WebSocket con reconnection policy unificata, normalizzazione canonica via mapper F2 invariato, auto-fallback SSE→WS, ping/pong applicativo D-111, visibility-aware behavior, cascade cleanup ext F4. Closed: 2026-05-04.
 - [x] **Phase 5: Worker Runtime** ✅ **COMPLETE** (7/7 plans, ready for verifier) — Worker Registry + Worker Pool bounded `min(hwc, 4)` cap 8 + WorkerBridge Comlink wrap + state machine atomico Pitfall 2C closure (D-133) + cancellation hybrid dedicated/cooperative (D-131, D-132) + progress events Comlink callback proxy throttled (D-135-D-138) + serialization WK-07 documentata (D-139-D-142, structuredClone default + transferable JSONPath opt-in) + composition wrapper Opzione B preserva D-83 strict. Closed: 2026-05-05.
-- [ ] **Phase 6: Cache & Tooling avanzato** — In-memory cache con metadata `cache`/`remote`, Event Inspector, metrics, controlli `pauseTopic`/`resumeTopic`/`flushQueue`
+- [x] **Phase 6: Cache & Tooling avanzato** ✅ **COMPLETE** (11/11 plans, ready for verifier) — Cache layer in-memory LRU bounded `maxEntries=1000` (D-158) + scope user-aware (D-156/D-157) + cache-then-network ordering microtask (RESEARCH §15.6) + Event Inspector ring buffer 500 (D-167) + Route Inspector aggrega step 9+10 + MetricsCollector simil-OpenMetrics + naming `sembridge.<package>.<metric>{<labels>}` Prometheus + reservoir Algorithm R Vitter 1985 (D-165) + cardinality cap 100 + audit (D-166) + PauseController pauseTopic/resumeTopic/flushQueue + critical bypass (D-170) + getDebugSnapshot deep-clone via structuredClone (D-162) + tap registry chain MultiplexTap (D-159) + step 14 reale attivato (`event.observed` D-161) + createSemBridge chain completa F1+F2+F3+F4+F5+F6 (BLOCKER-2 fix). **Closes PRD §39 #10 (TOOL-05 metrics format)**. Closed: 2026-05-05.
+
+---
+
+**MILESTONE v1.0 ✅ CHIUSA 2026-05-05** — 6/6 fasi PRD complete + 10/11 open issues PRD §39 closed (#2 deferred V1.x) + 91/91 REQ-IDs Complete + 8 pacchetti `@sembridge/*` ESM-only ready for `npm publish v1.0.0`.
 
 ## Phase Details
 
@@ -245,15 +249,29 @@ CACHE-01, CACHE-02, CACHE-03, TOOL-01, TOOL-02, TOOL-03, TOOL-04, TOOL-05, TEST-
 **Plans**: 11 plans (post revision iter 1 split BLOCKER-3 — 06-08 → 06-08a/b + 06-09 → 06-09a/b)
 - [x] 06-01-PLAN.md — Bootstrap @sembridge/{cache,devtools,sembridge} (package.json + tsup ESM-only + vitest 3-tier + types/* + augment.ts) — Wave 1 sequential gate
 - [x] 06-02-PLAN.md — MemoryCacheAdapter LRU bounded `maxEntries=1000` (D-158) + stable-hash FNV-1a (D-155 riuso F3 D-74) — Wave 2 ∥ 06-04
-- [ ] 06-03-PLAN.md — CacheHandler + CompositeHandler concretizza F3 D-77 placeholder + scope hybrid D-156/D-157 + cache-then-network ordering microtask — Wave 2-bis post 06-02
-- [ ] 06-04-PLAN.md — MultiplexTap + tap registry chain D-159 + auto-wrap F1 single-tap backward-compat — Wave 2 ∥ 06-02
-- [ ] 06-05-PLAN.md — EventInspector + RouteInspector ring buffer 500 entries (D-167) + structuredClone deep-clone (D-162) + default NODE_ENV inline (WARNING-5 fix) — Wave 3 parallel
-- [ ] 06-06-PLAN.md — MetricsCollector + reservoir Algorithm R Vitter 1985 (D-165) + cardinality cap 100 (D-166) + Prometheus naming (D-163) + cumulative-only (D-164) — Wave 3 parallel
-- [ ] 06-07-PLAN.md — PauseController + queue cap 1000 + critical bypass (D-170) + flushQueue audit (D-169) + pauseTopic block publish (D-168) — Wave 3 parallel
-- [ ] 06-08a-PLAN.md — CacheBroker composition wrapper Opzione B + createCacheBroker factory + createCacheHarness + 4 integration test cache 3-tier + barrel cache FINAL append — Wave 4a sequential post 06-03
-- [ ] 06-08b-PLAN.md — DevtoolsBroker composition wrapper + createDevtoolsBroker + createSemBridge **CHAIN COMPLETA F1+F2+F3+F4+F5+F6** (BLOCKER-2 fix) + barrel devtools FINAL cumulative (BLOCKER-1 fix single-writer) + 6 integration test devtools+sembridge 3-tier — Wave 4b sequential post 06-08a
-- [ ] 06-09a-PLAN.md — CI gates verification + size-limit budget calibration cache/devtools/sembridge + biome auto-format + coverage threshold calibration post-impl — Wave 5a sequential post 06-08b
-- [ ] 06-09b-PLAN.md — Final gate F6 milestone v1.0 closure: DOC-02/05/06 italiano (~1400 LOC) con 7 Q&A enumerate WARNING-2 fix + JSDoc TypeDoc-ready 11 file public + REQ matrix flip + chiusura PRD §39 #10 (TOOL-05) + CHANGELOG v1.0.0 + ROADMAP/STATE/TRACKER closure — Wave 5b sequential post 06-09a
+- [x] 06-03-PLAN.md — CacheHandler + CompositeHandler concretizza F3 D-77 placeholder + scope hybrid D-156/D-157 + cache-then-network ordering microtask — Wave 2-bis post 06-02
+- [x] 06-04-PLAN.md — MultiplexTap + tap registry chain D-159 + auto-wrap F1 single-tap backward-compat — Wave 2 ∥ 06-02
+- [x] 06-05-PLAN.md — EventInspector + RouteInspector ring buffer 500 entries (D-167) + structuredClone deep-clone (D-162) + default NODE_ENV inline (WARNING-5 fix) — Wave 3 parallel
+- [x] 06-06-PLAN.md — MetricsCollector + reservoir Algorithm R Vitter 1985 (D-165) + cardinality cap 100 (D-166) + Prometheus naming (D-163) + cumulative-only (D-164) — Wave 3 parallel
+- [x] 06-07-PLAN.md — PauseController + queue cap 1000 + critical bypass (D-170) + flushQueue audit (D-169) + pauseTopic block publish (D-168) — Wave 3 parallel
+- [x] 06-08a-PLAN.md — CacheBroker composition wrapper Opzione B + createCacheBroker factory + createCacheHarness + 4 integration test cache 3-tier + barrel cache FINAL append — Wave 4a sequential post 06-03
+- [x] 06-08b-PLAN.md — DevtoolsBroker composition wrapper + createDevtoolsBroker + createSemBridge **CHAIN COMPLETA F1+F2+F3+F4+F5+F6** (BLOCKER-2 fix) + barrel devtools FINAL cumulative (BLOCKER-1 fix single-writer) + 6 integration test devtools+sembridge 3-tier — Wave 4b sequential post 06-08a
+- [x] 06-09a-PLAN.md — CI gates verification + size-limit budget calibration cache/devtools/sembridge + biome auto-format + coverage threshold calibration post-impl — Wave 5a sequential post 06-08b
+- [x] 06-09b-PLAN.md — Final gate F6 milestone v1.0 closure: DOC-02/05/06 italiano (~1748 LOC) con 7 Q&A enumerate WARNING-2 fix + JSDoc TypeDoc-ready 11 file public + REQ matrix flip + chiusura PRD §39 #10 (TOOL-05) + CHANGELOG v1.0.0 + ROADMAP/STATE/TRACKER closure — Wave 5b sequential post 06-09a — completato 2026-05-05 (4 commits: 3178103 DOC-02/05/06 + a4b2af2 JSDoc + ca1656d REQ flip + final closure)
+
+**Phase 6 closure highlights:**
+
+- ✅ CACHE-01..03 + TOOL-01..05 + DOC-02/05/06 + ERR-02 ext + LIFE-02 ext + PIPE-01 ext + TEST-01/02 ext F6 → Complete
+- ✅ DOC-05 `packages/devtools/README.md` italiano 11 sezioni 368 LOC con sezione 6 "MetricsCollector — closes PRD §39 #10 (TOOL-05)" + 7 Q&A enumerate Q1-Q7 + anti-pattern cardinality explosion
+- ✅ DOC-02 `packages/sembridge/README.md` italiano 452 LOC con scenario meteo F1+F2+F3+F4+F5+F6 end-to-end + chain composition + Q&A 8 domande
+- ✅ DOC `packages/sembridge/EXAMPLES.md` italiano 519 LOC con 10 esempi consolidati cross-feature
+- ✅ DOC `packages/cache/README.md` italiano 409 LOC con cache adapter + LRU + 3 strategies + scope D-156 + Q&A 5
+- ✅ JSDoc TypeDoc-ready: 36 @example / 55 @see / 9 @throws preservati in dist/index.d.ts (target ≥27/30/9)
+- ✅ Coverage v8 cache 100/94.21/100/100, devtools 96.44/89.28/94.36/96.98, sembridge 100/100/100/100 (sopra hard floor target ≥90/80/90/90)
+- ✅ CI gates: publint 8/8 ✅, attw ESM-only 8/8 ✅, size-limit 8/8 ✅, biome ✅, typecheck 8/8 ✅, build 8/8 ✅
+- ✅ D-83 strict carryover ✓ verified `git diff main...HEAD packages/{core,mapper,routing,gateway,worker}/src/` exit 0 lines per tutta F6
+- ✅ 16 decisioni F6 D-155..D-170 lockate
+- ✅ Phase 6 ready for `gsd-verifier 6` finale
 **Needs research**: no
 **UI hint**: no
 
@@ -312,7 +330,7 @@ I 11 punti che il PRD §39 vieta esplicitamente di lasciare impliciti vengono ch
 | 7 | Unsubscribe automatico in `unregisterPlugin` | Cascade obbligatoria, test deterministico | F1 (LIFE-02) — **Closed in 01-08** |
 | 8 | Retry 4xx vs 5xx | No retry su 4xx (eccetto 408/429); retry su 5xx + network + 408/429 | F3 (ROUTE-09) |
 | 9 | Reconnection rules realtime | Exponential backoff + full jitter, cap 30s, eventi `system.realtime.*`, Last-Event-ID per SSE, ping app-level per WS | F4 (RT-07) — **Closed in 04-09** ✅ |
-| 10 | Format metriche | JSON simil-OpenMetrics `{ counters, gauges, histograms }` | F6 (TOOL-05) |
+| 10 | Format metriche | JSON simil-OpenMetrics `{ counters, gauges, histograms }` + naming `sembridge.<package>.<metric>{<labels>}` Prometheus dot.case + cumulative-only counters D-164 + reservoir Algorithm R Vitter 1985 D-165 + cardinality cap 100 D-166 | F6 (TOOL-05) — **Closed in 06-09b** ✅ |
 | 11 | Serializzazione messaggi worker | structuredClone default, transferable opt-in, no functions, `assertSerializable` dev mode | F5 (WK-07) |
 
 ## Architectural Constraints (vincolanti per la roadmap)
@@ -343,12 +361,18 @@ I 11 punti che il PRD §39 vieta esplicitamente di lasciare impliciti vengono ch
 | 3. Routing & Server Gateway HTTP | 14/14 | ✅ Complete | 2026-05-03 |
 | 4. Realtime inbound | 9/9 | ✅ Complete | 2026-05-04 |
 | 5. Worker Runtime | 7/7 | ✅ Complete | 2026-05-05 |
-| 6. Cache & Tooling avanzato | 0/11 (planned) | In Progress (11 plans post revision iter 1 — split BLOCKER-3) | - |
+| 6. Cache & Tooling avanzato | 11/11 | ✅ Complete | 2026-05-05 |
+
+---
+
+**Milestone v1.0 ✅ CHIUSA 2026-05-05** — 6/6 fasi complete + 10/11 open issues PRD §39 closed (#2 deferred V1.x) + 91/91 REQ-IDs Complete.
 
 ---
 
 *Roadmap created: 2026-04-28*
-*Last updated: 2026-05-05 — **Phase 5 COMPLETE 7/7 plan** (05-01..05-06 done + 05-07 final gate). 1 open issue PRD §39 chiuso: #11 WK-07 (serializzazione messaggi worker — `structuredClone` (SCA) default + `assertSerializable` deep-walk PRE-postMessage dev-mode auto + transferable opt-in JSONPath + DOC-05 `packages/worker/README.md` italiano 11 sezioni 429 LOC). CI gates: publint ✅, attw ESM-only ✅ (node16 + bundler 🟢), size-limit ✅ (`@sembridge/worker` 26.45/32 KB gz include all deps cross-package), biome ✅ (zero errors), typecheck ✅, build ✅. Coverage v8 worker subset 91.96% statements / 83.73% branches / 90.58% functions / 94.17% lines (above floor 85/75/88/87 + above target 90/80/90/90). Test totale: 121 worker (18 file Tier-1 jsdom + 6 browser smoke Tier-3 Playwright Chromium reale), 877/880 monorepo full (3 skip MSW V1.x F4). D-83 strict carryover ✓ verified `git diff main...HEAD packages/{core,mapper,routing}/src/ + packages/gateway/src/{http,sse-ws}/` exit 0 lines per tutta F5. **WK-01..WK-07 + ERR-02 ext + LIFE-02 ext F5 + TEST-01/02/03 ext F5 → Complete**. **Phase 4 COMPLETE & READY** (9/9). **Phase 3 COMPLETE & READY** (14/14). **Phase 2 COMPLETE & READY** (12/12). **Phase 1 COMPLETE & VERIFIED** (PASS HIGH).*
+*Last updated: 2026-05-05 — **Phase 6 COMPLETE 11/11 plan + MILESTONE v1.0 CHIUSA**. Phase 6 closure: CACHE-01..03 + TOOL-01..05 + DOC-02/05/06 + ERR-02/LIFE-02/PIPE-01/TEST-01-02 ext F6 → Complete. **PRD §39 #10 (TOOL-05 metrics format) → CLOSED 2026-05-05** — ULTIMA open issue v1.0 chiusa. CI gates F6: publint 8/8 ✅, attw ESM-only 8/8 ✅, size-limit 8/8 ✅ (cache 22.13/27 KB + devtools 22.27/27 KB + sembridge 34.80/42 KB), biome ✅, typecheck 8/8 ✅, build 8/8 ✅. Coverage v8 cache 100/94.21/100/100, devtools 96.44/89.28/94.36/96.98, sembridge 100/100/100/100 (sopra hard floor target ≥90/80/90/90). DOC-02/05/06 italiano ~1748 LOC (cache 409 + devtools 368 + sembridge 452 + EXAMPLES 519). JSDoc TypeDoc-ready: @example 36 / @see 55 / @throws 9 (sopra target ≥27/30/9). D-83 strict carryover ✓ verified `git diff main...HEAD packages/{core,mapper,routing,gateway,worker}/src/` exit 0 lines per tutta F6. 16 decisioni F6 D-155..D-170 lockate. **MILESTONE v1.0 chiusa** — 6/6 fasi PRD complete + 10/11 open issues PRD §39 closed (#2 deferred V1.x) + 91/91 REQ-IDs Complete + 8 pacchetti `@sembridge/*` ESM-only ready for `npm publish v1.0.0`.*
+
+*Previous update: 2026-05-05 — **Phase 5 COMPLETE 7/7 plan** (05-01..05-06 done + 05-07 final gate). 1 open issue PRD §39 chiuso: #11 WK-07 (serializzazione messaggi worker — `structuredClone` (SCA) default + `assertSerializable` deep-walk PRE-postMessage dev-mode auto + transferable opt-in JSONPath + DOC-05 `packages/worker/README.md` italiano 11 sezioni 429 LOC). CI gates: publint ✅, attw ESM-only ✅ (node16 + bundler 🟢), size-limit ✅ (`@sembridge/worker` 26.45/32 KB gz include all deps cross-package), biome ✅ (zero errors), typecheck ✅, build ✅. Coverage v8 worker subset 91.96% statements / 83.73% branches / 90.58% functions / 94.17% lines (above floor 85/75/88/87 + above target 90/80/90/90). Test totale: 121 worker (18 file Tier-1 jsdom + 6 browser smoke Tier-3 Playwright Chromium reale), 877/880 monorepo full (3 skip MSW V1.x F4). D-83 strict carryover ✓ verified `git diff main...HEAD packages/{core,mapper,routing}/src/ + packages/gateway/src/{http,sse-ws}/` exit 0 lines per tutta F5. **WK-01..WK-07 + ERR-02 ext + LIFE-02 ext F5 + TEST-01/02/03 ext F5 → Complete**. **Phase 4 COMPLETE & READY** (9/9). **Phase 3 COMPLETE & READY** (14/14). **Phase 2 COMPLETE & READY** (12/12). **Phase 1 COMPLETE & VERIFIED** (PASS HIGH).*
 
 *Previous update: 2026-05-04 — **Phase 5 In Progress 6/7 plan completi** (Wave 4 ✅ COMPLETE). 05-06 (composition wrapper Opzione B + factory + 8 integration test Tier-1 + 6 browser smoke Tier-3 Playwright Chromium). 121/121 worker test passing + 6/6 browser smoke; cross-package zero regression: core 248 + mapper 183 + routing 103 + gateway 222 (3 skip MSW V1.x F4) + worker 121 = 877/880 monorepo full. Opzione B research §7.2 verified. D-83 strict ✓. D-151 10 scenari coverage. WK-01..WK-07 + ERR-02 ext + LIFE-02 ext F5 + TEST-01/02/03 ext F5 → subset W4 done (full closure 05-07).*
 

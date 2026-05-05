@@ -2,14 +2,14 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: verifying
-last_updated: "2026-05-05T18:59:53.803Z"
+status: phase_6_complete_milestone_v1_0_ready_for_verifier
+last_updated: "2026-05-05T22:00:00.000Z"
 progress:
   total_phases: 6
-  completed_phases: 5
+  completed_phases: 6
   total_plans: 64
-  completed_plans: 63
-  percent: 98
+  completed_plans: 64
+  percent: 100
 ---
 
 # Project State: SemBridge
@@ -22,16 +22,32 @@ progress:
 - **Project:** SemBridge — libreria JavaScript browser-side TypeScript-first (ESM) per pub/sub, routing, canonical model, gateway server unico, worker runtime, developer tooling
 - **Authoritative source:** `prd.md` (root del progetto, "l'unica base informativa condivisa con il developer", PRD §1)
 - **Core Value:** I plugin/componenti possono essere sviluppati indipendentemente, con la propria nomenclatura locale, e interoperare correttamente attraverso il vocabolario canonico del broker — senza accordo preventivo sui nomi tra autori
-- **Current Milestone:** v1
-- **Current Focus:** Phase 5 — worker-runtime
+- **Current Milestone:** v1.0 ✅ CHIUSA 2026-05-05
+- **Current Focus:** Phase 6 — Cache & Tooling avanzato — ✅ COMPLETE — milestone v1.0 closed
 
 ## Current Position
 
-Phase: 5 (worker-runtime) — ✅ COMPLETE (ready for gsd-verifier 5)
-Wave: 5 ✅ COMPLETE (05-07 final gate F5 done)
-Plan: 7 of 7 (05-01..05-07 all done with SUMMARY)
-Total Plans: 7 (Phase 5) — phase_5_complete_ready_for_verifier
-Next phase: Phase 6 — Cache & Tooling avanzato (auto-advance enabled `/gsd-discuss-phase 6`)
+Phase: 6 (Cache & Tooling avanzato) — ✅ COMPLETE (ready for gsd-verifier 6)
+Wave: 5b ✅ COMPLETE (06-09b final gate F6 + milestone v1.0 closure done)
+Plan: 11 of 11 (06-01..06-09b all done with SUMMARY)
+Total Plans: 11 (Phase 6) — phase_6_complete_milestone_v1_0_ready_for_verifier
+**Milestone v1.0 ✅ CHIUSA** — All 6 phases complete + 10/11 open issues PRD §39 closed (#2 deferred V1.x) + 91/91 REQ-IDs Complete.
+
+**Last completed:** Plan 06-09b (Wave 5b — Final gate F6 + milestone v1.0 closure) at 2026-05-05 — 4 commits atomici: `3178103` docs(06-09b) DOC-02/05/06 consolidation finale italiano (4 README ~1748 LOC totali — WARNING-2 fix Q&A enumerate Q1-Q7) + `a4b2af2` docs(06-09b) JSDoc API pubblica TypeDoc-ready su F6 (@example 36 / @see 55 / @throws 9 preservation post-build) + `ca1656d` docs(06-09b) REQ matrix flip atomic CACHE-01..03 + TOOL-01..05 + DOC-02/05/06 + ERR-02/LIFE-02/PIPE-01/TEST-01-02 ext F6 → Complete + (questo) docs(06-09b) Phase 6 closure + MILESTONE v1.0 ✅ CHIUSO. CI gates F6: publint 8/8 ✅, attw ESM-only 8/8 ✅, size-limit 8/8 ✅, biome ✅, typecheck 8/8 ✅, build 8/8 ✅. **D-83 strict ✓ verified** `git diff main...HEAD packages/{core,mapper,routing,gateway,worker}/src/` exit 0 lines per tutta F6. **PRD §39 #10 (TOOL-05 metrics format) → CLOSED 2026-05-05** — ULTIMA open issue v1.0 chiusa.
+
+**Phase 6 closure highlights:**
+
+- CACHE-01..03 + TOOL-01..05 + DOC-02/05/06 + ERR-02 ext + LIFE-02 ext + PIPE-01 ext + TEST-01/02 ext F6 → Complete
+- DOC-05 `packages/devtools/README.md` italiano 11 sezioni 368 LOC con sezione 6 "MetricsCollector — closes PRD §39 #10 (TOOL-05)" + 7 Q&A enumerate (WARNING-2 fix Q1 dot.case + Q2 getMetricsDelta + Q3 reservoir + Q4 cardinality + Q5 Prometheus/OTel + Q6 metriche standard + Q7 custom V1.x)
+- DOC-02 `packages/sembridge/README.md` italiano 452 LOC con scenario meteo F1+F2+F3+F4+F5+F6 end-to-end + chain composition outermost devtools→cache→worker→realtime→router→mapper→broker + Q&A 8
+- DOC `packages/sembridge/EXAMPLES.md` italiano 519 LOC con 10 esempi consolidati cross-feature + scenario meteo full chain
+- DOC `packages/cache/README.md` italiano 409 LOC con cache adapter LRU + 3 strategies + scope D-156 + Q&A 5
+- JSDoc TypeDoc-ready: 36 @example / 55 @see / 9 @throws preservati in dist/index.d.ts (sopra target ≥27/30/9)
+- 16 decisioni F6 D-155..D-170 lockate
+- D-83 strict carryover ✓ verified per tutta F6
+- 91/91 REQ-IDs Complete + 10/11 open issues PRD §39 closed (#2 cross-fase pipeline ordering deferred V1.x — opt-in quando emergeranno consumer cross-fase reali)
+
+**Phase 6 ready for gsd-verifier 6 finale + npm publish v1.0.0.**
 
 **Last completed:** Plan 05-06 (Wave 4 — composition wrapper Opzione B + factory + integration test 3-tier) at 2026-05-04 — 4 commits atomici: `4717a2e` feat WorkerHandler Strategy F3 dispatch + atomic state + sanitized errors (D-152/D-153/D-146 + Pitfall 2C closure) + `e117332` feat WorkerBroker composition wrapper Opzione B + createWorkerBroker factory + harness (D-121/122/126/152) + `6141eba` test 8 integration test Tier-1 jsdom (D-151 #1-#6 + #8 + #9 — TEST-01/02/03 ext F5) + `ff3d694` test Tier-3 Playwright real Worker smoke + D-151 #7 transferable byteLength=0 (D-150 + D-141 Pitfall 7.E verified). 16 file creati + 1 modificato (~2112 LOC totali — 1383 source + 616 integration + 113 browser). **121/121 worker test passing** Tier-1 jsdom (8 handler + 12 broker + 6 factory + 8 integration + 87 W1+W2+W3 precedenti) + **6/6 browser smoke Tier-3 Playwright Chromium reale**; cross-package: core 248/248 + mapper 183/183 + routing 103/103 + gateway 222/225 (3 skip MSW V1.x F4) → zero regression. Build OK ESM-only: dist/index.js 50.85 KB (+18.50 vs 05-04), dts 60.72 KB. Typecheck zero errors su 5 package. **D-83 strict ✓ verified** `git diff main packages/{core,mapper,routing}/src/ packages/gateway/src/{http,sse-ws}/` empty. **Opzione B research §7.2 verified**: `WorkerBroker.publish` intercepta topic matching una worker route registrata PRIMA di delegare a `inner.publish` (RouterBroker F3) — JSDoc cita Opzione B + D-83 in 14 occurrenze + 4 esplicite RESEARCH §7.2. **DI bridgeFactory innovation** (Auto-fix Rule 2): aggiunta opzione `WorkerBrokerConfig.bridgeFactory` per integration test deterministico — sostituisce default `WorkerBridge` (Comlink RPC reale) con `MockBridge` cooperativo (onora signal, tracking instances/byWorkerId/dispatchCalls/cancelledCount). Pattern coerente con `WorkerPool.bridgeFactory` (05-05 disaccoppiamento). **Sanitized error shape** writer-side (T-03-07-01 carryover F3 OutcomeCollector): `{ code, category, message, routeId, topic, eventId, workerId, taskName }` — niente `originalError`/`stack`/`cause`. **ERR-02 ext F5**: ogni failure emette sia `<topic>.failed` che `worker.error` topic ext. **D-151 10 scenari coverage**: #1-#6 + #8 + #9 (8) in Tier-1 + #7 (transferable byteLength=0) in Tier-3 + #10 (assertSerializable PRE-postMessage no spawn) coperto in 05-04 worker-bridge.test Test 4. 11/11 threat enumerate (T-05-06-01..T-05-06-11) tutti `LOW` severity, 10 `mitigate` + 1 `accept` (externalAbortControllers Map cleanup in finally bounded). REQ progress: WK-01..WK-07 subset W4 done (full closure 05-07), ERR-02 ext F5 complete, LIFE-02 ext F5 complete, TEST-01/02/03 ext F5 complete subset W4.
 
