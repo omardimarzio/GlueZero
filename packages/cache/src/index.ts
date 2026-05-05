@@ -50,7 +50,16 @@ export {
 export { cacheKey, fnv1a32, stableHash, stableStringify } from './stable-hash'
 
 // ---------- W2-bis plan 06-03 — cache-handler + composite-handler (concretizza F3 D-77) ----------
-// export { createCacheHandlerF6 } from './cache-handler'
+export {
+  createCacheHandlerF6,
+  deriveTopicFromCache,
+  type CacheHandlerF6,
+  type CacheHandlerF6Deps,
+  type CacheHandlerOutcome,
+  type CacheHttpDelegate,
+  type CachePublishFn,
+  type RouteCacheCompiled,
+} from './cache-handler'
 // export { createCompositeHandlerF6 } from './composite-handler'
 
 // ---------- Wave 4 plan 06-08 — composition wrapper Opzione B + factory pubblico ----------

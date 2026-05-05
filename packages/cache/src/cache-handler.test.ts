@@ -510,3 +510,88 @@ describe('deriveTopicFromCache helper', () => {
     expect(deriveTopicFromCache('singleword', 'loaded')).toBe('singleword.loaded')
   })
 })
+
+describe('Error path coverage — fetch error per strategy', () => {
+  it('Test 20: D-157 missing scope auth + httpHandler error → publish failed sanitized', async () => {
+    const cache = createMemoryCacheAdapter()
+    const { publishFn, captured } = makePublishFn()
+    const { httpHandler } = makeHttpHandler({ outcome: 'error', error: new Error('boom') })
+    const handler = createCacheHandlerF6({
+      cache,
+      publishFn,
+      httpHandler,
+      scopeProvider: () => null,
+    })
+
+    const event = makeBrokerEvent({ id: 'evt-bypass-err' })
+    const route = makeRoute({ strategy: 'cache-first', auth: true, id: 'r-bypass' })
+
+    const outcome = await handler.execute(event, route)
+
+    expect(outcome.status).toBe('error')
+    expect(outcome.errorCode).toBe('cache.network.failed')
+    const failed = captured.find((c) => c.topic === 'weather.failed')
+    expect(failed).toBeDefined()
+    const payload = failed?.payload as { error?: { routeId?: string; eventId?: string } }
+    expect(payload.error?.routeId).toBe('r-bypass')
+    expect(payload.error?.eventId).toBe('evt-bypass-err')
+  })
+
+  it('Test 21: cache-first MISS + httpHandler error → publish failed sanitized', async () => {
+    const cache = createMemoryCacheAdapter()
+    const { publishFn, captured } = makePublishFn()
+    const { httpHandler } = makeHttpHandler({ outcome: 'error', error: new Error('boom') })
+    const handler = createCacheHandlerF6({ cache, publishFn, httpHandler })
+
+    const event = makeBrokerEvent({ id: 'evt-cf-err' })
+    const route = makeRoute({ strategy: 'cache-first', id: 'r-cf' })
+
+    const outcome = await handler.execute(event, route)
+
+    expect(outcome.status).toBe('error')
+    expect(outcome.errorCode).toBe('cache.network.failed')
+    const failed = captured.find((c) => c.topic === 'weather.failed')
+    expect(failed).toBeDefined()
+    const payload = failed?.payload as { error?: { code?: string; routeId?: string } }
+    expect(payload.error?.code).toBe('cache.network.failed')
+    expect(payload.error?.routeId).toBe('r-cf')
+  })
+
+  it('Test 22: cache-then-network MISS + httpHandler error → publish failed sanitized', async () => {
+    const cache = createMemoryCacheAdapter()
+    const { publishFn, captured } = makePublishFn()
+    const { httpHandler } = makeHttpHandler({ outcome: 'error', error: new Error('boom') })
+    const handler = createCacheHandlerF6({ cache, publishFn, httpHandler })
+
+    const event = makeBrokerEvent({ id: 'evt-ctn-err' })
+    const route = makeRoute({ strategy: 'cache-then-network', id: 'r-ctn' })
+
+    const outcome = await handler.execute(event, route)
+    await Promise.resolve()
+
+    expect(outcome.status).toBe('error')
+    expect(outcome.errorCode).toBe('cache.network.failed')
+    const failed = captured.find((c) => c.topic === 'weather.failed')
+    expect(failed).toBeDefined()
+  })
+
+  it('Test 23: unknown strategy default branch → publish failed config error', async () => {
+    const cache = createMemoryCacheAdapter()
+    const { publishFn, captured } = makePublishFn()
+    const { httpHandler } = makeHttpHandler()
+    const handler = createCacheHandlerF6({ cache, publishFn, httpHandler })
+
+    const event = makeBrokerEvent()
+    // Cast intenzionale: simula route con strategy unknown (TS protegge ma runtime safety net)
+    const route = { id: 'r-unk', topic: 'weather.requested', strategy: 'unknown-strategy' } as unknown as RouteCacheCompiled
+
+    const outcome = await handler.execute(event, route)
+
+    expect(outcome.status).toBe('error')
+    expect(outcome.errorCode).toBe('cache.strategy.unknown')
+    const failed = captured.find((c) => c.topic === 'weather.failed')
+    expect(failed).toBeDefined()
+    const payload = failed?.payload as { error?: { code?: string } }
+    expect(payload.error?.code).toBe('cache.strategy.unknown')
+  })
+})
