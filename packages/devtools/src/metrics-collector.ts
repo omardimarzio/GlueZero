@@ -34,8 +34,8 @@ import { createCardinalityTracker, flatLabels } from './cardinality-cap'
 import {
   computeSummary,
   createReservoir,
-  reservoirAdd,
   type ReservoirState,
+  reservoirAdd,
 } from './reservoir-sampling'
 import type { HistogramSummary, MetricsDelta, MetricsSnapshot } from './types/metrics'
 
@@ -96,10 +96,7 @@ export interface MetricsCollectorOptions {
    * D-166 audit hook su cardinality overflow. Wired dal consumer 06-08 a
    * `broker.publish('system.metrics.cardinality-overflow', info)`.
    */
-  readonly onCardinalityOverflow?: (info: {
-    baseName: string
-    droppedLabels: string
-  }) => void
+  readonly onCardinalityOverflow?: (info: { baseName: string; droppedLabels: string }) => void
 }
 
 const DEFAULT_HISTOGRAM_SAMPLES = 1024 // D-165
@@ -122,9 +119,7 @@ const DEFAULT_MAX_LABEL_COMBINATIONS = 100 // D-166
  *   memory ≈ `maxLabelCombinations * histogramSamples * 8 bytes` per metric key.
  *   Con default = 100 * 1024 * 8 = ~800KB per metric base name (acceptable).
  */
-export function createMetricsCollector(
-  opts: MetricsCollectorOptions = {},
-): MetricsCollector {
+export function createMetricsCollector(opts: MetricsCollectorOptions = {}): MetricsCollector {
   const samplesCap = opts.histogramSamples ?? DEFAULT_HISTOGRAM_SAMPLES
   const cardinality = createCardinalityTracker(
     opts.onCardinalityOverflow !== undefined

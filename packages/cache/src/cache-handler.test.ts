@@ -76,12 +76,14 @@ function makeRoute(overrides: Partial<RouteCacheCompiled> = {}): RouteCacheCompi
   }
 }
 
-function makeHttpHandler(behavior: {
-  readonly outcome?: 'success' | 'error'
-  readonly value?: unknown
-  readonly error?: unknown
-  readonly throws?: Error
-} = {}): {
+function makeHttpHandler(
+  behavior: {
+    readonly outcome?: 'success' | 'error'
+    readonly value?: unknown
+    readonly error?: unknown
+    readonly throws?: Error
+  } = {},
+): {
   readonly httpHandler: CacheHttpDelegate
   readonly callCount: () => number
 } {
@@ -122,7 +124,10 @@ describe('cache-first strategy', () => {
     const event = makeBrokerEvent()
     const route = makeRoute({ strategy: 'cache-first' })
     // Pre-populate cache with key matching event derived
-    cache.set('weather.requested::' + (await import('./stable-hash')).stableHash({ city: 'Roma' }), { temp: 30 })
+    cache.set(
+      'weather.requested::' + (await import('./stable-hash')).stableHash({ city: 'Roma' }),
+      { temp: 30 },
+    )
 
     const outcome = await handler.execute(event, route)
 
@@ -185,7 +190,10 @@ describe('network-first strategy', () => {
 
     const event = makeBrokerEvent()
     const route = makeRoute({ strategy: 'network-first' })
-    cache.set('weather.requested::' + (await import('./stable-hash')).stableHash({ city: 'Roma' }), { temp: 18 })
+    cache.set(
+      'weather.requested::' + (await import('./stable-hash')).stableHash({ city: 'Roma' }),
+      { temp: 18 },
+    )
 
     const outcome = await handler.execute(event, route)
 
@@ -223,7 +231,10 @@ describe('cache-then-network strategy', () => {
 
     const event = makeBrokerEvent({ id: 'evt-cache-then' })
     const route = makeRoute({ strategy: 'cache-then-network' })
-    cache.set('weather.requested::' + (await import('./stable-hash')).stableHash({ city: 'Roma' }), { temp: 18 })
+    cache.set(
+      'weather.requested::' + (await import('./stable-hash')).stableHash({ city: 'Roma' }),
+      { temp: 18 },
+    )
 
     const outcome = await handler.execute(event, route)
     // Flush microtasks queued
@@ -367,7 +378,10 @@ describe('cache-then-network ordering deterministic', () => {
 
     const event = makeBrokerEvent({ id: 'evt-replaces-deterministic' })
     const route = makeRoute({ strategy: 'cache-then-network' })
-    cache.set('weather.requested::' + (await import('./stable-hash')).stableHash({ city: 'Roma' }), { temp: 18 })
+    cache.set(
+      'weather.requested::' + (await import('./stable-hash')).stableHash({ city: 'Roma' }),
+      { temp: 18 },
+    )
 
     await handler.execute(event, route)
     await Promise.resolve()
@@ -583,7 +597,11 @@ describe('Error path coverage — fetch error per strategy', () => {
 
     const event = makeBrokerEvent()
     // Cast intenzionale: simula route con strategy unknown (TS protegge ma runtime safety net)
-    const route = { id: 'r-unk', topic: 'weather.requested', strategy: 'unknown-strategy' } as unknown as RouteCacheCompiled
+    const route = {
+      id: 'r-unk',
+      topic: 'weather.requested',
+      strategy: 'unknown-strategy',
+    } as unknown as RouteCacheCompiled
 
     const outcome = await handler.execute(event, route)
 

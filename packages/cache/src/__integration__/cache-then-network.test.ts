@@ -10,7 +10,7 @@
 //   verificato dal test ordering deterministic.
 
 import { afterEach, describe, expect, it } from 'vitest'
-import { createCacheHarness, type CacheHarness } from '../test-utils/cache-harness'
+import { type CacheHarness, createCacheHarness } from '../test-utils/cache-harness'
 
 describe('cache-then-network integration — ordering microtask deterministic', () => {
   let harness: CacheHarness
@@ -39,9 +39,13 @@ describe('cache-then-network integration — ordering microtask deterministic', 
 
     harness.adapter.set('fixed-feed-key', { items: ['cached'] }, 60_000)
 
-    await harness.publish('feed.requested', {}, {
-      source: { type: 'plugin', id: 'app' },
-    })
+    await harness.publish(
+      'feed.requested',
+      {},
+      {
+        source: { type: 'plugin', id: 'app' },
+      },
+    )
     await harness.flushAsync()
 
     const loadedSoFar = harness.events.filter((e) => e.topic === 'feed.loaded')
@@ -73,9 +77,13 @@ describe('cache-then-network integration — ordering microtask deterministic', 
       },
     })
 
-    await harness.publish('feed.requested', {}, {
-      source: { type: 'plugin', id: 'app' },
-    })
+    await harness.publish(
+      'feed.requested',
+      {},
+      {
+        source: { type: 'plugin', id: 'app' },
+      },
+    )
     await harness.flushAsync()
 
     expect(fetchCount).toBe(1)
@@ -107,17 +115,25 @@ describe('cache-then-network integration — ordering microtask deterministic', 
     })
 
     currentUser = 'userA'
-    await harness.publish('feed.requested', {}, {
-      source: { type: 'plugin', id: 'app' },
-    })
+    await harness.publish(
+      'feed.requested',
+      {},
+      {
+        source: { type: 'plugin', id: 'app' },
+      },
+    )
     await harness.flushAsync()
     expect(fetchCount).toBe(1)
 
     currentUser = 'userB'
     harness.reset()
-    await harness.publish('feed.requested', {}, {
-      source: { type: 'plugin', id: 'app' },
-    })
+    await harness.publish(
+      'feed.requested',
+      {},
+      {
+        source: { type: 'plugin', id: 'app' },
+      },
+    )
     await harness.flushAsync()
     expect(fetchCount).toBe(2)
     const loaded = harness.events.find((e) => e.topic === 'feed.loaded')

@@ -104,10 +104,7 @@ export interface CompositeHandlerF6Deps {
  * route)`. Tutti i path async terminano con outcome shape (no throw fuori).
  */
 export interface CompositeHandlerF6 {
-  execute(
-    event: BrokerEvent,
-    route: RouteCompositeCompiled,
-  ): Promise<CompositeHandlerOutcome>
+  execute(event: BrokerEvent, route: RouteCompositeCompiled): Promise<CompositeHandlerOutcome>
 }
 
 /**

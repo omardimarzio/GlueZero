@@ -116,11 +116,7 @@ export function createCacheHarness(opts: CacheHarnessOptions = {}): CacheHarness
   // Costruzione publish wrapped:
   // - Se httpDelegate fornito → custom CacheHandler con delegate iniettato
   // - Altrimenti → baseBroker.publish plain
-  let publishFn: (
-    topic: string,
-    payload: unknown,
-    options?: unknown,
-  ) => void | Promise<void>
+  let publishFn: (topic: string, payload: unknown, options?: unknown) => void | Promise<void>
 
   if (httpDelegate !== undefined) {
     const cacheRoutesMap = new Map<string, RouteCacheCompiled>()
@@ -137,9 +133,11 @@ export function createCacheHarness(opts: CacheHarnessOptions = {}): CacheHarness
     }
 
     const customPublishFn: CachePublishFn = (topic, payload, opts) => {
-      ;(baseBroker as unknown as {
-        publish: (t: string, p: unknown, o?: unknown) => void | Promise<void>
-      }).publish(topic, payload, opts)
+      ;(
+        baseBroker as unknown as {
+          publish: (t: string, p: unknown, o?: unknown) => void | Promise<void>
+        }
+      ).publish(topic, payload, opts)
     }
 
     const customHandler = createCacheHandlerF6({
@@ -158,9 +156,11 @@ export function createCacheHarness(opts: CacheHarnessOptions = {}): CacheHarness
     publishFn = (topic, payload, options) => {
       const cacheRoute = cacheRoutesMap.get(topic)
       if (cacheRoute === undefined) {
-        return (baseBroker as unknown as {
-          publish: (t: string, p: unknown, o?: unknown) => void | Promise<void>
-        }).publish(topic, payload, options)
+        return (
+          baseBroker as unknown as {
+            publish: (t: string, p: unknown, o?: unknown) => void | Promise<void>
+          }
+        ).publish(topic, payload, options)
       }
       const safeOpts = (options ?? {}) as { source?: BrokerEvent['source']; id?: string }
       const event = {
@@ -174,9 +174,11 @@ export function createCacheHarness(opts: CacheHarnessOptions = {}): CacheHarness
     }
   } else {
     publishFn = (topic, payload, options) => {
-      return (baseBroker as unknown as {
-        publish: (t: string, p: unknown, o?: unknown) => void | Promise<void>
-      }).publish(topic, payload, options)
+      return (
+        baseBroker as unknown as {
+          publish: (t: string, p: unknown, o?: unknown) => void | Promise<void>
+        }
+      ).publish(topic, payload, options)
     }
   }
 

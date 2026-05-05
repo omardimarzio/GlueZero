@@ -14,12 +14,7 @@
 import type { BrokerConfig, EventTap } from '@sembridge/core'
 import { describe, expect, expectTypeOf, it } from 'vitest'
 import { __augmentDevtoolsLoaded, type F6PipelineStep } from './augment'
-import type {
-  DevtoolsConfig,
-  HistogramSummary,
-  MetricsSnapshot,
-  PauseAction,
-} from './types'
+import type { DevtoolsConfig, HistogramSummary, MetricsSnapshot, PauseAction } from './types'
 
 describe('augment.ts (F6 Devtools TS declaration merging — plan 06-01)', () => {
   it('Test 1: __augmentDevtoolsLoaded const true exported (Pattern S1 anti tree-shake — T-06-01-01)', () => {

@@ -36,11 +36,7 @@
  */
 
 import type { BrokerEvent } from '@sembridge/core'
-import type {
-  FlushQueueResult,
-  PauseAction,
-  PauseControllerSnapshot,
-} from './types/pause-state'
+import type { FlushQueueResult, PauseAction, PauseControllerSnapshot } from './types/pause-state'
 
 const DEFAULT_MAX_QUEUE_SIZE = 1000 // D-170
 

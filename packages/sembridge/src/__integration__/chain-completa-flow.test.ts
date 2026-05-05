@@ -27,9 +27,13 @@ describe('chain-completa-flow integration — createSemBridge default F1+F2+F3+F
     const broker = createSemBridge({}) as DevtoolsLikeBroker
     const received: unknown[] = []
     broker.subscribe('e2e.topic', (ev) => received.push(ev.payload))
-    broker.publish('e2e.topic', { hello: 'F6' }, {
-      source: { type: 'plugin', id: 'app' },
-    })
+    broker.publish(
+      'e2e.topic',
+      { hello: 'F6' },
+      {
+        source: { type: 'plugin', id: 'app' },
+      },
+    )
     await flushAsync()
 
     expect(received).toEqual([{ hello: 'F6' }])
@@ -38,9 +42,13 @@ describe('chain-completa-flow integration — createSemBridge default F1+F2+F3+F
   it('Test 2: default features → devtools OUTERMOST → getDebugSnapshot popolato', async () => {
     const broker = createSemBridge({}) as DevtoolsLikeBroker
     broker.subscribe('debug.topic', () => {})
-    broker.publish('debug.topic', { v: 1 }, {
-      source: { type: 'plugin', id: 'app' },
-    })
+    broker.publish(
+      'debug.topic',
+      { v: 1 },
+      {
+        source: { type: 'plugin', id: 'app' },
+      },
+    )
     await flushAsync()
 
     expect(typeof broker.getDebugSnapshot).toBe('function')
@@ -57,9 +65,13 @@ describe('chain-completa-flow integration — createSemBridge default F1+F2+F3+F
       received.push((ev.payload as { v: number }).v)
     })
     for (let i = 0; i < 10; i++) {
-      broker.publish('seq.topic', { v: i }, {
-        source: { type: 'plugin', id: 'app' },
-      })
+      broker.publish(
+        'seq.topic',
+        { v: i },
+        {
+          source: { type: 'plugin', id: 'app' },
+        },
+      )
     }
     await flushAsync()
 

@@ -37,13 +37,16 @@ export default defineConfig({
         'src/test-utils/**',
         'src/__browser__/**',
       ],
-      // Wave 1 placeholder thresholds. Calibration finale in 06-09a (lesson
-      // learned F4-F5: misurare floor post-impl, arrotondare per difetto al 0.5%).
+      // Wave 5a calibration (plan 06-09a final gate F6):
+      // Misurato post-implementation W1..W4: 100 / 94.21 / 100 / 100.
+      // Thresholds calibrate al floor measurato arrotondato per difetto al 0.5%
+      // (analog F4 04-09 commit 761e4ad + F5 05-07 commit 1347d0b pattern).
+      // Hard floor inderogabile target ≥90/80/90/90 — tutti rispettati con margini ampi.
       thresholds: {
-        statements: 90,
-        branches: 80,
-        functions: 90,
-        lines: 90,
+        statements: 99.5,
+        branches: 93.5,
+        functions: 99.5,
+        lines: 99.5,
       },
     },
     typecheck: {

@@ -20,9 +20,13 @@ describe('features-opt-out integration — opt-out per feature singola e combina
     }) as { publish: Function; subscribe: Function; getDebugSnapshot?: Function }
     const received: unknown[] = []
     broker.subscribe('rtoff.topic', (ev: { payload: unknown }) => received.push(ev.payload))
-    broker.publish('rtoff.topic', { v: 1 }, {
-      source: { type: 'plugin', id: 'app' },
-    })
+    broker.publish(
+      'rtoff.topic',
+      { v: 1 },
+      {
+        source: { type: 'plugin', id: 'app' },
+      },
+    )
     await flushAsync()
     expect(received).toEqual([{ v: 1 }])
     // Devtools attivo (default true) — getDebugSnapshot disponibile
@@ -44,9 +48,13 @@ describe('features-opt-out integration — opt-out per feature singola e combina
     // worker-broker quando worker=false). Verifichiamo behavioral.
     const received: unknown[] = []
     broker.subscribe('wrkoff.topic', (ev: { payload: unknown }) => received.push(ev.payload))
-    broker.publish('wrkoff.topic', { v: 2 }, {
-      source: { type: 'plugin', id: 'app' },
-    })
+    broker.publish(
+      'wrkoff.topic',
+      { v: 2 },
+      {
+        source: { type: 'plugin', id: 'app' },
+      },
+    )
     await flushAsync()
     expect(received).toEqual([{ v: 2 }])
   })
@@ -60,9 +68,13 @@ describe('features-opt-out integration — opt-out per feature singola e combina
     expect(typeof broker.getCacheStats).toBe('undefined')
     const received: unknown[] = []
     broker.subscribe('cacheoff.topic', (ev: { payload: unknown }) => received.push(ev.payload))
-    broker.publish('cacheoff.topic', { v: 3 }, {
-      source: { type: 'plugin', id: 'app' },
-    })
+    broker.publish(
+      'cacheoff.topic',
+      { v: 3 },
+      {
+        source: { type: 'plugin', id: 'app' },
+      },
+    )
     await flushAsync()
     expect(received).toEqual([{ v: 3 }])
   })
@@ -82,9 +94,13 @@ describe('features-opt-out integration — opt-out per feature singola e combina
     expect(typeof broker.getCacheStats).toBe('function')
     const received: unknown[] = []
     broker.subscribe('dtoff.topic', (ev: { payload: unknown }) => received.push(ev.payload))
-    broker.publish('dtoff.topic', { v: 4 }, {
-      source: { type: 'plugin', id: 'app' },
-    })
+    broker.publish(
+      'dtoff.topic',
+      { v: 4 },
+      {
+        source: { type: 'plugin', id: 'app' },
+      },
+    )
     await flushAsync()
     expect(received).toEqual([{ v: 4 }])
   })
@@ -104,9 +120,13 @@ describe('features-opt-out integration — opt-out per feature singola e combina
     expect(typeof broker.registerRoute).toBe('function')
     const received: unknown[] = []
     broker.subscribe('min.topic', (ev: { payload: unknown }) => received.push(ev.payload))
-    broker.publish('min.topic', { v: 5 }, {
-      source: { type: 'plugin', id: 'app' },
-    })
+    broker.publish(
+      'min.topic',
+      { v: 5 },
+      {
+        source: { type: 'plugin', id: 'app' },
+      },
+    )
     await flushAsync()
     expect(received).toEqual([{ v: 5 }])
   })

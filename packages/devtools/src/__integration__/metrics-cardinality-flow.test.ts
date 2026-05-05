@@ -6,8 +6,8 @@
 // - naming Prometheus-friendly verified (D-163)
 
 import { describe, expect, it } from 'vitest'
-import { createDevtoolsBroker } from '../public-factory'
 import { createMetricsCollector } from '../metrics-collector'
+import { createDevtoolsBroker } from '../public-factory'
 
 function flushAsync(): Promise<void> {
   return new Promise((r) => setTimeout(r, 10))

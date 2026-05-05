@@ -60,9 +60,13 @@ describe('DevtoolsBroker — composition wrapper Opzione B (D-83 / D-121 / D-159
     it('Test 3: subscribe + publish pipeline §28 cattura snapshot via Inspector', async () => {
       broker = new DevtoolsBroker({ devtools: { initiallyEnabled: true } as never })
       broker.subscribe('plain.topic', () => {})
-      broker.publish('plain.topic', { hello: 'world' }, {
-        source: { type: 'plugin', id: 'app' },
-      })
+      broker.publish(
+        'plain.topic',
+        { hello: 'world' },
+        {
+          source: { type: 'plugin', id: 'app' },
+        },
+      )
       await flushMicrotasks()
       const snap = broker.getDebugSnapshot()
       // L'Inspector di default è enabled (NODE_ENV !== 'production' → true) e
@@ -85,9 +89,13 @@ describe('DevtoolsBroker — composition wrapper Opzione B (D-83 / D-121 / D-159
       }
       broker = new DevtoolsBroker({ taps: [userTap] })
       broker.subscribe('multi.topic', () => {})
-      broker.publish('multi.topic', { x: 1 }, {
-        source: { type: 'plugin', id: 'app' },
-      })
+      broker.publish(
+        'multi.topic',
+        { x: 1 },
+        {
+          source: { type: 'plugin', id: 'app' },
+        },
+      )
       await flushMicrotasks()
       expect(userTapSteps.length).toBeGreaterThan(0)
     })
@@ -106,9 +114,13 @@ describe('DevtoolsBroker — composition wrapper Opzione B (D-83 / D-121 / D-159
       }
       broker = new DevtoolsBroker({ taps: [badTap, goodTap] })
       broker.subscribe('iso.topic', () => {})
-      broker.publish('iso.topic', { x: 1 }, {
-        source: { type: 'plugin', id: 'app' },
-      })
+      broker.publish(
+        'iso.topic',
+        { x: 1 },
+        {
+          source: { type: 'plugin', id: 'app' },
+        },
+      )
       await flushMicrotasks()
       expect(goodTapSteps.length).toBeGreaterThan(0)
     })
@@ -122,9 +134,13 @@ describe('DevtoolsBroker — composition wrapper Opzione B (D-83 / D-121 / D-159
       }
       broker = new DevtoolsBroker({ taps: [customTap] })
       broker.subscribe('chain.topic', () => {})
-      broker.publish('chain.topic', { v: 1 }, {
-        source: { type: 'plugin', id: 'app' },
-      })
+      broker.publish(
+        'chain.topic',
+        { v: 1 },
+        {
+          source: { type: 'plugin', id: 'app' },
+        },
+      )
       await flushMicrotasks()
       // Custom tap riceve almeno uno step
       expect(customSteps.length).toBeGreaterThan(0)
@@ -148,9 +164,13 @@ describe('DevtoolsBroker — composition wrapper Opzione B (D-83 / D-121 / D-159
       }
       broker = new DevtoolsBroker({ runtime: { tap: legacyTap } })
       broker.subscribe('legacy.topic', () => {})
-      broker.publish('legacy.topic', {}, {
-        source: { type: 'plugin', id: 'app' },
-      })
+      broker.publish(
+        'legacy.topic',
+        {},
+        {
+          source: { type: 'plugin', id: 'app' },
+        },
+      )
       await flushMicrotasks()
       expect(legacySteps.length).toBeGreaterThan(0)
     })
@@ -187,9 +207,13 @@ describe('DevtoolsBroker — composition wrapper Opzione B (D-83 / D-121 / D-159
       }
       broker = new DevtoolsBroker({ taps: [tap] })
       broker.subscribe('obs.topic', () => {})
-      broker.publish('obs.topic', { observed: true }, {
-        source: { type: 'plugin', id: 'app' },
-      })
+      broker.publish(
+        'obs.topic',
+        { observed: true },
+        {
+          source: { type: 'plugin', id: 'app' },
+        },
+      )
       await flushMicrotasks()
       expect(observedSteps).toContain('event.observed')
     })
@@ -210,7 +234,9 @@ describe('DevtoolsBroker — composition wrapper Opzione B (D-83 / D-121 / D-159
       ;(s1 as { recentEvents: unknown[] }).recentEvents.push({ injected: true } as never)
       const s2 = broker.getDebugSnapshot()
       // s2.recentEvents NON contiene l'iniezione
-      expect((s2.recentEvents as readonly { injected?: boolean }[]).some((e) => e.injected === true)).toBe(false)
+      expect(
+        (s2.recentEvents as readonly { injected?: boolean }[]).some((e) => e.injected === true),
+      ).toBe(false)
     })
 
     it('Test 11: snapshot ha shape stabile { recentEvents, recentRoutes, currentMetrics, pausedTopics, enabled }', () => {

@@ -45,7 +45,57 @@
 // Side-effect import — abilita TS declaration merging per BrokerConfig.taps +
 // BrokerConfig.devtools (D-159/D-160/D-167/D-170). Pattern S1 anti tree-shaking.
 export { __augmentDevtoolsLoaded, type F6PipelineStep } from './augment'
-
+export {
+  type CardinalityTracker,
+  type CardinalityTrackerOptions,
+  createCardinalityTracker,
+  flatLabels,
+} from './cardinality-cap'
+// ---------- W4 plan 06-08b — composition wrapper Opzione B + factory ----------
+export {
+  type DebugSnapshot,
+  DevtoolsBroker,
+  type DevtoolsBrokerConfig,
+} from './devtools-broker'
+// ---------- W3 plan 06-05 — event-inspector + route-inspector (D-167) ----------
+export {
+  createEventInspector,
+  type EventInspector,
+  type EventInspectorOptions,
+} from './event-inspector'
+// ---------- W3 plan 06-06 — metrics-collector + reservoir + cardinality (D-163/D-165/D-166) ----------
+export {
+  createMetricsCollector,
+  type MetricsCollector,
+  type MetricsCollectorOptions,
+} from './metrics-collector'
+// ---------- W2 plan 06-04 — multiplex-tap + tap-registry (D-159) ----------
+export { createMultiplexTap } from './multiplex-tap'
+// ---------- W3 plan 06-07 — pause-controller (D-168/D-170) ----------
+export {
+  createPauseController,
+  type PauseController,
+  type PauseControllerOptions,
+  type PausePublishFn,
+} from './pause-controller'
+export { createDevtoolsBroker } from './public-factory'
+export {
+  computeSummary,
+  createReservoir,
+  type ReservoirState,
+  reservoirAdd,
+} from './reservoir-sampling'
+export {
+  createRouteInspector,
+  type RouteInspector,
+  type RouteInspectorOptions,
+} from './route-inspector'
+export {
+  createTapRegistry,
+  type TapHandle,
+  type TapRegistry,
+  wrapLegacyTap,
+} from './tap-registry'
 // ---------- Public types F6 devtools ----------
 export type {
   DevtoolsConfig,
@@ -59,59 +109,3 @@ export type {
   PipelineSnapshot,
   RouteInspectorEntry,
 } from './types'
-
-// ---------- W2 plan 06-04 — multiplex-tap + tap-registry (D-159) ----------
-export { createMultiplexTap } from './multiplex-tap'
-export {
-  createTapRegistry,
-  type TapHandle,
-  type TapRegistry,
-  wrapLegacyTap,
-} from './tap-registry'
-
-// ---------- W3 plan 06-05 — event-inspector + route-inspector (D-167) ----------
-export {
-  createEventInspector,
-  type EventInspector,
-  type EventInspectorOptions,
-} from './event-inspector'
-export {
-  createRouteInspector,
-  type RouteInspector,
-  type RouteInspectorOptions,
-} from './route-inspector'
-
-// ---------- W3 plan 06-06 — metrics-collector + reservoir + cardinality (D-163/D-165/D-166) ----------
-export {
-  createMetricsCollector,
-  type MetricsCollector,
-  type MetricsCollectorOptions,
-} from './metrics-collector'
-export {
-  computeSummary,
-  createReservoir,
-  reservoirAdd,
-  type ReservoirState,
-} from './reservoir-sampling'
-export {
-  createCardinalityTracker,
-  flatLabels,
-  type CardinalityTracker,
-  type CardinalityTrackerOptions,
-} from './cardinality-cap'
-
-// ---------- W3 plan 06-07 — pause-controller (D-168/D-170) ----------
-export {
-  createPauseController,
-  type PauseController,
-  type PauseControllerOptions,
-  type PausePublishFn,
-} from './pause-controller'
-
-// ---------- W4 plan 06-08b — composition wrapper Opzione B + factory ----------
-export {
-  DevtoolsBroker,
-  type DevtoolsBrokerConfig,
-  type DebugSnapshot,
-} from './devtools-broker'
-export { createDevtoolsBroker } from './public-factory'

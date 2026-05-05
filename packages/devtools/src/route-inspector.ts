@@ -155,9 +155,8 @@ export function createRouteInspector(opts: RouteInspectorOptions = {}): RouteIns
             eventId: snapshot.eventId,
             routeId,
             topic: snapshot.topic,
-            type:
-              ((meta as { type?: RouteInspectorEntry['type'] }).type ?? 'local') as
-                RouteInspectorEntry['type'],
+            type: ((meta as { type?: RouteInspectorEntry['type'] }).type ??
+              'local') as RouteInspectorEntry['type'],
             outcome: 'pending',
             durationMs: snapshot.durationMs,
             timestamp: snapshot.timestamp,
@@ -170,13 +169,12 @@ export function createRouteInspector(opts: RouteInspectorOptions = {}): RouteIns
 
         if (step === STEP_OUTCOME_COLLECTED) {
           const partial = state.pending.get(key)
-          const outcome: RouteInspectorEntry['outcome'] =
-            ((meta as { outcome?: RouteInspectorEntry['outcome'] }).outcome ?? 'success') as
-              RouteInspectorEntry['outcome']
+          const outcome: RouteInspectorEntry['outcome'] = ((
+            meta as { outcome?: RouteInspectorEntry['outcome'] }
+          ).outcome ?? 'success') as RouteInspectorEntry['outcome']
           const origin = (meta as { origin?: 'cache' | 'remote' }).origin
           const errorCode = (meta as { errorCode?: string }).errorCode
-          const cacheHitResolved =
-            origin === 'cache' ? true : (partial?.cacheHit ?? undefined)
+          const cacheHitResolved = origin === 'cache' ? true : (partial?.cacheHit ?? undefined)
           const base: RouteInspectorEntry = partial ?? {
             eventId: snapshot.eventId,
             routeId,

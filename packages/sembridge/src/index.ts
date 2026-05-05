@@ -36,26 +36,19 @@
 import '@sembridge/cache'
 import '@sembridge/devtools'
 
-// ---------- Type re-export ----------
-export type { SemBridgeConfig, SemBridgeFeatures } from './types/sembridge-config'
-
-// ---------- Wave 4b plan 06-08b — runtime factory aggregato ----------
-export { createSemBridge, type SemBridge } from './sem-bridge'
-
 // ---------- Re-export pubblico API surface F6 cache ----------
 export {
-  CacheBroker,
-  cacheKey,
-  createCacheBroker,
-  createMemoryCacheAdapter,
-  stableHash,
   type CacheAdapter,
+  CacheBroker,
   type CacheBrokerConfig,
   type CacheConfig,
   type CacheEntry,
   type CacheStats,
+  cacheKey,
+  createCacheBroker,
+  createMemoryCacheAdapter,
+  stableHash,
 } from '@sembridge/cache'
-
 // ---------- Re-export pubblico API surface F6 devtools ----------
 export {
   createDevtoolsBroker,
@@ -65,8 +58,8 @@ export {
   createPauseController,
   createRouteInspector,
   createTapRegistry,
-  DevtoolsBroker,
   type DebugSnapshot,
+  DevtoolsBroker,
   type DevtoolsBrokerConfig,
   type DevtoolsConfig,
   type EventInspector,
@@ -80,3 +73,7 @@ export {
   type PauseControllerSnapshot,
   type RouteInspector,
 } from '@sembridge/devtools'
+// ---------- Wave 4b plan 06-08b — runtime factory aggregato ----------
+export { createSemBridge, type SemBridge } from './sem-bridge'
+// ---------- Type re-export ----------
+export type { SemBridgeConfig, SemBridgeFeatures } from './types/sembridge-config'

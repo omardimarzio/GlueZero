@@ -36,14 +36,14 @@
  * @see RESEARCH §11.3 raccomandazione researcher (Opzione B factory aggregato)
  */
 
-import * as v from 'valibot'
-import { createBroker } from '@sembridge/core'
-import { createMapperBroker } from '@sembridge/mapper'
-import { createRouterBroker } from '@sembridge/routing'
-import { createRealtimeBroker } from '@sembridge/gateway/sse-ws'
-import { createWorkerBroker } from '@sembridge/worker'
 import { createCacheBroker } from '@sembridge/cache'
+import type { createBroker } from '@sembridge/core'
 import { createDevtoolsBroker } from '@sembridge/devtools'
+import { createRealtimeBroker } from '@sembridge/gateway/sse-ws'
+import type { createMapperBroker } from '@sembridge/mapper'
+import { createRouterBroker } from '@sembridge/routing'
+import { createWorkerBroker } from '@sembridge/worker'
+import * as v from 'valibot'
 
 import type { SemBridgeConfig } from './types/sembridge-config'
 

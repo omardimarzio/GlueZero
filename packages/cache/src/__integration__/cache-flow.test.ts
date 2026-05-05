@@ -10,7 +10,7 @@
 //   verificato dal test scope isolation user A vs user B.
 
 import { afterEach, describe, expect, it } from 'vitest'
-import { createCacheHarness, type CacheHarness } from '../test-utils/cache-harness'
+import { type CacheHarness, createCacheHarness } from '../test-utils/cache-harness'
 
 describe('cache-flow integration — cache-first HIT/MISS + scope + invalidate', () => {
   let harness: CacheHarness
@@ -37,9 +37,13 @@ describe('cache-flow integration — cache-first HIT/MISS + scope + invalidate',
       },
     })
 
-    await harness.publish('weather.requested', { city: 'Roma' }, {
-      source: { type: 'plugin', id: 'app' },
-    })
+    await harness.publish(
+      'weather.requested',
+      { city: 'Roma' },
+      {
+        source: { type: 'plugin', id: 'app' },
+      },
+    )
     await harness.flushAsync()
 
     const loaded = harness.events.find((e) => e.topic === 'weather.loaded')
@@ -66,17 +70,25 @@ describe('cache-flow integration — cache-first HIT/MISS + scope + invalidate',
       },
     })
 
-    await harness.publish('weather.requested', { city: 'Roma' }, {
-      source: { type: 'plugin', id: 'app' },
-    })
+    await harness.publish(
+      'weather.requested',
+      { city: 'Roma' },
+      {
+        source: { type: 'plugin', id: 'app' },
+      },
+    )
     await harness.flushAsync()
     expect(fetchCount).toBe(1)
 
     harness.reset()
 
-    await harness.publish('weather.requested', { city: 'Roma' }, {
-      source: { type: 'plugin', id: 'app' },
-    })
+    await harness.publish(
+      'weather.requested',
+      { city: 'Roma' },
+      {
+        source: { type: 'plugin', id: 'app' },
+      },
+    )
     await harness.flushAsync()
 
     expect(fetchCount).toBe(1)
@@ -108,17 +120,25 @@ describe('cache-flow integration — cache-first HIT/MISS + scope + invalidate',
     })
 
     currentUser = 'userA'
-    await harness.publish('orders.requested', {}, {
-      source: { type: 'plugin', id: 'app' },
-    })
+    await harness.publish(
+      'orders.requested',
+      {},
+      {
+        source: { type: 'plugin', id: 'app' },
+      },
+    )
     await harness.flushAsync()
     expect(fetchCount).toBe(1)
 
     currentUser = 'userB'
     harness.reset()
-    await harness.publish('orders.requested', {}, {
-      source: { type: 'plugin', id: 'app' },
-    })
+    await harness.publish(
+      'orders.requested',
+      {},
+      {
+        source: { type: 'plugin', id: 'app' },
+      },
+    )
     await harness.flushAsync()
     expect(fetchCount).toBe(2)
     const loaded = harness.events.find((e) => e.topic === 'orders.loaded')
@@ -146,9 +166,13 @@ describe('cache-flow integration — cache-first HIT/MISS + scope + invalidate',
       },
     })
 
-    await harness.publish('data.requested', {}, {
-      source: { type: 'plugin', id: 'app' },
-    })
+    await harness.publish(
+      'data.requested',
+      {},
+      {
+        source: { type: 'plugin', id: 'app' },
+      },
+    )
     await harness.flushAsync()
     expect(fetchCount).toBe(1)
 
@@ -156,9 +180,13 @@ describe('cache-flow integration — cache-first HIT/MISS + scope + invalidate',
     expect(removed).toBeGreaterThan(0)
 
     harness.reset()
-    await harness.publish('data.requested', {}, {
-      source: { type: 'plugin', id: 'app' },
-    })
+    await harness.publish(
+      'data.requested',
+      {},
+      {
+        source: { type: 'plugin', id: 'app' },
+      },
+    )
     await harness.flushAsync()
     expect(fetchCount).toBe(2)
   })

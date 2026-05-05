@@ -8,7 +8,7 @@
 
 import type { EventTap, PipelineSnapshot } from '@sembridge/core'
 import { afterEach, describe, expect, it } from 'vitest'
-import { createCacheHarness, type CacheHarness } from '../test-utils/cache-harness'
+import { type CacheHarness, createCacheHarness } from '../test-utils/cache-harness'
 
 function makeRecorderTap(): { tap: EventTap; steps: string[] } {
   const steps: string[] = []
@@ -46,9 +46,13 @@ describe('tap-events integration — D-161 lifecycle events forwarding', () => {
 
     harness.adapter.set('fixed-cache-key', { cached: true }, 60_000)
 
-    await harness.publish('data.requested', {}, {
-      source: { type: 'plugin', id: 'app' },
-    })
+    await harness.publish(
+      'data.requested',
+      {},
+      {
+        source: { type: 'plugin', id: 'app' },
+      },
+    )
     await harness.flushAsync()
 
     expect(steps).toContain('event.cache.lookup')
@@ -72,9 +76,13 @@ describe('tap-events integration — D-161 lifecycle events forwarding', () => {
       httpDelegate: async () => ({ outcome: 'success', value: { fresh: true } }),
     })
 
-    await harness.publish('data.requested', {}, {
-      source: { type: 'plugin', id: 'app' },
-    })
+    await harness.publish(
+      'data.requested',
+      {},
+      {
+        source: { type: 'plugin', id: 'app' },
+      },
+    )
     await harness.flushAsync()
 
     expect(steps).toContain('event.cache.lookup')
@@ -99,15 +107,27 @@ describe('tap-events integration — D-161 lifecycle events forwarding', () => {
       httpDelegate: async () => ({ outcome: 'success', value: { v: 1 } }),
     })
 
-    await harness.publish('multi.requested', { id: 1 }, {
-      source: { type: 'plugin', id: 'app' },
-    })
-    await harness.publish('multi.requested', { id: 2 }, {
-      source: { type: 'plugin', id: 'app' },
-    })
-    await harness.publish('multi.requested', { id: 1 }, {
-      source: { type: 'plugin', id: 'app' },
-    })
+    await harness.publish(
+      'multi.requested',
+      { id: 1 },
+      {
+        source: { type: 'plugin', id: 'app' },
+      },
+    )
+    await harness.publish(
+      'multi.requested',
+      { id: 2 },
+      {
+        source: { type: 'plugin', id: 'app' },
+      },
+    )
+    await harness.publish(
+      'multi.requested',
+      { id: 1 },
+      {
+        source: { type: 'plugin', id: 'app' },
+      },
+    )
     await harness.flushAsync()
 
     const lookupCount = steps.filter((s) => s === 'event.cache.lookup').length

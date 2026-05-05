@@ -23,11 +23,7 @@ import type { BrokerEvent } from '@sembridge/core'
 import { describe, expect, it, vi } from 'vitest'
 import { createPauseController } from './pause-controller'
 
-function makeEvent(
-  topic: string,
-  id = 'evt-1',
-  priority?: BrokerEvent['priority'],
-): BrokerEvent {
+function makeEvent(topic: string, id = 'evt-1', priority?: BrokerEvent['priority']): BrokerEvent {
   return {
     id,
     topic,
@@ -136,13 +132,7 @@ describe('createPauseController (D-168 + D-169 + D-170 + critical bypass)', () =
     }
     expect(auditPayload.topic).toBe('weather.requested')
     expect(auditPayload.droppedCount).toBe(5)
-    expect(auditPayload.droppedEventIds).toEqual([
-      'evt-1',
-      'evt-2',
-      'evt-3',
-      'evt-4',
-      'evt-5',
-    ])
+    expect(auditPayload.droppedEventIds).toEqual(['evt-1', 'evt-2', 'evt-3', 'evt-4', 'evt-5'])
   })
 
   it('Test 8: flushQueue("topic") → topic ancora paused (queue empty ma isPaused=true) (D-169 retain state)', () => {
@@ -166,9 +156,7 @@ describe('createPauseController (D-168 + D-169 + D-170 + critical bypass)', () =
     const result = ctrl.flushQueue()
     expect(result).toHaveLength(2)
     expect(publishFn).toHaveBeenCalledTimes(2)
-    const topics = publishFn.mock.calls.map(
-      (c) => (c[1] as { topic: string }).topic,
-    )
+    const topics = publishFn.mock.calls.map((c) => (c[1] as { topic: string }).topic)
     expect(topics).toContain('topic.a')
     expect(topics).toContain('topic.b')
   })
@@ -217,9 +205,7 @@ describe('createPauseController (D-168 + D-169 + D-170 + critical bypass)', () =
     }
     expect(ctrl.getSnapshot().queueSizes['weather.requested']).toBe(3)
     // 7 overflow events emitted
-    const overflowCalls = publishFn.mock.calls.filter(
-      (c) => c[0] === 'system.queue.overflow',
-    )
+    const overflowCalls = publishFn.mock.calls.filter((c) => c[0] === 'system.queue.overflow')
     expect(overflowCalls).toHaveLength(7)
     // Ultimi 3 in queue: evt-8, evt-9, evt-10
     publishFn.mockClear()
@@ -234,9 +220,7 @@ describe('createPauseController (D-168 + D-169 + D-170 + critical bypass)', () =
     const publishFn = vi.fn()
     const ctrl = createPauseController({ publishFn })
     ctrl.pauseTopic('weather.requested')
-    const action = ctrl.intercept(
-      makeEvent('weather.requested', 'evt-crit', 'critical'),
-    )
+    const action = ctrl.intercept(makeEvent('weather.requested', 'evt-crit', 'critical'))
     expect(action).toBe('pass')
     // Critical NON deve essere accodato
     expect(ctrl.getSnapshot().queueSizes['weather.requested']).toBe(0)
@@ -254,9 +238,7 @@ describe('createPauseController (D-168 + D-169 + D-170 + critical bypass)', () =
     }
     publishFn.mockClear()
     // Critical event → pass through (no queue mutation, no overflow audit)
-    const action = ctrl.intercept(
-      makeEvent('weather.requested', 'evt-crit', 'critical'),
-    )
+    const action = ctrl.intercept(makeEvent('weather.requested', 'evt-crit', 'critical'))
     expect(action).toBe('pass')
     expect(ctrl.getSnapshot().queueSizes['weather.requested']).toBe(5)
     expect(publishFn).not.toHaveBeenCalled()

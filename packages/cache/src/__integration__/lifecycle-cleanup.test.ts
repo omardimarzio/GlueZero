@@ -10,7 +10,7 @@
 //   dal test idempotency double-call.
 
 import { afterEach, describe, expect, it } from 'vitest'
-import { createCacheHarness, type CacheHarness } from '../test-utils/cache-harness'
+import { type CacheHarness, createCacheHarness } from '../test-utils/cache-harness'
 
 describe('lifecycle-cleanup integration — cascade D-126 ext F6 LIFE-02', () => {
   let harness: CacheHarness

@@ -49,9 +49,13 @@ describe('CacheBroker — composition wrapper Opzione B (D-83 / D-121)', () => {
       broker.subscribe('plain.topic', (ev) => {
         received.push(ev.payload)
       })
-      broker.publish('plain.topic', { hello: 'world' }, {
-        source: { type: 'plugin', id: 'test' },
-      })
+      broker.publish(
+        'plain.topic',
+        { hello: 'world' },
+        {
+          source: { type: 'plugin', id: 'test' },
+        },
+      )
       await flushMicrotasks()
       expect(received).toEqual([{ hello: 'world' }])
     })
@@ -106,9 +110,13 @@ describe('CacheBroker — composition wrapper Opzione B (D-83 / D-121)', () => {
         received.push({ topic: ev.topic, payload: ev.payload })
       })
 
-      await broker.publish('weather.requested', { city: 'Roma' }, {
-        source: { type: 'plugin', id: 'app' },
-      })
+      await broker.publish(
+        'weather.requested',
+        { city: 'Roma' },
+        {
+          source: { type: 'plugin', id: 'app' },
+        },
+      )
       await flushMicrotasks()
 
       expect(received).toHaveLength(1)
@@ -131,9 +139,13 @@ describe('CacheBroker — composition wrapper Opzione B (D-83 / D-121)', () => {
       broker.subscribe('other.topic', (ev) => {
         received.push(ev.payload)
       })
-      broker.publish('other.topic', { x: 1 }, {
-        source: { type: 'plugin', id: 'app' },
-      })
+      broker.publish(
+        'other.topic',
+        { x: 1 },
+        {
+          source: { type: 'plugin', id: 'app' },
+        },
+      )
       await flushMicrotasks()
       expect(received).toEqual([{ x: 1 }])
     })
@@ -205,7 +217,7 @@ describe('CacheBroker — composition wrapper Opzione B (D-83 / D-121)', () => {
   // --------------------------------------------------------------------------
 
   describe('DI override adapter', () => {
-    it('config.cache.adapter override usa l\'adapter fornito (no MemoryCacheAdapter default)', () => {
+    it("config.cache.adapter override usa l'adapter fornito (no MemoryCacheAdapter default)", () => {
       const customAdapter: CacheAdapter = {
         get: vi.fn().mockReturnValue(undefined),
         set: vi.fn(),
@@ -233,9 +245,13 @@ describe('CacheBroker — composition wrapper Opzione B (D-83 / D-121)', () => {
       broker.subscribe('any.topic', (ev) => {
         received.push(ev.payload)
       })
-      broker.publish('any.topic', { z: 1 }, {
-        source: { type: 'plugin', id: 'app' },
-      })
+      broker.publish(
+        'any.topic',
+        { z: 1 },
+        {
+          source: { type: 'plugin', id: 'app' },
+        },
+      )
       await flushMicrotasks()
       expect(received).toEqual([{ z: 1 }])
     })
@@ -271,9 +287,13 @@ describe('CacheBroker — composition wrapper Opzione B (D-83 / D-121)', () => {
       broker.subscribe('fallback.loaded', (ev) => {
         received.push({ topic: ev.topic, payload: ev.payload })
       })
-      await broker.publish('fallback.requested', { input: 'X' }, {
-        source: { type: 'plugin', id: 'app' },
-      })
+      await broker.publish(
+        'fallback.requested',
+        { input: 'X' },
+        {
+          source: { type: 'plugin', id: 'app' },
+        },
+      )
       await flushMicrotasks()
       // Fallback minimal del CacheBroker propaga payload come { outcome: 'success', value: payload }
       expect(received).toHaveLength(1)
@@ -323,12 +343,16 @@ describe('CacheBroker — composition wrapper Opzione B (D-83 / D-121)', () => {
           },
         ],
       })
-      await broker.publish('opt.requested', { x: 1 }, {
-        id: 'custom-evt-id',
-        source: { type: 'plugin', id: 'P', name: 'plugin-name' },
-        correlationId: 'corr-123',
-        priority: 'high',
-      })
+      await broker.publish(
+        'opt.requested',
+        { x: 1 },
+        {
+          id: 'custom-evt-id',
+          source: { type: 'plugin', id: 'P', name: 'plugin-name' },
+          correlationId: 'corr-123',
+          priority: 'high',
+        },
+      )
       await flushMicrotasks()
       // Solo verifica che non throw — il path branch coverage di tutti gli
       // optional propagation è eseguito.
@@ -388,9 +412,13 @@ describe('CacheBroker — composition wrapper Opzione B (D-83 / D-121)', () => {
         ],
       })
 
-      await broker.publish('tap.requested', {}, {
-        source: { type: 'plugin', id: 'app' },
-      })
+      await broker.publish(
+        'tap.requested',
+        {},
+        {
+          source: { type: 'plugin', id: 'app' },
+        },
+      )
       await flushMicrotasks()
 
       // Almeno cache.lookup + cache.hit emessi (D-161)

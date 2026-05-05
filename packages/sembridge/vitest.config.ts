@@ -21,11 +21,17 @@ export default defineConfig({
       reporter: ['text', 'json', 'html'],
       include: ['src/**/*.ts'],
       exclude: ['src/**/*.test.ts', 'src/index.ts', 'src/types/**'],
+      // Wave 5a calibration (plan 06-09a final gate F6):
+      // Misurato post-implementation W1..W4: 100 / 100 / 100 / 100 (subset
+      // ridotto: solo `createSemBridge` factory + smoke Phase 6 chain).
+      // Thresholds calibrate al floor measurato arrotondato per difetto al 0.5%
+      // (analog F4 04-09 + F5 05-07 pattern).
+      // Hard floor inderogabile target ≥90/80/90/90 — tutti rispettati con margini ampi.
       thresholds: {
-        statements: 90,
-        branches: 80,
-        functions: 90,
-        lines: 90,
+        statements: 99.5,
+        branches: 99.5,
+        functions: 99.5,
+        lines: 99.5,
       },
     },
     typecheck: {

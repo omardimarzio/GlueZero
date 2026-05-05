@@ -38,50 +38,46 @@
 // (D-155/D-156/D-158). Pattern S1 anti tree-shaking (riferimento PATTERNS.md §3.2).
 // Wave 4 plan 06-08 estenderà runtime con composition wrapper.
 export { __augmentCacheLoaded, type F6CachePipelineStep } from './augment'
-
-// ---------- Public types F6 cache ----------
-export type { CacheAdapter, CacheConfig, CacheEntry, CacheStats } from './types'
-
-// ---------- W2 plan 06-02 — memory-cache-adapter + stable-hash (D-155/D-158) ----------
-export {
-  createMemoryCacheAdapter,
-  type MemoryCacheAdapterOptions,
-} from './memory-cache-adapter'
-export { cacheKey, fnv1a32, stableHash, stableStringify } from './stable-hash'
-
-// ---------- W2-bis plan 06-03 — cache-handler + composite-handler (concretizza F3 D-77) ----------
-export {
-  createCacheHandlerF6,
-  deriveTopicFromCache,
-  type CacheHandlerF6,
-  type CacheHandlerF6Deps,
-  type CacheHandlerOutcome,
-  type CacheHttpDelegate,
-  type CachePublishFn,
-  type RouteCacheCompiled,
-} from './cache-handler'
-export {
-  createCompositeHandlerF6,
-  type CompositeHandlerF6,
-  type CompositeHandlerF6Deps,
-  type CompositeHandlerOutcome,
-  type CompositeHttpDelegate,
-  type RouteCompositeCompiled,
-  type RouteCompositeStep,
-} from './composite-handler'
-
 // ---------- Wave 4a plan 06-08a — composition wrapper Opzione B + factory pubblico ----------
 export {
   CacheBroker,
   type CacheBrokerConfig,
   type CacheBrokerRouteDefinition,
 } from './cache-broker'
+// ---------- W2-bis plan 06-03 — cache-handler + composite-handler (concretizza F3 D-77) ----------
+export {
+  type CacheHandlerF6,
+  type CacheHandlerF6Deps,
+  type CacheHandlerOutcome,
+  type CacheHttpDelegate,
+  type CachePublishFn,
+  createCacheHandlerF6,
+  deriveTopicFromCache,
+  type RouteCacheCompiled,
+} from './cache-handler'
+export {
+  type CompositeHandlerF6,
+  type CompositeHandlerF6Deps,
+  type CompositeHandlerOutcome,
+  type CompositeHttpDelegate,
+  createCompositeHandlerF6,
+  type RouteCompositeCompiled,
+  type RouteCompositeStep,
+} from './composite-handler'
+// ---------- W2 plan 06-02 — memory-cache-adapter + stable-hash (D-155/D-158) ----------
+export {
+  createMemoryCacheAdapter,
+  type MemoryCacheAdapterOptions,
+} from './memory-cache-adapter'
 export { createCacheBroker } from './public-factory'
+export { cacheKey, fnv1a32, stableHash, stableStringify } from './stable-hash'
 // Test-utils harness — esposto al barrel pubblico per integration test consumer
 // (analog F5 worker-harness export). Pattern carryover D-151.
 export {
-  createCacheHarness,
   type CacheHarness,
   type CacheHarnessOptions,
   type CollectedEvent,
+  createCacheHarness,
 } from './test-utils/cache-harness'
+// ---------- Public types F6 cache ----------
+export type { CacheAdapter, CacheConfig, CacheEntry, CacheStats } from './types'

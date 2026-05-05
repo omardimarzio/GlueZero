@@ -373,11 +373,9 @@ export function createCacheHandlerF6(deps: CacheHandlerF6Deps): CacheHandlerF6 {
           const fallbackHit = deps.cache.get(key)
           if (fallbackHit) {
             emitTap(deps.tap, event, 'event.cache.hit')
-            void deps.publishFn(
-              deriveTopicFromCache(event.topic, 'loaded'),
-              fallbackHit.value,
-              { metadata: { origin: 'cache' } },
-            )
+            void deps.publishFn(deriveTopicFromCache(event.topic, 'loaded'), fallbackHit.value, {
+              metadata: { origin: 'cache' },
+            })
             return { status: 'success', source: 'cache', cacheHit: true }
           }
           emitTap(deps.tap, event, 'event.cache.miss')

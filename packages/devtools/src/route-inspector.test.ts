@@ -12,9 +12,9 @@
 //   structuredClone in getBuffer(). Test 6.
 
 import type { PipelineSnapshot, PipelineStep } from '@sembridge/core'
-import type { RouteInspectorEntry } from './types/inspector-entry'
 import { describe, expect, it } from 'vitest'
 import { createRouteInspector } from './route-inspector'
+import type { RouteInspectorEntry } from './types/inspector-entry'
 
 const STEP_ROUTE_EXECUTED = 'event.route.executed' as PipelineStep
 const STEP_OUTCOME_COLLECTED = 'event.outcome.collected' as PipelineStep
@@ -59,7 +59,7 @@ describe('createRouteInspector (D-167 ring buffer 500 + capture step 9+10 + aggr
     expect(inspector.getSnapshot().bufferEntries).toBe(0)
   })
 
-  it('Test 3: step 10 (event.outcome.collected) con outcome=success aggrega all\'entry pending → entry finale in buffer', () => {
+  it("Test 3: step 10 (event.outcome.collected) con outcome=success aggrega all'entry pending → entry finale in buffer", () => {
     const inspector = createRouteInspector({ initiallyEnabled: true })
     inspector.tap.onPipelineStep(
       STEP_ROUTE_EXECUTED,
@@ -67,7 +67,13 @@ describe('createRouteInspector (D-167 ring buffer 500 + capture step 9+10 + aggr
     )
     inspector.tap.onPipelineStep(
       STEP_OUTCOME_COLLECTED,
-      makeSnapshot(STEP_OUTCOME_COLLECTED, 'evt-1', { routeId: 'r1', outcome: 'success' }, 'topic.x', 12),
+      makeSnapshot(
+        STEP_OUTCOME_COLLECTED,
+        'evt-1',
+        { routeId: 'r1', outcome: 'success' },
+        'topic.x',
+        12,
+      ),
     )
     const buffer = inspector.getBuffer()
     expect(buffer.length).toBe(1)

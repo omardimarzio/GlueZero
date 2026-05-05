@@ -15,12 +15,7 @@
 
 import type { EventTap } from '@sembridge/core'
 import { describe, expect, it, vi } from 'vitest'
-import {
-  createTapRegistry,
-  type TapHandle,
-  type TapRegistry,
-  wrapLegacyTap,
-} from './tap-registry'
+import { createTapRegistry, type TapHandle, type TapRegistry, wrapLegacyTap } from './tap-registry'
 
 describe('createTapRegistry (D-159 runtime add/remove/list + getMultiplexed)', () => {
   it('Test 1: createTapRegistry() ritorna { add, remove, list, getMultiplexed } — base API', () => {

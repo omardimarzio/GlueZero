@@ -84,9 +84,7 @@ export interface CardinalityTracker {
  *
  * Pattern Map-of-Set è O(1) avg per check (lookup hash + Set.has hash).
  */
-export function createCardinalityTracker(
-  opts: CardinalityTrackerOptions = {},
-): CardinalityTracker {
+export function createCardinalityTracker(opts: CardinalityTrackerOptions = {}): CardinalityTracker {
   const cap = opts.cap ?? DEFAULT_CARDINALITY_CAP
   const cardinality = new Map<string, Set<string>>()
 

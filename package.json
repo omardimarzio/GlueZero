@@ -17,10 +17,11 @@
     "lint": "biome check .",
     "format": "biome format --write .",
     "typecheck": "pnpm -r --filter='./packages/*' --if-present run typecheck",
-    "ci:publint": "pnpm --filter @sembridge/core --filter @sembridge/mapper --filter @sembridge/routing --filter @sembridge/gateway exec publint",
-    "ci:attw": "pnpm --filter @sembridge/core --filter @sembridge/mapper --filter @sembridge/routing --filter @sembridge/gateway exec attw --pack --profile=esm-only",
+    "ci:publint": "pnpm --filter @sembridge/core --filter @sembridge/mapper --filter @sembridge/routing --filter @sembridge/gateway --filter @sembridge/worker --filter @sembridge/cache --filter @sembridge/devtools --filter @sembridge/sembridge exec publint",
+    "ci:attw": "pnpm --filter @sembridge/core --filter @sembridge/mapper --filter @sembridge/routing --filter @sembridge/gateway --filter @sembridge/worker --filter @sembridge/cache --filter @sembridge/devtools --filter @sembridge/sembridge exec attw --pack --profile=esm-only",
     "ci:size": "size-limit",
     "ci:gate:f3": "pnpm ci:publint && pnpm ci:attw && pnpm ci:size",
+    "ci:gate:f6": "pnpm ci:publint && pnpm ci:attw && pnpm ci:size",
     "changeset": "changeset",
     "release": "pnpm build && changeset publish"
   },
@@ -71,6 +72,24 @@
       "name": "@sembridge/worker (gzip)",
       "path": "packages/worker/dist/index.js",
       "limit": "32 KB",
+      "gzip": true
+    },
+    {
+      "name": "@sembridge/cache (gzip)",
+      "path": "packages/cache/dist/index.js",
+      "limit": "27 KB",
+      "gzip": true
+    },
+    {
+      "name": "@sembridge/devtools (gzip)",
+      "path": "packages/devtools/dist/index.js",
+      "limit": "27 KB",
+      "gzip": true
+    },
+    {
+      "name": "@sembridge/sembridge (gzip)",
+      "path": "packages/sembridge/dist/index.js",
+      "limit": "42 KB",
       "gzip": true
     }
   ]

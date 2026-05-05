@@ -46,10 +46,9 @@ function makeCacheRoute(overrides: Partial<RouteCacheCompiled> = {}): RouteCache
   }
 }
 
-function makeMockCacheHandler(behavior: {
-  readonly outcome?: CacheHandlerOutcome
-  readonly throws?: Error
-} = {}): { handler: CacheHandlerF6; calls: () => number } {
+function makeMockCacheHandler(
+  behavior: { readonly outcome?: CacheHandlerOutcome; readonly throws?: Error } = {},
+): { handler: CacheHandlerF6; calls: () => number } {
   let calls = 0
   const handler: CacheHandlerF6 = {
     async execute() {
@@ -143,9 +142,7 @@ describe('Edge cases workflow', () => {
     const handler = createCompositeHandlerF6({ cacheHandler, httpHandler })
 
     const event = makeBrokerEvent()
-    const route = makeCompositeRoute([
-      { type: 'cache', cacheRoute: makeCacheRoute() },
-    ])
+    const route = makeCompositeRoute([{ type: 'cache', cacheRoute: makeCacheRoute() }])
 
     const outcome = await handler.execute(event, route)
 
@@ -211,7 +208,10 @@ describe('Error path graceful fallback', () => {
     const { handler: cacheHandler } = makeMockCacheHandler({
       outcome: { status: 'success', source: 'remote', cacheHit: false },
     })
-    const httpHandler = vi.fn(async () => ({ outcome: 'error' as const, error: new Error('http fail') }))
+    const httpHandler = vi.fn(async () => ({
+      outcome: 'error' as const,
+      error: new Error('http fail'),
+    }))
     const handler = createCompositeHandlerF6({ cacheHandler, httpHandler })
 
     const event = makeBrokerEvent()
@@ -241,10 +241,7 @@ describe('Integration con cacheHandler reale', () => {
 
     const event = makeBrokerEvent()
     const cacheRoute = makeCacheRoute({ id: 'cr-integration', strategy: 'cache-first', ttl: 5000 })
-    const route = makeCompositeRoute([
-      { type: 'cache', cacheRoute },
-      { type: 'http' },
-    ])
+    const route = makeCompositeRoute([{ type: 'cache', cacheRoute }, { type: 'http' }])
 
     await handler.execute(event, route)
 

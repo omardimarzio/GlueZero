@@ -61,9 +61,7 @@ export interface MemoryCacheAdapterOptions {
  * @param opts Opzioni di configurazione (default `maxEntries=1000`)
  * @returns Istanza `CacheAdapter` con stato cumulative isolato
  */
-export function createMemoryCacheAdapter(
-  opts: MemoryCacheAdapterOptions = {},
-): CacheAdapter {
+export function createMemoryCacheAdapter(opts: MemoryCacheAdapterOptions = {}): CacheAdapter {
   const maxEntries = opts.maxEntries ?? DEFAULT_MAX_ENTRIES
   // Map insertion order = LRU order (oldest first → evicted first).
   const cache = new Map<string, CacheEntry>()
@@ -106,8 +104,7 @@ export function createMemoryCacheAdapter(
       // Map.set su key esistente NON cambia insertion order in alcune implementazioni
       // — qui delete+set per garantire LRU touch coerente.
       if (cache.has(key)) cache.delete(key)
-      const expiresAt =
-        ttlMs !== undefined ? Date.now() + ttlMs : Number.POSITIVE_INFINITY
+      const expiresAt = ttlMs !== undefined ? Date.now() + ttlMs : Number.POSITIVE_INFINITY
       cache.set(key, { value, expiresAt, setAt: Date.now() })
     },
 
