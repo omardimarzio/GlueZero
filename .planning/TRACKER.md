@@ -1,11 +1,11 @@
 ---
-last_updated: 2026-05-04
-status: phase_5_complete_ready_for_verifier
+last_updated: 2026-05-05
+status: phase_6_discuss_complete_auto_advance_plan
 project: SemBridge
 milestone: v1.0
-current_phase: 5
-current_wave: 5_complete
-current_plan: 05-07_done_phase_5_closed
+current_phase: 6
+current_wave: 6_discuss_done
+current_plan: 06_context_captured_pending_research_plan
 session_active: true
 ---
 
@@ -23,32 +23,34 @@ session_active: true
 
 | Campo | Valore |
 |-------|--------|
-| Fase | **Phase 5 — Worker Runtime — ✅ COMPLETE** (7/7 plans done — ready for gsd-verifier 5; auto-advance pronta a Phase 6 Cache & Tooling avanzato — ULTIMA fase v1.0) |
-| Wave | 5 ✅ COMPLETE (05-07 final gate F5 done) |
-| Plan in esecuzione | nessuno — Phase 5 chiusa; next phase: Phase 6 (auto-advance via `/gsd-discuss-phase 6` o manual `gsd-verifier 5` prima) |
+| Fase | **Phase 6 — Cache & Tooling avanzato — DISCUSS COMPLETE** (CONTEXT.md 06 scritto + 16 decisioni D-155..D-170 lockate; auto-advance to plan-phase via `/gsd-plan-phase 6 --auto`; ULTIMA fase v1.0) |
+| Wave | 6 — discuss done (research + planning pending) |
+| Plan in esecuzione | nessuno — `/gsd-discuss-phase 6 --chain` chiuso; auto-advance a `/gsd-plan-phase 6 --auto` |
+| Plan progress F6 | **0 / TBD** — Phase 6 da pianificare (5-7 plan stimati post-research) |
 | Plan progress F5 | **7 / 7 (✅ COMPLETE)** — 05-01..05-07 done |
 | Plan progress F4 | **9 / 9 (✅ COMPLETE)** — 04-01..04-09 done |
-| Plan progress globale | 52 / 53 (Phase 6 ancora da pianificare — 0 plan F6) |
+| Plan progress globale | 52 / TBD (Phase 6 ancora da pianificare) |
 | Mode GSD | yolo + auto_advance + parallelization (sequential exec, no worktree) |
 | Modello attivo | `claude-opus-4-7-1` (opus) — override esplicito su tutti i sub-agent |
+| Graphify watch | PID 8702 attivo (debounce 3s, log `graphify-out/.watch.log`) — bootstrap iniziale `/graphify .` ancora pending |
 
-## Ultimo step completato (auto-update 2026-05-04T22:25:29Z)
+## Ultimo step completato (2026-05-05)
 
-- Plan: **05-07** → SUMMARY.md committed
-- Commit: `411dcdd docs(05): close Phase 5 — WK-01..WK-07 complete + PRD §39 #11 closed + SUMMARY`
-- Phase progress: **7/7** plan completati con SUMMARY.md
-- Project progress: 52/53 plan (98%)
+- Step: **Phase 6 discuss-phase 6 --chain ✓**
+- Commit: `738e0c1 docs(06): capture phase context — Cache & Tooling avanzato (D-155..D-170 lockate)`
+- Output: `.planning/phases/06-cache-tooling-avanzato/06-CONTEXT.md` (16 decisioni) + `06-DISCUSSION-LOG.md` (audit trail)
+- Aree discusse (4/4): Cache key & user-scope, EventTap multiplex pattern, MetricsCollector schema & semantics, Inspector retention + pauseTopic queue
 
 
 ## Prossimo step
 
-**Phase 5 ✅ COMPLETE — ready for gsd-verifier 5** (poi `/gsd-discuss-phase 6` Cache & Tooling avanzato).
+**Auto-advance a Phase 6 plan-phase** (`--chain` mode).
 
 ```
-Skill: gsd-verifier 5  (verifica chiusura Phase 5)
-# OPPURE auto-advance:
-/gsd-discuss-phase 6  (inizia Phase 6 — Cache & Tooling avanzato — ULTIMA fase v1.0)
+Skill: gsd-plan-phase 6 --auto  (research + plan + plan-checker)
 ```
+
+Dopo plan-phase: auto-execute via `/gsd-execute-phase 6` (mode yolo + auto_advance).
 
 Wave struttura globale F5 (RIEPILOGO CHIUSURA):
 - ✅ Wave 1: 05-01 (bootstrap) — DONE 2026-05-04
@@ -93,6 +95,8 @@ Phase 4 closure highlights:
 - **Auto-advance attivo:** discuss → plan → execute → verify automatico senza chiedere conferma.
 
 ## Decisioni recenti rilevanti
+
+- **Phase 6 CONTEXT.md scritto ✓ (discuss-phase 6 --chain)** — 16 decisioni D-155..D-170 lockate. **A. Cache** (CACHE-01..03 + SC-5): D-155 cache key default `${topic}::${stableHash(canonicalPayload)}` (riuso F3 D-74 KeyBased) + override callback; D-156 scope hybrid `BrokerConfig.cache.scopeProvider` config-level + `RouteDefinition.cache.scope` route-level override; D-157 missing scope su route auth → skip cache + `system.cache.scope-missing` warn (zero-leakage by default); D-158 MemoryCacheAdapter LRU bounded `maxEntries=1000` default + TTL ortogonale. **B. EventTap** (TOOL-01/02/04): D-159 tap registry chain `BrokerConfig.taps?: readonly EventTap[]` con error isolation try/catch per tap + auto-wrap backward-compat di config.tap singleton; D-160 `enableDebug()/disableDebug()` toggle live-mode (tap sempre registrati, lazy mode quando off; default `NODE_ENV !== 'production'` → debug=on auto dev / auto-off prod, allineato D-139); D-161 tap su tutti 14 step §28 + lifecycle events (`route.dispatched`, `cache.hit/miss/evicted`, `worker.spawned/terminated`, `realtime.connected/disconnected`); D-162 `getDebugSnapshot()` deep clone via structuredClone (zero side-effect, zero race). **C. MetricsCollector** (TOOL-03/05 → PRD §39 #10 closure): D-163 naming `sembridge.<package>.<metric>` dot.case namespaced (Prometheus/OpenMetrics-friendly: `_total` counter, `_ms` duration, mapping 1:1 a OTel exporter V1.x); D-164 cumulative-only counters + helper `getMetricsDelta(prev)` opzionale; D-165 histogram = quantile summary `{ count, sum, p50, p90, p99 }` con ring buffer ~1024 samples (reservoir sampling/t-digest, lasciato al researcher in F6 RESEARCH.md); D-166 labels Prometheus-style flatten in name `metric{label="v"}` + cap 100 distinct combinations per metric (cardinality protection) + `system.metrics.cardinality-overflow` audit. **D. Inspector + pauseTopic** (TOOL-01/02/05): D-167 EventInspector + RouteInspector ring buffer 500 eventi default + config (~5-10MB con payload medio); D-168 `pauseTopic(topic)` block publish + queue events FIFO (subscriber + route NON triggherano, coerente SC-4 wording); D-169 `flushQueue(topic?)` drop silenzioso + emit `system.queue.flushed { topic, droppedCount, droppedEventIds }` (NIENTE re-publish — replay via resumeTopic); D-170 pause queue cap `maxQueueSize: 1000` default + drop-oldest FIFO + `system.queue.overflow` + critical priority bypass (consistency F3 D-75 + F5 D-130). **Carryover D-83 strict**: F6 vive solo in `packages/cache/src/` + `packages/devtools/src/` + augment.ts. Topology composition wrapper Opzione B vs factory aggregato `createSemBridge` lasciata al researcher. **Out of scope V1**: @sembridge/cache-idb (V1.x), OpenTelemetry exporter nativo (V1.x), real-time dashboard UI (V2), distributed tracing W3C (V1.x), bytes-based eviction (V1.x), custom histogram bucketing per route (V1.x), Inspector persistence, SharedWorker cross-tab metrics (V2), Service Worker bridge (V2), WorkerInspector dedicated (V1.x), MappingInspector integrato, user-defined metric registration (V1.x), anti-flap pause/resume (V1.x). **Open issue PRD §39 #10 (TOOL-05) chiusura pianificata in F6** via D-163/D-164/D-165/D-166. Auto-advance attivo a `/gsd-plan-phase 6 --auto` (--chain mode).
 
 - **Plan 05-07 ESEGUITO ✓ (Wave 5 — Final gate F5 — Phase 5 CHIUSA)** — Final gate F5 completato in 5 commit atomic: `1347d0b` test coverage thresholds calibration post-implementation (worker subset 91.96% statements / 83.73% branches / 90.58% functions / 94.17% lines, supera floor 85/75/88/87 + supera target preliminary 90/80/90/90 — thresholds calibrate al floor measurato 91.5/83/90/93.5 analog F4 04-09 commit 761e4ad pattern) + size-limit budget @sembridge/worker 26.45/32 KB gz (include all deps cross-package Comlink + valibot + nanoid + @sembridge/{core,routing,gateway/http} — bundle effettivo dist/index.js senza deps esterni ~14 KB gz, lesson learned analog F3 routing 19.57/24 KB raised: STACK.md preventivi pre-implementation sotto-stimano sistematicamente per pacchetti compositi) + biome auto-format su 25 file packages/worker/src (organize imports + format whitespace, zero behavior change). `33d20a7` docs DOC-05 README italiano `packages/worker/README.md` 429 LOC 11 sezioni numerate: Quick start (factory createWorkerBroker D-122 + composition wrapper Opzione B D-121 + registerPlugin con workers field D-126), Worker source contract (D-123 factory lazy + D-124 tasks dichiarate fail-fast + D-125 hybrid Comlink expose + D-147 ESM default + D-148 new URL pattern), Pool strategy (D-127 min(hwc,4) + D-128 cap 8 + D-129 lazy first-dispatch + D-130 BackpressureStrategy F3 reuse 1:1 + critical bypass Pitfall 4.C), Cancellation (D-131 hybrid dedicated terminate / pool cooperative grace 2000ms + D-132 AbortSignal proxied via Comlink + D-144 concurrency 'latest-only'), Progress events (D-135 callback proxy + D-136 schema canonical {value, message?, partialResult?} + D-137 throttle 100ms latest-only + D-138 passa per pipeline §28 mapper), Serialization contract WK-07 PRD §39 #11 (D-139 dev-mode auto + D-140 throw PRE-postMessage + D-141 transferable JSONPath + D-142 documentazione completa con tabella structuredClone supported types incl. Date/Map/Set/BigInt/Blob/MessagePort + tabella tipi NON supportati con strategia raccomandata + JSON.stringify NEVER warning + Pitfall 7.E transferable detached byteLength=0), Scenario report generation pesante (esempio end-to-end PRD §29 esteso a worker + correlationId D-134 + cascade unregisterPlugin LIFE-02 ext F5), State machine timeout vs success Pitfall 2C closure (D-133 CAS atomico + counter lateResponses + test deterministic timeout-strict.test.ts), Worker module loading (D-147 ESM default + D-148 bundler-friendly pattern + classic opt-in raro), Limitazioni V1 (pool autoscaling + superjson + custom RPC + SharedWorker + worker.retry + auto-detect transferable + WorkerInspector F6 + IndexedDB queue), Q&A closure PRD §39 #11 (15 domande lockate Phase 5). `e3b8770` docs JSDoc API pubblica TypeDoc-ready: 5 file public arricchiti (public-factory createWorkerBroker 2 @example Quick start + Multi-tenant isolation D-30 + worker-handler 2 @example Strategy dispatch + Topic auto-derive deriveTopic + 4 @throws sanitized error shape + task-tracker 2 @example race timeout/success Pitfall 2C + cooperative cancellation + worker-pool 2 @example Lifecycle + Backpressure F3 reuse Pitfall 4.C critical bypass + 2 @throws + worker-registry 2 @example Register/lookup/cascade + Validate task fail-fast D-124 + 3 @throws); preservation in dist/index.d.ts: @example 23/10 + @see 30/15 + @throws 21/5 (sopra target floor analog F4 12/21/x). `3f07f7a` docs REQ matrix flip atomic in REQUIREMENTS.md: WK-01..WK-07 → Complete con plan reference (es. "Done plan 05-04+05-05+05-06") + ERR-02 ext F5 (worker.error + worker.messageerror sanitized error + ext codes worker.unknown/worker.task.unknown/worker.timeout/worker.cancelled/worker.serialization.failed.<sub>) → Complete + LIFE-02 ext F5 (cascade workers 3-step idempotente) → Complete + TEST-01/02/03 ext F5 (121 worker test Tier-1 jsdom + 6 browser smoke Tier-3 + 8 integration Tier-1 D-151 #1-#6,#8,#9 + Pitfall 2C deterministic) → Complete + DOC-05 → In Progress (worker section delivered F5, full consolidamento F6) + Open Issues PRD §39 #11 (WK-07) → CLOSED 2026-05-05 ✅ con citazione esplicita closure DOC-05 README + plan 05-02 assertSerializable + plan 05-04 transferable. Final docs commit (questo + ROADMAP/STATE/TRACKER + 05-07-SUMMARY.md). REQ flip: WK-01..WK-07 + ERR-02 ext + LIFE-02 ext F5 + TEST-01/02/03 ext F5 → Complete. **PRD §39 #11 (WK-07) chiuso** in DOC-05. Test invariato 121/121 worker Tier-1 jsdom + 6/6 browser smoke Tier-3 Playwright Chromium + 877/880 monorepo full (3 skip MSW V1.x F4 — no regression). D-83 strict carryover ✓ verified `git diff main...HEAD packages/{core,mapper,routing}/src/ + packages/gateway/src/{http,sse-ws}/` exit 0 lines per tutta F5 (composition wrapper Opzione B research §7.2 preserva tutta F1-F4 invariata). Phase 5 ready for gsd-verifier; Phase 6 (Cache & Tooling avanzato — ULTIMA fase v1.0) auto-advance enabled.
 
