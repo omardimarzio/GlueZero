@@ -1,11 +1,11 @@
 ---
 last_updated: 2026-05-05
-status: phase_6_executing_W2_done_W2bis_06_03_pending
+status: phase_6_executing_W3_06_06_done_next_06_07
 project: SemBridge
 milestone: v1.0
 current_phase: 6
-current_wave: 6_W2_done_next_W2bis_06_03
-current_plan: 06_04_done_next_06_03
+current_wave: 6_W3_06_05_06_06_done_next_06_07
+current_plan: 06_06_done_next_06_07
 session_active: true
 ---
 
@@ -23,34 +23,30 @@ session_active: true
 
 | Campo | Valore |
 |-------|--------|
-| Fase | **Phase 6 — Cache & Tooling avanzato — IN ESECUZIONE** (W1 + W2 complete; ULTIMA fase v1.0) |
-| Wave | 6 — W2-bis ✅ done (06-03 sequential post W2 — CacheHandler + CompositeHandler concretizza F3 D-77) — next W3 ∥ parallel (06-05 + 06-06 + 06-07) |
-| Plan in esecuzione | 06-03 ✅ done — next: 06-05 ‖ 06-06 ‖ 06-07 (devtools wave 3 parallel file ownership disgiunta) |
-| Plan progress F6 | **4 / 11** — 06-01 + 06-02 + 06-04 + 06-03 done; pending 06-05..06-07 + 06-08a + 06-08b + 06-09a + 06-09b |
+| Fase | **Phase 6 — Cache & Tooling avanzato — IN ESECUZIONE** (W1 + W2 + W2-bis complete; W3 in corso) |
+| Wave | 6 — W3 ∥ parallel in corso: 06-05 ✅ + 06-06 ✅ done — next 06-07 (PauseController) |
+| Plan in esecuzione | 06-06 ✅ done — next: 06-07 (PauseController D-168/D-170) |
+| Plan progress F6 | **6 / 11** — 06-01 + 06-02 + 06-04 + 06-03 + 06-05 + 06-06 done; pending 06-07 + 06-08a + 06-08b + 06-09a + 06-09b |
 | Plan progress F5 | **7 / 7 (✅ COMPLETE)** — 05-01..05-07 done |
 | Plan progress F4 | **9 / 9 (✅ COMPLETE)** — 04-01..04-09 done |
-| Plan progress globale | 56 / 64 (88%) |
+| Plan progress globale | 58 / 64 (90%) |
 | Mode GSD | yolo + auto_advance + parallelization (sequential exec, no worktree) |
 | Modello attivo | `claude-opus-4-7-1` (opus) — override esplicito su tutti i sub-agent |
 | Graphify watch | PID 8702 attivo (debounce 3s, log `graphify-out/.watch.log`) — bootstrap iniziale `/graphify .` ancora pending |
 
-## Ultimo step completato (auto-update 2026-05-05T19:46:50Z)
+## Ultimo step completato (auto-update 2026-05-05T20:08Z)
 
-- Plan: **06-03** → SUMMARY.md committed
-- Commit (TDD atomic): `7e7928f` test RED cache-handler + `4b9b05d` feat GREEN cache-handler + `488e770` test RED composite-handler + `a9993cc` feat GREEN composite-handler
-- File creati: 4 (cache-handler.ts/test.ts + composite-handler.ts/test.ts) + 1 modificato (cache/src/index.ts append W2-bis runtime exports)
-- Test: +33 (23 cache-handler + 10 composite-handler) tutti deterministici Tier-1 jsdom — totale @sembridge/cache = 71 passing; cross-package full monorepo 976 passing zero regression
-- Coverage v8 sui 2 file F6 W2-bis: cache-handler.ts 100/92.5/100/100, composite-handler.ts 100/100/100/100 (target ≥90/80/90/90 ✓)
-- D-83 strict ✓ verified: `git diff main packages/{core,mapper,routing,gateway,worker}/src/` exit 0 lines
-- D-77 carryover F3 (`cache.not-implemented` stub) **CONCRETIZZATO** — wiring runtime CacheBroker via composition wrapper deferred a 06-08a
-- REQ-IDs subset: CACHE-01..03 + PIPE-01 ext F6 (lifecycle events tap `event.cache.{lookup,hit,miss,evicted}`) — full closure 06-08a/06-08b/06-09b
-- Phase progress: **4/11** plan completati con SUMMARY.md
-- Project progress: 56/64 plan (88%)
+- Plan: **06-06** → SUMMARY.md committed (chiude PRD §39 #10 TOOL-05 metrics format)
+- Commit GREEN finali: `8322fe7` (metrics-collector) + 5 commit TDD precedenti
+- Files creati: 6 (3 source + 3 test) — 45 test deterministici Tier-1 jsdom passing
+- Coverage devtools globale: 98.7/89.71/100/99.29 (≥90/80/90/90 target)
+- Phase progress: **6/11** plan completati con SUMMARY.md
+- Project progress: 58/64 plan (90%)
 
 
 ## Prossimo step
 
-**Continue execute Phase 6 W3 ∥ parallel (3-way)** — 06-05 (Event/RouteInspector) ‖ 06-06 (MetricsCollector + reservoir + cardinality cap) ‖ 06-07 (PauseController). File ownership disgiunta verified pre-plan-checker iter 2.
+**Continue execute Phase 6 W3** — restano da completare: 06-07 (PauseController D-168/D-170 queue cap 1000 + critical bypass).
 
 ```
 Skill: gsd-execute-phase 6 --auto --no-transition
