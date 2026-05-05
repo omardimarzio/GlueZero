@@ -87,8 +87,8 @@ Tutti i requisiti elencati sono table stakes (vincolanti dalla checklist PRD §4
 
 ### Cache + Tooling Avanzato (Fase 6)
 
-- [ ] **CACHE-01**: Cache in-memory con chiave configurabile per route/topic *(PRD §20.2)*
-- [ ] **CACHE-02**: TTL configurabile e invalidazione manuale/automatica *(PRD §20.2)*
+- [x] **CACHE-01**: Cache in-memory con chiave configurabile per route/topic *(PRD §20.2)*
+- [x] **CACHE-02**: TTL configurabile e invalidazione manuale/automatica *(PRD §20.2)*
 - [ ] **CACHE-03**: Metadata di consegna distingue origine `cache` vs `remote` *(PRD §20.2, §20.4)*
 - [ ] **TOOL-01**: Event Inspector completo: topic, publisher, timestamp, payload originale/canonico, subscriber raggiunti, route attivate, esito, errori, tempi *(PRD §25.1)*
 - [ ] **TOOL-02**: Metrics: eventi/sec, eventi scartati, errori per categoria, tempi medi route HTTP/worker, cache hit ratio, subscriber per topic, backlog *(PRD §25.5)*
@@ -270,8 +270,8 @@ Mappatura definitiva REQ-ID → fase. Ogni requisito è assegnato alla **prima f
 
 | Requirement | Phase | Status | Note |
 |-------------|-------|--------|------|
-| CACHE-01 | Phase 6 | Pending | MemoryCacheAdapter default; IDB rinviato a V1.x |
-| CACHE-02 | Phase 6 | Pending | TTL + invalidate per key/pattern |
+| CACHE-01 | Phase 6 | Complete | MemoryCacheAdapter default; IDB rinviato a V1.x |
+| CACHE-02 | Phase 6 | Complete | TTL + invalidate per key/pattern |
 | CACHE-03 | Phase 6 | Pending | metadata `cache` vs `remote` |
 | TOOL-01 | Phase 6 | Pending | Event Inspector — implementazione reale di `EventTap` predisposto in F1 |
 | TOOL-02 | Phase 6 | Pending | Metrics simil-OpenMetrics |

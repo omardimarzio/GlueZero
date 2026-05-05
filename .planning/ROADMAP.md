@@ -243,8 +243,8 @@ CACHE-01, CACHE-02, CACHE-03, TOOL-01, TOOL-02, TOOL-03, TOOL-04, TOOL-05, TEST-
   5. Cache invalidation con scope user-aware: la chiave di cache include scope (es. `userId` o `tenantId`) per route auth, evitando cross-tenant leakage; TTL configurabile per route, invalidazione manuale via API (`broker.cache.invalidate(keyOrPattern)`) e automatica al passare del TTL — verificato da `TEST-02` (cache hit/miss flows) e da test di robustezza.
 
 **Plans**: 11 plans (post revision iter 1 split BLOCKER-3 — 06-08 → 06-08a/b + 06-09 → 06-09a/b)
-- [ ] 06-01-PLAN.md — Bootstrap @sembridge/{cache,devtools,sembridge} (package.json + tsup ESM-only + vitest 3-tier + types/* + augment.ts) — Wave 1 sequential gate
-- [ ] 06-02-PLAN.md — MemoryCacheAdapter LRU bounded `maxEntries=1000` (D-158) + stable-hash FNV-1a (D-155 riuso F3 D-74) — Wave 2 ∥ 06-04
+- [x] 06-01-PLAN.md — Bootstrap @sembridge/{cache,devtools,sembridge} (package.json + tsup ESM-only + vitest 3-tier + types/* + augment.ts) — Wave 1 sequential gate
+- [x] 06-02-PLAN.md — MemoryCacheAdapter LRU bounded `maxEntries=1000` (D-158) + stable-hash FNV-1a (D-155 riuso F3 D-74) — Wave 2 ∥ 06-04
 - [ ] 06-03-PLAN.md — CacheHandler + CompositeHandler concretizza F3 D-77 placeholder + scope hybrid D-156/D-157 + cache-then-network ordering microtask — Wave 2-bis post 06-02
 - [ ] 06-04-PLAN.md — MultiplexTap + tap registry chain D-159 + auto-wrap F1 single-tap backward-compat — Wave 2 ∥ 06-02
 - [ ] 06-05-PLAN.md — EventInspector + RouteInspector ring buffer 500 entries (D-167) + structuredClone deep-clone (D-162) + default NODE_ENV inline (WARNING-5 fix) — Wave 3 parallel
