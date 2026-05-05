@@ -641,3 +641,11 @@ Se la sessione viene interrotta, riprendere con `/gsd-plan-phase 1` o con review
 **Planned Phase:** 1 (Core essenziale) — 11 plans — 2026-04-28T11:47:46.016Z
 
 **Plans complete (Phase 1):** 01-01 ✓, 01-02 ✓, 01-03 ✓, 01-04 ✓, 01-05 ✓, 01-06 ✓, 01-07 ✓, 01-08 ✓, 01-09 ✓, 01-10 ✓, 01-11 ✓ — **11/11 done, all gates passed**. 248/248 test su 24 file. Final gate 01-11: publint OK, attw OK, size-limit 6.14 KB/8 KB (76% budget). Pending solo `gsd-verifier` per goal-backward verification.
+
+---
+
+## Quick Tasks Completed
+
+| Quick ID | Slug | Date | Status | Commit finale | Note |
+|----------|------|------|--------|---------------|------|
+| 260505-v1e | rinomina-sembridge-to-gluezero | 2026-05-05 | ✅ complete | `c3fc994` | Rename progetto SemBridge → GlueZero pre v1.0.0 release. 8 commit atomic. CI gates 8/8 verdi. 1 hit grep residuo (commit message storico TRACKER, immutabile). Istruzioni manuali post-task per `mv` root directory + memory copy + `/graphify .` rigenerazione in SUMMARY.
