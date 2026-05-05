@@ -102,6 +102,23 @@ export interface PauseControllerOptions {
  * const action = ctrl.intercept(event) // 'queued' | 'dropped' | 'pass'
  * ctrl.resumeTopic('weather.requested') // replay FIFO
  * ```
+ *
+ * @example Critical bypass (D-170 — Pitfall 4.C carryover F3+F5+F6)
+ * ```ts
+ * ctrl.pauseTopic('user.notify')
+ * const evCritical = { ...event, priority: 'critical' as const }
+ * ctrl.intercept(evCritical) // → 'pass' (bypass cap E queue)
+ * ```
+ *
+ * @example flushQueue audit (D-169)
+ * ```ts
+ * ctrl.pauseTopic('chat.message')
+ * ctrl.intercept(event1) // → queued
+ * ctrl.intercept(event2) // → queued
+ * const flushed = ctrl.flushQueue('chat.message')
+ * // → [{ topic: 'chat.message', droppedCount: 2, droppedEventIds: [...] }]
+ * // → emit 'system.queue.flushed' audit (NIENTE re-publish)
+ * ```
  */
 export function createPauseController(opts: PauseControllerOptions): PauseController {
   const cap = opts.maxQueueSize ?? DEFAULT_MAX_QUEUE_SIZE

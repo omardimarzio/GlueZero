@@ -147,6 +147,18 @@ export interface CacheBrokerConfig extends RouterBrokerConfig {
  * // → adapter.invalidate({ prefix: 'reports-plugin::' }) — cleanup atomico
  * ```
  *
+ * @example Cache stats consumption (consumed da MetricsCollector 06-06 + DevtoolsBroker 06-08b)
+ * ```ts
+ * const stats = broker.getCacheStats()
+ * console.log(`hits=${stats.hits}, misses=${stats.misses}, evictions=${stats.evictions}`)
+ * console.log(`entries=${stats.entries} / ${stats.entries < 500 ? 'OK' : 'NEAR-CAP'}`)
+ * ```
+ *
+ * @throws {Error} `Invalid CacheBrokerConfig: <issues>` — propagato dal `createCacheBroker`
+ *   factory se Valibot validation fallisce (delegate al `createRouterBroker` interno per
+ *   sezioni F1-F5 + Schema F6 cache locale). Catturare via `try/catch` al boot consumer-side
+ *   per UX fix dev-time.
+ *
  * @see {@link createCacheBroker} — public factory (no singleton, D-30)
  * @see {@link CacheHandlerF6} — Strategy 3-way dispatch (06-03)
  * @see {@link CacheAdapter} — LRU bounded MemoryCacheAdapter default (06-02)

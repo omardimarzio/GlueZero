@@ -111,6 +111,34 @@ const SemBridgeConfigSchema = v.looseObject({
  * })
  * ```
  *
+ * @example Multi-tenant isolation (D-30 anti-singleton)
+ * ```ts
+ * function brokerForTenant(tenantId: string) {
+ *   return createSemBridge({
+ *     cache: {
+ *       maxEntries: 200,
+ *       scopeProvider: () => tenantId,
+ *     },
+ *   })
+ * }
+ * const brokerAcme = brokerForTenant('acme')
+ * const brokerInitech = brokerForTenant('initech')
+ * // No cross-tenant cache leakage — D-156 scope hybrid prefix isolation
+ * ```
+ *
+ * @example Bare minimum F1+F2+F3 (uguale a createRouterBroker direct)
+ * ```ts
+ * const bare = createSemBridge({
+ *   features: { realtime: false, worker: false, cache: false, devtools: false },
+ * })
+ * // → ritorna RouterBroker con chain implicita F1+F2+F3
+ * ```
+ *
+ * @throws {Error} `Invalid SemBridgeConfig: <issues>` se Valibot validation fallisce.
+ *   Propaga anche `Invalid CacheBrokerConfig:` / `Invalid DevtoolsBrokerConfig:` /
+ *   `Invalid WorkerBrokerConfig:` / `Invalid RealtimeBrokerConfig:` / `Invalid
+ *   RouterBrokerConfig:` dei factory downstream (D-56 validation at boundary cascade).
+ *
  * @see RESEARCH §11.3 Opzione B convenience factory.
  */
 export function createSemBridge(config: SemBridgeConfig = {}): SemBridge {

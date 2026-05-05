@@ -285,6 +285,26 @@ function buildSanitizedError(opts: {
  * // → publish '<topic>.loaded' (success) | '<topic>.failed' (error sanitized)
  * ```
  *
+ * @example Cache-then-network ordering (RESEARCH §15.6 anti-flicker UI)
+ * ```ts
+ * // strategy 'cache-then-network' HIT branch — microtask publish PRIMA della fetch:
+ * const route = { type: 'cache', id: 'r', topic: 'weather.requested',
+ *                 strategy: 'cache-then-network', ttl: 60_000 }
+ * // Subscriber order garantito: 'cache' → 'remote' (anche con fetch istantanea/mock)
+ * ```
+ *
+ * @example Missing scope auth bypass (D-157 fail-secure)
+ * ```ts
+ * const handler = createCacheHandlerF6({ cache, publishFn, httpHandler })
+ * await handler.execute(event, { ...route, auth: true, scope: () => null })
+ * // → emit 'system.cache.scope-missing' audit + cold fetch sempre (NO cache lookup)
+ * ```
+ *
+ * @throws {never} La factory non solleva sincrono — tutti gli errori runtime sono
+ *   convertiti in `<topic>.failed` payload via `buildSanitizedError` (sanitized
+ *   shape D-80, NO originalError/stack/cause). Errori di config (route.strategy
+ *   sconosciuto) → `cache.strategy.unknown` codice come failure event payload.
+ *
  * @see ./composite-handler.ts — orchestrator workflow F6 concretizza F3 stub
  * @see RESEARCH §4 cache route handler concretizza F3 D-77
  * @see RESEARCH §15.6 cache-then-network ordering microtask Pitfall

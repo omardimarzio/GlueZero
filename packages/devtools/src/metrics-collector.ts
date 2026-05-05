@@ -24,6 +24,31 @@
  * (`event.observed`) per auto-increment lifecycle metrics. Il MetricsCollector
  * standalone NON dipende dal broker — può essere usato in isolamento (es. test).
  *
+ * @example Counter increment + cumulative readback (D-164)
+ * ```ts
+ * const metrics = createMetricsCollector()
+ * metrics.increment('sembridge.cache.hits_total', { routeId: 'weather' })
+ * metrics.increment('sembridge.cache.hits_total', { routeId: 'weather' })
+ * const snap = metrics.getMetrics()
+ * console.log(snap.counters['sembridge.cache.hits_total{routeId="weather"}']) // → 2
+ * ```
+ *
+ * @example Gauge last-write-wins
+ * ```ts
+ * metrics.setGauge('sembridge.cache.entries_count', 42, { tenant: 'acme' })
+ * metrics.setGauge('sembridge.cache.entries_count', 50, { tenant: 'acme' }) // overwrite
+ * // → snap.gauges['sembridge.cache.entries_count{tenant="acme"}'] === 50
+ * ```
+ *
+ * @example Histogram observe + reservoir summary (D-165)
+ * ```ts
+ * for (let i = 0; i < 1000; i++) {
+ *   metrics.observe('sembridge.routing.dispatch_duration_ms', Math.random() * 100)
+ * }
+ * const summary = metrics.getMetrics().histograms['sembridge.routing.dispatch_duration_ms']
+ * console.log(`p50=${summary.p50}, p90=${summary.p90}, p99=${summary.p99}, n=${summary.count}`)
+ * ```
+ *
  * @see RESEARCH §7 MetricsCollector impl deep dive
  * @see CONTEXT D-163, D-164, D-165, D-166
  * @see types/metrics.ts — `MetricsSnapshot` + `HistogramSummary` + `MetricsDelta`

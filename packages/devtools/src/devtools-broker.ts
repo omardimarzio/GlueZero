@@ -153,6 +153,31 @@ function detectDefaultEnabled(): boolean {
  * console.log('recent events:', snap.recentEvents)
  * ```
  *
+ * @example Tap chain user-side (D-159 multiplex)
+ * ```ts
+ * const auditTap: EventTap = {
+ *   onPipelineStep(step, snap) {
+ *     if (step === 'event.observed') console.log(`[AUDIT] ${snap.eventId}`)
+ *   },
+ * }
+ * const broker = createDevtoolsBroker({ taps: [auditTap] })
+ * // auditTap riceve TUTTI gli step §28 + le altre tap (Inspector + Metrics) chained
+ * ```
+ *
+ * @example pauseTopic admin flow (D-168/D-169)
+ * ```ts
+ * broker.pauseTopic('chat.message')
+ * await broker.publish('chat.message', { text: 'queued' }) // → accodato FIFO
+ * broker.resumeTopic('chat.message') // → replay FIFO
+ * // Alternativa: scarta backlog
+ * broker.pauseTopic('chat.message')
+ * await broker.publish('chat.message', { text: 'stale' })
+ * broker.flushQueue('chat.message') // → drop + audit, NO replay
+ * ```
+ *
+ * @throws {Error} `Invalid DevtoolsBrokerConfig: <issues>` — propagato dal
+ *   `createDevtoolsBroker` factory se Valibot validation fallisce.
+ *
  * @see {@link createDevtoolsBroker} — public factory (no singleton, D-30)
  * @see {@link MultiplexTap} — chain N tap aggregator (D-159)
  * @see {@link EventInspector} — ring buffer 500 (D-167)
