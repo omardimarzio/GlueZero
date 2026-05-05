@@ -31,7 +31,7 @@ Libreria JavaScript browser-side (TypeScript-first, ESM) che combina sei capabil
 **Tutto in italiano** salvo richiesta esplicita diversa: risposte utente, prompt agenti, commit message, descrizioni REQ-ID, success criteria, JSDoc descrittivi. Restano in inglese: codice, identificatori, comandi shell, nomi librerie/file/package, error messages letterali, log keywords.
 
 ### Boundary di sicurezza
-**Area di lavoro libera:** `/Users/omarmarzio/programming/prova AI/` e tutte le sottocartelle (incluso SemBridge, API-Integrator, fasttrack3, ecc.) — crei, modifichi, sposti, cancelli, esegui senza chiedere conferma.
+**Area di lavoro libera:** `/Users/omarmarzio/programming/prova AI/` e tutte le sottocartelle (incluso GlueZero, API-Integrator, fasttrack3, ecc.) — crei, modifichi, sposti, cancelli, esegui senza chiedere conferma.
 
 **Fuori da quella directory:** solo lettura e creazione di NUOVI file/directory. **MAI** cancellare/sovrascrivere/spostare/modificare file esistenti, eseguire `rm`/`mv`/`git reset --hard` su path esterni, modificare config globali (`~/.claude/settings.json`, `~/.gitconfig`, `~/.zshrc`, settings di sistema). Eccezione: aggiornamenti alle memorie GSD-Claude in `~/.claude/projects/<projectDir>/memory/` sono OK (create/update), ma DELETE/MOVE richiedono conferma.
 

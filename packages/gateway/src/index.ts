@@ -36,21 +36,18 @@
 // `sideEffects: ["./dist/augment.js", "./src/augment.ts", "**/augment.js", "**/augment.ts"]`
 // array per double-safety in ambienti consumer.
 export { __augmentGatewayLoaded } from './augment'
-
-// PHASE 4 (plan 04-01) — side-effect augment SSE/WS: declaration merging additive di
-// `BrokerConfig.realtime` + `PluginDescriptor.realtimeChannels` (D-102/D-103). Il glob
-// `sideEffects: ["**/augment.ts", "**/augment.js"]` esistente copre `dist/sse-ws/augment.js`
-// (Pattern S1 anti tree-shaking, T-04-01-01 mitigation).
-export { __augmentSseWsLoaded } from './sse-ws/augment'
-
 // Re-export sub-modulo HTTP per consumer che importano dall'umbrella.
 // Consumer ottimizzati per bundle size importeranno direttamente da
 // `@gluezero/gateway/http` (subpath dedicato — RESEARCH §"Subpath Exports").
 export * from './http'
-
 // PHASE 4 (plan 04-01) — re-export sub-modulo SSE/WS dall'umbrella. Consumer
 // ottimizzati per bundle size importeranno direttamente da `@gluezero/gateway/sse-ws`
 // (subpath dedicato). Plan 04-01 espone solo types + augment marker; i runtime
 // (parseFrame, SseAdapter, WebSocketAdapter, RealtimeChannelManager, RealtimeBroker,
 // createRealtimeBroker) verranno aggiunti incrementalmente nei plan 04-02..04-08.
 export * from './sse-ws'
+// PHASE 4 (plan 04-01) — side-effect augment SSE/WS: declaration merging additive di
+// `BrokerConfig.realtime` + `PluginDescriptor.realtimeChannels` (D-102/D-103). Il glob
+// `sideEffects: ["**/augment.ts", "**/augment.js"]` esistente copre `dist/sse-ws/augment.js`
+// (Pattern S1 anti tree-shaking, T-04-01-01 mitigation).
+export { __augmentSseWsLoaded } from './sse-ws/augment'
