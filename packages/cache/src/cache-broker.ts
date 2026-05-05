@@ -204,8 +204,7 @@ export class CacheBroker {
     // su `runtime?.tap` perché `RouterBrokerConfig.runtime` è un type alias
     // proveniente da `MapperBroker` ConstructorParameters — la risoluzione DTS
     // cross-package può non includere il field; usiamo lookup runtime safe.
-    const runtimeCfg = (config as { runtime?: { tap?: import('@gluezero/core').EventTap } })
-      .runtime
+    const runtimeCfg = (config as { runtime?: { tap?: import('@gluezero/core').EventTap } }).runtime
     const tapForward = runtimeCfg?.tap
 
     this.handler = createCacheHandlerF6({

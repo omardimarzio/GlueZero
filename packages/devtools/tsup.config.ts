@@ -27,12 +27,7 @@ export default defineConfig({
   minify: false,
   target: 'es2022',
   platform: 'browser',
-  external: [
-    /^node:/,
-    '@gluezero/core',
-    '@gluezero/mapper',
-    '@gluezero/routing',
-  ],
+  external: [/^node:/, '@gluezero/core', '@gluezero/mapper', '@gluezero/routing'],
   banner: {
     js: '/* @gluezero/devtools — MIT — https://github.com/<TBD>/gluezero */',
   },

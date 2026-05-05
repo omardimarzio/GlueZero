@@ -166,7 +166,8 @@ function sanitizeError(err: BrokerError): SanitizedError {
     retryAfterMs?: unknown
   }
   const httpStatus =
-    ext.httpStatus ?? (typeof detailsBag.httpStatus === 'number' ? detailsBag.httpStatus : undefined)
+    ext.httpStatus ??
+    (typeof detailsBag.httpStatus === 'number' ? detailsBag.httpStatus : undefined)
   const retryAttempt =
     ext.retryAttempt ??
     (typeof detailsBag.retryAttempt === 'number' ? detailsBag.retryAttempt : undefined)
