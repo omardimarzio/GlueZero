@@ -193,8 +193,13 @@ export class DevtoolsBroker {
         // Lazy-binding via this.inner (set sotto in step 4) → safe perché
         // onCardinalityOverflow è chiamato solo durante observe/increment
         // runtime, post-construction.
+        //
+        // NOTE: il topic name segue la convention F1 D-24 (segments lowercase
+        // alphanumeric o '*'). Il trattino non è ammesso → usiamo 'cardinalityoverflow'
+        // come singolo segmento. La doc PRD §28.3 / RESEARCH §7.4 può essere
+        // aggiornata in 06-09b al final gate (DOC-06).
         try {
-          this.inner.publish('system.metrics.cardinality-overflow', info, {
+          this.inner.publish('system.metrics.cardinalityoverflow', info, {
             source: { type: 'system', id: 'devtools-broker' },
           } as RouterPublishOptions)
         } catch {
