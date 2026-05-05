@@ -1,11 +1,11 @@
 ---
 last_updated: 2026-05-05
-status: phase_6_executing_W4a_complete_next_06_08b
+status: phase_6_executing_W4b_complete_next_06_09a
 project: SemBridge
 milestone: v1.0
 current_phase: 6
-current_wave: 6_W4a_complete_next_W4b_06_08b
-current_plan: 06_08a_done_next_06_08b
+current_wave: 6_W4b_complete_next_W5a_06_09a
+current_plan: 06_08b_done_next_06_09a
 session_active: true
 ---
 
@@ -23,34 +23,33 @@ session_active: true
 
 | Campo | Valore |
 |-------|--------|
-| Fase | **Phase 6 — Cache & Tooling avanzato — IN ESECUZIONE** (W1 + W2 + W2-bis + W3 + W4a complete) |
-| Wave | 6 — W4a ✅ COMPLETE (06-08a CacheBroker composition wrapper done) — next W4b sequential gate 06-08b (DevtoolsBroker + createSemBridge chain completa) |
-| Plan in esecuzione | 06-08a ✅ done — next: 06-08b (DevtoolsBroker composition wrapper + createSemBridge CHAIN F1+F2+F3+F4+F5+F6 + 6 integration test) |
-| Plan progress F6 | **8 / 11** — 06-01 + 06-02 + 06-04 + 06-03 + 06-05 + 06-06 + 06-07 + 06-08a done; pending 06-08b + 06-09a + 06-09b |
+| Fase | **Phase 6 — Cache & Tooling avanzato — IN ESECUZIONE** (W1 + W2 + W2-bis + W3 + W4a + W4b complete) |
+| Wave | 6 — W4b ✅ COMPLETE (06-08b DevtoolsBroker + createSemBridge CHAIN F1+F2+F3+F4+F5+F6 done — BLOCKER-1 + BLOCKER-2 fix) — next W5a sequential gate 06-09a (CI gates + size-limit + biome cleanup) |
+| Plan in esecuzione | 06-08b ✅ done — next: 06-09a (CI gates + size-limit + biome cleanup) |
+| Plan progress F6 | **9 / 11** — 06-01 + 06-02 + 06-04 + 06-03 + 06-05 + 06-06 + 06-07 + 06-08a + 06-08b done; pending 06-09a + 06-09b |
 | Plan progress F5 | **7 / 7 (✅ COMPLETE)** — 05-01..05-07 done |
 | Plan progress F4 | **9 / 9 (✅ COMPLETE)** — 04-01..04-09 done |
-| Plan progress globale | 60 / 64 (94%) |
+| Plan progress globale | 61 / 64 (95%) |
 | Mode GSD | yolo + auto_advance + parallelization (sequential exec, no worktree) |
 | Modello attivo | `claude-opus-4-7-1` (opus) — override esplicito su tutti i sub-agent |
 | Graphify watch | PID 8702 attivo (debounce 3s, log `graphify-out/.watch.log`) — bootstrap iniziale `/graphify .` ancora pending |
 
-## Ultimo step completato (auto-update 2026-05-05T20:30:00Z)
+## Ultimo step completato (auto-update 2026-05-05T20:50:00Z)
 
-- Plan: **06-08a** → SUMMARY.md ready to commit
-- Commit list:
-  - `2221187 test(06-08a): RED CacheBroker + createCacheBroker`
-  - `a69f468 feat(06-08a): GREEN CacheBroker composition wrapper Opzione B + createCacheBroker factory`
-  - `aef7e1a test(06-08a): cache-harness + 4 integration test 3-tier + barrel FINAL append`
-- Phase progress: **8/11** plan completati con SUMMARY.md
-- Project progress: 60/64 plan (94%)
-- Test totali cache package: 108 (39 nuovi nel plan)
-- Coverage v8 cache-broker.ts: 100/90.32/100/100 (target 90/80/90/90 superato +10.32% branches)
-- D-83 strict: zero diff packages/{core,mapper,routing,gateway,worker}/src/
+- Plan: **06-08b** → 6 commit TDD + SUMMARY pending commit
+- Commits: `4c6950e` RED devtools-broker, `3217a9a` GREEN devtools-broker, `2db79c0` GREEN factory, `ae1a565` RED sem-bridge, `74e4c4d` GREEN createSemBridge BLOCKER-2 fix, `9a96216` Task 3 aggregato barrel + 6 integration test BLOCKER-1 fix
+- BLOCKER-1 fix verified: barrel devtools/index.ts single-writer cumulativo Wave 3+4
+- BLOCKER-2 fix verified: acceptance grep `createWorkerBroker|createRealtimeBroker` → 10 hits ≥ 4
+- D-83 strict OK: 0 diff lines su packages/{core,mapper,routing,gateway,worker}/src/
+- Coverage devtools 96.44/89.28/94.36/96.98 + sembridge 100/100/100/100
+- 50 test plan + cross-package zero regression (devtools 160/160 + cache 108/108 + sembridge 20/20 + worker 121/121)
+- Phase progress: **9/11** plan completati
+- Project progress: 61/64 plan (95%)
 
 
 ## Prossimo step
 
-**Continue execute Phase 6 W4b** — sequential gate: 06-08b (DevtoolsBroker composition wrapper + createSemBridge CHAIN COMPLETA F1+F2+F3+F4+F5+F6 + 6 integration test).
+**Continue execute Phase 6 W5a** — sequential gate: 06-09a (CI gates + size-limit + biome cleanup).
 
 ```
 Skill: gsd-execute-phase 6 --auto --no-transition
