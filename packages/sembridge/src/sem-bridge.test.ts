@@ -18,11 +18,12 @@
 //   - acceptance grep BLOCKER-2 verifica chain include createWorkerBroker + createRealtimeBroker
 
 import { readFileSync } from 'node:fs'
-import { fileURLToPath } from 'node:url'
+import { resolve } from 'node:path'
 import { describe, expect, it } from 'vitest'
 import { createSemBridge } from './sem-bridge'
 
-const SEM_BRIDGE_PATH = fileURLToPath(new URL('./sem-bridge.ts', import.meta.url))
+// Path relativo al cwd del test (root del package @sembridge/sembridge).
+const SEM_BRIDGE_PATH = resolve(process.cwd(), 'src/sem-bridge.ts')
 
 describe('createSemBridge — chain composition F1+F2+F3+F4+F5+F6 (BLOCKER-2 fix)', () => {
   it('Test 1: createSemBridge({}) ritorna broker con publish/subscribe API (default chain F1..F6 attiva)', () => {
