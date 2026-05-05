@@ -1,11 +1,11 @@
 ---
 last_updated: 2026-05-05
-status: phase_6_executing_W4b_complete_next_06_09a
+status: phase_6_executing_W5a_complete_next_06_09b
 project: SemBridge
 milestone: v1.0
 current_phase: 6
-current_wave: 6_W4b_complete_next_W5a_06_09a
-current_plan: 06_08b_done_next_06_09a
+current_wave: 6_W5a_complete_next_W5b_06_09b
+current_plan: 06_09a_done_next_06_09b
 session_active: true
 ---
 
@@ -23,33 +23,33 @@ session_active: true
 
 | Campo | Valore |
 |-------|--------|
-| Fase | **Phase 6 — Cache & Tooling avanzato — IN ESECUZIONE** (W1 + W2 + W2-bis + W3 + W4a + W4b complete) |
-| Wave | 6 — W4b ✅ COMPLETE (06-08b DevtoolsBroker + createSemBridge CHAIN F1+F2+F3+F4+F5+F6 done — BLOCKER-1 + BLOCKER-2 fix) — next W5a sequential gate 06-09a (CI gates + size-limit + biome cleanup) |
-| Plan in esecuzione | 06-08b ✅ done — next: 06-09a (CI gates + size-limit + biome cleanup) |
-| Plan progress F6 | **9 / 11** — 06-01 + 06-02 + 06-04 + 06-03 + 06-05 + 06-06 + 06-07 + 06-08a + 06-08b done; pending 06-09a + 06-09b |
+| Fase | **Phase 6 — Cache & Tooling avanzato — IN ESECUZIONE** (W1 + W2 + W2-bis + W3 + W4a + W4b + W5a complete) |
+| Wave | 6 — W5a ✅ COMPLETE (06-09a CI gates + coverage thresholds calibration + size-limit budget F6 + biome cleanup) — next W5b FINAL 06-09b (DOC italiani + REQ flip + CHANGELOG v1.0.0 milestone closure) |
+| Plan in esecuzione | 06-09a ✅ done — next: 06-09b (DOC + REQ flip + CHANGELOG) |
+| Plan progress F6 | **10 / 11** — 06-01 + 06-02 + 06-04 + 06-03 + 06-05 + 06-06 + 06-07 + 06-08a + 06-08b + 06-09a done; pending 06-09b |
 | Plan progress F5 | **7 / 7 (✅ COMPLETE)** — 05-01..05-07 done |
 | Plan progress F4 | **9 / 9 (✅ COMPLETE)** — 04-01..04-09 done |
-| Plan progress globale | 61 / 64 (95%) |
+| Plan progress globale | 62 / 64 (97%) |
 | Mode GSD | yolo + auto_advance + parallelization (sequential exec, no worktree) |
 | Modello attivo | `claude-opus-4-7-1` (opus) — override esplicito su tutti i sub-agent |
 | Graphify watch | PID 8702 attivo (debounce 3s, log `graphify-out/.watch.log`) — bootstrap iniziale `/graphify .` ancora pending |
 
-## Ultimo step completato (auto-update 2026-05-05T20:50:00Z)
+## Ultimo step completato (auto-update 2026-05-05T20:56:00Z)
 
-- Plan: **06-08b** → 6 commit TDD + SUMMARY pending commit
-- Commits: `4c6950e` RED devtools-broker, `3217a9a` GREEN devtools-broker, `2db79c0` GREEN factory, `ae1a565` RED sem-bridge, `74e4c4d` GREEN createSemBridge BLOCKER-2 fix, `9a96216` Task 3 aggregato barrel + 6 integration test BLOCKER-1 fix
-- BLOCKER-1 fix verified: barrel devtools/index.ts single-writer cumulativo Wave 3+4
-- BLOCKER-2 fix verified: acceptance grep `createWorkerBroker|createRealtimeBroker` → 10 hits ≥ 4
-- D-83 strict OK: 0 diff lines su packages/{core,mapper,routing,gateway,worker}/src/
-- Coverage devtools 96.44/89.28/94.36/96.98 + sembridge 100/100/100/100
-- 50 test plan + cross-package zero regression (devtools 160/160 + cache 108/108 + sembridge 20/20 + worker 121/121)
-- Phase progress: **9/11** plan completati
-- Project progress: 61/64 plan (95%)
+- Plan: **06-09a** → SUMMARY.md committed (in commit di chiusura corrente)
+- Commit Task 1: `8941276 test(06-09a): coverage thresholds calibration post-impl + size-limit budget F6 + biome cleanup`
+- Phase progress: **10/11** plan completati con SUMMARY.md
+- Project progress: 62/64 plan (97%)
+- CI gates ALL GREEN: typecheck 8/8 + build ESM-only 8/8 + test 1166/1169 monorepo full + publint 8/8 All good + attw ESM-only 8/8 (🟢) + size-limit 8/8 within budget + biome zero errors
+- Coverage v8 F6 measured: cache 100/94.21/100/100 + devtools 96.44/89.28/94.36/96.98 + sembridge 100/100/100/100 (above target ≥90/80/90/90)
+- Size-limit F6 calibrate measured + 20% headroom: cache 22.13/27 KB + devtools 22.27/27 KB + sembridge 34.80/42 KB
+- D-83 strict ✓ verified: 0 lines diff su packages/{core,mapper,routing,gateway,worker}/src/
+- Deferred-items.md 06-06 risolto inline (typecheck gateway green via build:f3:cyclic workflow)
 
 
 ## Prossimo step
 
-**Continue execute Phase 6 W5a** — sequential gate: 06-09a (CI gates + size-limit + biome cleanup).
+**Continue execute Phase 6 W5b FINAL** — milestone v1.0 closure: 06-09b (DOC italiani README per cache + devtools + sembridge + JSDoc TypeDoc-ready + REQ matrix flip CACHE-01..03 + TOOL-01..05 + DOC-02/05/06 + PRD §39 #10 closure + CHANGELOG v1.0.0 + ROADMAP F6 → ✅ Complete).
 
 ```
 Skill: gsd-execute-phase 6 --auto --no-transition
@@ -110,6 +110,8 @@ Phase 4 closure highlights:
 - **Auto-advance attivo:** discuss → plan → execute → verify automatico senza chiedere conferma.
 
 ## Decisioni recenti rilevanti
+
+- **Plan 06-09a ESEGUITO ✓ (Wave 5a — CI gates final F6)** — 1 commit atomic `8941276 test(06-09a): coverage thresholds calibration post-impl + size-limit budget F6 + biome cleanup`. Coverage v8 calibrate post-impl (analog F4 04-09 commit `761e4ad` + F5 05-07 commit `1347d0b` pattern, floor measurato arrotondato per difetto 0.5%): @sembridge/cache 100/94.21/100/100 (thresholds 99.5/93.5/99.5/99.5) + @sembridge/devtools 96.44/89.28/94.36/96.98 (thresholds 95.94/88.78/93.86/96.48) + @sembridge/sembridge 100/100/100/100 (thresholds 99.5/99.5/99.5/99.5). Hard floor inderogabile target ≥90/80/90/90 rispettato con margini ampi. Size-limit budget calibrate measured + 20% headroom (lesson learned F3 commit `9922a36` carryover): @sembridge/cache 22.13/27 KB + @sembridge/devtools 22.27/27 KB + @sembridge/sembridge 34.80/42 KB (with all deps cross-package). Biome auto-format safe-fix su 28 file packages/{cache,devtools,sembridge}/src/ (organize imports + format whitespace, zero behavior change verificato via re-run completo 1166/1169 monorepo full). 33 warnings unsafe rimasti non bloccanti (suggerimenti stilistici opzionali). CI gates ALL GREEN: typecheck 8/8 + build ESM-only 8/8 + test 1166/1169 monorepo full (3 skip MSW V1.x F4 deferred, zero regression cross-package) + publint 8/8 All good (3 nuovi F6: cache + devtools + sembridge) + attw ESM-only OK 8/8 (node16 🟢 + bundler 🟢) + size-limit 8/8 within budget. ci:publint + ci:attw scripts esteso a 8 packages (era 4 F1-F3); aggiunto `ci:gate:f6` alias. **Deferred-items.md 06-06 risolto inline** (Auto-fix Rule 3): typecheck `@sembridge/gateway` + DTS chain `routing↔gateway` falliva con dist stale. Soluzione: rebuild ordinato F1+F2 → `pnpm build:f3:cyclic` (workflow F3-aware DTS bootstrap esistente in package.json) → F4-F6. Tutti 8 typecheck ora green. **D-83 strict ✓ verified**: 0 lines diff su `packages/{core,mapper,routing,gateway,worker}/src/` per tutto il plan 06-09a. Building blocks pronti per 06-09b (DOC italiani README cache+devtools+sembridge + JSDoc TypeDoc-ready + REQ matrix flip CACHE-01..03 + TOOL-01..05 + DOC-02/05/06 + PRD §39 #10 closure + CHANGELOG v1.0.0 milestone closure).
 
 - **Phase 6 PLAN-PHASE COMPLETATO ✓ (research + pattern-mapper + planner iter 1 + plan-checker iter 1 → revision + plan-checker iter 2 PASS)** — RESEARCH.md 21 sezioni ~1450 LOC verificato live npm 2026-05-05 (lru-cache@11.3.6, tdigest@0.1.2, json-stable-stringify@1.3.0 **valutati e RIGETTATI** in favore di implementazioni inline: Map insertion order LRU ~80 LOC + reservoir Algorithm R Vitter 1985 ~30 LOC + stableStringify+FNV-1a ~50 LOC, zero new deps philosophy F1-F5 carryover). PATTERNS.md 38 file F6 mappati con analog F1-F5 esatto + 10 lesson learned cross-fase (size-limit pre-impl underestimate 20-30% raise post-impl, augment.ts pattern S1 anti tree-shake replica meccanica, README italiano 11 sezioni 400+ LOC carryover). Plan iter 1 = 9 plan; plan-checker iter 1 ha trovato 3 BLOCKER + 5 WARNING; **revision iter 1** ha applicato fix targettati: BLOCKER-1 barrel ownership devtools/index.ts spostato da Wave 3 ∥ a 06-08b Wave 4b sequential single-writer cumulative; **BLOCKER-2 createSemBridge chain completa F1+F2+F3+F4+F5+F6** (Opzione 1 raccomandata dal checker, decisione autonoma utente coerente con CONTEXT.md sezione "Composition wrapper aggregato" + RESEARCH §11.3 + ROADMAP SC-2 + CHANGELOG v1.0.0 8 package bump promise) — codice TS in 06-08b con import condizionali da @sembridge/{worker,gateway/sse-ws} + chain `if (f.realtime) ... if (f.worker) ... if (f.cache) ... if (f.devtools) ...` + type union 7 ReturnType; BLOCKER-3 split 06-08 → 06-08a/06-08b + split 06-09 → 06-09a/06-09b (9→11 plan totali) per scope sanity (06-08 era 20 file/4 task, 06-09 era 27 file/5 task — eccedevano budget context); WARNING-1 truth consistency post-fix; WARNING-2 7 Q&A enumerate Q1-Q7 in DOC-05 Sezione 6 (PRD §39 #10 closure: dot.case rationale D-163, getMetricsDelta D-164, reservoir vs t-digest D-165, cardinality overflow D-166, Prometheus/OTel exporter map, metriche standard, custom metric V1.x); WARNING-3 frontmatter cleanup; WARNING-4 `pnpm -F @sembridge/sembridge test` aggiunto verify; WARNING-5 NODE_ENV inline default `detectDefaultEnabled()` in createEventInspector + createRouteInspector. Plan-checker iter 2 verdetto **PASS**: 3/3 BLOCKER risolti + 5/5 WARNING risolti + 16/16 D-155..D-170 coverage cumulative + REQ-IDs coverage cross 11-plan tutti + ZERO threat HIGH+ severity ASVS L1 (~25-30 threat enumerated T-06-XX-NN) + D-83 strict acceptance gate ogni plan (`git diff main...HEAD packages/{core,mapper,routing,gateway,worker}/src/` exit 0 lines) + file ownership Wave 3 parallel disgiunta (06-05/06-06/06-07 NON modificano packages/devtools/src/index.ts) + chain completa F1+F2+F3+F4+F5+F6 in 06-08b createSemBridge (35 hits createWorkerBroker|createRealtimeBroker, type union 7 ReturnType) + milestone v1.0 closure deliverables (06-09b CHANGELOG 8 package bump + REQ matrix flip + PRD §39 #10 closure + ROADMAP F6 → ✅ Complete). Estimated speedup wave-based ~1.3× vs sequential. Coverage REQ-IDs F6 distribuiti: CACHE-01..03 (5/4/4 plan), TOOL-01..05 (5/5/5/5/4 plan), ERR-02 ext F6 (2 plan), LIFE-02 ext F6 (3 plan), PIPE-01 ext F6 (7 plan massima trasversalità), TEST-01/02 ext F6 (3/3 plan), DOC-02/05/06 (1/1/1 plan in 06-09b consolidamento finale), PKG-01..04 (2/2/2/2 plan in 06-01 + 06-09a). Pronto per `/gsd-execute-phase 6 --auto --no-transition`.
 
