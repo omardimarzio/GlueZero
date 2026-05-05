@@ -1,10 +1,10 @@
-# @sembridge/devtools
+# @gluezero/devtools
 
-> Developer tooling per SemBridge — Phase 6 (Event Inspector + Route Inspector + MetricsCollector simil-OpenMetrics + PauseController + getDebugSnapshot deep-clone — closes PRD §39 #10 / TOOL-05 metrics format).
+> Developer tooling per GlueZero — Phase 6 (Event Inspector + Route Inspector + MetricsCollector simil-OpenMetrics + PauseController + getDebugSnapshot deep-clone — closes PRD §39 #10 / TOOL-05 metrics format).
 
-ESM-only TypeScript library. Browser evergreen target (ES2022). Composition wrapper di [`@sembridge/routing`](../routing/README.md) `RouterBroker` (D-121, D-83 strict carryover): un singolo entry point `createDevtoolsBroker(config)` orchestra route F3 + tap registry chain D-159 + Inspector ring buffer 500 (D-167) + MetricsCollector cumulative-only (D-164) + PauseController FIFO + critical bypass (D-170).
+ESM-only TypeScript library. Browser evergreen target (ES2022). Composition wrapper di [`@gluezero/routing`](../routing/README.md) `RouterBroker` (D-121, D-83 strict carryover): un singolo entry point `createDevtoolsBroker(config)` orchestra route F3 + tap registry chain D-159 + Inspector ring buffer 500 (D-167) + MetricsCollector cumulative-only (D-164) + PauseController FIFO + critical bypass (D-170).
 
-Quattro dipendenze runtime: [`@sembridge/core`](../core/README.md) (EventTap + PipelineSnapshot, F1), [`@sembridge/mapper`](../mapper/README.md) (canonical mapping, F2 — implicit via routing), [`@sembridge/routing`](../routing/README.md) (RouterBroker base composta, F3), [`valibot`](https://valibot.dev) (config validation al boundary).
+Quattro dipendenze runtime: [`@gluezero/core`](../core/README.md) (EventTap + PipelineSnapshot, F1), [`@gluezero/mapper`](../mapper/README.md) (canonical mapping, F2 — implicit via routing), [`@gluezero/routing`](../routing/README.md) (RouterBroker base composta, F3), [`valibot`](https://valibot.dev) (config validation al boundary).
 
 ## Indice
 
@@ -24,10 +24,10 @@ Quattro dipendenze runtime: [`@sembridge/core`](../core/README.md) (EventTap + P
 
 ## 1. Quick start
 
-`@sembridge/devtools` espone `createDevtoolsBroker(config)` come factory pubblico (D-30 anti-singleton). Il broker compone trasparentemente il `RouterBroker` di Phase 3 (D-121, D-83 strict carryover) e installa un `MultiplexTap` aggregator come singleton `runtime.tap` — il tap chain riceve TUTTI gli step §28 della pipeline (steps 1-13 da F1+F2+F3+F4+F5 + step 14 attivato in F6).
+`@gluezero/devtools` espone `createDevtoolsBroker(config)` come factory pubblico (D-30 anti-singleton). Il broker compone trasparentemente il `RouterBroker` di Phase 3 (D-121, D-83 strict carryover) e installa un `MultiplexTap` aggregator come singleton `runtime.tap` — il tap chain riceve TUTTI gli step §28 della pipeline (steps 1-13 da F1+F2+F3+F4+F5 + step 14 attivato in F6).
 
 ```ts
-import { createDevtoolsBroker } from '@sembridge/devtools'
+import { createDevtoolsBroker } from '@gluezero/devtools'
 
 const broker = createDevtoolsBroker({
   devtools: { enableByDefault: true, eventBufferSize: 500 },
@@ -61,8 +61,8 @@ console.log('Counters:', snap.currentMetrics.counters)
 Tutti i tap sono chained via `MultiplexTap` con error isolation: un throw da un tap NON propaga agli altri (try/catch swallow per ciascuno — pattern carryover F1 D-20 `safeTapStep`).
 
 ```ts
-import { createDevtoolsBroker } from '@sembridge/devtools'
-import type { EventTap } from '@sembridge/core'
+import { createDevtoolsBroker } from '@gluezero/devtools'
+import type { EventTap } from '@gluezero/core'
 
 const auditTap: EventTap = {
   onPipelineStep(step, snapshot) {
@@ -190,13 +190,13 @@ type HistogramSummary = {
 }
 ```
 
-### Naming convention `sembridge.<package>.<metric>{<labels>}` (D-163)
+### Naming convention `gluezero.<package>.<metric>{<labels>}` (D-163)
 
 | Type      | Suffix esempio | Naming convention                                          |
 | --------- | -------------- | ---------------------------------------------------------- |
-| Counter   | `_total`       | `sembridge.cache.hits_total{routeId="weather"}`            |
-| Gauge     | `_count`       | `sembridge.cache.entries_count{tenant="acme"}`             |
-| Histogram | `_ms`          | `sembridge.routing.dispatch_duration_ms{routeId="weather"}` |
+| Counter   | `_total`       | `gluezero.cache.hits_total{routeId="weather"}`            |
+| Gauge     | `_count`       | `gluezero.cache.entries_count{tenant="acme"}`             |
+| Histogram | `_ms`          | `gluezero.routing.dispatch_duration_ms{routeId="weather"}` |
 
 Labels Prometheus-style flatten alphabetical sort (idempotente cross-version):
 
@@ -215,7 +215,7 @@ const t2 = broker.getMetrics()
 // Helper per delta (consumer monitoring scrape interval pattern):
 const delta = (broker.getDebugSnapshot().currentMetrics === t2 ? null : t2) // type narrowing example
 const deltaCalc = (broker as { getMetricsDelta?: typeof t1 }).getMetricsDelta?.(t1)
-// → { counters: { 'sembridge.cache.hits_total': +42 }, gauges: t2.gauges, histograms: t2.histograms }
+// → { counters: { 'gluezero.cache.hits_total': +42 }, gauges: t2.gauges, histograms: t2.histograms }
 ```
 
 ### Reservoir Algorithm R Vitter 1985 (D-165)
@@ -229,7 +229,7 @@ Default cap 100 distinct combinations per base name. Overflow → drop new combo
 ```ts
 broker.subscribe('system.metrics.cardinalityoverflow', (event) => {
   console.warn('Cardinality overflow:', event.payload)
-  // → { baseName: 'sembridge.cache.hits_total', droppedLabels: '{userId="..."}' }
+  // → { baseName: 'gluezero.cache.hits_total', droppedLabels: '{userId="..."}' }
 })
 ```
 
@@ -237,12 +237,12 @@ broker.subscribe('system.metrics.cardinalityoverflow', (event) => {
 
 | Domanda                                                                                  | Risposta lockata Phase 6                                                                                                                                                                                                                                                                            |
 | ---------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Q1: Perché dot.case `sembridge.<package>.<metric>` invece di snake_case?**             | dot.case è coerente con Prometheus convention storica + permette grouping naturale per package quando si esporta a Prometheus/OTel via mapping 1:1 (snake_case è l'output finale Prometheus textfile, ma dot.case è l'input library-friendly). Mapping `dot.case → snake_case` lascia all'exporter. |
+| **Q1: Perché dot.case `gluezero.<package>.<metric>` invece di snake_case?**             | dot.case è coerente con Prometheus convention storica + permette grouping naturale per package quando si esporta a Prometheus/OTel via mapping 1:1 (snake_case è l'output finale Prometheus textfile, ma dot.case è l'input library-friendly). Mapping `dot.case → snake_case` lascia all'exporter. |
 | **Q2: Come si calcola un counter delta tra due `getMetrics()`?**                         | Usa `broker.getMetricsDelta(prevSnapshot)` — counters delta = current - prev, gauges = current snapshot, histograms = current. Pattern monitoring scrape interval (Prometheus `rate()` simulated client-side).                                                                                       |
 | **Q3: Reservoir vs t-digest — perché reservoir Algorithm R?**                            | Reservoir Algorithm R Vitter 1985 ~30 LOC inline zero deps, ~5% errore p50/p90/p99 vs t-digest ~1%. Trade-off: zero-dep priority + budget bundle stretto. V1.x se profiling richiede p999 reali (es. SLA 99.9p latenze sub-ms).                                                                       |
 | **Q4: Cosa succede se cardinality overflow?**                                            | Cap 100 distinct combinations per base name. Overflow → drop new combo (silently rejected) + emit `system.metrics.cardinalityoverflow` audit (consumer può sottoscrivere per alerting). La cardinalità non si "espande" oltre il cap — protezione memory leak da label esplosivo.                    |
-| **Q5: Come integrare con Prometheus / OpenTelemetry?**                                   | V1 fornisce schema `{ counters, gauges, histograms }` simil-OpenMetrics. Mapping 1:1 esportabile via custom adapter (`getMetrics()` → Prometheus textfile / OTel SDK). Adapter ufficiale `@sembridge/metrics-prometheus` + `@sembridge/metrics-otel` V1.x roadmap.                                   |
-| **Q6: Quali metriche standard sono disponibili out-of-the-box?**                         | Counters: `sembridge.cache.hits_total`, `sembridge.cache.misses_total`, `sembridge.cache.evictions_total`, `sembridge.routing.routes_dispatched_total`, `sembridge.gateway.fetches_total`, `sembridge.worker.tasks_total`. Gauges: `sembridge.cache.entries_count`, `sembridge.worker.pool_size`. Histograms: `sembridge.routing.dispatch_duration_ms`, `sembridge.gateway.fetch_duration_ms`. |
+| **Q5: Come integrare con Prometheus / OpenTelemetry?**                                   | V1 fornisce schema `{ counters, gauges, histograms }` simil-OpenMetrics. Mapping 1:1 esportabile via custom adapter (`getMetrics()` → Prometheus textfile / OTel SDK). Adapter ufficiale `@gluezero/metrics-prometheus` + `@gluezero/metrics-otel` V1.x roadmap.                                   |
+| **Q6: Quali metriche standard sono disponibili out-of-the-box?**                         | Counters: `gluezero.cache.hits_total`, `gluezero.cache.misses_total`, `gluezero.cache.evictions_total`, `gluezero.routing.routes_dispatched_total`, `gluezero.gateway.fetches_total`, `gluezero.worker.tasks_total`. Gauges: `gluezero.cache.entries_count`, `gluezero.worker.pool_size`. Histograms: `gluezero.routing.dispatch_duration_ms`, `gluezero.gateway.fetch_duration_ms`. |
 | **Q7: Come si registra un custom metric?**                                               | V1 NON espone API `registerCustomMetric()`. Pattern current: subscribe a un tap user-side via `config.taps[]` + chiamare `metricsCollector.increment / setGauge / observe` direttamente sul collector esposto via factory custom. API ergonomica `broker.registerCustomMetric()` V1.x roadmap.        |
 
 ## 7. PauseController — pauseTopic / resumeTopic / flushQueue
@@ -276,7 +276,7 @@ broker.flushQueue('chat.message') // → drop silenzioso + audit, queue empty ma
 Scenario integrato F1+F2+F3+F4+F5+F6 con devtools full active — utile per debug interactive in development tools UI custom.
 
 ```ts
-import { createDevtoolsBroker } from '@sembridge/devtools'
+import { createDevtoolsBroker } from '@gluezero/devtools'
 
 const broker = createDevtoolsBroker({
   devtools: {
@@ -316,13 +316,13 @@ console.log('Histograms p99:', snap.currentMetrics.histograms)
 
 ```ts
 // BAD — userId arbitrario, ~milioni di distinct combo:
-metrics.increment('sembridge.cache.hits_total', { userId: ev.payload.userId })
+metrics.increment('gluezero.cache.hits_total', { userId: ev.payload.userId })
 
 // GOOD — tenantId bounded (~decine):
-metrics.increment('sembridge.cache.hits_total', { tenantId: 'acme' })
+metrics.increment('gluezero.cache.hits_total', { tenantId: 'acme' })
 
 // GOOD — routeId bounded (~unità per app):
-metrics.increment('sembridge.cache.hits_total', { routeId: 'weather-route' })
+metrics.increment('gluezero.cache.hits_total', { routeId: 'weather-route' })
 ```
 
 **Mitigazione D-166 cap 100**: il MetricsCollector intercetta cardinality overflow e droppa nuove combinations (audit `system.metrics.cardinalityoverflow`). Se vedi audit frequenti → c'è un consumer che usa label di alta cardinalità — fix consumer-side.
@@ -341,7 +341,7 @@ metrics.increment('sembridge.cache.hits_total', { routeId: 'weather-route' })
 
 | Domanda                                                                          | Risposta                                                                                                                                                                                                                                                                                            |
 | -------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Quando usare `enableDebug()` in production?**                                  | Mai per default. Toggle su trigger UI debug (es. URL query `?sembridge_debug=1` + `broker.enableDebug()`). Costo lazy-mode quando off ≈ 0. Costo lazy-mode quando on ≈ ~5-10% overhead publish path (acceptable per session di debug interattivo).                                                  |
+| **Quando usare `enableDebug()` in production?**                                  | Mai per default. Toggle su trigger UI debug (es. URL query `?gluezero_debug=1` + `broker.enableDebug()`). Costo lazy-mode quando off ≈ 0. Costo lazy-mode quando on ≈ ~5-10% overhead publish path (acceptable per session di debug interattivo).                                                  |
 | **getDebugSnapshot polling intervallato — cost?**                                | ~30-50ms per call su 500 entries × ~5KB payload medio. Per dashboard real-time, preferire un tap custom append-only invece di snapshot ripetuti. Pattern: `tap.onPipelineStep` → push a observable/store esterno con backpressure RxJS-like.                                                          |
 | **Differenza EventInspector vs RouteInspector?**                                 | EventInspector cattura ogni `PipelineSnapshot` (tutti i 14 step §28). RouteInspector cattura solo step 9+10 e aggrega per `(eventId, routeId)` con outcome/retryCount/cacheHit/policiesApplied — più focused per route-level debug.                                                                  |
 | **Come integrare con DevTools browser custom?**                                  | Pattern: tap custom user-side che fa `postMessage` a content script → DevTools panel via Chrome Extensions API. Esempio in `examples/devtools-extension/` (V1.x roadmap).                                                                                                                            |
@@ -356,10 +356,10 @@ metrics.increment('sembridge.cache.hits_total', { routeId: 'weather-route' })
 - `prd.md` (root) §16 (debug + introspection), §25 (developer tooling), §28 (pipeline §28 14 step), §39 #10 (open issue TOOL-05 — **CHIUSO in F6**)
 - `.planning/phases/06-cache-tooling-avanzato/06-CONTEXT.md` (D-159..D-170 — 12 decisioni lockate F6 devtools layer)
 - `.planning/phases/06-cache-tooling-avanzato/06-RESEARCH.md` §6 (Inspector ring buffer impl), §7 (MetricsCollector deep dive), §10 (PauseController), §15 (Pitfall list)
-- [`@sembridge/core`](../core/README.md) (EventTap + PipelineSnapshot + safeTapStep, F1)
-- [`@sembridge/mapper`](../mapper/README.md) (canonical mapping, F2)
-- [`@sembridge/routing`](../routing/README.md) (RouterBroker + step 9+10 pipeline, F3)
-- [`@sembridge/cache`](../cache/README.md) (cache layer F6 — emette `event.cache.{lookup,hit,miss,evicted}` consumati da Inspector)
+- [`@gluezero/core`](../core/README.md) (EventTap + PipelineSnapshot + safeTapStep, F1)
+- [`@gluezero/mapper`](../mapper/README.md) (canonical mapping, F2)
+- [`@gluezero/routing`](../routing/README.md) (RouterBroker + step 9+10 pipeline, F3)
+- [`@gluezero/cache`](../cache/README.md) (cache layer F6 — emette `event.cache.{lookup,hit,miss,evicted}` consumati da Inspector)
 
 ## Licenza
 

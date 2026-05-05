@@ -1,14 +1,14 @@
-# @sembridge/sembridge
+# @gluezero/gluezero
 
-> Pacchetto aggregato pubblico SemBridge — milestone v1.0.0 closure (chain composition F1+F2+F3+F4+F5+F6 + features opt-out + scenario meteo end-to-end cross-feature).
+> Pacchetto aggregato pubblico GlueZero — milestone v1.0.0 closure (chain composition F1+F2+F3+F4+F5+F6 + features opt-out + scenario meteo end-to-end cross-feature).
 
-ESM-only TypeScript library. Browser evergreen target (ES2022). Factory aggregato `createSemBridge(config)` (RESEARCH §11.3 Opzione B convenience) che orchestra l'intera chain SemBridge in un singolo entry-point. Ogni call ritorna un broker con il superset di API attive in funzione di `config.features` (default: tutte le feature enabled).
+ESM-only TypeScript library. Browser evergreen target (ES2022). Factory aggregato `createGlueZero(config)` (RESEARCH §11.3 Opzione B convenience) che orchestra l'intera chain GlueZero in un singolo entry-point. Ogni call ritorna un broker con il superset di API attive in funzione di `config.features` (default: tutte le feature enabled).
 
-Sette dipendenze runtime (i sub-pacchetti SemBridge): [`@sembridge/core`](../core/README.md) (F1), [`@sembridge/mapper`](../mapper/README.md) (F2), [`@sembridge/routing`](../routing/README.md) (F3), [`@sembridge/gateway`](../gateway/README.md) (F3 HTTP + F4 SSE/WS sub-modulo), [`@sembridge/worker`](../worker/README.md) (F5), [`@sembridge/cache`](../cache/README.md) (F6), [`@sembridge/devtools`](../devtools/README.md) (F6) + [`valibot`](https://valibot.dev) (config validation).
+Sette dipendenze runtime (i sub-pacchetti GlueZero): [`@gluezero/core`](../core/README.md) (F1), [`@gluezero/mapper`](../mapper/README.md) (F2), [`@gluezero/routing`](../routing/README.md) (F3), [`@gluezero/gateway`](../gateway/README.md) (F3 HTTP + F4 SSE/WS sub-modulo), [`@gluezero/worker`](../worker/README.md) (F5), [`@gluezero/cache`](../cache/README.md) (F6), [`@gluezero/devtools`](../devtools/README.md) (F6) + [`valibot`](https://valibot.dev) (config validation).
 
 ## Indice
 
-1. [Quick start (createSemBridge chain completa)](#1-quick-start-createsembridge-chain-completa)
+1. [Quick start (createGlueZero chain completa)](#1-quick-start-creategluezero-chain-completa)
 2. [Power-user chain explicit (Opzione A)](#2-power-user-chain-explicit-opzione-a)
 3. [Features flag — opt-out cache/devtools/worker/realtime](#3-features-flag--opt-out-cachedevtoolsworkerrealtime)
 4. [Chain composition F1+F2+F3+F4+F5+F6](#4-chain-composition-f1f2f3f4f5f6)
@@ -22,14 +22,14 @@ Sette dipendenze runtime (i sub-pacchetti SemBridge): [`@sembridge/core`](../cor
 
 ---
 
-## 1. Quick start (createSemBridge chain completa)
+## 1. Quick start (createGlueZero chain completa)
 
-`createSemBridge(config)` è il **single entry-point** raccomandato per la stragrande maggioranza dei consumer. Restituisce un broker pronto all'uso con TUTTE le feature attive di default (F1 broker pub/sub + F2 mapper canonical + F3 routing/HTTP + F4 realtime SSE/WS + F5 worker runtime + F6 cache + F6 devtools).
+`createGlueZero(config)` è il **single entry-point** raccomandato per la stragrande maggioranza dei consumer. Restituisce un broker pronto all'uso con TUTTE le feature attive di default (F1 broker pub/sub + F2 mapper canonical + F3 routing/HTTP + F4 realtime SSE/WS + F5 worker runtime + F6 cache + F6 devtools).
 
 ```ts
-import { createSemBridge } from '@sembridge/sembridge'
+import { createGlueZero } from '@gluezero/gluezero'
 
-const broker = createSemBridge({
+const broker = createGlueZero({
   cache: { maxEntries: 500 },
   devtools: { enableByDefault: true },
   routes: [
@@ -64,7 +64,7 @@ broker.subscribe('weather.loaded', (event) => {
 await broker.publish('weather.requested', { city: 'Roma' })
 ```
 
-`createSemBridge` è una **pure function** (D-30 anti-singleton) — ogni call ritorna istanza indipendente. La validazione `SemBridgeConfigSchema` Valibot avviene al boot: errori schema → `Error` nativo con prefix `Invalid SemBridgeConfig:`.
+`createGlueZero` è una **pure function** (D-30 anti-singleton) — ogni call ritorna istanza indipendente. La validazione `GlueZeroConfigSchema` Valibot avviene al boot: errori schema → `Error` nativo con prefix `Invalid GlueZeroConfig:`.
 
 ## 2. Power-user chain explicit (Opzione A)
 
@@ -72,19 +72,19 @@ Per consumer che richiedono controllo esplicito sulla chain (multi-tenant + lazy
 
 ```ts
 // Opzione A — chain manuale esplicita (controllo totale)
-import { createBroker } from '@sembridge/core'
-import { createMapperBroker } from '@sembridge/mapper'
-import { createRouterBroker } from '@sembridge/routing'
-import { createRealtimeBroker } from '@sembridge/gateway/sse-ws'
-import { createWorkerBroker } from '@sembridge/worker'
-import { createCacheBroker } from '@sembridge/cache'
-import { createDevtoolsBroker } from '@sembridge/devtools'
+import { createBroker } from '@gluezero/core'
+import { createMapperBroker } from '@gluezero/mapper'
+import { createRouterBroker } from '@gluezero/routing'
+import { createRealtimeBroker } from '@gluezero/gateway/sse-ws'
+import { createWorkerBroker } from '@gluezero/worker'
+import { createCacheBroker } from '@gluezero/cache'
+import { createDevtoolsBroker } from '@gluezero/devtools'
 
 // Step-wise composition — il consumer controlla ogni layer:
 const f1 = createBroker({ debug: { enabled: true } })
 // ... wiring custom ...
 
-// Equivalente moralmente a createSemBridge — ma con possibilità di skip layer:
+// Equivalente moralmente a createGlueZero — ma con possibilità di skip layer:
 const router = createRouterBroker({ ...config })
 // (createRouterBroker include implicitamente F1+F2 via composition interna)
 ```
@@ -93,13 +93,13 @@ V1 mantiene l'astrazione che ogni `createXxxBroker` di F4/F5/F6 estende `RouterB
 
 ## 3. Features flag — opt-out cache/devtools/worker/realtime
 
-Per SPA che non usano realtime o worker, `createSemBridge` espone `config.features` per selective opt-out:
+Per SPA che non usano realtime o worker, `createGlueZero` espone `config.features` per selective opt-out:
 
 ```ts
-import { createSemBridge } from '@sembridge/sembridge'
+import { createGlueZero } from '@gluezero/gluezero'
 
 // SPA non realtime, no worker → minimal F1+F2+F3+F6 cache+devtools
-const broker = createSemBridge({
+const broker = createGlueZero({
   features: {
     realtime: false,
     worker: false,
@@ -111,7 +111,7 @@ const broker = createSemBridge({
 })
 
 // SPA dashboard read-only — solo broker pub/sub + routing + cache
-const minimal = createSemBridge({
+const minimal = createGlueZero({
   features: {
     realtime: false,
     worker: false,
@@ -121,7 +121,7 @@ const minimal = createSemBridge({
 })
 
 // Bare minimum F1+F2+F3 (uguale a createRouterBroker direct)
-const bare = createSemBridge({
+const bare = createGlueZero({
   features: {
     realtime: false,
     worker: false,
@@ -135,10 +135,10 @@ Il bundle è già ESM tree-shakable (vedi sez. 7) — i sub-pacchetti non usati 
 
 ## 4. Chain composition F1+F2+F3+F4+F5+F6
 
-**Order chain (OUTERMOST → INNERMOST)**: `createSemBridge` ritorna il wrapper più esterno in funzione di `features`. La gerarchia di precedenza è:
+**Order chain (OUTERMOST → INNERMOST)**: `createGlueZero` ritorna il wrapper più esterno in funzione di `features`. La gerarchia di precedenza è:
 
 ```
-createSemBridge
+createGlueZero
   → createDevtoolsBroker (F6)     [if features.devtools]   ← OUTERMOST
   → createCacheBroker (F6)        [if features.cache]
   → createWorkerBroker (F5)       [if features.worker]
@@ -153,7 +153,7 @@ createSemBridge
 **BLOCKER-2 fix critico**: la chain include OBBLIGATORIAMENTE `createWorkerBroker` + `createRealtimeBroker` quando `features` li abilita (default: tutte enabled). Type union completa:
 
 ```ts
-export type SemBridge =
+export type GlueZero =
   | ReturnType<typeof createBroker>
   | ReturnType<typeof createMapperBroker>
   | ReturnType<typeof createRouterBroker>
@@ -180,7 +180,7 @@ Il consumer riceve l'union — narrowing avviene tramite type guard runtime (es.
 7. **F6 devtools**: 1-step (Inspector + Metrics + PauseController NON hanno per-owner state in V1)
 
 ```ts
-const broker = createSemBridge({})
+const broker = createGlueZero({})
 
 await broker.registerPlugin({
   id: 'weather-widget',
@@ -207,9 +207,9 @@ await broker.unregisterPlugin('weather-widget')
 PRD §29 esteso a tutte le feature: widget meteo + plugin form input + plugin worker forecasting + cache layer + Inspector full-on. Cross-feature integrato.
 
 ```ts
-import { createSemBridge } from '@sembridge/sembridge'
+import { createGlueZero } from '@gluezero/gluezero'
 
-const broker = createSemBridge({
+const broker = createGlueZero({
   cache: {
     maxEntries: 1000,
     scopeProvider: (event) => (event.payload as { tenantId?: string })?.tenantId ?? null,
@@ -340,19 +340,19 @@ await broker.unregisterPlugin('forecast-plugin')
 
 ## 7. Tree-shake selective import
 
-Per consumer micro-bundle (es. landing page con < 50KB JS budget), preferire import selettivo dei sub-pacchetti invece di `createSemBridge`:
+Per consumer micro-bundle (es. landing page con < 50KB JS budget), preferire import selettivo dei sub-pacchetti invece di `createGlueZero`:
 
 ```ts
 // Tree-shake aggressivo — solo F1 broker pub/sub (~6 KB gz):
-import { createBroker } from '@sembridge/core'
+import { createBroker } from '@gluezero/core'
 const broker = createBroker({})
 
 // Tree-shake F1+F2+F3 — broker + routing HTTP (~25 KB gz):
-import { createRouterBroker } from '@sembridge/routing'
+import { createRouterBroker } from '@gluezero/routing'
 const broker = createRouterBroker({ /* config F1+F2+F3 */ })
 
 // Tree-shake F1+F2+F3+F6 cache (~30 KB gz):
-import { createCacheBroker } from '@sembridge/cache'
+import { createCacheBroker } from '@gluezero/cache'
 const broker = createCacheBroker({ /* config */ })
 ```
 
@@ -360,28 +360,28 @@ const broker = createCacheBroker({ /* config */ })
 
 | Entry-point                  | Bundle size gz (with deps) |
 | ---------------------------- | -------------------------- |
-| `@sembridge/core`            | ~6 KB                      |
-| `@sembridge/routing` (F1+2+3) | ~19 KB                     |
-| `@sembridge/cache` (+F6)     | ~22 KB                     |
-| `@sembridge/devtools` (+F6)  | ~22 KB                     |
-| `@sembridge/sembridge` full  | ~35 KB                     |
+| `@gluezero/core`            | ~6 KB                      |
+| `@gluezero/routing` (F1+2+3) | ~19 KB                     |
+| `@gluezero/cache` (+F6)     | ~22 KB                     |
+| `@gluezero/devtools` (+F6)  | ~22 KB                     |
+| `@gluezero/gluezero` full  | ~35 KB                     |
 
-**Convention sub-path import**: `@sembridge/gateway/http` e `@sembridge/gateway/sse-ws` sono sub-modulo separati (F3 vs F4) con `package.json` exports map — il bundler include solo il sub-modulo richiesto.
+**Convention sub-path import**: `@gluezero/gateway/http` e `@gluezero/gateway/sse-ws` sono sub-modulo separati (F3 vs F4) con `package.json` exports map — il bundler include solo il sub-modulo richiesto.
 
 ## 8. Versioning v1.0 milestone closure
 
-Versione `1.0.0` = milestone v1.0 closure (PRD §32 — 6 fasi complete). Tutti gli 8 pacchetti `@sembridge/*` sono allineati a `1.0.0` (Changesets fixed mode):
+Versione `1.0.0` = milestone v1.0 closure (PRD §32 — 6 fasi complete). Tutti gli 8 pacchetti `@gluezero/*` sono allineati a `1.0.0` (Changesets fixed mode):
 
 | Pacchetto              | Versione | Phase | Open issue PRD §39 chiuso        |
 | ---------------------- | -------- | ----- | -------------------------------- |
-| `@sembridge/core`      | 1.0.0    | F1    | LIFE-02 cascade unsubscribe      |
-| `@sembridge/mapper`    | 1.0.0    | F2    | MAP-17, VAL-08, VAL-09           |
-| `@sembridge/routing`   | 1.0.0    | F3    | ROUTE-09, ROUTE-15, ROUTE-16     |
-| `@sembridge/gateway`   | 1.0.0    | F3+F4 | RT-07 (reconnection rules)       |
-| `@sembridge/worker`    | 1.0.0    | F5    | WK-07 (serializzazione worker)   |
-| `@sembridge/cache`     | 1.0.0    | F6    | —                                |
-| `@sembridge/devtools`  | 1.0.0    | F6    | **TOOL-05 (metrics format)**     |
-| `@sembridge/sembridge` | 1.0.0    | F1-F6 | (aggregato)                      |
+| `@gluezero/core`      | 1.0.0    | F1    | LIFE-02 cascade unsubscribe      |
+| `@gluezero/mapper`    | 1.0.0    | F2    | MAP-17, VAL-08, VAL-09           |
+| `@gluezero/routing`   | 1.0.0    | F3    | ROUTE-09, ROUTE-15, ROUTE-16     |
+| `@gluezero/gateway`   | 1.0.0    | F3+F4 | RT-07 (reconnection rules)       |
+| `@gluezero/worker`    | 1.0.0    | F5    | WK-07 (serializzazione worker)   |
+| `@gluezero/cache`     | 1.0.0    | F6    | —                                |
+| `@gluezero/devtools`  | 1.0.0    | F6    | **TOOL-05 (metrics format)**     |
+| `@gluezero/gluezero` | 1.0.0    | F1-F6 | (aggregato)                      |
 
 Tutti gli 11 punti della checklist PRD §39 sono chiusi in milestone v1.0. Vedi `CHANGELOG.md` per dettagli release notes.
 
@@ -389,9 +389,9 @@ Tutti gli 11 punti della checklist PRD §39 sono chiusi in milestone v1.0. Vedi 
 
 Nessuna breaking change attesa V1 → V1.x. La V1.x roadmap include estensioni opt-in che mantengono semver minor compatibility:
 
-- `@sembridge/cache-idb` (cache adapter IndexedDB persistente)
-- `@sembridge/metrics-prometheus` (exporter ufficiale)
-- `@sembridge/metrics-otel` (exporter OpenTelemetry)
+- `@gluezero/cache-idb` (cache adapter IndexedDB persistente)
+- `@gluezero/metrics-prometheus` (exporter ufficiale)
+- `@gluezero/metrics-otel` (exporter OpenTelemetry)
 - `superjson` adapter pluggable per worker serialization (D-142)
 - Custom histogram bucketing per route
 - Anti-flap pause/resume (debounce N ms)
@@ -402,8 +402,8 @@ Nessuna breaking change attesa V1 → V1.x. La V1.x roadmap include estensioni o
 
 **Out-of-scope V1** (deferred a V1.x o V2):
 
-- **Cache idb persistence** → V1.x (`@sembridge/cache-idb`)
-- **OpenTelemetry exporter nativo** → V1.x (`@sembridge/metrics-otel`)
+- **Cache idb persistence** → V1.x (`@gluezero/cache-idb`)
+- **OpenTelemetry exporter nativo** → V1.x (`@gluezero/metrics-otel`)
 - **Inspector UI standalone** (DevTools panel browser extension) → V2
 - **Distributed tracing W3C** (traceparent/tracestate header) → V1.x
 - **Pool autoscaling worker** (CPU-pressure-based) → V2
@@ -419,14 +419,14 @@ Nessuna breaking change attesa V1 → V1.x. La V1.x roadmap include estensioni o
 
 | Domanda                                                                              | Risposta                                                                                                                                                                                                                                                                                          |
 | ------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Q1: Quando usare `createSemBridge` vs chain manuale?**                             | `createSemBridge` per il 95% dei casi (single-tenant + tutte le feature default). Chain manuale (Opzione A) per multi-tenant esplicito (es. SaaS multi-app), DI test (mock per layer), micro-bundle aggressivo (skip layer non usati con dead-code elimination forzato).                          |
-| **Q2: Come fare opt-out per SPA non realtime?**                                      | `createSemBridge({ features: { realtime: false, worker: false } })`. Il broker ritornato espone solo F1+F2+F3+F6 API. Bundle size gz ~30KB invece di ~35KB.                                                                                                                                       |
-| **Q3: createSemBridge vs createBroker base — differenze?**                           | `createBroker` (F1) espone solo pub/sub + plugin lifecycle (~6KB gz). `createSemBridge` aggrega tutta la chain F1+F2+F3+F4+F5+F6 — broker plus routing + canonical mapper + HTTP gateway + realtime SSE/WS + worker pool + cache layer + devtools. La chain completa ~35KB gz.                     |
-| **Q4: Come integrare con framework (React/Vue/Svelte)?**                             | SemBridge è framework-agnostic. Pattern raccomandato: `createSemBridge` al boot (es. `main.ts`), espose il broker via Context API React (`BrokerContext.Provider`) / Vue `provide/inject` / Svelte store. Subscribe su `useEffect` (React) / `onMount` (Vue/Svelte) con cleanup `subscription.unsubscribe()`. |
-| **Q5: Tree-shake — quanto pesa selective import vs full bundle?**                    | `@sembridge/sembridge` full ~35KB gz (con tutte le dep). Selective import F1 only ~6KB. Selective F1+F2+F3 ~19KB. Selective F1+F2+F3+F6 cache ~22KB. Diff netto = ~13KB risparmio se SPA non usa worker/realtime.                                                                                  |
-| **Q6: Multi-tenant isolation D-30 — come si garantisce?**                            | `createSemBridge` è pure function (D-30 anti-singleton). Ogni call ritorna istanza indipendente con state isolato (RouterBroker, MemoryCacheAdapter, MetricsCollector, WorkerPool). Multi-tenant pattern: 1 istanza per tenant + scopeProvider che ritorna tenantId per cache/metric labels.        |
+| **Q1: Quando usare `createGlueZero` vs chain manuale?**                             | `createGlueZero` per il 95% dei casi (single-tenant + tutte le feature default). Chain manuale (Opzione A) per multi-tenant esplicito (es. SaaS multi-app), DI test (mock per layer), micro-bundle aggressivo (skip layer non usati con dead-code elimination forzato).                          |
+| **Q2: Come fare opt-out per SPA non realtime?**                                      | `createGlueZero({ features: { realtime: false, worker: false } })`. Il broker ritornato espone solo F1+F2+F3+F6 API. Bundle size gz ~30KB invece di ~35KB.                                                                                                                                       |
+| **Q3: createGlueZero vs createBroker base — differenze?**                           | `createBroker` (F1) espone solo pub/sub + plugin lifecycle (~6KB gz). `createGlueZero` aggrega tutta la chain F1+F2+F3+F4+F5+F6 — broker plus routing + canonical mapper + HTTP gateway + realtime SSE/WS + worker pool + cache layer + devtools. La chain completa ~35KB gz.                     |
+| **Q4: Come integrare con framework (React/Vue/Svelte)?**                             | GlueZero è framework-agnostic. Pattern raccomandato: `createGlueZero` al boot (es. `main.ts`), espose il broker via Context API React (`BrokerContext.Provider`) / Vue `provide/inject` / Svelte store. Subscribe su `useEffect` (React) / `onMount` (Vue/Svelte) con cleanup `subscription.unsubscribe()`. |
+| **Q5: Tree-shake — quanto pesa selective import vs full bundle?**                    | `@gluezero/gluezero` full ~35KB gz (con tutte le dep). Selective import F1 only ~6KB. Selective F1+F2+F3 ~19KB. Selective F1+F2+F3+F6 cache ~22KB. Diff netto = ~13KB risparmio se SPA non usa worker/realtime.                                                                                  |
+| **Q6: Multi-tenant isolation D-30 — come si garantisce?**                            | `createGlueZero` è pure function (D-30 anti-singleton). Ogni call ritorna istanza indipendente con state isolato (RouterBroker, MemoryCacheAdapter, MetricsCollector, WorkerPool). Multi-tenant pattern: 1 istanza per tenant + scopeProvider che ritorna tenantId per cache/metric labels.        |
 | **Q7: Plugin scope hybrid — `registerPlugin` con `scopeProvider`?**                  | Lo scope provider è config-level (non per-plugin in V1). Il plugin che ha bisogno di scope custom usa `route.scope` route-level override (D-156 hybrid layer 1 — più alto della config-level fallback). V1.x roadmap: `PluginDescriptor.scopeProvider` per scope dichiarato per-plugin.            |
-| **Q8: Migration da V0.x → V1.0 — breaking changes?**                                 | V1.0 è la prima release pubblica major. V0.x era pre-release alpha (zero consumer pubblici). Nessuna migration documentata necessaria. Per consumer interni che hanno usato V0.x: l'API `createSemBridge` è la stessa; le sezioni `cache` / `devtools` / `realtime` sono nuove (additive, non breaking). |
+| **Q8: Migration da V0.x → V1.0 — breaking changes?**                                 | V1.0 è la prima release pubblica major. V0.x era pre-release alpha (zero consumer pubblici). Nessuna migration documentata necessaria. Per consumer interni che hanno usato V0.x: l'API `createGlueZero` è la stessa; le sezioni `cache` / `devtools` / `realtime` sono nuove (additive, non breaking). |
 
 ---
 
@@ -437,13 +437,13 @@ Nessuna breaking change attesa V1 → V1.x. La V1.x roadmap include estensioni o
 - `.planning/REQUIREMENTS.md` (91 REQ-IDs Complete v1.0)
 - `.planning/phases/06-cache-tooling-avanzato/06-RESEARCH.md` §11 composition wrapper topology + §11.3 Opzione B convenience factory aggregato
 - `EXAMPLES.md` (in questo pacchetto) — esempi consolidati end-to-end cross-package
-- [`@sembridge/core`](../core/README.md) (F1)
-- [`@sembridge/mapper`](../mapper/README.md) (F2)
-- [`@sembridge/routing`](../routing/README.md) (F3)
-- [`@sembridge/gateway`](../gateway/README.md) (F3 HTTP + F4 SSE/WS)
-- [`@sembridge/worker`](../worker/README.md) (F5)
-- [`@sembridge/cache`](../cache/README.md) (F6)
-- [`@sembridge/devtools`](../devtools/README.md) (F6 — TOOL-05 closure PRD §39 #10)
+- [`@gluezero/core`](../core/README.md) (F1)
+- [`@gluezero/mapper`](../mapper/README.md) (F2)
+- [`@gluezero/routing`](../routing/README.md) (F3)
+- [`@gluezero/gateway`](../gateway/README.md) (F3 HTTP + F4 SSE/WS)
+- [`@gluezero/worker`](../worker/README.md) (F5)
+- [`@gluezero/cache`](../cache/README.md) (F6)
+- [`@gluezero/devtools`](../devtools/README.md) (F6 — TOOL-05 closure PRD §39 #10)
 
 ## Licenza
 

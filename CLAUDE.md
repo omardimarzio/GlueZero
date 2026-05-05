@@ -1,8 +1,8 @@
-# SemBridge — Project Guide for Claude Code
+# GlueZero — Project Guide for Claude Code
 
 Questo file fornisce contesto operativo a future istanze di Claude Code che lavorano su questo progetto.
 
-## Cos'è SemBridge
+## Cos'è GlueZero
 
 Libreria JavaScript browser-side (TypeScript-first, ESM) che combina sei capability in un singolo runtime:
 1. Broker pub/sub interno alla pagina
@@ -78,6 +78,41 @@ Quando si lavora con GSD, **preferire parallelizzazione**: spawnare più agenti 
 
 **Protocollo update:** modifica via `Edit` (preserva struttura), commit insieme a SUMMARY.md/STATE.md per consistency con `gsd-sdk query commit`.
 
+### Knowledge graph (Graphify)
+
+Il progetto usa **graphify** per mantenere un knowledge graph del codebase + docs in `graphify-out/`. CLI `graphify` installato globalmente via `uv tool` (`/Users/omarmarzio/.local/bin/graphify`); skill `/graphify` registrata; hook globale `PreToolUse` in `~/.claude/settings.json` suggerisce il grafo prima di grep/find/rg/fd.
+
+**Bootstrap a inizio sessione (e dopo ogni `/clear`):**
+- Se `graphify-out/graph.json` NON esiste → lancia `/graphify .` PRIMA di affrontare qualunque richiesta su architettura/codebase.
+- Se esiste → salta direttamente al watcher.
+
+**Watch mode persistente per-progetto (NON globale):**
+A inizio sessione, avvia il watcher se non è già attivo per QUESTO progetto. Check via PID file locale (`graphify-out/.watch.pid`), MAI via `pgrep` globale.
+
+```bash
+mkdir -p graphify-out
+if [ -f graphify-out/.watch.pid ] && kill -0 "$(cat graphify-out/.watch.pid)" 2>/dev/null; then
+  echo "graphify watch already running (PID $(cat graphify-out/.watch.pid))"
+else
+  nohup graphify watch . --debounce 3 > graphify-out/.watch.log 2>&1 &
+  echo $! > graphify-out/.watch.pid
+fi
+```
+
+Il watcher è persistente per tutta la sessione: NON rilanciarlo, NON killarlo a fine task. Kill manuale: `kill "$(cat graphify-out/.watch.pid)" && rm graphify-out/.watch.pid`.
+
+**Uso del grafo PRIMA di grep:**
+- Domande "come X si relaziona a Y", "qual è l'architettura", "dove vive Z" → `graphify query "<domanda>"` / `graphify path "<A>" "<B>"` / `graphify explain "<concetto>"`.
+- Overview → leggi `graphify-out/GRAPH_REPORT.md` (god nodes, community structure, surprising connections).
+
+**Aggiornamento file non-code (markdown, PDF, immagini, video):**
+Il watcher copre solo codice (AST, zero LLM). Per file non-code lancia `graphify update .` manualmente (estrazione semantica, costa token). Se il watcher rileva non-code crea il flag `graphify-out/needs_update`: controllalo prima di chiudere fasi importanti.
+
+**Stato watcher in TRACKER.md:**
+Includi PID watcher (`cat graphify-out/.watch.pid`) + timestamp ultimo `graphify update .` non-code.
+
+**Niente check-in di `graphify-out/`:** artefatto rigenerabile, aggiungilo a `.gitignore` quando esisterà.
+
 ## Vincoli architetturali (dal PRD §33.2 — non negoziabili)
 
 - Esistenza del canonical model
@@ -113,7 +148,7 @@ Riferimento: `.planning/research/ARCHITECTURE.md` §3.2 e `.planning/research/SU
 | Lint/Format | `Biome` 1.9+ | One-tool, Rust-based |
 | Versioning | `Changesets` 2.x | |
 | Docs | `TypeDoc` + `typedoc-plugin-markdown` | |
-| Repo | **Monorepo `pnpm` workspaces** con 7 sub-package | `@sembridge/{core, mapper, gateway, routing, worker, cache, devtools}` + `@sembridge/sembridge` aggregato pubblico |
+| Repo | **Monorepo `pnpm` workspaces** con 7 sub-package | `@gluezero/{core, mapper, gateway, routing, worker, cache, devtools}` + `@gluezero/gluezero` aggregato pubblico |
 
 **Cosa NON usare:** `ky`/`wretch`/`ofetch` (insufficienti per le policy richieste), `reconnecting-websocket` (vincolo PRD §31.3), polyfill SSE, RxJS come base, `eventemitter3` come base.
 
@@ -121,12 +156,12 @@ Riferimento: `.planning/research/ARCHITECTURE.md` §3.2 e `.planning/research/SU
 
 | Phase | Goal | Pacchetto principale | Research extra |
 |-------|------|----------------------|----------------|
-| 1 — Core essenziale | Broker pub/sub + plugin registry + EventTap pre-instrumentato | `@sembridge/core` | no |
-| 2 — Canonical Model & Mapper | Vocabolario canonico + mapper bidirezionale + Mapping Inspector | `@sembridge/mapper` | no |
-| 3 — Routing & Server Gateway HTTP | Routing engine dichiarativo + HTTP gateway centralizzato | `@sembridge/routing` + `@sembridge/gateway` | yes |
-| 4 — Realtime inbound | Adapter SSE+WS con reconnection policy | `@sembridge/gateway` (sse/ws adapter) | yes |
-| 5 — Worker Runtime | Worker registry + route worker + task tracking | `@sembridge/worker` | yes |
-| 6 — Cache & Tooling avanzato | In-memory cache + Inspector + Metrics + debug API | `@sembridge/cache` + `@sembridge/devtools` | no |
+| 1 — Core essenziale | Broker pub/sub + plugin registry + EventTap pre-instrumentato | `@gluezero/core` | no |
+| 2 — Canonical Model & Mapper | Vocabolario canonico + mapper bidirezionale + Mapping Inspector | `@gluezero/mapper` | no |
+| 3 — Routing & Server Gateway HTTP | Routing engine dichiarativo + HTTP gateway centralizzato | `@gluezero/routing` + `@gluezero/gateway` | yes |
+| 4 — Realtime inbound | Adapter SSE+WS con reconnection policy | `@gluezero/gateway` (sse/ws adapter) | yes |
+| 5 — Worker Runtime | Worker registry + route worker + task tracking | `@gluezero/worker` | yes |
+| 6 — Cache & Tooling avanzato | In-memory cache + Inspector + Metrics + debug API | `@gluezero/cache` + `@gluezero/devtools` | no |
 
 Dipendenze: F1 → F2 → F3 → (F4 ∥ F5) → F6 (F4 e F5 parallelizzabili).
 

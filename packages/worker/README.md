@@ -1,10 +1,10 @@
-# @sembridge/worker
+# @gluezero/worker
 
-> Worker Runtime per SemBridge — Phase 5 (Comlink-based RPC + bounded pool + state machine atomico Pitfall 2C closure + WK-07 serializzazione documentata).
+> Worker Runtime per GlueZero — Phase 5 (Comlink-based RPC + bounded pool + state machine atomico Pitfall 2C closure + WK-07 serializzazione documentata).
 
-ESM-only TypeScript library. Browser evergreen target (ES2022). Composition wrapper di [`@sembridge/routing`](../routing/README.md) `RouterBroker` (D-121, D-83 strict carryover): un singolo entry point `createWorkerBroker(config)` orchestra route HTTP, route worker, mapping canonico, plugin lifecycle, pipeline §28 estesa con step 9 dispatch worker (D-152).
+ESM-only TypeScript library. Browser evergreen target (ES2022). Composition wrapper di [`@gluezero/routing`](../routing/README.md) `RouterBroker` (D-121, D-83 strict carryover): un singolo entry point `createWorkerBroker(config)` orchestra route HTTP, route worker, mapping canonico, plugin lifecycle, pipeline §28 estesa con step 9 dispatch worker (D-152).
 
-Cinque dipendenze runtime: [`@sembridge/core`](../core/README.md) (BrokerError + BrokerEvent + tipi base, F1), [`@sembridge/mapper`](../mapper/README.md) (canonical mapping, F2), [`@sembridge/routing`](../routing/README.md) (RouterBroker base composta, F3), [`@sembridge/gateway`](../gateway/README.md) (BackpressureStrategy F3 riusata 1:1, F3), [`comlink`](https://github.com/GoogleChromeLabs/comlink) 4.4.2 (RPC postMessage), [`nanoid`](https://github.com/ai/nanoid) (correlationId end-to-end D-134), [`valibot`](https://valibot.dev) (config validation).
+Cinque dipendenze runtime: [`@gluezero/core`](../core/README.md) (BrokerError + BrokerEvent + tipi base, F1), [`@gluezero/mapper`](../mapper/README.md) (canonical mapping, F2), [`@gluezero/routing`](../routing/README.md) (RouterBroker base composta, F3), [`@gluezero/gateway`](../gateway/README.md) (BackpressureStrategy F3 riusata 1:1, F3), [`comlink`](https://github.com/GoogleChromeLabs/comlink) 4.4.2 (RPC postMessage), [`nanoid`](https://github.com/ai/nanoid) (correlationId end-to-end D-134), [`valibot`](https://valibot.dev) (config validation).
 
 ## Indice
 
@@ -24,10 +24,10 @@ Cinque dipendenze runtime: [`@sembridge/core`](../core/README.md) (BrokerError +
 
 ## 1. Quick start
 
-`@sembridge/worker` espone `createWorkerBroker(config)` come factory pubblico (D-122, anti-singleton D-30). Il broker compone trasparentemente il `RouterBroker` di Phase 3 (D-121, D-83 strict carryover): per topic con worker route registrata, intercetta la `publish` PRIMA del `RouterBroker.publish` (Opzione B research §7.2) e dispatch al pool worker; per topic non-worker delega trasparente al `RouterBroker` invariato (pipeline F3 HTTP/local/cache/composite preservata).
+`@gluezero/worker` espone `createWorkerBroker(config)` come factory pubblico (D-122, anti-singleton D-30). Il broker compone trasparentemente il `RouterBroker` di Phase 3 (D-121, D-83 strict carryover): per topic con worker route registrata, intercetta la `publish` PRIMA del `RouterBroker.publish` (Opzione B research §7.2) e dispatch al pool worker; per topic non-worker delega trasparente al `RouterBroker` invariato (pipeline F3 HTTP/local/cache/composite preservata).
 
 ```ts
-import { createWorkerBroker } from '@sembridge/worker'
+import { createWorkerBroker } from '@gluezero/worker'
 
 const broker = createWorkerBroker({
   workers: { assertSerializable: 'dev' },
@@ -117,7 +117,7 @@ Comlink.expose(api)
 
 **Lazy first-dispatch (D-129)**: il pool non spawna worker al register, solo al primo `schedule()`. Un'app con 5 plugin che dichiarano worker ma di cui solo 2 vengono effettivamente usati spawna 0 worker per i 3 inutilizzati.
 
-**BackpressureStrategy F3 riusata 1:1 (D-130)**: la coda di scheduling worker condivide la stessa policy di backpressure F3 (`queue-bounded`, `drop-old`, `drop-new`, `throttle`, `debounce`, `latest-only`, `coalesce`) tramite import diretto `from '@sembridge/gateway/http'`. Zero ridichiarazione tipi, zero copia logica, zero modifica F3 source. Override per-route via `RouteWorkerDefinition.policies.backpressure`.
+**BackpressureStrategy F3 riusata 1:1 (D-130)**: la coda di scheduling worker condivide la stessa policy di backpressure F3 (`queue-bounded`, `drop-old`, `drop-new`, `throttle`, `debounce`, `latest-only`, `coalesce`) tramite import diretto `from '@gluezero/gateway/http'`. Zero ridichiarazione tipi, zero copia logica, zero modifica F3 source. Override per-route via `RouteWorkerDefinition.policies.backpressure`.
 
 **Critical bypass esplicito (Pitfall 4.C consistency)**: `priority === 'critical'` bypassa la coda backpressure (event broadcast ad esempio). Bypass `grep -c "priority === 'critical'"` audit-able.
 
@@ -199,7 +199,7 @@ broker.subscribe('report.generation.progress', (event) => {
 
 ### Default: `structuredClone` (Structured Clone Algorithm)
 
-`@sembridge/worker` usa `postMessage` standard come backbone Comlink. Il browser applica automaticamente lo Structured Clone Algorithm (SCA) — niente `JSON.stringify`, niente `superjson` di default (V1 — D-142 closure).
+`@gluezero/worker` usa `postMessage` standard come backbone Comlink. Il browser applica automaticamente lo Structured Clone Algorithm (SCA) — niente `JSON.stringify`, niente `superjson` di default (V1 — D-142 closure).
 
 **Tipi supportati nativamente da SCA (round-trip preservato):**
 
@@ -282,7 +282,7 @@ Verifica end-to-end di Pitfall 7.E è coperta in `__browser__/playwright-worker-
 Esempio end-to-end PRD §29 esteso a worker — plugin form + plugin widget + worker CSV/report. Mostra correlationId end-to-end (D-134) + progress events + outcome `<topic>.completed`/`.failed` (D-146 topic auto-derive) + cascade cleanup (LIFE-02 ext F5).
 
 ```ts
-import { createWorkerBroker } from '@sembridge/worker'
+import { createWorkerBroker } from '@gluezero/worker'
 
 const broker = createWorkerBroker({
   workers: { assertSerializable: 'dev' },
@@ -407,7 +407,7 @@ Il `workerType: 'classic'` opt-in è documentato come estensione PRD §31.3 — 
 | Topic naming?                      | Auto-derive D-146 (`<topic>.completed/.progress/.failed`) o override esplicito via `route.publishes.{success\|progress\|error}`                                       |
 | Cascade cleanup plugin unregister? | LIFE-02 ext F5 (D-126): subscribe orphan removal + worker pool terminate + bridges teardown idempotenti                                                               |
 | Pool default size?                 | `min(navigator.hardwareConcurrency, 4)` cap hard 8 (D-127, D-128); `allowUnboundedPool: true` opt-in con `console.warn` 1x                                            |
-| Backpressure?                      | F3 `BackpressureStrategy` riusato 1:1 via `import from '@sembridge/gateway/http'` (D-130) — zero ridichiarazione                                                      |
+| Backpressure?                      | F3 `BackpressureStrategy` riusato 1:1 via `import from '@gluezero/gateway/http'` (D-130) — zero ridichiarazione                                                      |
 
 ---
 
@@ -416,10 +416,10 @@ Il `workerType: 'classic'` opt-in è documentato come estensione PRD §31.3 — 
 - `prd.md` (root) §10 (worker capability requirements), §19 (Worker Runtime spec), §29 (scenario meteo), §31.3 (browser API constraints), §39 #11 (open issue WK-07 — **CHIUSO in F5**)
 - `.planning/phases/05-worker-runtime/05-CONTEXT.md` (D-121..D-154 — 34 decisioni lockate)
 - `.planning/phases/05-worker-runtime/05-RESEARCH.md` §6 (Serialization contract WK-07), §7 (Composition wrapper Opzione B), §9 (Test 3-tier)
-- [`@sembridge/core`](../core/README.md) (BrokerError + BrokerEvent + EventTap, F1)
-- [`@sembridge/mapper`](../mapper/README.md) (canonical mapping registries, F2)
-- [`@sembridge/routing`](../routing/README.md) (RouterBroker + RouteResolver, F3)
-- [`@sembridge/gateway`](../gateway/README.md) (BackpressureStrategy F3 + sub-modulo /sse-ws F4)
+- [`@gluezero/core`](../core/README.md) (BrokerError + BrokerEvent + EventTap, F1)
+- [`@gluezero/mapper`](../mapper/README.md) (canonical mapping registries, F2)
+- [`@gluezero/routing`](../routing/README.md) (RouterBroker + RouteResolver, F3)
+- [`@gluezero/gateway`](../gateway/README.md) (BackpressureStrategy F3 + sub-modulo /sse-ws F4)
 - [Comlink](https://github.com/GoogleChromeLabs/comlink) 4.4.2 (RPC postMessage)
 
 ## Licenza

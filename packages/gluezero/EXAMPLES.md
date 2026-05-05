@@ -1,6 +1,6 @@
-# SemBridge Examples — End-to-end cross-package
+# GlueZero Examples — End-to-end cross-package
 
-> Esempi consolidati italiano per tutte le 6 fasi PRD. Ogni esempio è completo (consumer-side + config + subscribe + publish) e direttamente eseguibile con `pnpm install @sembridge/sembridge`.
+> Esempi consolidati italiano per tutte le 6 fasi PRD. Ogni esempio è completo (consumer-side + config + subscribe + publish) e direttamente eseguibile con `pnpm install @gluezero/gluezero`.
 
 ## Indice
 
@@ -20,9 +20,9 @@
 ## 1. Hello World pub/sub (F1 base)
 
 ```ts
-import { createSemBridge } from '@sembridge/sembridge'
+import { createGlueZero } from '@gluezero/gluezero'
 
-const broker = createSemBridge({
+const broker = createGlueZero({
   features: {
     realtime: false,
     worker: false,
@@ -42,9 +42,9 @@ await broker.publish('greeting.hello', { name: 'Mondo' })
 ## 2. Mapping canonical (F2 scenario meteo)
 
 ```ts
-import { createSemBridge } from '@sembridge/sembridge'
+import { createGlueZero } from '@gluezero/gluezero'
 
-const broker = createSemBridge({
+const broker = createGlueZero({
   features: { realtime: false, worker: false, cache: false, devtools: false },
   canonicalModel: {
     'weather.canonical': {
@@ -82,9 +82,9 @@ await broker.publish('weather.loaded', {
 ## 3. HTTP route + retry/timeout (F3 weather-fetch)
 
 ```ts
-import { createSemBridge } from '@sembridge/sembridge'
+import { createGlueZero } from '@gluezero/gluezero'
 
-const broker = createSemBridge({
+const broker = createGlueZero({
   features: { realtime: false, worker: false, cache: false, devtools: false },
   routes: [
     {
@@ -117,9 +117,9 @@ await broker.publish('weather.requested', { city: 'Roma' })
 ## 4. Realtime SSE inbound (F4)
 
 ```ts
-import { createSemBridge } from '@sembridge/sembridge'
+import { createGlueZero } from '@gluezero/gluezero'
 
-const broker = createSemBridge({
+const broker = createGlueZero({
   features: { worker: false, cache: false, devtools: false },
   realtime: {
     channels: [
@@ -144,9 +144,9 @@ broker.subscribe('notification.new', (event) => {
 ## 5. Worker offload report generation (F5)
 
 ```ts
-import { createSemBridge } from '@sembridge/sembridge'
+import { createGlueZero } from '@gluezero/gluezero'
 
-const broker = createSemBridge({
+const broker = createGlueZero({
   features: { realtime: false, cache: false, devtools: false },
   workerRoutes: [
     {
@@ -186,9 +186,9 @@ await broker.publish('report.generation.requested', { period: '2026-Q1' })
 ## 6. Cache-then-network UI flicker control (F6)
 
 ```ts
-import { createSemBridge } from '@sembridge/sembridge'
+import { createGlueZero } from '@gluezero/gluezero'
 
-const broker = createSemBridge({
+const broker = createGlueZero({
   features: { realtime: false, worker: false, devtools: false },
   cache: { maxEntries: 500 },
   cacheRoutes: [
@@ -236,9 +236,9 @@ await broker.publish('weather.requested', { city: 'Roma' })
 ## 7. Inspector + Metrics dashboard data (F6)
 
 ```ts
-import { createSemBridge } from '@sembridge/sembridge'
+import { createGlueZero } from '@gluezero/gluezero'
 
-const broker = createSemBridge({
+const broker = createGlueZero({
   features: { realtime: false, worker: false },
   cache: { maxEntries: 500 },
   devtools: {
@@ -277,9 +277,9 @@ console.log('Counters:', (snap as { currentMetrics: { counters: unknown } }).cur
 ## 8. pauseTopic admin flow (F6)
 
 ```ts
-import { createSemBridge } from '@sembridge/sembridge'
+import { createGlueZero } from '@gluezero/gluezero'
 
-const broker = createSemBridge({
+const broker = createGlueZero({
   features: { realtime: false, worker: false, cache: false },
   devtools: { enableByDefault: true, pauseQueueMaxSize: 1000 },
 })
@@ -308,11 +308,11 @@ await broker.publish('chat.message', { text: 'Stale' })
 ## 9. Multi-tenant scope (D-156)
 
 ```ts
-import { createSemBridge } from '@sembridge/sembridge'
+import { createGlueZero } from '@gluezero/gluezero'
 
 // Pattern: una istanza per tenant — D-30 anti-singleton:
 function brokerForTenant(tenantId: string) {
-  return createSemBridge({
+  return createGlueZero({
     cache: {
       maxEntries: 200,
       scopeProvider: () => tenantId, // tutti i cache key prefix `<tenantId>::`
@@ -343,9 +343,9 @@ await brokerInitech.publish('config.requested', { key: 'theme' })
 ## 10. Cross-feature integrato F1+F2+F3+F4+F5+F6 (scenario meteo full chain)
 
 ```ts
-import { createSemBridge } from '@sembridge/sembridge'
+import { createGlueZero } from '@gluezero/gluezero'
 
-const broker = createSemBridge({
+const broker = createGlueZero({
   // F2 canonical
   canonicalModel: {
     'weather.canonical': {
@@ -483,7 +483,7 @@ await broker.publish('user.search.submitted', {
 // 5. F4 SSE: server push → 'weather.update' inbound canonicalizzato
 // 6. F5 worker (parallelo): 'weather.forecast.requested' → pool dispatch
 // 7. F6 devtools: tutti gli step §28 catturati in EventInspector + RouteInspector
-// 8. F6 metrics: counter sembridge.cache.hits_total incrementato
+// 8. F6 metrics: counter gluezero.cache.hits_total incrementato
 
 // Debug live:
 const snap = (broker as { getDebugSnapshot?: () => unknown }).getDebugSnapshot?.()
@@ -500,7 +500,7 @@ await broker.unregisterPlugin('forecast-plugin')
 ## Helper functions usate negli esempi
 
 ```ts
-// UI rendering helpers (consumer-side, non parte di SemBridge):
+// UI rendering helpers (consumer-side, non parte di GlueZero):
 declare function renderInstant(payload: unknown): void
 declare function replaceWeather(eventId: string, payload: unknown): void
 declare function updateWeatherLive(payload: unknown): void
@@ -513,7 +513,7 @@ declare function showError(payload: unknown): void
 ## Riferimenti
 
 - `prd.md` (root) §29 (scenario meteo PRD esteso a F1-F6)
-- [`@sembridge/sembridge` README.md](./README.md)
+- [`@gluezero/gluezero` README.md](./README.md)
 - Sub-pacchetti README (per dettagli per-fase): F1 [`core`](../core/README.md) / F2 [`mapper`](../mapper/README.md) / F3 [`routing`](../routing/README.md) / F4 [`gateway`](../gateway/README.md) / F5 [`worker`](../worker/README.md) / F6 [`cache`](../cache/README.md) + [`devtools`](../devtools/README.md)
 
 *Phase 6 closure date: 2026-05-05. Milestone v1.0 chiusa.*

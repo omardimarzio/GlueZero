@@ -1,13 +1,13 @@
-# @sembridge/gateway
+# @gluezero/gateway
 
-> Gateway centralizzato per SemBridge — Phase 3 (HTTP) + Phase 4 (Realtime SSE/WS).
+> Gateway centralizzato per GlueZero — Phase 3 (HTTP) + Phase 4 (Realtime SSE/WS).
 
 ESM-only TypeScript library. Browser evergreen target (ES2022). Implementa due sub-moduli:
 
 - **`/http`** (F3) — **Server Gateway HTTP** centralizzato (PRD §18) con policy uniformi: auth Bearer + token refresh single-flight, retry differenziato 4xx/5xx con full jitter, timeout via `AbortSignal.timeout()`, dedupe via Promise singleton, backpressure (queue/drop/throttle/debounce/latest-only/coalesce), idempotency token auto su POST/PATCH/PUT/DELETE, URL allowlist pre-fetch, circuit breaker per-route opt-in.
 - **`/sse-ws`** (F4) — **Realtime inbound** (SSE prioritario, WebSocket opzionale): `RealtimeBroker` composition wrapper di `RouterBroker` (D-101), `RealtimeChannelManager` (registry N-canale D-102), `SseAdapter` + `WebSocketAdapter` con reconnection policy unificata (full jitter D-109 + auto-fallback SSE→WS D-107), Last-Event-ID injection (D-105 — chiude PRD §39 #9), envelope JSON `{topic, data, id?}` per WS (D-106), ping/pong applicativo D-111, visibility-aware behavior (D-110), cascade cleanup `disconnectByOwner` (D-112).
 
-Cinque dipendenze runtime: [`@sembridge/core`](../core/README.md) (BrokerError + tipi base, F1), [`@sembridge/mapper`](../mapper/README.md) (response mapping server→canonical, F2), [`@sembridge/routing`](../routing/README.md) (consumer principale del gateway, F3), [`nanoid`](https://github.com/ai/nanoid) (Idempotency-Key generation), [`valibot`](https://valibot.dev) (config validation).
+Cinque dipendenze runtime: [`@gluezero/core`](../core/README.md) (BrokerError + tipi base, F1), [`@gluezero/mapper`](../mapper/README.md) (response mapping server→canonical, F2), [`@gluezero/routing`](../routing/README.md) (consumer principale del gateway, F3), [`nanoid`](https://github.com/ai/nanoid) (Idempotency-Key generation), [`valibot`](https://valibot.dev) (config validation).
 
 ## Indice
 
@@ -40,7 +40,7 @@ REQ-ID coperti F3 dal sub-modulo HTTP: SEC-01..SEC-05, ROUTE-06, ROUTE-07, ROUTE
 Il package è organizzato in subpath per separare le capability F3 (HTTP) da F4 (realtime). Il consumer importa il sub-modulo necessario:
 
 ```ts
-import { createHttpGateway, HttpGateway } from '@sembridge/gateway/http'
+import { createHttpGateway, HttpGateway } from '@gluezero/gateway/http'
 import {
   createRetryStrategy,
   createTimeoutStrategy,
@@ -49,9 +49,9 @@ import {
   createAuthStrategy,
   createIdempotencyStrategy,
   createCircuitBreakerStrategy,
-} from '@sembridge/gateway/http'
+} from '@gluezero/gateway/http'
 
-// import { createSseAdapter } from '@sembridge/gateway/sse-ws'  // Phase 4
+// import { createSseAdapter } from '@gluezero/gateway/sse-ws'  // Phase 4
 ```
 
 Il subpath `./http` ha bundle budget separato (8 KB gzip) rispetto al package umbrella, garantendo che chi non usa SSE/WS non paghi il costo di F4. Vedi `package.json` `exports`.
@@ -59,15 +59,15 @@ Il subpath `./http` ha bundle budget separato (8 KB gzip) rispetto al package um
 ## Installazione
 
 ```sh
-pnpm add @sembridge/core @sembridge/mapper @sembridge/routing @sembridge/gateway
+pnpm add @gluezero/core @gluezero/mapper @gluezero/routing @gluezero/gateway
 ```
 
-Il package si installa insieme agli altri tre — è il consumer principale di `@sembridge/routing` per le route HTTP.
+Il package si installa insieme agli altri tre — è il consumer principale di `@gluezero/routing` per le route HTTP.
 
 ## Quick start — config gateway
 
 ```ts
-import { createHttpGateway } from '@sembridge/gateway/http'
+import { createHttpGateway } from '@gluezero/gateway/http'
 import {
   createRetryStrategy,
   createTimeoutStrategy,
@@ -76,7 +76,7 @@ import {
   createDedupeStrategy,
   createBackpressureStrategy,
   createCircuitBreakerStrategy,
-} from '@sembridge/gateway/http'
+} from '@gluezero/gateway/http'
 
 const gateway = createHttpGateway({
   // SEC-05 (D-71): URL allowlist (string prefix o RegExp)
@@ -115,7 +115,7 @@ const response = await gateway.execute(httpRequest, route, event, externalSignal
 if (response.ok) console.log(response.body)
 ```
 
-In produzione, `createRouterBroker` di `@sembridge/routing` istanzia il gateway internamente — il consumer tipico passa solo `gateway: GatewayConfig` al `createRouterBroker(config)` e non istanzia direttamente `HttpGateway`.
+In produzione, `createRouterBroker` di `@gluezero/routing` istanzia il gateway internamente — il consumer tipico passa solo `gateway: GatewayConfig` al `createRouterBroker(config)` e non istanzia direttamente `HttpGateway`.
 
 ## Cosa contiene (`/http`)
 
@@ -136,7 +136,7 @@ In produzione, `createRouterBroker` di `@sembridge/routing` istanzia il gateway 
 
 ## Vincolo D-83 — composition
 
-Zero modifiche a `packages/core/` runtime e `packages/mapper/` runtime. Estensione tramite **composition** (`HttpGateway` chiamato dal `RouteExecutor` di `@sembridge/routing`) + TS declaration merging (`src/augment.ts` — `BrokerConfig.gateway`).
+Zero modifiche a `packages/core/` runtime e `packages/mapper/` runtime. Estensione tramite **composition** (`HttpGateway` chiamato dal `RouteExecutor` di `@gluezero/routing`) + TS declaration merging (`src/augment.ts` — `BrokerConfig.gateway`).
 
 ## API pubblica
 
@@ -281,7 +281,7 @@ L'API consumer-facing è il `RealtimeBroker` — composition wrapper di `RouterB
 ### Quick start
 
 ```ts
-import { createRealtimeBroker } from '@sembridge/gateway/sse-ws'
+import { createRealtimeBroker } from '@gluezero/gateway/sse-ws'
 
 const broker = createRealtimeBroker({
   // Tutta la config F3 (RouterBroker) è valida + sezione realtime opzionale
@@ -319,7 +319,7 @@ EventSource standard NON supporta header custom (vincolo PRD §31.3). Quattro st
 | Cookie HttpOnly **same-origin** | Default raccomandato | Browser invia cookie automaticamente. Nessuna config app-side. |
 | Cookie HttpOnly **cross-origin** | API su dominio dedicato | `withCredentials: true` opt-in nel `def.eventSourceInit?.withCredentials` per SSE. |
 | Token in **query string** | Quando il server non supporta cookie | `buildUrl: () => \`/events?token=${shortLivedJwt}\`` — best practice: ≤5 min, single-use, server invalida al disconnect. |
-| WebSocket **subprotocol** | WS only, server custom handshake | `def.wsSubprotocols: ['sembridge-v1', token]` (Q4 closure). |
+| WebSocket **subprotocol** | WS only, server custom handshake | `def.wsSubprotocols: ['gluezero-v1', token]` (Q4 closure). |
 
 **Best practice security:** token in URL ≤5 min, single-use server-side. Cookie HttpOnly è la scelta preferita quando l'origin è controllato.
 
@@ -531,7 +531,7 @@ Strategia testing 3-livelli:
 
 | Tier | Environment | Cosa testa | Comando |
 |------|-------------|------------|---------|
-| **Tier-1 jsdom** | `vitest run` (default) | Unit + integration con `MockEventSource`/`MockWebSocket` DI | `pnpm --filter @sembridge/gateway test` |
+| **Tier-1 jsdom** | `vitest run` (default) | Unit + integration con `MockEventSource`/`MockWebSocket` DI | `pnpm --filter @gluezero/gateway test` |
 | **Tier-2 MSW V1.x** | jsdom + msw 2.x | Server contract: SSE replay (riconosce header `Last-Event-ID` E query `?lastEventId=`), ws.link compat | `pnpm test:msw` (deferred V1.x — `describe.skip`) |
 | **Tier-3 Playwright Chromium** | Real browser headless | Smoke `EventSource` API non-mocked, real-browser semantics | `pnpm test:browser` (opt-in) |
 
@@ -563,7 +563,7 @@ Vedi `.planning/phases/04-realtime-inbound-sse-prioritario-ws-opzionale/04-RESEA
 
 ## Roadmap (deferred F5-F6)
 
-- **Phase 5 — Worker Runtime** (`@sembridge/worker`): Worker registry + WorkerBridge + structuredClone default (chiude PRD §39 #11 / WK-07).
+- **Phase 5 — Worker Runtime** (`@gluezero/worker`): Worker registry + WorkerBridge + structuredClone default (chiude PRD §39 #11 / WK-07).
 - **Phase 6 — wiring `DedupeStrategy`/`BackpressureStrategy`** nel `gateway.execute()` flow (V1 verificate in isolation, deferred wiring middleware automatico).
 - **V1.x — circuit breaker avanzato** sliding window stats + success rate + fallback URL.
 - **V1.x — custom serializer/parser** (form-data/multipart/binary, response non-JSON).

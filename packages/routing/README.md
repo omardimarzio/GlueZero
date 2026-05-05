@@ -1,10 +1,10 @@
-# @sembridge/routing
+# @gluezero/routing
 
-> Routing engine dichiarativo per SemBridge — Phase 3.
+> Routing engine dichiarativo per GlueZero — Phase 3.
 
-ESM-only TypeScript library. Browser evergreen target (ES2022). Estende [`@sembridge/mapper`](../mapper/README.md) (F2) con `RouteDefinition` discriminata, `RouteResolver` pre-compilato, `RouteExecutor` dispatch by type e `RouterBroker` composition wrapper. Le route HTTP delegano a [`@sembridge/gateway/http`](../gateway/README.md) per le policy uniformi (auth/retry/timeout/dedupe/idempotency/circuit).
+ESM-only TypeScript library. Browser evergreen target (ES2022). Estende [`@gluezero/mapper`](../mapper/README.md) (F2) con `RouteDefinition` discriminata, `RouteResolver` pre-compilato, `RouteExecutor` dispatch by type e `RouterBroker` composition wrapper. Le route HTTP delegano a [`@gluezero/gateway/http`](../gateway/README.md) per le policy uniformi (auth/retry/timeout/dedupe/idempotency/circuit).
 
-Quattro dipendenze runtime: [`@sembridge/core`](../core/README.md) (broker base, F1), [`@sembridge/mapper`](../mapper/README.md) (canonical model + mapper bidirezionale, F2), [`@sembridge/gateway`](../gateway/README.md) (HTTP gateway, F3), [`nanoid`](https://github.com/ai/nanoid) (ID generation), [`valibot`](https://valibot.dev) (config validation).
+Quattro dipendenze runtime: [`@gluezero/core`](../core/README.md) (broker base, F1), [`@gluezero/mapper`](../mapper/README.md) (canonical model + mapper bidirezionale, F2), [`@gluezero/gateway`](../gateway/README.md) (HTTP gateway, F3), [`nanoid`](https://github.com/ai/nanoid) (ID generation), [`valibot`](https://valibot.dev) (config validation).
 
 ## Indice
 
@@ -25,27 +25,27 @@ Quattro dipendenze runtime: [`@sembridge/core`](../core/README.md) (broker base,
 
 ## Stato
 
-Phase 3 **complete** (14/14 plan). `@sembridge/routing` consegna F3 V1: routing engine dichiarativo + composition wrapper di `MapperBroker`.
+Phase 3 **complete** (14/14 plan). `@gluezero/routing` consegna F3 V1: routing engine dichiarativo + composition wrapper di `MapperBroker`.
 
 REQ-ID coperti F3 (29 totali tra `routing` e `gateway`): ROUTE-01..ROUTE-16, VAL-05, ERR-02 ext (`<topic>.failed`, `network.error`), SEC-01..SEC-05, TEST-01 (subset HTTP), TEST-02 (plugin → server → plugin), TEST-03 (server malconfigurato), DOC-04, LIFE-02 ext F3.
 
 ## Installazione
 
 ```sh
-pnpm add @sembridge/core @sembridge/mapper @sembridge/routing @sembridge/gateway
+pnpm add @gluezero/core @gluezero/mapper @gluezero/routing @gluezero/gateway
 # oppure
-npm install @sembridge/core @sembridge/mapper @sembridge/routing @sembridge/gateway
+npm install @gluezero/core @gluezero/mapper @gluezero/routing @gluezero/gateway
 ```
 
-I quattro package devono essere installati insieme — `@sembridge/routing` estende `BrokerConfig` e `PluginDescriptor` di `core` via TS declaration merging (`augment.ts`) e dipende da `@sembridge/mapper` come composition wrapper, `@sembridge/gateway/http` per le policy HTTP.
+I quattro package devono essere installati insieme — `@gluezero/routing` estende `BrokerConfig` e `PluginDescriptor` di `core` via TS declaration merging (`augment.ts`) e dipende da `@gluezero/mapper` come composition wrapper, `@gluezero/gateway/http` per le policy HTTP.
 
 ## Quick start — scenario meteo PRD §29 con HTTP
 
 End-to-end con HTTP: un plugin form pubblica `weather.requested`; il `RouterBroker` risolve la route HTTP, il gateway esegue la fetch (auth/retry/timeout/idempotency/allowlist), il mapper inverso trasforma la response in canonico, e `weather.loaded` viene pubblicato come `BrokerEvent`. Un plugin widget consumer riceve la nomenclatura locale via `inputMap`.
 
 ```ts
-import { createRouterBroker } from '@sembridge/routing'
-import type { CanonicalSchemaId } from '@sembridge/mapper'
+import { createRouterBroker } from '@gluezero/routing'
+import type { CanonicalSchemaId } from '@gluezero/mapper'
 
 const broker = createRouterBroker({
   // Sezioni F1 (delegate al Broker via MapperBroker)
@@ -159,7 +159,7 @@ Vedi `packages/routing/src/__integration__/scenario-meteo-http.test.ts` per il t
 - **`createRouterBroker(config)`** — factory pure function (no singleton, D-30) con Valibot config validation.
 - **`RouteDefinition`** — discriminated union via `type`: `'local'` | `'http'` | `'cache'` (stub F6) | `'composite'` (workflow). Worker route aggiunto in F5 via declaration merging.
 - **`RouteResolver`** — dispatch table pre-compilata `Map<routeId, CompiledRoute>` + `TopicTrie<CompiledRoute>` per O(segments) lookup runtime. Tre policy multi-route (D-66): `'first-match'` (default + warn dev), `'priority-ordered'`, `'all'` (broadcast).
-- **`RouteExecutor`** — dispatch by type: handler `local` (sync, riusa pipeline F1+F2), `http` (async via `@sembridge/gateway/http`), `cache`/`composite` (stub F3 — adapter cache effettivo a F6).
+- **`RouteExecutor`** — dispatch by type: handler `local` (sync, riusa pipeline F1+F2), `http` (async via `@gluezero/gateway/http`), `cache`/`composite` (stub F3 — adapter cache effettivo a F6).
 - **`OutcomeCollector`** — step 10 publisher con recursion guard (D-82): publish `<topic>.loaded` o `<topic>.failed` UNA volta sola dopo retry exhausted; secondario `network.error` per consumer sistemici (D-81).
 - **3 strategy multi-route** — `'first-match'`, `'priority-ordered'`, `'all'` (vedi `strategies/`).
 - **Cascade unregisterPlugin** — D-86 (LIFE-02 ext F3): rimuove subscription F1+F2 + route registrate dal plugin + abort fetch in volo bound al `pluginId`.
@@ -201,7 +201,7 @@ Composition wrapper di `MapperBroker` (F2) + `RouterEngine` (resolver + executor
 
 ### Tipi pubblici
 
-Tutti esposti dal barrel `@sembridge/routing`:
+Tutti esposti dal barrel `@gluezero/routing`:
 
 | Tipo | Descrizione |
 |------|-------------|
@@ -289,11 +289,11 @@ Pattern coerente con F2 D-49 (cascade isolation T-02-10-03).
 
 ## Roadmap (deferred F4-F6)
 
-`@sembridge/routing` consegna F3 V1. Le 3 fasi successive estendono:
+`@gluezero/routing` consegna F3 V1. Le 3 fasi successive estendono:
 
-- **Phase 4 — Realtime inbound** (`@sembridge/gateway/sse-ws`): adapter SSE/WebSocket; il `RouterBroker` riusa il pattern composition.
-- **Phase 5 — Worker runtime** (`@sembridge/worker`): aggiunge `type: 'worker'` al `RouteDefinition` via TS declaration merging; cascade D-86 esteso ai worker MessageChannel.
-- **Phase 6 — Cache + Tooling** (`@sembridge/cache` + `@sembridge/devtools`): adapter cache reale (in-memory + IndexedDB) sostituisce lo stub `cache-handler.ts` F3; Route Inspector full snapshot; Metrics format (chiude PRD §39 #10 / TOOL-05).
+- **Phase 4 — Realtime inbound** (`@gluezero/gateway/sse-ws`): adapter SSE/WebSocket; il `RouterBroker` riusa il pattern composition.
+- **Phase 5 — Worker runtime** (`@gluezero/worker`): aggiunge `type: 'worker'` al `RouteDefinition` via TS declaration merging; cascade D-86 esteso ai worker MessageChannel.
+- **Phase 6 — Cache + Tooling** (`@gluezero/cache` + `@gluezero/devtools`): adapter cache reale (in-memory + IndexedDB) sostituisce lo stub `cache-handler.ts` F3; Route Inspector full snapshot; Metrics format (chiude PRD §39 #10 / TOOL-05).
 
 Vedi `prd.md` (project root) per la specifica V1 completa e `.planning/ROADMAP.md` per i success criteria di ogni fase.
 

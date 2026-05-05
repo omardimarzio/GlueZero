@@ -1,10 +1,10 @@
-# @sembridge/cache
+# @gluezero/cache
 
-> Cache layer per SemBridge — Phase 6 (in-memory LRU bounded + 3-strategy dispatch + scope hybrid D-156 + cache-then-network ordering microtask + cascade invalidate ext LIFE-02).
+> Cache layer per GlueZero — Phase 6 (in-memory LRU bounded + 3-strategy dispatch + scope hybrid D-156 + cache-then-network ordering microtask + cascade invalidate ext LIFE-02).
 
-ESM-only TypeScript library. Browser evergreen target (ES2022). Composition wrapper di [`@sembridge/routing`](../routing/README.md) `RouterBroker` (D-121, D-83 strict carryover): un singolo entry point `createCacheBroker(config)` orchestra route HTTP/local/composite F3 + nuovo route `cache` con 3 strategie (`cache-first`, `network-first`, `cache-then-network`) e adapter pluggable (default `MemoryCacheAdapter` LRU bounded `maxEntries=1000` D-158).
+ESM-only TypeScript library. Browser evergreen target (ES2022). Composition wrapper di [`@gluezero/routing`](../routing/README.md) `RouterBroker` (D-121, D-83 strict carryover): un singolo entry point `createCacheBroker(config)` orchestra route HTTP/local/composite F3 + nuovo route `cache` con 3 strategie (`cache-first`, `network-first`, `cache-then-network`) e adapter pluggable (default `MemoryCacheAdapter` LRU bounded `maxEntries=1000` D-158).
 
-Quattro dipendenze runtime: [`@sembridge/core`](../core/README.md) (BrokerError + BrokerEvent + EventTap, F1), [`@sembridge/mapper`](../mapper/README.md) (canonical mapping, F2 — implicit via routing), [`@sembridge/routing`](../routing/README.md) (RouterBroker base composta, F3), [`valibot`](https://valibot.dev) (config validation al boundary).
+Quattro dipendenze runtime: [`@gluezero/core`](../core/README.md) (BrokerError + BrokerEvent + EventTap, F1), [`@gluezero/mapper`](../mapper/README.md) (canonical mapping, F2 — implicit via routing), [`@gluezero/routing`](../routing/README.md) (RouterBroker base composta, F3), [`valibot`](https://valibot.dev) (config validation al boundary).
 
 ## Indice
 
@@ -24,10 +24,10 @@ Quattro dipendenze runtime: [`@sembridge/core`](../core/README.md) (BrokerError 
 
 ## 1. Quick start
 
-`@sembridge/cache` espone `createCacheBroker(config)` come factory pubblico (D-30 anti-singleton). Il broker compone trasparentemente il `RouterBroker` di Phase 3 (D-121, D-83 strict carryover): per topic con cache route registrata, intercetta la `publish` PRIMA del `RouterBroker.publish` (Opzione B research §4.2 / §11.3) e dispatch al `CacheHandlerF6` 3-way; per topic non-cache delega trasparente al `RouterBroker` invariato (pipeline F3 HTTP/local/composite preservata).
+`@gluezero/cache` espone `createCacheBroker(config)` come factory pubblico (D-30 anti-singleton). Il broker compone trasparentemente il `RouterBroker` di Phase 3 (D-121, D-83 strict carryover): per topic con cache route registrata, intercetta la `publish` PRIMA del `RouterBroker.publish` (Opzione B research §4.2 / §11.3) e dispatch al `CacheHandlerF6` 3-way; per topic non-cache delega trasparente al `RouterBroker` invariato (pipeline F3 HTTP/local/composite preservata).
 
 ```ts
-import { createCacheBroker } from '@sembridge/cache'
+import { createCacheBroker } from '@gluezero/cache'
 
 const broker = createCacheBroker({
   cache: { maxEntries: 500 },
@@ -84,7 +84,7 @@ interface CacheAdapter {
 **D-155 default cacheKey:** `${topic}::${stableHash(canonicalPayload)}` (riuso pattern F3 D-74 KeyBased dedupe). Stable hash via FNV-1a + JSON canonical (`stableStringify` con sorted keys) → ~50 LOC inline zero-dep, predicabile cross-version.
 
 ```ts
-import { cacheKey } from '@sembridge/cache' // helper utility
+import { cacheKey } from '@gluezero/cache' // helper utility
 
 const key = cacheKey({
   topic: 'weather.requested',
@@ -271,7 +271,7 @@ Il rationale è "fail-secure": meglio una cache miss + un fetch di troppo che un
 Esempio integrato: un widget meteo che usa cache layer con `cache-then-network` + scope tenant + cascade cleanup al logout plugin.
 
 ```ts
-import { createCacheBroker } from '@sembridge/cache'
+import { createCacheBroker } from '@gluezero/cache'
 
 const broker = createCacheBroker({
   cache: {
@@ -340,7 +340,7 @@ Il `correlationId` (F1) viaggia end-to-end nel `BrokerEvent.correlationId` — i
 
 **Cache stampede** (PRD §17.6 / RESEARCH §4.5): N publish concorrenti sullo stesso topic+key con cache MISS → N fetch HTTP paralleli identici → server overload + cache write race.
 
-**Mitigazione F3 D-74 KeyBased dedupe carryover (riuso 1:1):** la dedupe strategy F3 (in `@sembridge/gateway/http`) coalesce N fetch concorrenti sullo stesso key in 1 Promise singleton. Il pattern KeyBased usa lo stesso `cacheKey()` derivation di F6 (D-155 `${topic}::${stableHash(canonicalPayload)}`) → coerenza cross-fase cache+dedupe.
+**Mitigazione F3 D-74 KeyBased dedupe carryover (riuso 1:1):** la dedupe strategy F3 (in `@gluezero/gateway/http`) coalesce N fetch concorrenti sullo stesso key in 1 Promise singleton. Il pattern KeyBased usa lo stesso `cacheKey()` derivation di F6 (D-155 `${topic}::${stableHash(canonicalPayload)}`) → coerenza cross-fase cache+dedupe.
 
 ```ts
 const broker = createCacheBroker({
@@ -371,7 +371,7 @@ const broker = createCacheBroker({
 
 ## 10. Limitazioni V1
 
-- **`@sembridge/cache-idb`** (IndexedDB persistence) → V1.x quando emerge use case offline-first / cross-session cache.
+- **`@gluezero/cache-idb`** (IndexedDB persistence) → V1.x quando emerge use case offline-first / cross-session cache.
 - **Bytes-based eviction** (cap in MB invece che entries) → V1.x. Trade-off rejected V1: predictability entries vs misurazione bytes (overhead `JSON.stringify` per ogni set).
 - **`invalidateOn` declarativo** route-level — V1.x. V1 espone solo `adapter.invalidate()` runtime + cascade plugin.
 - **Cache warming** (preload al boot) → V1.x.
@@ -386,21 +386,21 @@ const broker = createCacheBroker({
 | **Q1: Quando usare `cache-first` vs `cache-then-network`?**                            | `cache-first` per dato che cambia raramente (config, vocabolari) — minimizza fetch. `cache-then-network` per UI fluida con dato fresco (dashboard, weather) — anti-flicker + background refresh. `network-first` per dato critico fresh-priority (notifiche, stato realtime) con fallback offline.       |
 | **Q2: Come invalidare cache quando un plugin si disregistra?**                         | Cascade automatica via D-126 ext F6 LIFE-02: `unregisterPlugin(id)` → `adapter.invalidate({ prefix: '<id>::' })`. Convention: il default `cacheKey()` con `scope: ownerId` produce key prefisse `<id>::topic::hash`.                                                                                    |
 | **Q3: Cosa succede a un cache hit in `scope=null` su route con `auth: true`?**         | D-157 fail-secure: skip cache (lookup E set) + emit `system.cache.scope-missing` audit + cold fetch sempre. Il consumer auth-aware **deve** garantire scope non-null per route con `auth: true` — missing scope è bug consumer-side. Audit consumable per alerting/telemetry.                            |
-| **Q4: Come si configura un custom adapter (Redis-like / IndexedDB)?**                  | Implementa `CacheAdapter` interface (get/set/delete/invalidate/size/clear/stats) e passa via `cache.adapter` config. V1.x roadmap: `@sembridge/cache-idb` ufficiale.                                                                                                                                     |
+| **Q4: Come si configura un custom adapter (Redis-like / IndexedDB)?**                  | Implementa `CacheAdapter` interface (get/set/delete/invalidate/size/clear/stats) e passa via `cache.adapter` config. V1.x roadmap: `@gluezero/cache-idb` ufficiale.                                                                                                                                     |
 | **Q5: Quando TTL scade durante `cache-then-network` background fetch?**                | Lazy expiration su read (RESEARCH §15.7): cache HIT viene servito se entry presente E `expiresAt > Date.now()` AT lookup time. Background fetch parte indipendentemente — al return `cache.set(key, value, ttl)` rinnova l'expiry.                                                                      |
 
 ---
 
 ## Riferimenti
 
-- `prd.md` (root) §17.6 (cache strategies), §20 (cache layer behavior), §39 (open issues — TOOL-05 closure F6 in `@sembridge/devtools`)
+- `prd.md` (root) §17.6 (cache strategies), §20 (cache layer behavior), §39 (open issues — TOOL-05 closure F6 in `@gluezero/devtools`)
 - `.planning/phases/06-cache-tooling-avanzato/06-CONTEXT.md` (D-155..D-170 — 16 decisioni lockate F6)
 - `.planning/phases/06-cache-tooling-avanzato/06-RESEARCH.md` §2 (LRU implementation), §4 (cache handler 3-strategy), §15.6 (cache-then-network ordering microtask)
-- [`@sembridge/core`](../core/README.md) (BrokerError + BrokerEvent + EventTap, F1)
-- [`@sembridge/mapper`](../mapper/README.md) (canonical mapping registries, F2)
-- [`@sembridge/routing`](../routing/README.md) (RouterBroker + RouteResolver, F3)
-- [`@sembridge/gateway`](../gateway/README.md) (HTTP gateway + F3 dedupe KeyBased riusato)
-- [`@sembridge/devtools`](../devtools/README.md) (MetricsCollector + Inspector, F6 — TOOL-05 closure PRD §39 #10)
+- [`@gluezero/core`](../core/README.md) (BrokerError + BrokerEvent + EventTap, F1)
+- [`@gluezero/mapper`](../mapper/README.md) (canonical mapping registries, F2)
+- [`@gluezero/routing`](../routing/README.md) (RouterBroker + RouteResolver, F3)
+- [`@gluezero/gateway`](../gateway/README.md) (HTTP gateway + F3 dedupe KeyBased riusato)
+- [`@gluezero/devtools`](../devtools/README.md) (MetricsCollector + Inspector, F6 — TOOL-05 closure PRD §39 #10)
 
 ## Licenza
 

@@ -1,10 +1,10 @@
-# @sembridge/mapper
+# @gluezero/mapper
 
-> Canonical model + bidirectional mapper per SemBridge — Phase 2.
+> Canonical model + bidirectional mapper per GlueZero — Phase 2.
 
-ESM-only TypeScript library. Browser evergreen target (ES2022). Estende [`@sembridge/core`](../core/README.md) con vocabolario canonico tipizzato, mapper bidirezionale pre-compilato, transform pipeline, validation adapter pluggable e Mapping Inspector.
+ESM-only TypeScript library. Browser evergreen target (ES2022). Estende [`@gluezero/core`](../core/README.md) con vocabolario canonico tipizzato, mapper bidirezionale pre-compilato, transform pipeline, validation adapter pluggable e Mapping Inspector.
 
-Tre dipendenze runtime: [`@sembridge/core`](../core/README.md) (broker base, workspace), [`valibot`](https://valibot.dev) (validation), [`nanoid`](https://github.com/ai/nanoid) (transitivo via core).
+Tre dipendenze runtime: [`@gluezero/core`](../core/README.md) (broker base, workspace), [`valibot`](https://valibot.dev) (validation), [`nanoid`](https://github.com/ai/nanoid) (transitivo via core).
 
 ## Indice
 
@@ -26,21 +26,21 @@ Tre dipendenze runtime: [`@sembridge/core`](../core/README.md) (broker base, wor
 ## Installazione
 
 ```sh
-pnpm add @sembridge/core @sembridge/mapper
+pnpm add @gluezero/core @gluezero/mapper
 # oppure
-npm install @sembridge/core @sembridge/mapper
+npm install @gluezero/core @gluezero/mapper
 # oppure
-yarn add @sembridge/core @sembridge/mapper
+yarn add @gluezero/core @gluezero/mapper
 ```
 
-`@sembridge/mapper` dipende da `@sembridge/core` (workspace protocol). Entrambi i package devono essere installati insieme — il mapper estende il `BrokerConfig` e `PluginDescriptor` di `core` via TS declaration merging.
+`@gluezero/mapper` dipende da `@gluezero/core` (workspace protocol). Entrambi i package devono essere installati insieme — il mapper estende il `BrokerConfig` e `PluginDescriptor` di `core` via TS declaration merging.
 
 ## Quick start — scenario meteo PRD §29
 
 End-to-end senza HTTP (HTTP routing è F3): un plugin form pubblica `weather.requested` con field locali italiani; il mapper produce un payload canonico inglese; un plugin widget consumer riceve la sua nomenclatura locale via `inputMap` inverso.
 
 ```ts
-import { createMapperBroker, type CanonicalSchemaId } from '@sembridge/mapper'
+import { createMapperBroker, type CanonicalSchemaId } from '@gluezero/mapper'
 
 // 1. Configura il broker con canonical schemas + transforms registrati al boot
 const broker = createMapperBroker({
@@ -153,7 +153,7 @@ Composition wrapper di `Broker` (F1) + `MapperEngine` + `MappingInspector`. Surf
 
 ### Tipi pubblici
 
-Tutti esposti dal barrel `@sembridge/mapper`:
+Tutti esposti dal barrel `@gluezero/mapper`:
 
 | Tipo | Descrizione |
 |------|-------------|
@@ -298,7 +298,7 @@ Il plugin **NON viene registrato** in caso di throw (rollback automatico, coeren
 Default `valibotAdapter` esportato dal barrel. Pluggable via `ValidatorAdapter` interface — Zod/Ajv adapter sono deferred a V2 (out of scope V1 per minimizzare bundle size).
 
 ```ts
-import { valibotAdapter, type ValidatorAdapter } from '@sembridge/mapper'
+import { valibotAdapter, type ValidatorAdapter } from '@gluezero/mapper'
 
 // Custom adapter (es. AJV in V2)
 const customAdapter: ValidatorAdapter = {
@@ -342,12 +342,12 @@ L'ordine è coerente con CONTEXT D-50. Niente trasformazioni implicite invisibil
 
 ## Roadmap (deferred a F3-F6)
 
-`@sembridge/mapper` consegna F2 V1. Le 4 fasi successive estendono il mapping a domini specifici:
+`@gluezero/mapper` consegna F2 V1. Le 4 fasi successive estendono il mapping a domini specifici:
 
-- **Phase 3 — Routing & HTTP gateway** (`@sembridge/routing` + `@sembridge/gateway`): route HTTP dichiarative; il mapper riusa `MapperEngine` F2 per server response mapping (`temperatureCelsius → temperature` ecc.).
+- **Phase 3 — Routing & HTTP gateway** (`@gluezero/routing` + `@gluezero/gateway`): route HTTP dichiarative; il mapper riusa `MapperEngine` F2 per server response mapping (`temperatureCelsius → temperature` ecc.).
 - **Phase 4 — Realtime inbound** (SSE + WS adapter): il mapper riusa `MapperEngine` F2 per normalizzare i payload server.
-- **Phase 5 — Worker runtime** (`@sembridge/worker`): canonicalizzazione del payload prima del dispatch al worker.
-- **Phase 6 — Cache + Tooling** (`@sembridge/cache` + `@sembridge/devtools`): Inspector reale (full payload before/after per evento) sostituisce il no-op di F1.
+- **Phase 5 — Worker runtime** (`@gluezero/worker`): canonicalizzazione del payload prima del dispatch al worker.
+- **Phase 6 — Cache + Tooling** (`@gluezero/cache` + `@gluezero/devtools`): Inspector reale (full payload before/after per evento) sostituisce il no-op di F1.
 
 Vedi `prd.md` (project root) per la specifica V1 completa e `.planning/ROADMAP.md` per i success criteria di ogni fase.
 
