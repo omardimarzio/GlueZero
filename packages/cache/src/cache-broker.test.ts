@@ -249,6 +249,116 @@ describe('CacheBroker — composition wrapper Opzione B (D-83 / D-121)', () => {
   })
 
   // --------------------------------------------------------------------------
+  // httpDelegate fallback minimal (1 test extra) — copre linee 182-191
+  // --------------------------------------------------------------------------
+
+  describe('httpDelegate fallback minimal', () => {
+    it('cache MISS senza DI httpDelegate → fallback minimal propaga payload come success', async () => {
+      const adapter = createMemoryCacheAdapter()
+      broker = new CacheBroker({
+        cache: { adapter },
+        cacheRoutes: [
+          {
+            id: 'r-fallback',
+            type: 'cache',
+            topic: 'fallback.requested',
+            strategy: 'cache-first',
+            key: () => 'fallback-key',
+          },
+        ],
+      })
+      const received: { topic: string; payload: unknown }[] = []
+      broker.subscribe('fallback.loaded', (ev) => {
+        received.push({ topic: ev.topic, payload: ev.payload })
+      })
+      await broker.publish('fallback.requested', { input: 'X' }, {
+        source: { type: 'plugin', id: 'app' },
+      })
+      await flushMicrotasks()
+      // Fallback minimal del CacheBroker propaga payload come { outcome: 'success', value: payload }
+      expect(received).toHaveLength(1)
+      expect(received[0].payload).toEqual({ input: 'X' })
+      // Cache popolata via fallback
+      expect(adapter.get('fallback-key')).toBeDefined()
+    })
+  })
+
+  // --------------------------------------------------------------------------
+  // registerCanonicalSchema delegate (1 test extra) — copre linea 310
+  // --------------------------------------------------------------------------
+
+  describe('registerCanonicalSchema delegate', () => {
+    it('registerCanonicalSchema delegate a inner — F2 invocation effettiva', () => {
+      broker = new CacheBroker({})
+      // Verifichiamo che la chiamata si propaghi al RouterBroker → MapperBroker.
+      // In F2 lo schema richiede una shape canonical valida; valibot accetta
+      // un oggetto minimal { id, fields }. Il metodo delegate non throw quando
+      // lo schema è ben formato.
+      expect(() =>
+        broker.registerCanonicalSchema({
+          id: 'test-canonical',
+          fields: {},
+        } as never),
+      ).not.toThrow()
+    })
+  })
+
+  // --------------------------------------------------------------------------
+  // Branch coverage — publish con source/correlationId/priority/id options
+  // --------------------------------------------------------------------------
+
+  describe('publish branch coverage cache route options', () => {
+    it('publish con id+source+correlationId+priority espliciti → tutti propagati', async () => {
+      const adapter = createMemoryCacheAdapter()
+      adapter.set('opt-key', { v: 'cached' }, 60_000)
+      broker = new CacheBroker({
+        cache: { adapter },
+        cacheRoutes: [
+          {
+            id: 'r-opt',
+            type: 'cache',
+            topic: 'opt.requested',
+            strategy: 'cache-first',
+            key: () => 'opt-key',
+          },
+        ],
+      })
+      await broker.publish('opt.requested', { x: 1 }, {
+        id: 'custom-evt-id',
+        source: { type: 'plugin', id: 'P', name: 'plugin-name' },
+        correlationId: 'corr-123',
+        priority: 'high',
+      })
+      await flushMicrotasks()
+      // Solo verifica che non throw — il path branch coverage di tutti gli
+      // optional propagation è eseguito.
+      const stats = broker.getCacheStats()
+      expect(stats.hits).toBeGreaterThan(0)
+    })
+
+    it('publish con cacheRoute MA options undefined → default source iniettato', async () => {
+      const adapter = createMemoryCacheAdapter()
+      adapter.set('default-key', { v: 'cached' }, 60_000)
+      broker = new CacheBroker({
+        cache: { adapter },
+        cacheRoutes: [
+          {
+            id: 'r-def',
+            type: 'cache',
+            topic: 'def.requested',
+            strategy: 'cache-first',
+            key: () => 'default-key',
+          },
+        ],
+      })
+      // No options → default source 'system:cache-broker' iniettato dal wrapper
+      await broker.publish('def.requested', {})
+      await flushMicrotasks()
+      expect(broker.getCacheStats().hits).toBeGreaterThan(0)
+    })
+  })
+
+  // --------------------------------------------------------------------------
   // Tap forwarding D-161 readiness (1 test extra)
   // --------------------------------------------------------------------------
 

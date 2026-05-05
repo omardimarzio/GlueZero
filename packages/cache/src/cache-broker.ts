@@ -176,21 +176,25 @@ export class CacheBroker {
 
     // 3. Construct cache handler con publishFn legato a inner.publish (Opzione
     //    B delegate per outcome events — pipeline §28 step 11-12 mapper F2 +
-    //    step 13 dispatch F1 invariati). httpHandler delegato a inner.publish
-    //    del topic source (in V1 lo strato HTTP F3 è già wired via routing).
-    const httpDelegate: CacheHttpDelegate = async (event, _route, _signal) => {
-      try {
-        // Cache MISS / network-first / cache-then-network → delegate al routing
-        // F3 via inner.publish del topic source. Il routing risolve la route
-        // HTTP appropriata (se registrata) e popola gli outcome topic.
-        // Nel scenario V1 base (cache-only test integration), httpHandler è
-        // tipicamente sostituito via DI in test fixture; qui forniamo fallback
-        // graceful zero-disrupt che propaga il payload originale come success.
-        return { outcome: 'success', value: event.payload }
-      } catch (err) {
-        return { outcome: 'error', error: err }
-      }
+    //    step 13 dispatch F1 invariati).
+    //
+    // **httpHandler fallback minimal:** in V1 base (cache-only test integration)
+    // il delegate è tipicamente sostituito via DI nella `cache-harness`. Il
+    // fallback default propaga il payload originale come success — comportamento
+    // graceful zero-disrupt che permette al cache MISS di popolare l'adapter
+    // con il payload corrente (utile per test isolati e composition wrapper
+    // privo di routing HTTP esplicito).
+    const httpDelegate: CacheHttpDelegate = async (event) => {
+      return { outcome: 'success', value: event.payload }
     }
+
+    // Tap forwarding D-161 — consumed da DevtoolsBroker 06-08b. Cast esplicito
+    // su `runtime?.tap` perché `RouterBrokerConfig.runtime` è un type alias
+    // proveniente da `MapperBroker` ConstructorParameters — la risoluzione DTS
+    // cross-package può non includere il field; usiamo lookup runtime safe.
+    const runtimeCfg = (config as { runtime?: { tap?: import('@sembridge/core').EventTap } })
+      .runtime
+    const tapForward = runtimeCfg?.tap
 
     this.handler = createCacheHandlerF6({
       cache: this.adapter,
@@ -201,8 +205,7 @@ export class CacheBroker {
       ...(config.cache?.scopeProvider !== undefined && {
         scopeProvider: config.cache.scopeProvider,
       }),
-      // Tap forwarding D-161 — consumed da DevtoolsBroker 06-08b consumer
-      ...(config.runtime?.tap !== undefined && { tap: config.runtime.tap }),
+      ...(tapForward !== undefined && { tap: tapForward }),
     })
 
     // 4. Bootstrap cache routes from config (analog F3 `routes` boot e F5 `workerRoutes`).

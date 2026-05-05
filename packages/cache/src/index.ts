@@ -70,6 +70,18 @@ export {
   type RouteCompositeStep,
 } from './composite-handler'
 
-// ---------- Wave 4 plan 06-08 — composition wrapper Opzione B + factory pubblico ----------
-// export { CacheBroker, type CacheBrokerConfig } from './cache-broker'
-// export { createCacheBroker } from './public-factory'
+// ---------- Wave 4a plan 06-08a — composition wrapper Opzione B + factory pubblico ----------
+export {
+  CacheBroker,
+  type CacheBrokerConfig,
+  type CacheBrokerRouteDefinition,
+} from './cache-broker'
+export { createCacheBroker } from './public-factory'
+// Test-utils harness — esposto al barrel pubblico per integration test consumer
+// (analog F5 worker-harness export). Pattern carryover D-151.
+export {
+  createCacheHarness,
+  type CacheHarness,
+  type CacheHarnessOptions,
+  type CollectedEvent,
+} from './test-utils/cache-harness'
