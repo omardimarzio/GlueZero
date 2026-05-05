@@ -242,16 +242,18 @@ CACHE-01, CACHE-02, CACHE-03, TOOL-01, TOOL-02, TOOL-03, TOOL-04, TOOL-05, TEST-
   4. Controlli runtime funzionanti: `pauseTopic('weather.requested')` mette in pausa la route per il topic (gli eventi vengono accodati), `resumeTopic` riprende il flusso, `flushQueue('weather.requested')` svuota la queue; `enableDebug()` attiva tutti gli Inspector e i tap reali, `disableDebug()` torna alle implementazioni no-op (zero overhead in production).
   5. Cache invalidation con scope user-aware: la chiave di cache include scope (es. `userId` o `tenantId`) per route auth, evitando cross-tenant leakage; TTL configurabile per route, invalidazione manuale via API (`broker.cache.invalidate(keyOrPattern)`) e automatica al passare del TTL — verificato da `TEST-02` (cache hit/miss flows) e da test di robustezza.
 
-**Plans**: 9 plans
+**Plans**: 11 plans (post revision iter 1 split BLOCKER-3 — 06-08 → 06-08a/b + 06-09 → 06-09a/b)
 - [ ] 06-01-PLAN.md — Bootstrap @sembridge/{cache,devtools,sembridge} (package.json + tsup ESM-only + vitest 3-tier + types/* + augment.ts) — Wave 1 sequential gate
 - [ ] 06-02-PLAN.md — MemoryCacheAdapter LRU bounded `maxEntries=1000` (D-158) + stable-hash FNV-1a (D-155 riuso F3 D-74) — Wave 2 ∥ 06-04
 - [ ] 06-03-PLAN.md — CacheHandler + CompositeHandler concretizza F3 D-77 placeholder + scope hybrid D-156/D-157 + cache-then-network ordering microtask — Wave 2-bis post 06-02
 - [ ] 06-04-PLAN.md — MultiplexTap + tap registry chain D-159 + auto-wrap F1 single-tap backward-compat — Wave 2 ∥ 06-02
-- [ ] 06-05-PLAN.md — EventInspector + RouteInspector ring buffer 500 entries (D-167) + structuredClone deep-clone (D-162) — Wave 3 parallel
+- [ ] 06-05-PLAN.md — EventInspector + RouteInspector ring buffer 500 entries (D-167) + structuredClone deep-clone (D-162) + default NODE_ENV inline (WARNING-5 fix) — Wave 3 parallel
 - [ ] 06-06-PLAN.md — MetricsCollector + reservoir Algorithm R Vitter 1985 (D-165) + cardinality cap 100 (D-166) + Prometheus naming (D-163) + cumulative-only (D-164) — Wave 3 parallel
 - [ ] 06-07-PLAN.md — PauseController + queue cap 1000 + critical bypass (D-170) + flushQueue audit (D-169) + pauseTopic block publish (D-168) — Wave 3 parallel
-- [ ] 06-08-PLAN.md — Composition wrappers (CacheBroker + DevtoolsBroker + step 14 attivazione + getDebugSnapshot) + createSemBridge aggregato + 8 integration test 3-tier — Wave 4 sequential gate
-- [ ] 06-09-PLAN.md — Final gate F6 milestone v1.0 closure: publint + attw + size-limit + DOC-02/05/06 + REQ matrix flip + chiusura PRD §39 #10 (TOOL-05) + CHANGELOG v1.0.0 — Wave 5/Final
+- [ ] 06-08a-PLAN.md — CacheBroker composition wrapper Opzione B + createCacheBroker factory + createCacheHarness + 4 integration test cache 3-tier + barrel cache FINAL append — Wave 4a sequential post 06-03
+- [ ] 06-08b-PLAN.md — DevtoolsBroker composition wrapper + createDevtoolsBroker + createSemBridge **CHAIN COMPLETA F1+F2+F3+F4+F5+F6** (BLOCKER-2 fix) + barrel devtools FINAL cumulative (BLOCKER-1 fix single-writer) + 6 integration test devtools+sembridge 3-tier — Wave 4b sequential post 06-08a
+- [ ] 06-09a-PLAN.md — CI gates verification + size-limit budget calibration cache/devtools/sembridge + biome auto-format + coverage threshold calibration post-impl — Wave 5a sequential post 06-08b
+- [ ] 06-09b-PLAN.md — Final gate F6 milestone v1.0 closure: DOC-02/05/06 italiano (~1400 LOC) con 7 Q&A enumerate WARNING-2 fix + JSDoc TypeDoc-ready 11 file public + REQ matrix flip + chiusura PRD §39 #10 (TOOL-05) + CHANGELOG v1.0.0 + ROADMAP/STATE/TRACKER closure — Wave 5b sequential post 06-09a
 **Needs research**: no
 **UI hint**: no
 
@@ -341,7 +343,7 @@ I 11 punti che il PRD §39 vieta esplicitamente di lasciare impliciti vengono ch
 | 3. Routing & Server Gateway HTTP | 14/14 | ✅ Complete | 2026-05-03 |
 | 4. Realtime inbound | 9/9 | ✅ Complete | 2026-05-04 |
 | 5. Worker Runtime | 7/7 | ✅ Complete | 2026-05-05 |
-| 6. Cache & Tooling avanzato | 0/9 (planned) | In Progress (9 plans created 2026-05-05) | - |
+| 6. Cache & Tooling avanzato | 0/11 (planned) | In Progress (11 plans post revision iter 1 — split BLOCKER-3) | - |
 
 ---
 

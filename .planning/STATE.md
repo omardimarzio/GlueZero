@@ -2,14 +2,14 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: phase_5_complete_ready_for_verifier
-last_updated: "2026-05-05T00:15:00.000Z"
+status: completed
+last_updated: "2026-05-05T15:21:25.263Z"
 progress:
   total_phases: 6
   completed_phases: 5
   total_plans: 53
-  completed_plans: 52
-  percent: 98
+  completed_plans: 53
+  percent: 100
 ---
 
 # Project State: SemBridge
@@ -44,6 +44,7 @@ Next phase: Phase 6 — Cache & Tooling avanzato (auto-advance enabled `/gsd-dis
 **Last completed:** Plan 05-07 (Wave 5 — Final gate F5) at 2026-05-05 — 5 commits atomici: `1347d0b` test coverage thresholds calibration post-implementation (91.5/83/90/93.5 measured floor) + size-limit budget @sembridge/worker 32 KB gz + biome auto-format 25 file (zero behavior change) + `33d20a7` docs DOC-05 README italiano @sembridge/worker 11 sezioni 429 LOC (Quick start + Worker source + Pool + Cancellation + Progress + Serialization WK-07 PRD §39 #11 + Scenario meteo F5 + State machine Pitfall 2C + Module loading + Limitazioni V1 + Q&A) + `e3b8770` docs JSDoc API pubblica TypeDoc-ready 5 file (public-factory + worker-handler + task-tracker + worker-pool + worker-registry) — preservation in dts: @example 23 / @see 30 / @throws 21 (sopra target floor 10/15/5 analog F4 12/21/x) + `3f07f7a` docs REQ matrix flip atomic WK-01..WK-07 → Complete + ERR-02/LIFE-02/TEST-01-02-03 ext F5 → Complete + PRD §39 #11 CLOSED 2026-05-05 + final closure docs commit (questo + ROADMAP/STATE/TRACKER + 05-07-SUMMARY.md). Test invariato 121/121 worker (Tier-1 jsdom + Tier-3 Playwright Chromium 6/6) + 877/880 monorepo full (3 skip MSW V1.x F4) zero regression. CI gates: publint ✅, attw ESM-only ✅, size-limit ✅, biome ✅, typecheck ✅, build ✅. **D-83 strict carryover ✓ verified** `git diff main...HEAD packages/{core,mapper,routing}/src/ + packages/gateway/src/{http,sse-ws}/` exit 0 lines per tutta F5.
 
 **Phase 5 closure highlights:**
+
 - WK-01..WK-07 + ERR-02 ext + LIFE-02 ext F5 + TEST-01/02/03 ext F5 → Complete
 - DOC-05 README italiano `packages/worker/README.md` esteso 11 sezioni 429 LOC con scenario report generation pesante PRD §29 esteso a worker
 - Coverage v8 worker subset 91.96% / 83.73% / 90.58% / 94.17% (above floor 85/75/88/87 + above target 90/80/90/90)
