@@ -1,13 +1,18 @@
 ---
 phase: 06-cache-tooling-avanzato
 verified: 2026-05-05T21:30:00Z
+re_verified: 2026-05-06T16:40:00Z
 status: passed
 verdict: PASS
 score: 5/5 success_criteria + 12/12 REQ-IDs F6 + ext (ERR-02/LIFE-02/PIPE-01/TEST-01/02) + 4/4 PKG-* (ext F6) + DOC-02/05/06
-milestone: v1.0_closed
+milestone: v1.0_VERIFIED_ready_for_release
 re_verification:
-  previous_status: not_present
-  previous_score: n/a
+  previous_status: passed
+  previous_score: 5/5
+  trigger: rename SemBridge → GlueZero (quick task 260505-v1e) + cleanup post-rename
+  delta_commits: 12 (058b2dc..dd2c15b, tutti chore/docs rename)
+  runtime_changes: 0
+  ci_gates_rerun: PASS_8_OF_8_typecheck + PASS_1165_OF_1168_tests (3 skip MSW V1.x atteso)
   gaps_closed: []
   gaps_remaining: []
   regressions: []
@@ -283,3 +288,43 @@ Nessun anti-pattern blocker rilevato.
 
 *Verified: 2026-05-05T21:30:00Z*
 *Verifier: Claude (gsd-verifier, model claude-opus-4-7-1)*
+
+---
+
+## Delta re-verification post-rename (2026-05-06)
+
+**Trigger:** rinomina root directory + scope npm `SemBridge → GlueZero` (quick task `260505-v1e`) e cleanup post-rename hanno introdotto 12 commit fra `058b2dc` (head originario VERIFICATION) e `dd2c15b` (head corrente). Verifica delta per confermare che il verdict PASS regge.
+
+**Commit range:** `058b2dc..dd2c15b` (12 commit, tutti `chore(rename)` / `docs(rename)` / `chore(claude-settings)`)
+
+**Categoria modifiche:**
+- 7 commit `chore/refactor(rename)`: `git mv packages/sembridge → packages/gluezero`, scope npm `@sembridge/* → @gluezero/*` su 8 `package.json` + lockfile, biome auto-format, organize-imports
+- 4 commit `docs(rename)` / `docs(260505-v1e)`: README + EXAMPLES + CLAUDE.md + planning artefacts (169 file) + SUMMARY + POST-RENAME-CHECKLIST + TRACKER pointer
+- 1 commit `chore(claude-settings)`: permessi locali `.claude/settings.json` per `gsd-sdk query` + `npm view`
+
+**Zero modifiche runtime:**
+
+```bash
+$ git diff 058b2dc..dd2c15b -- 'packages/*/src/**/*.ts'
+$ # solo modifiche identifier @sembridge → @gluezero in import path; zero modifiche logica/algoritmi/API surface
+```
+
+**CI gates re-run post-rename (2026-05-06):**
+
+| Gate | Risultato | Note |
+|------|-----------|------|
+| `pnpm install` | ✅ | Lockfile up to date, 0 changes |
+| `pnpm typecheck` | ✅ PASS_8_OF_8 | Zero errors su 8 package |
+| `pnpm test` | ✅ PASS_1165_OF_1168 (3 skip MSW V1.x F4 atteso) | core 248 + mapper 183 + routing 103 + gateway 222/225 + cache 108 + devtools 160 + worker 121 + gluezero 20 |
+| Working tree | ✅ clean | Cleanup directory anomala `" /"` (residuo `cp -r ... " /"` malformato in copia memorie GSD) rimossa |
+
+**Delta verdict:** ✅ **PASS confirmed**
+
+I 5/5 success criteria F6 + 12/12 REQ-IDs F6 + ext + D-83 strict + chiusura PRD §39 #10 verificati al `058b2dc` restano tutti validi al `dd2c15b`. Il rename è puramente identifier-level (scope npm + path packages); nessun cambio di logica, algoritmi, contratto API pubblico, dipendenze runtime.
+
+**Caveats nuovi:** 0
+**Regressioni:** 0
+**Milestone v1.0 → VERIFIED post-rename, ready for `pnpm release`.**
+
+*Re-verified: 2026-05-06T16:40:00Z*
+*Verifier: Claude (delta verification, model claude-opus-4-7-1)*
