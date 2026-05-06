@@ -1,6 +1,6 @@
 {
   "name": "@gluezero/gluezero",
-  "version": "0.0.0",
+  "version": "1.0.0",
   "description": "GlueZero aggregato pubblico (Phase 6 — re-exports core + mapper + routing + gateway + worker + cache + devtools + factory createGlueZero milestone v1.0)",
   "license": "MIT",
   "author": "",

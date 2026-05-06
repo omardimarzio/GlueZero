@@ -1,6 +1,6 @@
 {
   "name": "@gluezero/gateway",
-  "version": "0.0.0",
+  "version": "1.0.0",
   "description": "HTTP Gateway centralizzato + adapter realtime per GlueZero (Phase 3 HTTP + Phase 4 realtime SSE/WS)",
   "license": "MIT",
   "author": "",

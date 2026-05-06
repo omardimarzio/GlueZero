@@ -1,6 +1,6 @@
 {
   "name": "@gluezero/mapper",
-  "version": "0.0.0",
+  "version": "1.0.0",
   "description": "Canonical model + bidirectional mapper for GlueZero (Phase 2)",
   "license": "MIT",
   "author": "",

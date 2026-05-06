@@ -7,13 +7,5 @@
   "access": "public",
   "baseBranch": "main",
   "updateInternalDependencies": "patch",
-  "ignore": [
-    "@gluezero/mapper",
-    "@gluezero/gateway",
-    "@gluezero/routing",
-    "@gluezero/worker",
-    "@gluezero/cache",
-    "@gluezero/devtools",
-    "@gluezero/gluezero"
-  ]
+  "ignore": []
 }

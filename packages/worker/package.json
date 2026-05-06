@@ -1,6 +1,6 @@
 {
   "name": "@gluezero/worker",
-  "version": "0.0.0",
+  "version": "1.0.0",
   "description": "Worker Runtime per GlueZero (Phase 5 — Comlink-based RPC + bounded pool + state machine atomico Pitfall 2C + WK-07 closure serializzazione documentata)",
   "license": "MIT",
   "author": "",

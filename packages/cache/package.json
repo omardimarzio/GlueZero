@@ -1,6 +1,6 @@
 {
   "name": "@gluezero/cache",
-  "version": "0.0.0",
+  "version": "1.0.0",
   "description": "Cache layer per GlueZero (Phase 6 — MemoryCacheAdapter LRU bounded + scope user-aware + cache-then-network ordering — D-155/D-156/D-157/D-158)",
   "license": "MIT",
   "author": "",

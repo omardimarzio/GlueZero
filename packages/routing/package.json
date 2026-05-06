@@ -1,6 +1,6 @@
 {
   "name": "@gluezero/routing",
-  "version": "0.0.0",
+  "version": "1.0.0",
   "description": "Declarative routing engine for GlueZero (Phase 3)",
   "license": "MIT",
   "author": "",

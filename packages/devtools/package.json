@@ -1,6 +1,6 @@
 {
   "name": "@gluezero/devtools",
-  "version": "0.0.0",
+  "version": "1.0.0",
   "description": "Developer tooling per GlueZero (Phase 6 — Tap registry chain D-159 + EventInspector + RouteInspector + MetricsCollector simil-OpenMetrics + pauseTopic queue — D-159..D-170 / chiude PRD §39 #10 TOOL-05)",
   "license": "MIT",
   "author": "",
