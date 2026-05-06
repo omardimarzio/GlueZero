@@ -1,5 +1,5 @@
 ---
-last_updated: 2026-05-06T22:00:00Z
+last_updated: 2026-05-06
 status: parte_a_cleanup_complete_v1_0_0_bumped_pending_user_actions_part_b
 project: GlueZero
 milestone: v1.0.0
@@ -39,31 +39,41 @@ parte_b_status: pending_user_actions (gh repo rename + npm org @gluezero + pnpm 
 | Modello attivo | `claude-opus-4-7-1` (opus) — override esplicito su tutti i sub-agent |
 | Graphify watch | PID 8702 attivo (debounce 3s, log `graphify-out/.watch.log`) — bootstrap iniziale `/graphify .` ancora pending |
 
-## Ultimo step completato (Parte A cleanup pre-release — 2026-05-06)
+## Parte A cleanup pre-release — 2026-05-06 ✅ COMPLETE
+
+> **Sezione manuale** (NON gestita dall'hook auto-update di `## Ultimo step completato`).
 
 **Parte A ✅ COMPLETE** (9/9 task — tutto autonomo lato Claude, working tree pulito).
 
-Sequenza commit Parte A (post-rename):
+Sequenza commit Parte A (post-rename SemBridge → GlueZero):
 
 | # | Commit | Task | Effetto |
 |---|--------|------|---------|
 | A1 | `dd2c15b chore(claude-settings): allow gsd-sdk query + npm view permissions` | Smoke check post-rename | pnpm install OK + typecheck 8/8 + 1165/1168 test pass + 3 skip MSW V1.x atteso |
-| A2 | (no commit, working tree cleanup) | Cleanup directory anomala `" /"` | Rimossa copia accidentale memorie GSD (residuo `cp -r ... " /"` malformato post-rename) |
-| A3 | `f9d1eff docs(06-verify): delta re-verification post-rename — PASS confirmed` | gsd-verifier 6 finale | Sezione delta in `06-VERIFICATION.md`: PASS regge sui 12 commit chore di rename, zero modifiche runtime, zero regressioni. STATE.md → `phase_6_VERIFIED_milestone_v1_0_ready_for_release` |
-| A4 | `fd6fa63 chore(scripts): rimuovi --passWithNoTests da test e test:coverage` | Cleanup tecnico residuo | Rimosso workaround Vitest 4.1.5 da 8 package (test reali esistono); mantenuto su `test:browser`/`test:msw` (deferred V1.x). tsup 8.5.1 ancora latest → `ignoreDeprecations: "6.0"` resta necessario. 0 residui SemBridge. 3 skip MSW già documentati con rationale. |
-| A5 | `ea54a88 docs: aggiunge DECISIONS.md indice navigabile + README documentation hub` | Chiusura gap documentazione | DECISIONS.md (326 righe) indice 170 decisioni D-01..D-170 estratto auto da 6 CONTEXT.md + tabella PRD §39 open issues + cross-fase critiche. README.md "Project status" + "Installation" + "Documentation" + "PRD concepts index" → aggancia 44 nodi rationale isolati nel grafo |
-| A6 | `004e8aa docs(readme): roadmap v1.0 completed + contributing aggiornato` | README root verifica | Roadmap forward-looking → "v1.0 completed 2026-05-05" + sotto-sezione "V1.x deferred opt-ins". Contributing updated con procedura PR (PRD + CLAUDE.md + DECISIONS.md). |
-| A7 | `4743108 fix(build): build script gestisce ciclicità routing↔gateway` | Smoke install tarball locale | **CRITICO:** `pnpm build` root falliva su cycle (TS7016). Fix: `build` ora usa `build:f3` + sequenziale (worker, cache, devtools, gluezero). `build:parallel` preservato per CI cache. **Senza questo fix `pnpm release` sarebbe fallito.** Smoke OK: 8 tarball pack, throwaway project con pnpm overrides, `import { createGlueZero } from '@gluezero/gluezero'` funzionante. |
-| A8 | `b4cc223 chore(release): v1.0.0` | Version bump v1.0.0 (no publish) | `pnpm changeset version` → 0.0.0 → 1.0.0 sugli 8 package. Rimossa `ignore: [...]` da `.changeset/config.json` (eredità F1 placeholder). Generati 8 CHANGELOG.md. NON push, NON publish. |
-| A9 | (questo commit) | Update TRACKER.md / STATE.md | Riflette stato Parte A complete + Parte B pending utente |
+| A2 | (no commit, working tree cleanup) | Cleanup directory anomala `" /"` | Rimossa copia accidentale memorie GSD (residuo `cp -r ... " /"` malformato) |
+| A3 | `f9d1eff docs(06-verify): delta re-verification post-rename — PASS confirmed` | gsd-verifier 6 finale | Sezione delta in `06-VERIFICATION.md`: PASS regge sui 12 commit chore di rename, zero modifiche runtime, zero regressioni |
+| A4 | `fd6fa63 chore(scripts): rimuovi --passWithNoTests da test e test:coverage` | Cleanup tecnico residuo | Rimosso workaround Vitest 4.1.5 da 8 package; mantenuto su `test:browser`/`test:msw` (deferred V1.x). 0 residui SemBridge. tsup 8.5.1 ancora latest → `ignoreDeprecations: "6.0"` resta necessario |
+| A5 | `ea54a88 docs: aggiunge DECISIONS.md indice navigabile + README documentation hub` | Chiusura gap documentazione | DECISIONS.md (326 righe) indice 170 decisioni D-01..D-170 + tabella PRD §39 open issues + cross-fase critiche. README.md "Documentation" + "PRD concepts index" → aggancia 44 nodi rationale isolati nel grafo |
+| A6 | `004e8aa docs(readme): roadmap v1.0 completed + contributing aggiornato` | README root verifica | Roadmap forward-looking → "v1.0 completed 2026-05-05" + "V1.x deferred opt-ins". Contributing aggiornato con procedura PR |
+| A7 | `4743108 fix(build): build script gestisce ciclicità routing↔gateway` | Smoke install tarball locale | **CRITICO:** `pnpm build` root falliva su cycle (TS7016). Fix: `build` ora usa `build:f3` + sequenziale (worker, cache, devtools, gluezero). **Senza questo fix `pnpm release` sarebbe fallito.** Smoke OK: 8 tarball pack + import `createGlueZero` + getDebugSnapshot funzionanti |
+| A8 | `b4cc223 chore(release): v1.0.0` | Version bump v1.0.0 (no publish) | `pnpm changeset version` → 0.0.0 → 1.0.0 sugli 8 package. Rimossa `ignore: [...]` da `.changeset/config.json`. 8 CHANGELOG.md generati |
+| A9 | `b7f776c docs(planning): TRACKER + STATE riflettono Parte A complete` | Update TRACKER.md / STATE.md | Frontmatter status → `parte_a_cleanup_complete_v1_0_0_bumped_pending_user_actions_part_b`. Sezioni Parte A + Parte B documentate |
 
 **Stato repo post-Parte A:**
+
 - 8 package a v1.0.0 (workspace-resolved inter-deps)
 - Build root funzionante (`pnpm build` → 8/8 OK con dts complete)
 - Test 1165/1168 pass (3 skip MSW V1.x atteso)
-- DECISIONS.md indice navigabile creato
+- DECISIONS.md indice navigabile creato (170 decisioni)
 - README documentation hub aggiornato
-- Working tree pulito
+- Working tree pulito (eccetto auto-update timestamp di questo TRACKER)
+
+## Ultimo step completato (auto-update 2026-05-06T21:29:30Z)
+
+- Plan: **03-11** → SUMMARY.md committed
+- Commit: `b7f776c docs(planning): TRACKER + STATE riflettono Parte A complete`
+- Phase progress: **11/11** plan completati con SUMMARY.md
+- Project progress: 64/64 plan (100%)
 
 
 ## Prossimo step — Parte B (richiede l'utente)
