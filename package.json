@@ -7,7 +7,8 @@
     "node": ">=20"
   },
   "scripts": {
-    "build": "pnpm -r --filter='./packages/*' --if-present run build",
+    "build": "pnpm run build:f3 && pnpm --filter @gluezero/worker --filter @gluezero/cache --filter @gluezero/devtools --filter @gluezero/gluezero run build",
+    "build:parallel": "pnpm -r --filter='./packages/*' --if-present run build",
     "build:f3": "pnpm --filter @gluezero/core --filter @gluezero/mapper run build && pnpm run build:f3:cyclic",
     "build:f3:cyclic": "pnpm --filter @gluezero/routing exec tsup --format esm --no-dts && pnpm --filter @gluezero/gateway exec tsup --format esm --no-dts && pnpm run build:f3:dts:bootstrap && pnpm run build:f3:dts:bundle",
     "build:f3:dts:bootstrap": "pnpm --filter @gluezero/routing exec tsc --emitDeclarationOnly --noEmit false --declaration --declarationDir dist || true; pnpm --filter @gluezero/gateway exec tsc --emitDeclarationOnly --noEmit false --declaration --declarationDir dist || true",
