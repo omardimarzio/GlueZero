@@ -815,30 +815,22 @@ If data moves, transforms, routes, fails or reaches a subscriber, developers sho
 
 ## Project status
 
-GlueZero is currently in early design / implementation phase.
+GlueZero **v1.0 milestone is closed** (2026-05-05). All 6 phases of the PRD §32 roadmap are complete and verified, with 91/91 v1 requirements implemented and 10/11 PRD §39 open issues closed (the remaining one is intentionally deferred to V1.x as a cross-phase pipeline ordering opt-in).
 
-The architectural direction is defined around:
+The implementation lives in 8 published packages under the `@gluezero/*` npm scope:
 
-- event broker;
-- declarative routing;
-- canonical model;
-- semantic mapper;
-- server gateway;
-- worker runtime;
-- observability tooling.
+| Package | Phase | Role |
+|---------|-------|------|
+| [`@gluezero/core`](./packages/core/README.md) | 1 | Pub/sub broker, plugin registry, EventTap pre-instrumentation |
+| [`@gluezero/mapper`](./packages/mapper/README.md) | 2 | Canonical model + bidirectional mapper + Mapping Inspector |
+| [`@gluezero/routing`](./packages/routing/README.md) | 3 | Declarative routing engine, route resolver, policy chain |
+| [`@gluezero/gateway`](./packages/gateway/README.md) | 3 + 4 | HTTP gateway with auth/retry/timeout + SSE/WS realtime adapters |
+| [`@gluezero/worker`](./packages/worker/README.md) | 5 | Worker runtime, registry, pool, cancellation, task tracking |
+| [`@gluezero/cache`](./packages/cache/README.md) | 6 | LRU memory cache adapter, 3 strategies, scope hybrid |
+| [`@gluezero/devtools`](./packages/devtools/README.md) | 6 | Event/Mapping/Route Inspector, MetricsCollector, PauseController |
+| [`@gluezero/gluezero`](./packages/gluezero/README.md) | aggregate | `createGlueZero()` factory composing F1+F2+F3+F4+F5+F6 |
 
-The initial implementation roadmap should prioritize:
-
-1. core pub/sub;
-2. topic registry;
-3. plugin registry;
-4. canonical model and mapper;
-5. route engine;
-6. HTTP gateway;
-7. realtime inbound;
-8. worker runtime;
-9. cache layer;
-10. debug tooling.
+CI gates passing on the full monorepo: typecheck 8/8, build 8/8, publint 8/8, attw ESM-only 8/8, size-limit 8/8, biome zero errors, **1165/1168 tests pass** (3 skipped, MSW V1.x deferred).
 
 ---
 
@@ -897,25 +889,34 @@ The initial implementation roadmap should prioritize:
 
 ## Installation
 
-> Package name and installation command will be finalized when the first public package is released.
-
-Expected installation:
-
 ```bash
-npm install gluezero
+pnpm add @gluezero/gluezero
 ```
 
 or:
 
 ```bash
-yarn add gluezero
+npm install @gluezero/gluezero
 ```
 
 or:
 
 ```bash
-pnpm add gluezero
+yarn add @gluezero/gluezero
 ```
+
+The aggregate package re-exports the factory `createGlueZero` and the configuration types you need to compose the full chain. You can also depend only on the sub-packages you need (e.g. just `@gluezero/core` + `@gluezero/mapper` for a no-network setup).
+
+```ts
+import { createGlueZero } from '@gluezero/gluezero'
+
+const broker = createGlueZero({
+  debug: true,
+  // ...config
+})
+```
+
+See the [`@gluezero/gluezero` README](./packages/gluezero/README.md) and [`EXAMPLES.md`](./packages/gluezero/EXAMPLES.md) for the end-to-end weather scenario covering all 6 features (broker → mapper → routing → realtime → worker → cache).
 
 ---
 
@@ -982,6 +983,45 @@ Areas where help will be especially valuable:
 - examples;
 - documentation;
 - framework adapters.
+
+---
+
+## Documentation
+
+### For users of the library
+
+- [`@gluezero/gluezero/README.md`](./packages/gluezero/README.md) — aggregate factory `createGlueZero` and chain composition order
+- [`@gluezero/gluezero/EXAMPLES.md`](./packages/gluezero/EXAMPLES.md) — 10 cross-feature consolidated examples + full weather scenario F1+F2+F3+F4+F5+F6
+- Per-package READMEs (italian, with Q&A and runnable code): [core](./packages/core/README.md) · [mapper](./packages/mapper/README.md) · [routing](./packages/routing/README.md) · [gateway](./packages/gateway/README.md) · [worker](./packages/worker/README.md) · [cache](./packages/cache/README.md) · [devtools](./packages/devtools/README.md)
+
+### For contributors and architecture-curious readers
+
+- [`prd.md`](./prd.md) — **authoritative PRD** (single source of truth for the v1 design)
+- [`DECISIONS.md`](./DECISIONS.md) — navigable index of all 170 architectural decisions `D-01..D-170` across the 6 phases, with cross-links to PRD sections, REQ-IDs and source CONTEXT files
+- [`.planning/REQUIREMENTS.md`](./.planning/REQUIREMENTS.md) — 91 v1 requirements mapped to phases and decisions
+- [`.planning/ROADMAP.md`](./.planning/ROADMAP.md) — 6-phase implementation roadmap with success criteria
+- [`.planning/research/`](./.planning/research/) — pre-implementation research: STACK, FEATURES, ARCHITECTURE, PITFALLS, SUMMARY
+- [`CLAUDE.md`](./CLAUDE.md) — operational constraints, conventions, boundaries (relevant for AI-assisted contribution)
+
+### PRD concepts index
+
+The PRD §1-§30 introduces the conceptual model; the implementation interprets it through the decision index above. The most load-bearing concepts to start from:
+
+| Concept | PRD § | Implementation entry-point | Decisions |
+|---------|-------|---------------------------|-----------|
+| `BrokerEvent` | §10 | [`@gluezero/core`](./packages/core/README.md) | D-01..D-07 (delivery semantics, deep-freeze) |
+| Wildcard pattern matching | §12.3 | [`@gluezero/core`](./packages/core/README.md) | D-08..D-10 (TopicTrie segmented) |
+| Plugin lifecycle + cascade `unregisterPlugin` (LIFE-02) | §11 | All packages | D-26 (cascade) extended to F2-F6 (D-86, D-126) |
+| Canonical Model + Mapper (alias resolution) | §13.5, §15-§16 | [`@gluezero/mapper`](./packages/mapper/README.md) | D-31..D-58 |
+| Routing & Policy chain | §17, §22-§23 | [`@gluezero/routing`](./packages/routing/README.md), [`@gluezero/gateway`](./packages/gateway/README.md) | D-60..D-100 |
+| Realtime SSE/WS (auto-fallback) | §18, §31.3 | [`@gluezero/gateway`](./packages/gateway/README.md) | D-104..D-120 |
+| Worker runtime + serialization | §19-§20 | [`@gluezero/worker`](./packages/worker/README.md) | D-121..D-154 (D-83 strict carryover) |
+| Cache scope hybrid + 3 strategies | §21 | [`@gluezero/cache`](./packages/cache/README.md) | D-155..D-158 |
+| Devtools, Inspector, Metrics | §27 | [`@gluezero/devtools`](./packages/devtools/README.md) | D-159..D-170 |
+| Pipeline §28 14-step | §28 | Cross-phase | D-161 (step 14 `event.observed`) |
+| PRD §39 open issues closure | §39 | All phases | 10/11 closed v1.0; 1 deferred V1.x (PIPE-01) |
+
+For the complete list of decisions per phase with one-line summaries, see [`DECISIONS.md`](./DECISIONS.md).
 
 ---
 
