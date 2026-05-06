@@ -43,11 +43,11 @@
   },
   "scripts": {
     "build": "tsup",
-    "test": "vitest run --passWithNoTests",
+    "test": "vitest run",
     "test:watch": "vitest",
     "test:msw": "vitest run --passWithNoTests src/sse-ws/__integration__/msw-",
     "test:browser": "vitest run --config vitest.browser.config.ts --passWithNoTests",
-    "test:coverage": "vitest run --coverage --passWithNoTests",
+    "test:coverage": "vitest run --coverage",
     "typecheck": "tsc --noEmit",
     "publint": "publint --strict",
     "attw": "attw --pack --profile=esm-only",

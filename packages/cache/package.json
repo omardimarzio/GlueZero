@@ -35,10 +35,10 @@
   },
   "scripts": {
     "build": "tsup",
-    "test": "vitest run --passWithNoTests",
+    "test": "vitest run",
     "test:watch": "vitest",
     "test:browser": "vitest run --config vitest.browser.config.ts --passWithNoTests",
-    "test:coverage": "vitest run --coverage --passWithNoTests",
+    "test:coverage": "vitest run --coverage",
     "typecheck": "tsc --noEmit",
     "clean": "rm -rf dist"
   },

@@ -35,9 +35,9 @@
   },
   "scripts": {
     "build": "tsup",
-    "test": "vitest run --passWithNoTests",
+    "test": "vitest run",
     "test:watch": "vitest",
-    "test:coverage": "vitest run --coverage --passWithNoTests",
+    "test:coverage": "vitest run --coverage",
     "typecheck": "tsc --noEmit",
     "publint": "publint --strict",
     "attw": "attw --pack --profile=esm-only",
