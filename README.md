@@ -836,54 +836,28 @@ CI gates passing on the full monorepo: typecheck 8/8, build 8/8, publint 8/8, at
 
 ## Roadmap
 
-### Phase 1 — Core broker
+### v1.0 — completed (2026-05-05)
 
-- publish / subscribe / unsubscribe;
-- topic registry;
-- event metadata;
-- basic logging;
-- lifecycle cleanup.
+All six phases of the original PRD §32 roadmap are implemented and verified.
 
-### Phase 2 — Canonical model and mapper
+- **Phase 1 — Core broker** (`@gluezero/core`): publish/subscribe/unsubscribe, segmented TopicTrie wildcard matching, plugin registry with cascade `unregisterPlugin` (LIFE-02), EventTap pre-instrumentation, deep-freeze runtime, BrokerError + sanitized error shape
+- **Phase 2 — Canonical model and mapper** (`@gluezero/mapper`): canonical schema registry, alias registry (global + scoped), pluggable Valibot validation, bidirectional mapper engine, mapping cycle detection at register-time, MappingInspector (no-op V1, full snapshot in F6)
+- **Phase 3 — Routing and HTTP gateway** (`@gluezero/routing`, `@gluezero/gateway`): declarative route registry, 6 route types (`local`/`http`/`realtime-inbound`/`worker`/`cache`/`composite`), Strategy chain (timeout/retry/backoff/dedupe/auth/idempotency/URL allowlist/concurrency/circuit-breaker/backpressure), success/error event publication
+- **Phase 4 — Realtime inbound** (`@gluezero/gateway/sse-ws`): SSE adapter (`EventSource`) + WebSocket adapter (envelope JSON), auto-fallback SSE→WS with cycle cap (D-107/D-108), visibility-aware behavior, application-level ping/pong, reconnect policy with exponential backoff
+- **Phase 5 — Worker runtime** (`@gluezero/worker`): worker registry, bounded worker pool, Comlink RPC bridge, hybrid cancellation (`AbortSignal` proxied), `assertSerializable` deep-walk, transferable opt-in via JSONPath, progress events, ESM module loading
+- **Phase 6 — Cache and advanced observability** (`@gluezero/cache`, `@gluezero/devtools`): LRU bounded `MemoryCacheAdapter`, scope hybrid 3-layer (D-156), 3 strategies (cache-first/network-first/cache-then-network), Event/Mapping/Route Inspector, `MetricsCollector` (simil-OpenMetrics + reservoir Algorithm R + cardinality cap), `PauseController`, full pipeline §28 14-step
 
-- canonical vocabulary registry;
-- plugin input/output maps;
-- aliases;
-- transforms;
-- mapping inspector.
+See [`.planning/ROADMAP.md`](./.planning/ROADMAP.md) for success criteria per phase and [`DECISIONS.md`](./DECISIONS.md) for the 170 architectural decisions across the 6 phases.
 
-### Phase 3 — Routing and server gateway
+### V1.x — deferred opt-ins
 
-- route registry;
-- HTTP routes;
-- success/error event publication;
-- retry;
-- timeout;
-- error handling.
+These are intentional deferrals tracked in [`REQUIREMENTS.md`](./.planning/REQUIREMENTS.md), to be reopened when real-world consumers emerge:
 
-### Phase 4 — Realtime inbound
-
-- SSE adapter;
-- optional WebSocket adapter;
-- reconnect policy;
-- server message normalization.
-
-### Phase 5 — Worker runtime
-
-- worker registry;
-- worker route handler;
-- task correlation;
-- progress events;
-- worker error propagation.
-
-### Phase 6 — Cache and advanced observability
-
-- in-memory cache;
-- cache policies;
-- route inspector;
-- metrics;
-- debug snapshot;
-- optional browser devtool integration.
+- **PIPE-01** (PRD §39 #11) — cross-phase pipeline mapping/validation ordering opt-in
+- **MSW 2.5+** integration tests — 3 `describe.skip` in `@gluezero/gateway/sse-ws` waiting for `ws.link` jsdom + EventSource fetch-based polyfill
+- **IndexedDB cache adapter** — current default is `MemoryCacheAdapter`; the `CacheAdapter` interface already supports swap-in
+- **Custom validator adapters** (Zod, Ajv) — `ValidatorAdapter` contract is no-throw discriminated-union; default is Valibot
+- **Extended browser test tier** (Playwright across `@gluezero/cache`, `@gluezero/devtools`, etc.) — `test:browser` script slot already wired
 
 ---
 
@@ -970,19 +944,21 @@ Recommended options:
 
 ## Contributing
 
-Contributions will be welcome once the initial implementation is published.
+Contributions are welcome. Before opening a PR, please:
 
-Areas where help will be especially valuable:
+1. Read [`prd.md`](./prd.md) — it is the single authoritative source for v1 design choices and is referenced explicitly in every per-package README.
+2. Read [`CLAUDE.md`](./CLAUDE.md) for operational conventions (italian for docs/commits, english for code, the 6-phase composition wrapper boundary D-83 strict carryover, etc.).
+3. Pick an existing decision from [`DECISIONS.md`](./DECISIONS.md) before introducing a competing pattern — most "obvious" extensions have already been considered and rationalized.
+4. Run `pnpm typecheck && pnpm test && pnpm build` locally; all 8 packages must pass with zero regressions.
 
-- TypeScript API design;
-- mapping engine;
-- validation layer;
-- route engine;
-- worker runtime;
-- debug tooling;
-- examples;
-- documentation;
-- framework adapters.
+Areas where contributions are especially welcome:
+
+- additional **`CacheAdapter`** implementations (IndexedDB, sessionStorage)
+- additional **`ValidatorAdapter`** implementations (Zod, Ajv)
+- alternative **`WorkerBridge`** implementations (RPC custom for niche use-cases)
+- framework integrations (React hooks, Vue composables, Svelte stores, Solid signals)
+- examples and tutorials covering specific verticals (CRM, low-code, micro-frontend)
+- TypeDoc → docs site automation (workflow scaffolding present, deploy not yet wired)
 
 ---
 
