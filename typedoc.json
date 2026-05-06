@@ -1,0 +1,26 @@
+{
+  "$schema": "https://typedoc.org/schema.json",
+  "name": "GlueZero",
+  "out": "docs",
+  "entryPointStrategy": "packages",
+  "entryPoints": [
+    "packages/core",
+    "packages/mapper",
+    "packages/routing",
+    "packages/gateway",
+    "packages/worker",
+    "packages/cache",
+    "packages/devtools",
+    "packages/gluezero"
+  ],
+  "exclude": ["**/__integration__/**", "**/__browser__/**", "**/*.test.ts"],
+  "readme": "README.md",
+  "includeVersion": true,
+  "skipErrorChecking": true,
+  "githubPages": false,
+  "navigationLinks": {
+    "PRD": "https://github.com/omardimarzio/GlueZero/blob/main/prd.md",
+    "Decisions": "https://github.com/omardimarzio/GlueZero/blob/main/DECISIONS.md",
+    "Examples": "https://github.com/omardimarzio/GlueZero/blob/main/packages/gluezero/EXAMPLES.md"
+  }
+}

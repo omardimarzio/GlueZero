@@ -24,7 +24,9 @@
     "ci:gate:f3": "pnpm ci:publint && pnpm ci:attw && pnpm ci:size",
     "ci:gate:f6": "pnpm ci:publint && pnpm ci:attw && pnpm ci:size",
     "changeset": "changeset",
-    "release": "pnpm build && changeset publish"
+    "release": "pnpm build && changeset publish",
+    "docs:build": "typedoc",
+    "docs:serve": "npx http-server docs -p 8080"
   },
   "devDependencies": {
     "typescript": "6.0.3",

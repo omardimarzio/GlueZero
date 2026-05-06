@@ -6,6 +6,9 @@ node_modules
 dist
 *.tsbuildinfo
 
+# typedoc output (rigenerato dal workflow .github/workflows/docs.yml su gh-pages)
+docs
+
 # test
 coverage
 .vitest
