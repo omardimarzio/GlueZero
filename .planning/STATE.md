@@ -1,9 +1,12 @@
 ---
 gsd_state_version: 1.0
-milestone: v1.0
+milestone: v1.0.0
 milestone_name: milestone
-status: phase_6_VERIFIED_milestone_v1_0_ready_for_release
-last_updated: "2026-05-06T16:40:00.000Z"
+status: parte_a_cleanup_complete_v1_0_0_bumped_pending_user_actions_part_b
+last_updated: "2026-05-06T22:00:00.000Z"
+package_versions: 1.0.0
+parte_a_status: COMPLETE_2026-05-06
+parte_b_status: pending_user_actions
 progress:
   total_phases: 6
   completed_phases: 6

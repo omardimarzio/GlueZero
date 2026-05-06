@@ -1,14 +1,17 @@
 ---
-last_updated: 2026-05-05
-status: phase_6_complete_verifier_pass_milestone_v1_0_ready_for_release
+last_updated: 2026-05-06T22:00:00Z
+status: parte_a_cleanup_complete_v1_0_0_bumped_pending_user_actions_part_b
 project: GlueZero
-milestone: v1.0
+milestone: v1.0.0
 current_phase: 6_complete
 current_wave: 5b_complete_milestone_v1_0_chiusa
 current_plan: 06_09b_done_milestone_closed
 session_active: false
 verifier_verdict: PASS
 verifier_report: .planning/phases/06-cache-tooling-avanzato/06-VERIFICATION.md
+package_versions: 1.0.0 (bumped 2026-05-06, awaiting publish)
+parte_a_status: COMPLETE_2026-05-06
+parte_b_status: pending_user_actions (gh repo rename + npm org @gluezero + pnpm release)
 ---
 
 # TRACKER — GlueZero
@@ -36,32 +39,60 @@ verifier_report: .planning/phases/06-cache-tooling-avanzato/06-VERIFICATION.md
 | Modello attivo | `claude-opus-4-7-1` (opus) — override esplicito su tutti i sub-agent |
 | Graphify watch | PID 8702 attivo (debounce 3s, log `graphify-out/.watch.log`) — bootstrap iniziale `/graphify .` ancora pending |
 
-## Ultimo step completato (auto-update 2026-05-05T21:03:00Z)
+## Ultimo step completato (Parte A cleanup pre-release — 2026-05-06)
 
-- Plan: **03-11** → SUMMARY.md committed
-- Commit: `9f948b2 docs(260505-v1e): SUMMARY quick task rename SemBridge → GlueZero done`
-- Phase progress: **11/11** plan completati con SUMMARY.md
-- Project progress: 64/64 plan (100%)
+**Parte A ✅ COMPLETE** (9/9 task — tutto autonomo lato Claude, working tree pulito).
+
+Sequenza commit Parte A (post-rename):
+
+| # | Commit | Task | Effetto |
+|---|--------|------|---------|
+| A1 | `dd2c15b chore(claude-settings): allow gsd-sdk query + npm view permissions` | Smoke check post-rename | pnpm install OK + typecheck 8/8 + 1165/1168 test pass + 3 skip MSW V1.x atteso |
+| A2 | (no commit, working tree cleanup) | Cleanup directory anomala `" /"` | Rimossa copia accidentale memorie GSD (residuo `cp -r ... " /"` malformato post-rename) |
+| A3 | `f9d1eff docs(06-verify): delta re-verification post-rename — PASS confirmed` | gsd-verifier 6 finale | Sezione delta in `06-VERIFICATION.md`: PASS regge sui 12 commit chore di rename, zero modifiche runtime, zero regressioni. STATE.md → `phase_6_VERIFIED_milestone_v1_0_ready_for_release` |
+| A4 | `fd6fa63 chore(scripts): rimuovi --passWithNoTests da test e test:coverage` | Cleanup tecnico residuo | Rimosso workaround Vitest 4.1.5 da 8 package (test reali esistono); mantenuto su `test:browser`/`test:msw` (deferred V1.x). tsup 8.5.1 ancora latest → `ignoreDeprecations: "6.0"` resta necessario. 0 residui SemBridge. 3 skip MSW già documentati con rationale. |
+| A5 | `ea54a88 docs: aggiunge DECISIONS.md indice navigabile + README documentation hub` | Chiusura gap documentazione | DECISIONS.md (326 righe) indice 170 decisioni D-01..D-170 estratto auto da 6 CONTEXT.md + tabella PRD §39 open issues + cross-fase critiche. README.md "Project status" + "Installation" + "Documentation" + "PRD concepts index" → aggancia 44 nodi rationale isolati nel grafo |
+| A6 | `004e8aa docs(readme): roadmap v1.0 completed + contributing aggiornato` | README root verifica | Roadmap forward-looking → "v1.0 completed 2026-05-05" + sotto-sezione "V1.x deferred opt-ins". Contributing updated con procedura PR (PRD + CLAUDE.md + DECISIONS.md). |
+| A7 | `4743108 fix(build): build script gestisce ciclicità routing↔gateway` | Smoke install tarball locale | **CRITICO:** `pnpm build` root falliva su cycle (TS7016). Fix: `build` ora usa `build:f3` + sequenziale (worker, cache, devtools, gluezero). `build:parallel` preservato per CI cache. **Senza questo fix `pnpm release` sarebbe fallito.** Smoke OK: 8 tarball pack, throwaway project con pnpm overrides, `import { createGlueZero } from '@gluezero/gluezero'` funzionante. |
+| A8 | `b4cc223 chore(release): v1.0.0` | Version bump v1.0.0 (no publish) | `pnpm changeset version` → 0.0.0 → 1.0.0 sugli 8 package. Rimossa `ignore: [...]` da `.changeset/config.json` (eredità F1 placeholder). Generati 8 CHANGELOG.md. NON push, NON publish. |
+| A9 | (questo commit) | Update TRACKER.md / STATE.md | Riflette stato Parte A complete + Parte B pending utente |
+
+**Stato repo post-Parte A:**
+- 8 package a v1.0.0 (workspace-resolved inter-deps)
+- Build root funzionante (`pnpm build` → 8/8 OK con dts complete)
+- Test 1165/1168 pass (3 skip MSW V1.x atteso)
+- DECISIONS.md indice navigabile creato
+- README documentation hub aggiornato
+- Working tree pulito
 
 
-## Prossimo step
+## Prossimo step — Parte B (richiede l'utente)
 
-> **⚠️ ALLA RIAPERTURA POST-MV ROOT:** leggi PRIMA `.planning/quick/260505-v1e-rinomina-sembridge-to-gluezero/POST-RENAME-CHECKLIST.md` — contiene la checklist completa pre-release v1.0.0 (npm scope reservation, smoke install, repo GitHub rename, dominio, release commands).
+> **🔴 BLOCCANTI** per `pnpm release` v1.0.0 (NON eseguibili da Claude):
 
-**Quick task `260505-v1e` rinomina ✅ COMPLETE** (commit finale `9f948b2 docs(260505-v1e): SUMMARY ...`). 9 commit atomic + CI gates 8/8 verdi + 0 hit grep non-documentati. Operazioni manuali ancora da fare dall'utente esterno alla sessione: `mv` root directory, `cp -r` memory dir, `/graphify .` rigenerazione, repo GitHub rename, npm scope reservation, `pnpm release`.
+| # | Azione | Strumento | Note |
+|---|--------|-----------|------|
+| B1 | `gh repo rename omardimarzio/SemBridge omardimarzio/GlueZero` | gh CLI o GitHub UI | Poi `git remote set-url origin <new-URL>` (Claude può eseguire questo step se URL fornito) |
+| B2 | Crea org `gluezero` su https://www.npmjs.com/org/create | npmjs.com web | Senza questo `pnpm release` fallisce 403 |
+| B2.1 | Genera **automation token granulare** scope `@gluezero/*` (se 2FA attivo) | npmjs.com Settings → Access Tokens | Salva in `~/.npmrc` o env CI |
+| B3 | `pnpm release` (= `pnpm build && changeset publish`) | pnpm da root | **IRREVERSIBILE** (npm deprecate solo, no unpublish dopo 72h). Posso eseguirlo io con autorizzazione esplicita |
+| B4 | `git push --follow-tags origin main` | git | Posso io con tua autorizzazione esplicita |
+| B5 | `gh release create v1.0.0 --generate-notes` | gh CLI | Posso io con tua autorizzazione |
 
-**Verifier PASS ✅ — milestone v1.0 ready for release:**
-- `gsd-verifier 6` ✅ verdict **PASS** (zero caveat actionable; report `.planning/phases/06-cache-tooling-avanzato/06-VERIFICATION.md`).
-- 12/12 REQ-IDs F6 Complete + 5 ext (ERR-02, LIFE-02, PIPE-01, TEST-01/02) + 4 PKG-* ext.
-- D-83 strict ✓ verified (zero diff `packages/{core,mapper,routing,gateway,worker}/src/`).
-- PRD §39 #10 (TOOL-05) closed esplicitamente in DOC-05 + REQUIREMENTS + ROADMAP + changeset.
-- Chain `createGlueZero` F1+F2+F3+F4+F5+F6: 29 hits factory in `packages/gluezero/src/glue-zero.ts`.
-- CI gates 8/8 ✅ + size-limit budget rispettati + 288/288 test F6 passing.
+> **🟢 OPZIONALI** post-release:
 
-**Comando release manuale (richiede chiavi npm utente):**
+| # | Azione | Strumento | Note |
+|---|--------|-----------|------|
+| B6 | Registra dominio `gluezero` (anti-squatting) | registrar | Solo utente |
+| B7 | Workflow TypeDoc → GitHub Pages | `.github/workflows/docs.yml` | Posso scaffoldare; primo deploy manuale utente |
+| B8 | License decision (MIT vs Apache-2.0) | repo/package.json | Scelta utente — package.json hanno già `license: MIT` ma root non ha LICENSE file |
+| B9 | Annuncio v1.0 (Twitter/Mastodon/Reddit r/javascript) | manuale | Solo utente |
+
+**Comando release effettivo (quando B1 + B2 sono fatti):**
 ```bash
-pnpm changeset version  # consume .changeset/v1-0-0-release.md → bump 0.0.0 → 1.0.0 su 8 package
-pnpm release            # changeset publish + git tag v1.0.0
+pnpm release            # pnpm build && changeset publish (richiede npm auth)
+git push --follow-tags origin main
+gh release create v1.0.0 --generate-notes
 ```
 
 Nessun plan/wave attivo. La sessione di execute Phase 6 è chiusa con success criteria coperti:
