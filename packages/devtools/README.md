@@ -353,9 +353,7 @@ metrics.increment('gluezero.cache.hits_total', { routeId: 'weather-route' })
 
 ## Riferimenti
 
-- `prd.md` (root) §16 (debug + introspection), §25 (developer tooling), §28 (pipeline §28 14 step), §39 #10 (open issue TOOL-05 — **CHIUSO in F6**)
-- `.planning/phases/06-cache-tooling-avanzato/06-CONTEXT.md` (D-159..D-170 — 12 decisioni lockate F6 devtools layer)
-- `.planning/phases/06-cache-tooling-avanzato/06-RESEARCH.md` §6 (Inspector ring buffer impl), §7 (MetricsCollector deep dive), §10 (PauseController), §15 (Pitfall list)
+- [`DECISIONS.md`](../../DECISIONS.md) — 170 decisioni architetturali con riferimenti a sezioni di design
 - [`@gluezero/core`](../core/README.md) (EventTap + PipelineSnapshot + safeTapStep, F1)
 - [`@gluezero/mapper`](../mapper/README.md) (canonical mapping, F2)
 - [`@gluezero/routing`](../routing/README.md) (RouterBroker + step 9+10 pipeline, F3)

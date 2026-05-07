@@ -1,16 +1,15 @@
 # Contributing to GlueZero
 
-Thanks for your interest in contributing. This document is the operational reference for working on GlueZero — for the *why* behind decisions, see [`prd.md`](./prd.md) and [`DECISIONS.md`](./DECISIONS.md).
+Thanks for your interest in contributing. This document is the operational reference for working on GlueZero — for the *why* behind decisions, see [`DECISIONS.md`](./DECISIONS.md).
 
 ## Before opening a PR
 
-1. **Read [`prd.md`](./prd.md)** — it is the single authoritative source for v1 design choices.
-2. **Read [`CLAUDE.md`](./CLAUDE.md)** for operational conventions:
+1. **Read [`DECISIONS.md`](./DECISIONS.md)** — index of 170 architectural decisions. Pick an existing decision before introducing a competing pattern. Most "obvious" extensions have already been considered and rationalized; if you want to override one, the PR should explicitly cite which D-XX is being revisited and why.
+2. **Operational conventions:**
    - Italian for docs / commit messages / JSDoc descriptions
    - English for code, identifiers, shell commands, library names, error keywords
    - The 6-phase composition wrapper boundary (D-83 strict carryover): F3+ packages do **not** modify `packages/{core,mapper}/src/`
-3. **Pick an existing decision from [`DECISIONS.md`](./DECISIONS.md)** before introducing a competing pattern. Most "obvious" extensions have already been considered and rationalized; if you want to override one, the PR should explicitly cite which D-XX is being revisited and why.
-4. **Run the full local gate** before opening the PR:
+3. **Run the full local gate** before opening the PR:
    ```bash
    pnpm install
    pnpm typecheck   # 8/8 must pass
@@ -37,11 +36,9 @@ packages/
 
 Each package is independently publishable on npm under `@gluezero/*`. Inter-package deps use `workspace:*` and are resolved at publish time by Changesets.
 
-The `.planning/` folder contains the full design history (research, plans, summaries, verifications) — useful for understanding *why* something exists, not as a source of truth for *how* the code currently behaves. The code is the source of truth for behavior.
-
 ## Architectural rules (non-negotiable)
 
-These derive from PRD §33 and decisions D-26 / D-49 / D-83:
+These derive from decisions D-26 / D-49 / D-83 (see `DECISIONS.md`):
 
 1. **Composition over inheritance.** `MapperBroker` wraps `Broker`, `RouterBroker` wraps `MapperBroker`, etc. Never subclass.
 2. **`createXBroker(config)` is a pure function (no singleton, D-30).** Factories return fresh instances; tests rely on this.

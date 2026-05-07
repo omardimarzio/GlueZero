@@ -432,10 +432,7 @@ Nessuna breaking change attesa V1 → V1.x. La V1.x roadmap include estensioni o
 
 ## Riferimenti
 
-- `prd.md` (root) §10 (chain composition F1-F6), §29 (scenario meteo), §31 (packaging), §32 (6 fasi roadmap), §39 (open issues — TUTTI chiusi v1.0)
-- `.planning/ROADMAP.md` (6 fasi PRD complete v1.0)
-- `.planning/REQUIREMENTS.md` (91 REQ-IDs Complete v1.0)
-- `.planning/phases/06-cache-tooling-avanzato/06-RESEARCH.md` §11 composition wrapper topology + §11.3 Opzione B convenience factory aggregato
+- [`DECISIONS.md`](../../DECISIONS.md) — 170 decisioni architetturali con riferimenti a sezioni di design
 - `EXAMPLES.md` (in questo pacchetto) — esempi consolidati end-to-end cross-package
 - [`@gluezero/core`](../core/README.md) (F1)
 - [`@gluezero/mapper`](../mapper/README.md) (F2)

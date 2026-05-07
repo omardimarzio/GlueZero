@@ -1,9 +1,9 @@
 {
   "name": "@gluezero/gateway",
   "version": "1.0.0",
-  "description": "HTTP Gateway centralizzato + adapter realtime per GlueZero (Phase 3 HTTP + Phase 4 realtime SSE/WS)",
+  "description": "GlueZero HTTP gateway + SSE/WebSocket realtime adapters \u2014 auth, retry, timeout, dedupe, backpressure, auto-fallback",
   "license": "MIT",
-  "author": "",
+  "author": "Omar Di Marzio",
   "type": "module",
   "main": "./dist/index.js",
   "module": "./dist/index.js",
@@ -74,5 +74,20 @@
     "directory": "packages/gateway"
   },
   "homepage": "https://github.com/omardimarzio/GlueZero/tree/main/packages/gateway#readme",
-  "bugs": "https://github.com/omardimarzio/GlueZero/issues"
+  "bugs": "https://github.com/omardimarzio/GlueZero/issues",
+  "keywords": [
+    "auth",
+    "browser",
+    "circuit-breaker",
+    "esm",
+    "fetch",
+    "frontend",
+    "http-client",
+    "javascript",
+    "realtime",
+    "retry",
+    "sse",
+    "typescript",
+    "websocket"
+  ]
 }

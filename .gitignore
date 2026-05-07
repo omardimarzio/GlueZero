@@ -25,8 +25,11 @@ graphify-out
 .idea
 .DS_Store
 
-# AI dev tooling (specifico ambiente sviluppatore, non rilevante per consumer della libreria)
+# AI dev tooling + workflow interno (specifico ambiente sviluppatore, non rilevante per consumer della libreria)
 .claude
+CLAUDE.md
+prd.md
+.planning
 
 # OS
 Thumbs.db

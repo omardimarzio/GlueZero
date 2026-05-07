@@ -847,11 +847,11 @@ All six phases of the original PRD §32 roadmap are implemented and verified.
 - **Phase 5 — Worker runtime** (`@gluezero/worker`): worker registry, bounded worker pool, Comlink RPC bridge, hybrid cancellation (`AbortSignal` proxied), `assertSerializable` deep-walk, transferable opt-in via JSONPath, progress events, ESM module loading
 - **Phase 6 — Cache and advanced observability** (`@gluezero/cache`, `@gluezero/devtools`): LRU bounded `MemoryCacheAdapter`, scope hybrid 3-layer (D-156), 3 strategies (cache-first/network-first/cache-then-network), Event/Mapping/Route Inspector, `MetricsCollector` (simil-OpenMetrics + reservoir Algorithm R + cardinality cap), `PauseController`, full pipeline §28 14-step
 
-See [`.planning/ROADMAP.md`](./.planning/ROADMAP.md) for success criteria per phase and [`DECISIONS.md`](./DECISIONS.md) for the 170 architectural decisions across the 6 phases.
+See [`DECISIONS.md`](./DECISIONS.md) for the 170 architectural decisions across the 6 phases.
 
 ### V1.x — deferred opt-ins
 
-These are intentional deferrals tracked in [`REQUIREMENTS.md`](./.planning/REQUIREMENTS.md), to be reopened when real-world consumers emerge:
+Intentional deferrals, to be reopened when real-world consumers emerge:
 
 - **PIPE-01** (PRD §39 #11) — cross-phase pipeline mapping/validation ordering opt-in
 - **MSW 2.5+** integration tests — 3 `describe.skip` in `@gluezero/gateway/sse-ws` waiting for `ws.link` jsdom + EventSource fetch-based polyfill
@@ -946,10 +946,9 @@ Recommended options:
 
 Contributions are welcome. Before opening a PR, please:
 
-1. Read [`prd.md`](./prd.md) — it is the single authoritative source for v1 design choices and is referenced explicitly in every per-package README.
-2. Read [`CLAUDE.md`](./CLAUDE.md) for operational conventions (italian for docs/commits, english for code, the 6-phase composition wrapper boundary D-83 strict carryover, etc.).
-3. Pick an existing decision from [`DECISIONS.md`](./DECISIONS.md) before introducing a competing pattern — most "obvious" extensions have already been considered and rationalized.
-4. Run `pnpm typecheck && pnpm test && pnpm build` locally; all 8 packages must pass with zero regressions.
+1. Read [`CONTRIBUTING.md`](./CONTRIBUTING.md) for the full procedure (operational conventions, repo layout, architectural rules, commit conventions, testing tiers).
+2. Pick an existing decision from [`DECISIONS.md`](./DECISIONS.md) before introducing a competing pattern — most "obvious" extensions have already been considered and rationalized.
+3. Run `pnpm typecheck && pnpm test && pnpm build` locally; all 8 packages must pass with zero regressions.
 
 Areas where contributions are especially welcome:
 
@@ -972,30 +971,26 @@ Areas where contributions are especially welcome:
 
 ### For contributors and architecture-curious readers
 
-- [`prd.md`](./prd.md) — **authoritative PRD** (single source of truth for the v1 design)
-- [`DECISIONS.md`](./DECISIONS.md) — navigable index of all 170 architectural decisions `D-01..D-170` across the 6 phases, with cross-links to PRD sections, REQ-IDs and source CONTEXT files
-- [`.planning/REQUIREMENTS.md`](./.planning/REQUIREMENTS.md) — 91 v1 requirements mapped to phases and decisions
-- [`.planning/ROADMAP.md`](./.planning/ROADMAP.md) — 6-phase implementation roadmap with success criteria
-- [`.planning/research/`](./.planning/research/) — pre-implementation research: STACK, FEATURES, ARCHITECTURE, PITFALLS, SUMMARY
-- [`CLAUDE.md`](./CLAUDE.md) — operational constraints, conventions, boundaries (relevant for AI-assisted contribution)
+- [`DECISIONS.md`](./DECISIONS.md) — navigable index of all 170 architectural decisions `D-01..D-170` across the 6 phases
+- [`CONTRIBUTING.md`](./CONTRIBUTING.md) — operational rules, repo layout, architectural invariants
+- Per-package CHANGELOG.md — release-by-release history per `@gluezero/*`
 
-### PRD concepts index
+### Concepts index
 
-The PRD §1-§30 introduces the conceptual model; the implementation interprets it through the decision index above. The most load-bearing concepts to start from:
+The most load-bearing concepts and where to find them in the codebase:
 
-| Concept | PRD § | Implementation entry-point | Decisions |
-|---------|-------|---------------------------|-----------|
-| `BrokerEvent` | §10 | [`@gluezero/core`](./packages/core/README.md) | D-01..D-07 (delivery semantics, deep-freeze) |
-| Wildcard pattern matching | §12.3 | [`@gluezero/core`](./packages/core/README.md) | D-08..D-10 (TopicTrie segmented) |
-| Plugin lifecycle + cascade `unregisterPlugin` (LIFE-02) | §11 | All packages | D-26 (cascade) extended to F2-F6 (D-86, D-126) |
-| Canonical Model + Mapper (alias resolution) | §13.5, §15-§16 | [`@gluezero/mapper`](./packages/mapper/README.md) | D-31..D-58 |
-| Routing & Policy chain | §17, §22-§23 | [`@gluezero/routing`](./packages/routing/README.md), [`@gluezero/gateway`](./packages/gateway/README.md) | D-60..D-100 |
-| Realtime SSE/WS (auto-fallback) | §18, §31.3 | [`@gluezero/gateway`](./packages/gateway/README.md) | D-104..D-120 |
-| Worker runtime + serialization | §19-§20 | [`@gluezero/worker`](./packages/worker/README.md) | D-121..D-154 (D-83 strict carryover) |
-| Cache scope hybrid + 3 strategies | §21 | [`@gluezero/cache`](./packages/cache/README.md) | D-155..D-158 |
-| Devtools, Inspector, Metrics | §27 | [`@gluezero/devtools`](./packages/devtools/README.md) | D-159..D-170 |
-| Pipeline §28 14-step | §28 | Cross-phase | D-161 (step 14 `event.observed`) |
-| PRD §39 open issues closure | §39 | All phases | 10/11 closed v1.0; 1 deferred V1.x (PIPE-01) |
+| Concept | Implementation entry-point | Decisions |
+|---------|---------------------------|-----------|
+| `BrokerEvent` | [`@gluezero/core`](./packages/core/README.md) | D-01..D-07 (delivery semantics, deep-freeze) |
+| Wildcard pattern matching | [`@gluezero/core`](./packages/core/README.md) | D-08..D-10 (TopicTrie segmented) |
+| Plugin lifecycle + cascade `unregisterPlugin` (LIFE-02) | All packages | D-26 (cascade) extended to F2-F6 (D-86, D-126) |
+| Canonical Model + Mapper (alias resolution) | [`@gluezero/mapper`](./packages/mapper/README.md) | D-31..D-58 |
+| Routing & Policy chain | [`@gluezero/routing`](./packages/routing/README.md), [`@gluezero/gateway`](./packages/gateway/README.md) | D-60..D-100 |
+| Realtime SSE/WS (auto-fallback) | [`@gluezero/gateway`](./packages/gateway/README.md) | D-104..D-120 |
+| Worker runtime + serialization | [`@gluezero/worker`](./packages/worker/README.md) | D-121..D-154 (D-83 strict carryover) |
+| Cache scope hybrid + 3 strategies | [`@gluezero/cache`](./packages/cache/README.md) | D-155..D-158 |
+| Devtools, Inspector, Metrics | [`@gluezero/devtools`](./packages/devtools/README.md) | D-159..D-170 |
+| §28 pipeline 14-step | Cross-phase | D-161 (step 14 `event.observed`) |
 
 For the complete list of decisions per phase with one-line summaries, see [`DECISIONS.md`](./DECISIONS.md).
 

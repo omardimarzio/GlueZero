@@ -95,5 +95,24 @@
       "limit": "42 KB",
       "gzip": true
     }
-  ]
+  ],
+  "description": "GlueZero monorepo \u2014 frontend integration runtime for modular browser applications. 8 published @gluezero/* packages.",
+  "keywords": [
+    "browser",
+    "esm",
+    "frontend",
+    "gluezero",
+    "javascript",
+    "monorepo",
+    "pnpm-workspace",
+    "typescript"
+  ],
+  "author": "Omar Di Marzio",
+  "homepage": "https://github.com/omardimarzio/GlueZero#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/omardimarzio/GlueZero.git"
+  },
+  "bugs": "https://github.com/omardimarzio/GlueZero/issues",
+  "license": "MIT"
 }

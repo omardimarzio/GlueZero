@@ -393,9 +393,7 @@ const broker = createCacheBroker({
 
 ## Riferimenti
 
-- `prd.md` (root) §17.6 (cache strategies), §20 (cache layer behavior), §39 (open issues — TOOL-05 closure F6 in `@gluezero/devtools`)
-- `.planning/phases/06-cache-tooling-avanzato/06-CONTEXT.md` (D-155..D-170 — 16 decisioni lockate F6)
-- `.planning/phases/06-cache-tooling-avanzato/06-RESEARCH.md` §2 (LRU implementation), §4 (cache handler 3-strategy), §15.6 (cache-then-network ordering microtask)
+- [`DECISIONS.md`](../../DECISIONS.md) — 170 decisioni architetturali con riferimenti a sezioni di design
 - [`@gluezero/core`](../core/README.md) (BrokerError + BrokerEvent + EventTap, F1)
 - [`@gluezero/mapper`](../mapper/README.md) (canonical mapping registries, F2)
 - [`@gluezero/routing`](../routing/README.md) (RouterBroker + RouteResolver, F3)

@@ -247,7 +247,7 @@ In F1 i plugin orchestrano fetch HTTP manualmente. F3 (`@gluezero/routing` + `@g
 - **Phase 5:** Worker runtime (`@gluezero/worker`).
 - **Phase 6:** Cache + Tooling avanzato (`@gluezero/cache`, `@gluezero/devtools`) — Inspector reale sostituisce no-op tap di F1.
 
-Vedi `prd.md` (project root) per la specifica completa V1.
+Vedi [`DECISIONS.md`](../../DECISIONS.md) per le 170 decisioni architetturali.
 
 ## Vincoli architetturali
 

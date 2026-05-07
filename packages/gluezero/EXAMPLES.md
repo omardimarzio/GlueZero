@@ -512,7 +512,7 @@ declare function showError(payload: unknown): void
 
 ## Riferimenti
 
-- `prd.md` (root) §29 (scenario meteo PRD esteso a F1-F6)
+- [`DECISIONS.md`](../../DECISIONS.md) — 170 decisioni architetturali con riferimenti a sezioni di design
 - [`@gluezero/gluezero` README.md](./README.md)
 - Sub-pacchetti README (per dettagli per-fase): F1 [`core`](../core/README.md) / F2 [`mapper`](../mapper/README.md) / F3 [`routing`](../routing/README.md) / F4 [`gateway`](../gateway/README.md) / F5 [`worker`](../worker/README.md) / F6 [`cache`](../cache/README.md) + [`devtools`](../devtools/README.md)
 

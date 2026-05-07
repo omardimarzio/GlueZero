@@ -295,7 +295,7 @@ Pattern coerente con F2 D-49 (cascade isolation T-02-10-03).
 - **Phase 5 — Worker runtime** (`@gluezero/worker`): aggiunge `type: 'worker'` al `RouteDefinition` via TS declaration merging; cascade D-86 esteso ai worker MessageChannel.
 - **Phase 6 — Cache + Tooling** (`@gluezero/cache` + `@gluezero/devtools`): adapter cache reale (in-memory + IndexedDB) sostituisce lo stub `cache-handler.ts` F3; Route Inspector full snapshot; Metrics format (chiude PRD §39 #10 / TOOL-05).
 
-Vedi `prd.md` (project root) per la specifica V1 completa e `.planning/ROADMAP.md` per i success criteria di ogni fase.
+Vedi [`DECISIONS.md`](../../DECISIONS.md) per le 170 decisioni architetturali con i success criteria di ogni fase.
 
 Wiring ancora deferred F4 (documentati in 03-13-SUMMARY):
 - `DedupeStrategy.execute()` invocata da `gateway.execute()` come middleware (V1 verificata in isolation).

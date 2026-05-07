@@ -1,9 +1,9 @@
 {
   "name": "@gluezero/cache",
   "version": "1.0.0",
-  "description": "Cache layer per GlueZero (Phase 6 \u2014 MemoryCacheAdapter LRU bounded + scope user-aware + cache-then-network ordering \u2014 D-155/D-156/D-157/D-158)",
+  "description": "GlueZero in-memory cache \u2014 LRU adapter, 3 strategies (cache-first/network-first/cache-then-network), scope hybrid",
   "license": "MIT",
-  "author": "",
+  "author": "Omar Di Marzio",
   "type": "module",
   "main": "./dist/index.js",
   "module": "./dist/index.js",
@@ -65,5 +65,17 @@
     "directory": "packages/cache"
   },
   "homepage": "https://github.com/omardimarzio/GlueZero/tree/main/packages/cache#readme",
-  "bugs": "https://github.com/omardimarzio/GlueZero/issues"
+  "bugs": "https://github.com/omardimarzio/GlueZero/issues",
+  "keywords": [
+    "browser",
+    "cache",
+    "cache-strategy",
+    "cache-then-network",
+    "esm",
+    "frontend",
+    "javascript",
+    "lru",
+    "memory-cache",
+    "typescript"
+  ]
 }

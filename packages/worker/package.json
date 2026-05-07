@@ -1,9 +1,9 @@
 {
   "name": "@gluezero/worker",
   "version": "1.0.0",
-  "description": "Worker Runtime per GlueZero (Phase 5 \u2014 Comlink-based RPC + bounded pool + state machine atomico Pitfall 2C + WK-07 closure serializzazione documentata)",
+  "description": "GlueZero Web Worker runtime \u2014 registry, bounded pool, Comlink bridge, hybrid cancellation, serialization checks",
   "license": "MIT",
-  "author": "",
+  "author": "Omar Di Marzio",
   "type": "module",
   "main": "./dist/index.js",
   "module": "./dist/index.js",
@@ -66,5 +66,17 @@
     "directory": "packages/worker"
   },
   "homepage": "https://github.com/omardimarzio/GlueZero/tree/main/packages/worker#readme",
-  "bugs": "https://github.com/omardimarzio/GlueZero/issues"
+  "bugs": "https://github.com/omardimarzio/GlueZero/issues",
+  "keywords": [
+    "browser",
+    "comlink",
+    "esm",
+    "frontend",
+    "javascript",
+    "rpc",
+    "task-queue",
+    "typescript",
+    "web-worker",
+    "worker"
+  ]
 }

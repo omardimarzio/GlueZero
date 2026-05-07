@@ -1,9 +1,9 @@
 {
   "name": "@gluezero/devtools",
   "version": "1.0.0",
-  "description": "Developer tooling per GlueZero (Phase 6 \u2014 Tap registry chain D-159 + EventInspector + RouteInspector + MetricsCollector simil-OpenMetrics + pauseTopic queue \u2014 D-159..D-170 / chiude PRD \u00a739 #10 TOOL-05)",
+  "description": "GlueZero devtools \u2014 Event/Mapping/Route Inspector, MetricsCollector (simil-OpenMetrics), PauseController",
   "license": "MIT",
-  "author": "",
+  "author": "Omar Di Marzio",
   "type": "module",
   "main": "./dist/index.js",
   "module": "./dist/index.js",
@@ -64,5 +64,18 @@
     "directory": "packages/devtools"
   },
   "homepage": "https://github.com/omardimarzio/GlueZero/tree/main/packages/devtools#readme",
-  "bugs": "https://github.com/omardimarzio/GlueZero/issues"
+  "bugs": "https://github.com/omardimarzio/GlueZero/issues",
+  "keywords": [
+    "browser",
+    "debug",
+    "devtools",
+    "esm",
+    "frontend",
+    "inspector",
+    "javascript",
+    "metrics",
+    "observability",
+    "openmetrics",
+    "typescript"
+  ]
 }

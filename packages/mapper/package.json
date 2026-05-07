@@ -1,9 +1,9 @@
 {
   "name": "@gluezero/mapper",
   "version": "1.0.0",
-  "description": "Canonical model + bidirectional mapper for GlueZero (Phase 2)",
+  "description": "GlueZero canonical model mapper \u2014 bidirectional plugin/canonical payload translation with validation",
   "license": "MIT",
-  "author": "",
+  "author": "Omar Di Marzio",
   "type": "module",
   "main": "./dist/index.js",
   "module": "./dist/index.js",
@@ -65,5 +65,17 @@
     "directory": "packages/mapper"
   },
   "homepage": "https://github.com/omardimarzio/GlueZero/tree/main/packages/mapper#readme",
-  "bugs": "https://github.com/omardimarzio/GlueZero/issues"
+  "bugs": "https://github.com/omardimarzio/GlueZero/issues",
+  "keywords": [
+    "browser",
+    "canonical-model",
+    "data-mapping",
+    "esm",
+    "frontend",
+    "javascript",
+    "schema",
+    "transform",
+    "typescript",
+    "validation"
+  ]
 }

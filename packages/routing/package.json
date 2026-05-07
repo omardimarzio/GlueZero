@@ -1,9 +1,9 @@
 {
   "name": "@gluezero/routing",
   "version": "1.0.0",
-  "description": "Declarative routing engine for GlueZero (Phase 3)",
+  "description": "GlueZero declarative routing engine \u2014 local/http/realtime/worker/cache/composite route types",
   "license": "MIT",
-  "author": "",
+  "author": "Omar Di Marzio",
   "type": "module",
   "main": "./dist/index.js",
   "module": "./dist/index.js",
@@ -61,5 +61,17 @@
     "directory": "packages/routing"
   },
   "homepage": "https://github.com/omardimarzio/GlueZero/tree/main/packages/routing#readme",
-  "bugs": "https://github.com/omardimarzio/GlueZero/issues"
+  "bugs": "https://github.com/omardimarzio/GlueZero/issues",
+  "keywords": [
+    "browser",
+    "declarative",
+    "esm",
+    "event-routing",
+    "frontend",
+    "javascript",
+    "policy-chain",
+    "router",
+    "routing",
+    "typescript"
+  ]
 }

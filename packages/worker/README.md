@@ -413,9 +413,7 @@ Il `workerType: 'classic'` opt-in è documentato come estensione PRD §31.3 — 
 
 ## Riferimenti
 
-- `prd.md` (root) §10 (worker capability requirements), §19 (Worker Runtime spec), §29 (scenario meteo), §31.3 (browser API constraints), §39 #11 (open issue WK-07 — **CHIUSO in F5**)
-- `.planning/phases/05-worker-runtime/05-CONTEXT.md` (D-121..D-154 — 34 decisioni lockate)
-- `.planning/phases/05-worker-runtime/05-RESEARCH.md` §6 (Serialization contract WK-07), §7 (Composition wrapper Opzione B), §9 (Test 3-tier)
+- [`DECISIONS.md`](../../DECISIONS.md) — 170 decisioni architetturali con riferimenti a sezioni di design
 - [`@gluezero/core`](../core/README.md) (BrokerError + BrokerEvent + EventTap, F1)
 - [`@gluezero/mapper`](../mapper/README.md) (canonical mapping registries, F2)
 - [`@gluezero/routing`](../routing/README.md) (RouterBroker + RouteResolver, F3)

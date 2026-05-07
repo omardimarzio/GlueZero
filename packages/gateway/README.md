@@ -559,7 +559,7 @@ Strategia testing 3-livelli:
 | Q5 | SSE staleTimeoutMs uniforme con WS | **60s uniforme** + `sseHeartbeatEventTypes` hook silent (default `['heartbeat']`) | B-5 closure |
 | Q6 | Browser test cross-engine V1 | **Chromium-only CI**, smoke FF/WK manuale pre-release | D-118 Tier-3 |
 
-Vedi `.planning/phases/04-realtime-inbound-sse-prioritario-ws-opzionale/04-RESEARCH.md` §13.1 per il rationale completo.
+Vedi [`DECISIONS.md`](../../DECISIONS.md) (D-104..D-120) per il rationale completo delle decisioni F4 realtime.
 
 ## Roadmap (deferred F5-F6)
 

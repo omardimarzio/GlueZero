@@ -349,7 +349,7 @@ L'ordine è coerente con CONTEXT D-50. Niente trasformazioni implicite invisibil
 - **Phase 5 — Worker runtime** (`@gluezero/worker`): canonicalizzazione del payload prima del dispatch al worker.
 - **Phase 6 — Cache + Tooling** (`@gluezero/cache` + `@gluezero/devtools`): Inspector reale (full payload before/after per evento) sostituisce il no-op di F1.
 
-Vedi `prd.md` (project root) per la specifica V1 completa e `.planning/ROADMAP.md` per i success criteria di ogni fase.
+Vedi [`DECISIONS.md`](../../DECISIONS.md) per le 170 decisioni architetturali con i success criteria di ogni fase.
 
 ## Phase 2 — success criteria
 
