@@ -1,0 +1,708 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GlueZero — Pub/sub demo: 1 publisher, 4 subscribers</title>
+<meta name="description" content="Working browser demo: one publisher component sends messages, four subscriber components react in different ways. Zero network, zero mocks — just GlueZero pub/sub between DOM components on the same page.">
+<meta name="theme-color" content="#6366F1">
+<link rel="canonical" href="https://gluezero.org/examples/pub-sub-demo.html">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect width='24' height='24' rx='6' fill='%236366F1'/%3E%3Ctext x='12' y='17' text-anchor='middle' fill='white' font-family='sans-serif' font-weight='800' font-size='12'%3EGZ%3C/text%3E%3C/svg%3E">
+
+<style>
+  :root {
+    --accent: #6366F1;
+    --accent-hover: #4F46E5;
+    --accent-soft: #EEF2FF;
+    --bg: #FFFFFF;
+    --bg-elevated: #FAFAFA;
+    --bg-code: #1E293B;
+    --text: #0F172A;
+    --text-muted: #64748B;
+    --text-subtle: #94A3B8;
+    --border: #E2E8F0;
+    --success: #10B981;
+    --error: #EF4444;
+    --orange: #F59E0B;
+    --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Inter", sans-serif;
+    --font-mono: ui-monospace, "SF Mono", "Cascadia Code", "JetBrains Mono", Consolas, monospace;
+  }
+  [data-theme="dark"] {
+    --bg: #0F172A;
+    --bg-elevated: #1E293B;
+    --bg-code: #0B1120;
+    --text: #F1F5F9;
+    --text-muted: #94A3B8;
+    --text-subtle: #64748B;
+    --border: #1E293B;
+    --accent-soft: #312E81;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: var(--font-sans);
+    color: var(--text);
+    background: var(--bg);
+    line-height: 1.5;
+  }
+
+  header {
+    position: sticky; top: 0; z-index: 10;
+    background: var(--bg);
+    border-bottom: 1px solid var(--border);
+    padding: 12px 24px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+  .brand { display: flex; align-items: center; gap: 10px; font-weight: 700; }
+  .brand-mark {
+    width: 28px; height: 28px;
+    border-radius: 7px;
+    background: linear-gradient(135deg, var(--accent), var(--accent-hover));
+    color: white; font-weight: 800; font-size: 13px;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .badge {
+    font-family: var(--font-mono); font-size: 11px;
+    padding: 2px 8px; border-radius: 4px;
+    background: var(--bg-elevated); border: 1px solid var(--border);
+    color: var(--text-muted);
+  }
+  .brand-tag { font-weight: 400; font-size: 14px; color: var(--text-muted); }
+  header .actions { margin-left: auto; display: flex; gap: 8px; }
+  header .actions a, .theme-toggle {
+    text-decoration: none; color: var(--text-muted);
+    font-size: 13px; padding: 6px 10px; border-radius: 5px;
+    border: 1px solid var(--border); background: transparent;
+    cursor: pointer;
+  }
+  header .actions a:hover, .theme-toggle:hover { color: var(--text); background: var(--bg-elevated); }
+
+  main { max-width: 1280px; margin: 0 auto; padding: 24px; }
+
+  .hero { margin-bottom: 32px; }
+  .hero h1 {
+    font-size: 28px; font-weight: 700; letter-spacing: -0.02em;
+    margin: 0 0 8px;
+  }
+  .hero p { color: var(--text-muted); margin: 0; max-width: 780px; }
+
+  .info-bar {
+    display: flex; gap: 16px; flex-wrap: wrap;
+    padding: 12px 16px;
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    margin-bottom: 24px;
+    font-size: 13px;
+    color: var(--text-muted);
+  }
+  .info-bar strong { color: var(--text); }
+
+  .layout {
+    display: grid;
+    grid-template-columns: 380px 1fr;
+    gap: 16px;
+  }
+  @media (max-width: 900px) { .layout { grid-template-columns: 1fr; } }
+
+  .subscribers-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+  @media (max-width: 700px) { .subscribers-grid { grid-template-columns: 1fr; } }
+
+  .panel {
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    background: var(--bg);
+    overflow: hidden;
+  }
+  .panel-header {
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--border);
+    background: var(--bg-elevated);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .panel-header h2 {
+    font-size: 12px; font-weight: 700; margin: 0;
+    text-transform: uppercase; letter-spacing: 0.06em;
+  }
+  .panel-header .role {
+    font-family: var(--font-mono); font-size: 10px;
+    padding: 1px 6px; border-radius: 3px;
+    color: white; font-weight: 600;
+  }
+  .role-pub { background: var(--accent); }
+  .role-sub { background: var(--success); }
+  .role-sub-paused { background: var(--text-subtle); }
+
+  .panel-header .status {
+    margin-left: auto;
+    font-family: var(--font-mono); font-size: 10px;
+    color: var(--text-muted);
+  }
+  .panel-body { padding: 14px; }
+
+  label {
+    display: block;
+    font-size: 11px; font-weight: 600; text-transform: uppercase;
+    letter-spacing: 0.05em; color: var(--text-muted);
+    margin-bottom: 4px; margin-top: 12px;
+  }
+  label:first-child { margin-top: 0; }
+  input, select, textarea, button {
+    font-family: var(--font-sans); font-size: 14px;
+  }
+  input, textarea {
+    width: 100%; padding: 8px 10px;
+    border: 1px solid var(--border); border-radius: 6px;
+    background: var(--bg); color: var(--text);
+  }
+  textarea { min-height: 60px; resize: vertical; }
+  input:focus, textarea:focus {
+    outline: none; border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-soft);
+  }
+
+  .btn {
+    padding: 9px 14px;
+    border: 1px solid var(--accent);
+    background: var(--accent); color: white;
+    border-radius: 6px; cursor: pointer; font-weight: 600;
+    margin-top: 12px; width: 100%;
+  }
+  .btn:hover { background: var(--accent-hover); border-color: var(--accent-hover); }
+  .btn-secondary {
+    background: transparent; color: var(--text);
+    border-color: var(--border); width: auto;
+  }
+  .btn-secondary:hover { background: var(--bg-elevated); }
+  .btn-row { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
+
+  .code-snippet {
+    margin-top: 14px; padding: 10px 12px;
+    background: var(--bg-code); color: #E2E8F0;
+    font-family: var(--font-mono); font-size: 11.5px;
+    border-radius: 6px;
+    overflow-x: auto;
+    white-space: pre;
+  }
+  .code-snippet .kw { color: #818CF8; }
+  .code-snippet .str { color: #6EE7B7; }
+  .code-snippet .com { color: #64748B; font-style: italic; }
+  .code-snippet .fn { color: #93C5FD; }
+
+  /* SUBSCRIBER 1 — Feed */
+  .feed { max-height: 280px; overflow-y: auto; }
+  .feed-empty {
+    padding: 24px; text-align: center;
+    color: var(--text-subtle); font-size: 13px; font-style: italic;
+  }
+  .feed-item {
+    padding: 8px 0; border-bottom: 1px solid var(--border);
+    font-size: 13.5px;
+  }
+  .feed-item:last-child { border-bottom: none; }
+  .feed-item-from {
+    display: inline-block;
+    font-weight: 600; color: var(--accent);
+    margin-right: 6px;
+  }
+  .feed-item-time {
+    font-family: var(--font-mono); font-size: 10.5px;
+    color: var(--text-subtle);
+    float: right;
+  }
+  .feed-item-text { display: block; margin-top: 2px; }
+
+  /* SUBSCRIBER 2 — Counter */
+  .stat-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 12px;
+  }
+  .stat-card {
+    padding: 12px;
+    background: var(--bg-elevated);
+    border-radius: 8px;
+    border: 1px solid var(--border);
+  }
+  .stat-label {
+    font-size: 10px; text-transform: uppercase; letter-spacing: 0.06em;
+    color: var(--text-muted); font-weight: 600;
+  }
+  .stat-value {
+    font-size: 28px; font-weight: 800;
+    color: var(--accent); margin-top: 4px; line-height: 1;
+    font-variant-numeric: tabular-nums;
+  }
+  .stat-unit { font-size: 13px; color: var(--text-muted); margin-left: 4px; font-weight: 400; }
+
+  /* SUBSCRIBER 3 — Latest */
+  .latest-empty {
+    padding: 16px; text-align: center;
+    color: var(--text-subtle); font-size: 13px; font-style: italic;
+  }
+  .latest-from {
+    font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em;
+    color: var(--text-muted); font-weight: 600;
+  }
+  .latest-text {
+    font-size: 16px; font-weight: 500; margin: 6px 0;
+    line-height: 1.4;
+  }
+  .latest-time {
+    font-family: var(--font-mono); font-size: 11px; color: var(--text-subtle);
+  }
+
+  /* SUBSCRIBER 4 — Activity histogram */
+  .histogram {
+    display: flex; align-items: flex-end; gap: 2px;
+    height: 120px; margin-top: 4px;
+  }
+  .bar {
+    flex: 1;
+    background: var(--accent);
+    min-height: 2px;
+    border-radius: 2px 2px 0 0;
+    transition: height 0.2s ease-out;
+  }
+  .histogram-meta {
+    margin-top: 8px;
+    display: flex; justify-content: space-between;
+    font-size: 11px; color: var(--text-muted);
+  }
+
+  /* CONTROL TOGGLES */
+  .controls {
+    display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px;
+  }
+  .toggle {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-size: 13px; color: var(--text-muted);
+    cursor: pointer; user-select: none;
+    padding: 6px 12px; border: 1px solid var(--border); border-radius: 6px;
+    background: var(--bg);
+  }
+  .toggle input { width: auto; margin: 0; }
+  .toggle.active {
+    background: var(--accent-soft); color: var(--accent);
+    border-color: var(--accent);
+  }
+
+  footer {
+    text-align: center; padding: 32px 24px;
+    color: var(--text-muted); font-size: 13px;
+    border-top: 1px solid var(--border); margin-top: 32px;
+  }
+  footer a { color: var(--accent); text-decoration: none; }
+  footer a:hover { text-decoration: underline; }
+
+  .pill {
+    display: inline-block;
+    padding: 1px 6px;
+    border-radius: 3px;
+    background: var(--accent-soft);
+    color: var(--accent);
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 600;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <a class="brand" href="https://gluezero.org" style="text-decoration:none;color:inherit;">
+    <span class="brand-mark">GZ</span>
+    <span>GlueZero</span>
+    <span class="badge">v1.0.1</span>
+    <span class="brand-tag">— Pub/sub demo</span>
+  </a>
+  <div class="actions">
+    <a href="./weather-demo.html">Mapping demo →</a>
+    <a href="https://gluezero.org/docs" target="_blank" rel="noopener">Docs</a>
+    <a href="https://github.com/omardimarzio/GlueZero" target="_blank" rel="noopener">GitHub</a>
+    <button class="theme-toggle" aria-label="Toggle theme">🌙</button>
+  </div>
+</header>
+
+<main>
+  <section class="hero">
+    <h1>Pub/sub demo — 1 publisher, 4 subscribers</h1>
+    <p>
+      One component publishes <span class="pill">message.posted</span> when you click "Send". Four subscribers react independently:
+      a feed lists every message, a counter aggregates statistics, a card shows the latest, a histogram tracks activity per second.
+      <strong>Zero network. Zero mocks. Just GlueZero coordinating components inside the same page.</strong>
+    </p>
+  </section>
+
+  <div class="info-bar">
+    <span><strong>Library:</strong> <code>@gluezero/gluezero@1.0.1</code></span>
+    <span><strong>Loaded from:</strong> <code>esm.sh</code></span>
+    <span><strong>Topic used:</strong> <span class="pill">message.posted</span></span>
+    <span><strong>Backend:</strong> none (pure pub/sub)</span>
+  </div>
+
+  <div class="controls">
+    <label class="toggle active" id="t-sub3">
+      <input type="checkbox" checked> Subscriber 3 (latest) active
+    </label>
+    <label class="toggle active" id="t-sub4">
+      <input type="checkbox" checked> Subscriber 4 (histogram) active
+    </label>
+    <button class="btn-secondary btn" id="reset-all" style="margin:0;">Reset all subscribers</button>
+  </div>
+
+  <div class="layout">
+    <!-- ============ PUBLISHER ============ -->
+    <div class="panel">
+      <div class="panel-header">
+        <h2>Publisher</h2>
+        <span class="role role-pub">PUBLISHER</span>
+        <span class="status" id="pub-count">0 sent</span>
+      </div>
+      <div class="panel-body">
+        <label for="from">From (sender name)</label>
+        <input id="from" type="text" value="Alice" maxlength="20">
+
+        <label for="text">Message</label>
+        <textarea id="text" maxlength="280" placeholder="Type something and press Send…">Hello from GlueZero!</textarea>
+
+        <div class="btn-row">
+          <button class="btn" id="send" style="margin:0;">Send (publish)</button>
+          <button class="btn-secondary btn" id="send-burst" style="margin:0;">Send 5 burst</button>
+        </div>
+
+        <div class="code-snippet"><span class="com">// What this button does:</span>
+broker.<span class="fn">publish</span>(<span class="str">'message.posted'</span>, {
+  from: <span class="str">'Alice'</span>,
+  text: <span class="str">'Hello from GlueZero!'</span>,
+  ts: Date.<span class="fn">now</span>()
+})</div>
+      </div>
+    </div>
+
+    <!-- ============ SUBSCRIBERS ============ -->
+    <div class="subscribers-grid">
+
+      <!-- SUBSCRIBER 1: Feed -->
+      <div class="panel">
+        <div class="panel-header">
+          <h2>Subscriber 1 — Feed</h2>
+          <span class="role role-sub">SUBSCRIBER</span>
+          <span class="status" id="sub1-count">0 received</span>
+        </div>
+        <div class="panel-body">
+          <div class="feed" id="feed">
+            <div class="feed-empty">Waiting for <code>message.posted</code>…</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SUBSCRIBER 2: Stats -->
+      <div class="panel">
+        <div class="panel-header">
+          <h2>Subscriber 2 — Stats</h2>
+          <span class="role role-sub">SUBSCRIBER</span>
+          <span class="status" id="sub2-count">0 received</span>
+        </div>
+        <div class="panel-body">
+          <div class="stat-grid">
+            <div class="stat-card">
+              <div class="stat-label">Total messages</div>
+              <div class="stat-value" id="stat-total">0</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-label">Unique senders</div>
+              <div class="stat-value" id="stat-senders">0</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-label">Total characters</div>
+              <div class="stat-value" id="stat-chars">0</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-label">Avg length</div>
+              <div class="stat-value" id="stat-avg">0<span class="stat-unit">chars</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SUBSCRIBER 3: Latest -->
+      <div class="panel" id="panel-sub3">
+        <div class="panel-header">
+          <h2>Subscriber 3 — Latest</h2>
+          <span class="role role-sub" id="sub3-role">SUBSCRIBER</span>
+          <span class="status" id="sub3-count">0 received</span>
+        </div>
+        <div class="panel-body">
+          <div id="latest">
+            <div class="latest-empty">No messages yet.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SUBSCRIBER 4: Histogram -->
+      <div class="panel" id="panel-sub4">
+        <div class="panel-header">
+          <h2>Subscriber 4 — Activity (last 30s)</h2>
+          <span class="role role-sub" id="sub4-role">SUBSCRIBER</span>
+          <span class="status" id="sub4-count">0 received</span>
+        </div>
+        <div class="panel-body">
+          <div class="histogram" id="histogram"></div>
+          <div class="histogram-meta">
+            <span>30 sec ago</span>
+            <span id="hist-peak">peak: 0/sec</span>
+            <span>now</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+</main>
+
+<footer>
+  Made with <a href="https://gluezero.org">GlueZero</a> ·
+  <a href="./weather-demo.html">See the canonical mapping demo →</a>
+</footer>
+
+<!-- =====================================================================
+     Application code — what this entire demo does in ~80 lines
+     ===================================================================== -->
+<script type="module">
+  import { createGlueZero } from 'https://esm.sh/@gluezero/gluezero@1.0.1'
+
+  // ---------- Theme toggle ----------
+  const themeBtn = document.querySelector('.theme-toggle')
+  applyTheme(localStorage.getItem('gz-theme') || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'))
+  themeBtn.addEventListener('click', () => {
+    const next = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark'
+    applyTheme(next); localStorage.setItem('gz-theme', next)
+  })
+  function applyTheme(t) {
+    document.documentElement.dataset.theme = t
+    themeBtn.textContent = t === 'dark' ? '☀' : '🌙'
+  }
+
+  // ---------- The broker. One instance for the whole page. ----------
+  const broker = createGlueZero({ debug: true })
+
+  // ============================================================
+  // PUBLISHER component — wires UI to broker.publish
+  // ============================================================
+  const fromInput = document.getElementById('from')
+  const textInput = document.getElementById('text')
+  let publishedCount = 0
+
+  function publishMessage(from, text) {
+    broker.publish('message.posted', {
+      from: String(from || 'anonymous').trim() || 'anonymous',
+      text: String(text || '').trim(),
+      ts: Date.now(),
+    })
+    publishedCount++
+    document.getElementById('pub-count').textContent = `${publishedCount} sent`
+  }
+
+  document.getElementById('send').addEventListener('click', () => {
+    const text = textInput.value.trim()
+    if (!text) return
+    publishMessage(fromInput.value, text)
+    textInput.value = ''
+  })
+
+  document.getElementById('send-burst').addEventListener('click', () => {
+    const senders = ['Alice', 'Bob', 'Carol', 'Dan', 'Eve']
+    const samples = [
+      'Just deployed v1.0.1 🎉',
+      'Anyone working on the dashboard?',
+      'Coffee break in 5',
+      'PR ready for review',
+      'Build is green',
+    ]
+    senders.forEach((s, i) => {
+      setTimeout(() => publishMessage(s, samples[i]), i * 200)
+    })
+  })
+
+  // ============================================================
+  // SUBSCRIBER 1 — Feed: lists every message in chronological order
+  // ============================================================
+  const feedEl = document.getElementById('feed')
+  let sub1Count = 0
+  let feedEmpty = true
+
+  broker.subscribe('message.posted', (event) => {
+    if (feedEmpty) { feedEl.innerHTML = ''; feedEmpty = false }
+    sub1Count++
+    document.getElementById('sub1-count').textContent = `${sub1Count} received`
+
+    const item = document.createElement('div')
+    item.className = 'feed-item'
+    item.innerHTML = `
+      <span class="feed-item-from">${escapeHtml(event.payload.from)}</span>
+      <span class="feed-item-time">${formatTime(event.payload.ts)}</span>
+      <span class="feed-item-text">${escapeHtml(event.payload.text)}</span>
+    `
+    feedEl.appendChild(item)
+    feedEl.scrollTop = feedEl.scrollHeight
+  })
+
+  // ============================================================
+  // SUBSCRIBER 2 — Stats: aggregates totals
+  // ============================================================
+  let sub2Count = 0
+  let totalChars = 0
+  const senders = new Set()
+
+  broker.subscribe('message.posted', (event) => {
+    sub2Count++
+    totalChars += event.payload.text.length
+    senders.add(event.payload.from)
+
+    document.getElementById('sub2-count').textContent = `${sub2Count} received`
+    document.getElementById('stat-total').textContent = sub2Count
+    document.getElementById('stat-senders').textContent = senders.size
+    document.getElementById('stat-chars').textContent = totalChars.toLocaleString()
+    document.getElementById('stat-avg').innerHTML = sub2Count > 0
+      ? `${Math.round(totalChars / sub2Count)}<span class="stat-unit">chars</span>`
+      : '0<span class="stat-unit">chars</span>'
+  })
+
+  // ============================================================
+  // SUBSCRIBER 3 — Latest: shows only the most recent message
+  // (this subscription can be toggled on/off at runtime)
+  // ============================================================
+  const latestEl = document.getElementById('latest')
+  let sub3Count = 0
+  let sub3 = null
+
+  function startSub3() {
+    if (sub3) return
+    sub3 = broker.subscribe('message.posted', (event) => {
+      sub3Count++
+      document.getElementById('sub3-count').textContent = `${sub3Count} received`
+      latestEl.innerHTML = `
+        <div class="latest-from">${escapeHtml(event.payload.from)}</div>
+        <div class="latest-text">${escapeHtml(event.payload.text)}</div>
+        <div class="latest-time">${formatTime(event.payload.ts)} · event id: ${event.id.slice(0, 8)}…</div>
+      `
+    })
+    document.getElementById('sub3-role').textContent = 'SUBSCRIBER'
+    document.getElementById('sub3-role').className = 'role role-sub'
+  }
+  function stopSub3() {
+    if (!sub3) return
+    sub3.unsubscribe()
+    sub3 = null
+    document.getElementById('sub3-role').textContent = 'PAUSED'
+    document.getElementById('sub3-role').className = 'role role-sub-paused'
+    latestEl.innerHTML = '<div class="latest-empty">Subscription paused. Toggle ON to resume receiving.</div>'
+  }
+
+  // ============================================================
+  // SUBSCRIBER 4 — Histogram: bucket per second over last 30s
+  // ============================================================
+  const histEl = document.getElementById('histogram')
+  const buckets = new Array(30).fill(0)
+  let sub4Count = 0
+  let sub4 = null
+
+  function renderHistogram() {
+    const max = Math.max(1, ...buckets)
+    histEl.innerHTML = buckets.map((v) => {
+      const h = Math.round((v / max) * 100)
+      return `<div class="bar" style="height: ${h}%; opacity: ${0.3 + 0.7 * (v / max)}"></div>`
+    }).join('')
+    document.getElementById('hist-peak').textContent = `peak: ${max}/sec`
+  }
+  function startSub4() {
+    if (sub4) return
+    sub4 = broker.subscribe('message.posted', (event) => {
+      sub4Count++
+      document.getElementById('sub4-count').textContent = `${sub4Count} received`
+      buckets[buckets.length - 1]++
+      renderHistogram()
+    })
+    document.getElementById('sub4-role').textContent = 'SUBSCRIBER'
+    document.getElementById('sub4-role').className = 'role role-sub'
+  }
+  function stopSub4() {
+    if (!sub4) return
+    sub4.unsubscribe(); sub4 = null
+    document.getElementById('sub4-role').textContent = 'PAUSED'
+    document.getElementById('sub4-role').className = 'role role-sub-paused'
+  }
+  // Tick: shift buckets every second to create a sliding window
+  setInterval(() => {
+    buckets.shift()
+    buckets.push(0)
+    renderHistogram()
+  }, 1000)
+
+  // ============================================================
+  // Toggles for sub3 and sub4 (demonstrates subscribe/unsubscribe at runtime)
+  // ============================================================
+  function bindToggle(elId, startFn, stopFn) {
+    const el = document.getElementById(elId)
+    const input = el.querySelector('input')
+    input.addEventListener('change', () => {
+      el.classList.toggle('active', input.checked)
+      input.checked ? startFn() : stopFn()
+    })
+  }
+  bindToggle('t-sub3', startSub3, stopSub3)
+  bindToggle('t-sub4', startSub4, stopSub4)
+
+  // ============================================================
+  // Reset all subscribers (clears state, keeps subscriptions alive)
+  // ============================================================
+  document.getElementById('reset-all').addEventListener('click', () => {
+    sub1Count = 0; sub2Count = 0; sub3Count = 0; sub4Count = 0
+    publishedCount = 0
+    totalChars = 0; senders.clear()
+    feedEl.innerHTML = '<div class="feed-empty">Cleared. Send a new message…</div>'
+    feedEmpty = true
+    document.getElementById('pub-count').textContent = '0 sent'
+    document.getElementById('sub1-count').textContent = '0 received'
+    document.getElementById('sub2-count').textContent = '0 received'
+    document.getElementById('sub3-count').textContent = '0 received'
+    document.getElementById('sub4-count').textContent = '0 received'
+    document.getElementById('stat-total').textContent = '0'
+    document.getElementById('stat-senders').textContent = '0'
+    document.getElementById('stat-chars').textContent = '0'
+    document.getElementById('stat-avg').innerHTML = '0<span class="stat-unit">chars</span>'
+    latestEl.innerHTML = '<div class="latest-empty">No messages yet.</div>'
+    for (let i = 0; i < buckets.length; i++) buckets[i] = 0
+    renderHistogram()
+  })
+
+  // ============================================================
+  // Boot
+  // ============================================================
+  startSub3()
+  startSub4()
+  renderHistogram()
+
+  // ---------- helpers ----------
+  function escapeHtml(s) {
+    return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
+  }
+  function formatTime(ts) {
+    const d = new Date(ts)
+    return d.toLocaleTimeString('en-US', { hour12: false })
+  }
+
+  console.log('GlueZero pub/sub demo ready.')
+  console.log('Try: window.broker = ...; broker.publish("message.posted", { from: "you", text: "hi", ts: Date.now() })')
+  window.broker = broker  // expose for devtools experimentation
+</script>
+</body>
+</html>

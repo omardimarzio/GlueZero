@@ -4,9 +4,10 @@ Standalone HTML files that import GlueZero from a CDN (`esm.sh`) and demonstrate
 
 ## Available examples
 
-| Example | What it demonstrates |
-|---------|----------------------|
-| [`weather-demo.html`](./weather-demo.html) | Two plugins with different naming conventions interoperating through canonical mapping. Mocked HTTP route, optional cache layer, simulated failures, live event log, debug snapshot. |
+| Example | What it demonstrates | Network? |
+|---------|----------------------|----------|
+| [`pub-sub-demo.html`](./pub-sub-demo.html) | **Start here.** One publisher, four subscribers reacting independently to the same topic. Pure broker pub/sub between DOM components on the same page. | None |
+| [`weather-demo.html`](./weather-demo.html) | Two plugins with different naming conventions interoperating through canonical mapping. HTTP route (mocked via `window.fetch` interception for demo only), optional cache, simulated failures. | Mocked |
 
 ## How they work
 
