@@ -1,0 +1,3194 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>HTTP gateway — GlueZero docs</title>
+<meta name="description" content="Concepts — GlueZero v1.0.0 documentation">
+<link rel="stylesheet" href="<h1>HTTP gateway</h1>
+<p class="lead">A single observable layer for outbound HTTP. All <code>type: 'http'</code> routes share the same strategy chain — auth, retry, timeout, dedupe, idempotency, allowlist, circuit breaker, backpressure.</p>
+
+<h2 id="why">Why a gateway</h2>
+<p>The traditional pattern: <code>fetch('/api/...')</code> scattered across components. Each component duplicates auth headers, retry logic, error handling. Some forget. Some get it wrong. None of them are observable.</p>
+<p>The gateway centralizes all of this. Components publish topics; routes describe HTTP calls; the gateway runs every call through the same policy stack. The result:</p>
+<ul>
+<li>One place to add a new auth scheme</li>
+<li>One place to tune retry behavior</li>
+<li>One place to add observability</li>
+<li>Components don&rsquo;t know HTTP exists</li>
+</ul>
+
+<h2 id="strategy-chain">The strategy chain</h2>
+<p>For each request, strategies execute in this order:</p>
+<ol>
+<li><strong>Allowlist</strong> — block if URL host is not allowlisted (decision <code>D-71</code>)</li>
+<li><strong>Auth</strong> — attach Bearer token, refresh once if 401 (single-flight, decision <code>D-72</code>)</li>
+<li><strong>Idempotency</strong> — auto-generate idempotency key on POST/PATCH/PUT/DELETE (decision <code>D-70</code>)</li>
+<li><strong>Dedupe</strong> — collapse concurrent identical requests (in-flight or windowed)</li>
+<li><strong>Concurrency</strong> — apply per-route policy (latest-only, serial, queue-bounded)</li>
+<li><strong>Backpressure</strong> — drop or queue if concurrency cap reached (with critical-priority bypass)</li>
+<li><strong>Circuit breaker</strong> — open after N failures, half-open after cooldown (per-route opt-in)</li>
+<li><strong>Timeout</strong> — abort with <code>AbortSignal.timeout()</code></li>
+<li><strong>Retry</strong> — retry on 5xx and network errors only, not 4xx (decision <code>D-73</code>) — except 408/429 honoring <code>Retry-After</code> header</li>
+<li><strong>Backoff</strong> — exponential with full-jitter when retrying</li>
+<li><strong>Fetch</strong> — the actual request</li>
+<li><strong>Response normalization</strong> — map server payload via the route&rsquo;s <code>responseMap</code></li>
+</ol>
+<p>Each strategy is configured via the <code>policies</code> key on the route. Default is &ldquo;everything off&rdquo; — opt in only what you need.</p>
+
+<h2 id="auth">Auth + single-flight refresh</h2>
+<pre><code class="language-typescript">broker.registerRoute({
+  id: 'protected-route',
+  on: 'customers.list.requested',
+  type: 'http',
+  request: { method: 'GET', url: '/api/customers' },
+  publishes: { success: 'customers.list.loaded', error: 'customers.list.failed' },
+  policies: {
+    auth: {
+      scheme: 'bearer',
+      getToken: () => sessionToken,
+      refresh: async () => {
+        const res = await fetch('/api/refresh', { method: 'POST' })
+        return (await res.json()).accessToken
+      },
+    },
+  },
+})
+</code></pre>
+<p>If multiple routes hit a 401 simultaneously, only one refresh is fired (<strong>single-flight</strong>); the others queue and retry with the new token.</p>
+
+<h2 id="dedupe">Dedupe</h2>
+<p>Two patterns:</p>
+<pre><code class="language-typescript">policies: {
+  dedupe: { window: 'inflight' },         // collapse concurrent identical requests
+}
+// or
+policies: {
+  dedupe: { window: 'time', ms: 500 },    // throttle: ignore identical requests within 500ms
+}
+</code></pre>
+<p>The dedupe key is the route id + canonical payload hash. Override with a custom key function if you want narrower or wider deduplication.</p>
+
+<h2 id="idempotency">Idempotency</h2>
+<p>For POST/PATCH/PUT/DELETE, the gateway can auto-generate an <code>Idempotency-Key</code> header (UUID v4 by default). The server decides whether to honor it. Useful when the user double-clicks &ldquo;Submit&rdquo;.</p>
+<pre><code class="language-typescript">policies: { idempotency: { auto: true } }
+</code></pre>
+
+<h2 id="allowlist">URL allowlist</h2>
+<p>Critical for security. Without an allowlist, any route definition can hit any URL (potentially data exfiltration if route definitions come from third-party plugins).</p>
+<pre><code class="language-typescript">// Global config
+gateway: {
+  allowlist: ['/api/', 'https://api.example.com/'],
+  onBlocked: (url) =&gt; broker.publish('system.security.blocked', { url }),
+}
+</code></pre>
+<p>Allowlisted prefixes apply to the final URL <em>after redirects</em> (decision <code>D-71</code>) — the gateway re-validates the destination if a redirect is followed.</p>
+
+<h2 id="errors">Sanitized errors</h2>
+<p>When a request fails, the gateway publishes the route&rsquo;s <code>error</code> topic with a sanitized payload (no stack, no original error, no internal details):</p>
+<pre><code class="language-typescript">{
+  code: 'http.timeout',
+  category: 'network',
+  message: 'Request timed out after 5000ms',
+  routeId: 'weather-fetch',
+  topic: 'weather.requested',
+  eventId: 'evt_xKp9N3...',
+}
+</code></pre>
+<p>The full error is logged via the Inspector (dev mode) but never leaks into application code that might display it to the user.</p>
+
+<h2 id="next">Where to next</h2>
+<div class="cards">
+  <a class="card" href="realtime.html"><div class="card-title">Realtime</div><div class="card-desc">SSE + WebSocket with auto-fallback and visibility-aware reconnection.</div></a>
+  <a class="card" href="../recipes/auth-token-refresh.html"><div class="card-title">Recipe: Auth + token refresh</div><div class="card-desc">Working example with token expiration and refresh.</div></a>
+</div>
+assets/styles.css">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect width='24' height='24' rx='6' fill='%236366F1'/%3E%3Ctext x='12' y='17' text-anchor='middle' fill='white' font-family='sans-serif' font-weight='800' font-size='12'%3EGZ%3C/text%3E%3C/svg%3E">
+</head>
+<body data-base="<h1>HTTP gateway</h1>
+<p class="lead">A single observable layer for outbound HTTP. All <code>type: 'http'</code> routes share the same strategy chain — auth, retry, timeout, dedupe, idempotency, allowlist, circuit breaker, backpressure.</p>
+
+<h2 id="why">Why a gateway</h2>
+<p>The traditional pattern: <code>fetch('/api/...')</code> scattered across components. Each component duplicates auth headers, retry logic, error handling. Some forget. Some get it wrong. None of them are observable.</p>
+<p>The gateway centralizes all of this. Components publish topics; routes describe HTTP calls; the gateway runs every call through the same policy stack. The result:</p>
+<ul>
+<li>One place to add a new auth scheme</li>
+<li>One place to tune retry behavior</li>
+<li>One place to add observability</li>
+<li>Components don&rsquo;t know HTTP exists</li>
+</ul>
+
+<h2 id="strategy-chain">The strategy chain</h2>
+<p>For each request, strategies execute in this order:</p>
+<ol>
+<li><strong>Allowlist</strong> — block if URL host is not allowlisted (decision <code>D-71</code>)</li>
+<li><strong>Auth</strong> — attach Bearer token, refresh once if 401 (single-flight, decision <code>D-72</code>)</li>
+<li><strong>Idempotency</strong> — auto-generate idempotency key on POST/PATCH/PUT/DELETE (decision <code>D-70</code>)</li>
+<li><strong>Dedupe</strong> — collapse concurrent identical requests (in-flight or windowed)</li>
+<li><strong>Concurrency</strong> — apply per-route policy (latest-only, serial, queue-bounded)</li>
+<li><strong>Backpressure</strong> — drop or queue if concurrency cap reached (with critical-priority bypass)</li>
+<li><strong>Circuit breaker</strong> — open after N failures, half-open after cooldown (per-route opt-in)</li>
+<li><strong>Timeout</strong> — abort with <code>AbortSignal.timeout()</code></li>
+<li><strong>Retry</strong> — retry on 5xx and network errors only, not 4xx (decision <code>D-73</code>) — except 408/429 honoring <code>Retry-After</code> header</li>
+<li><strong>Backoff</strong> — exponential with full-jitter when retrying</li>
+<li><strong>Fetch</strong> — the actual request</li>
+<li><strong>Response normalization</strong> — map server payload via the route&rsquo;s <code>responseMap</code></li>
+</ol>
+<p>Each strategy is configured via the <code>policies</code> key on the route. Default is &ldquo;everything off&rdquo; — opt in only what you need.</p>
+
+<h2 id="auth">Auth + single-flight refresh</h2>
+<pre><code class="language-typescript">broker.registerRoute({
+  id: 'protected-route',
+  on: 'customers.list.requested',
+  type: 'http',
+  request: { method: 'GET', url: '/api/customers' },
+  publishes: { success: 'customers.list.loaded', error: 'customers.list.failed' },
+  policies: {
+    auth: {
+      scheme: 'bearer',
+      getToken: () => sessionToken,
+      refresh: async () => {
+        const res = await fetch('/api/refresh', { method: 'POST' })
+        return (await res.json()).accessToken
+      },
+    },
+  },
+})
+</code></pre>
+<p>If multiple routes hit a 401 simultaneously, only one refresh is fired (<strong>single-flight</strong>); the others queue and retry with the new token.</p>
+
+<h2 id="dedupe">Dedupe</h2>
+<p>Two patterns:</p>
+<pre><code class="language-typescript">policies: {
+  dedupe: { window: 'inflight' },         // collapse concurrent identical requests
+}
+// or
+policies: {
+  dedupe: { window: 'time', ms: 500 },    // throttle: ignore identical requests within 500ms
+}
+</code></pre>
+<p>The dedupe key is the route id + canonical payload hash. Override with a custom key function if you want narrower or wider deduplication.</p>
+
+<h2 id="idempotency">Idempotency</h2>
+<p>For POST/PATCH/PUT/DELETE, the gateway can auto-generate an <code>Idempotency-Key</code> header (UUID v4 by default). The server decides whether to honor it. Useful when the user double-clicks &ldquo;Submit&rdquo;.</p>
+<pre><code class="language-typescript">policies: { idempotency: { auto: true } }
+</code></pre>
+
+<h2 id="allowlist">URL allowlist</h2>
+<p>Critical for security. Without an allowlist, any route definition can hit any URL (potentially data exfiltration if route definitions come from third-party plugins).</p>
+<pre><code class="language-typescript">// Global config
+gateway: {
+  allowlist: ['/api/', 'https://api.example.com/'],
+  onBlocked: (url) =&gt; broker.publish('system.security.blocked', { url }),
+}
+</code></pre>
+<p>Allowlisted prefixes apply to the final URL <em>after redirects</em> (decision <code>D-71</code>) — the gateway re-validates the destination if a redirect is followed.</p>
+
+<h2 id="errors">Sanitized errors</h2>
+<p>When a request fails, the gateway publishes the route&rsquo;s <code>error</code> topic with a sanitized payload (no stack, no original error, no internal details):</p>
+<pre><code class="language-typescript">{
+  code: 'http.timeout',
+  category: 'network',
+  message: 'Request timed out after 5000ms',
+  routeId: 'weather-fetch',
+  topic: 'weather.requested',
+  eventId: 'evt_xKp9N3...',
+}
+</code></pre>
+<p>The full error is logged via the Inspector (dev mode) but never leaks into application code that might display it to the user.</p>
+
+<h2 id="next">Where to next</h2>
+<div class="cards">
+  <a class="card" href="realtime.html"><div class="card-title">Realtime</div><div class="card-desc">SSE + WebSocket with auto-fallback and visibility-aware reconnection.</div></a>
+  <a class="card" href="../recipes/auth-token-refresh.html"><div class="card-title">Recipe: Auth + token refresh</div><div class="card-desc">Working example with token expiration and refresh.</div></a>
+</div>
+">
+<header class="topbar" role="banner">
+  <button class="menu-toggle" aria-label="Toggle navigation">☰</button>
+  <a class="topbar-brand" href="<h1>HTTP gateway</h1>
+<p class="lead">A single observable layer for outbound HTTP. All <code>type: 'http'</code> routes share the same strategy chain — auth, retry, timeout, dedupe, idempotency, allowlist, circuit breaker, backpressure.</p>
+
+<h2 id="why">Why a gateway</h2>
+<p>The traditional pattern: <code>fetch('/api/...')</code> scattered across components. Each component duplicates auth headers, retry logic, error handling. Some forget. Some get it wrong. None of them are observable.</p>
+<p>The gateway centralizes all of this. Components publish topics; routes describe HTTP calls; the gateway runs every call through the same policy stack. The result:</p>
+<ul>
+<li>One place to add a new auth scheme</li>
+<li>One place to tune retry behavior</li>
+<li>One place to add observability</li>
+<li>Components don&rsquo;t know HTTP exists</li>
+</ul>
+
+<h2 id="strategy-chain">The strategy chain</h2>
+<p>For each request, strategies execute in this order:</p>
+<ol>
+<li><strong>Allowlist</strong> — block if URL host is not allowlisted (decision <code>D-71</code>)</li>
+<li><strong>Auth</strong> — attach Bearer token, refresh once if 401 (single-flight, decision <code>D-72</code>)</li>
+<li><strong>Idempotency</strong> — auto-generate idempotency key on POST/PATCH/PUT/DELETE (decision <code>D-70</code>)</li>
+<li><strong>Dedupe</strong> — collapse concurrent identical requests (in-flight or windowed)</li>
+<li><strong>Concurrency</strong> — apply per-route policy (latest-only, serial, queue-bounded)</li>
+<li><strong>Backpressure</strong> — drop or queue if concurrency cap reached (with critical-priority bypass)</li>
+<li><strong>Circuit breaker</strong> — open after N failures, half-open after cooldown (per-route opt-in)</li>
+<li><strong>Timeout</strong> — abort with <code>AbortSignal.timeout()</code></li>
+<li><strong>Retry</strong> — retry on 5xx and network errors only, not 4xx (decision <code>D-73</code>) — except 408/429 honoring <code>Retry-After</code> header</li>
+<li><strong>Backoff</strong> — exponential with full-jitter when retrying</li>
+<li><strong>Fetch</strong> — the actual request</li>
+<li><strong>Response normalization</strong> — map server payload via the route&rsquo;s <code>responseMap</code></li>
+</ol>
+<p>Each strategy is configured via the <code>policies</code> key on the route. Default is &ldquo;everything off&rdquo; — opt in only what you need.</p>
+
+<h2 id="auth">Auth + single-flight refresh</h2>
+<pre><code class="language-typescript">broker.registerRoute({
+  id: 'protected-route',
+  on: 'customers.list.requested',
+  type: 'http',
+  request: { method: 'GET', url: '/api/customers' },
+  publishes: { success: 'customers.list.loaded', error: 'customers.list.failed' },
+  policies: {
+    auth: {
+      scheme: 'bearer',
+      getToken: () => sessionToken,
+      refresh: async () => {
+        const res = await fetch('/api/refresh', { method: 'POST' })
+        return (await res.json()).accessToken
+      },
+    },
+  },
+})
+</code></pre>
+<p>If multiple routes hit a 401 simultaneously, only one refresh is fired (<strong>single-flight</strong>); the others queue and retry with the new token.</p>
+
+<h2 id="dedupe">Dedupe</h2>
+<p>Two patterns:</p>
+<pre><code class="language-typescript">policies: {
+  dedupe: { window: 'inflight' },         // collapse concurrent identical requests
+}
+// or
+policies: {
+  dedupe: { window: 'time', ms: 500 },    // throttle: ignore identical requests within 500ms
+}
+</code></pre>
+<p>The dedupe key is the route id + canonical payload hash. Override with a custom key function if you want narrower or wider deduplication.</p>
+
+<h2 id="idempotency">Idempotency</h2>
+<p>For POST/PATCH/PUT/DELETE, the gateway can auto-generate an <code>Idempotency-Key</code> header (UUID v4 by default). The server decides whether to honor it. Useful when the user double-clicks &ldquo;Submit&rdquo;.</p>
+<pre><code class="language-typescript">policies: { idempotency: { auto: true } }
+</code></pre>
+
+<h2 id="allowlist">URL allowlist</h2>
+<p>Critical for security. Without an allowlist, any route definition can hit any URL (potentially data exfiltration if route definitions come from third-party plugins).</p>
+<pre><code class="language-typescript">// Global config
+gateway: {
+  allowlist: ['/api/', 'https://api.example.com/'],
+  onBlocked: (url) =&gt; broker.publish('system.security.blocked', { url }),
+}
+</code></pre>
+<p>Allowlisted prefixes apply to the final URL <em>after redirects</em> (decision <code>D-71</code>) — the gateway re-validates the destination if a redirect is followed.</p>
+
+<h2 id="errors">Sanitized errors</h2>
+<p>When a request fails, the gateway publishes the route&rsquo;s <code>error</code> topic with a sanitized payload (no stack, no original error, no internal details):</p>
+<pre><code class="language-typescript">{
+  code: 'http.timeout',
+  category: 'network',
+  message: 'Request timed out after 5000ms',
+  routeId: 'weather-fetch',
+  topic: 'weather.requested',
+  eventId: 'evt_xKp9N3...',
+}
+</code></pre>
+<p>The full error is logged via the Inspector (dev mode) but never leaks into application code that might display it to the user.</p>
+
+<h2 id="next">Where to next</h2>
+<div class="cards">
+  <a class="card" href="realtime.html"><div class="card-title">Realtime</div><div class="card-desc">SSE + WebSocket with auto-fallback and visibility-aware reconnection.</div></a>
+  <a class="card" href="../recipes/auth-token-refresh.html"><div class="card-title">Recipe: Auth + token refresh</div><div class="card-desc">Working example with token expiration and refresh.</div></a>
+</div>
+index.html">
+    <span class="topbar-brand-mark">GZ</span>
+    <span>GlueZero</span>
+    <span class="topbar-version">v1.0.0</span>
+  </a>
+  <div class="topbar-search" style="position: relative;">
+    <input type="search" placeholder="Search documentation…" autocomplete="off" spellcheck="false">
+    <div class="search-results"></div>
+  </div>
+  <div class="topbar-actions">
+    <a class="topbar-link" href="https://gluezero.org" target="_blank" rel="noopener">Site</a>
+    <a class="topbar-link" href="https://github.com/omardimarzio/GlueZero" target="_blank" rel="noopener">GitHub</a>
+    <a class="topbar-link" href="https://www.npmjs.com/package/@gluezero/gluezero" target="_blank" rel="noopener">npm</a>
+    <button class="theme-toggle" aria-label="Toggle theme">🌙</button>
+  </div>
+</header>
+<nav class="sidebar" aria-label="Documentation navigation">
+<div class="sidebar-section">
+  <div class="sidebar-section-title">Get started</div>
+  <a class="sidebar-link" href="<h1>HTTP gateway</h1>
+<p class="lead">A single observable layer for outbound HTTP. All <code>type: 'http'</code> routes share the same strategy chain — auth, retry, timeout, dedupe, idempotency, allowlist, circuit breaker, backpressure.</p>
+
+<h2 id="why">Why a gateway</h2>
+<p>The traditional pattern: <code>fetch('/api/...')</code> scattered across components. Each component duplicates auth headers, retry logic, error handling. Some forget. Some get it wrong. None of them are observable.</p>
+<p>The gateway centralizes all of this. Components publish topics; routes describe HTTP calls; the gateway runs every call through the same policy stack. The result:</p>
+<ul>
+<li>One place to add a new auth scheme</li>
+<li>One place to tune retry behavior</li>
+<li>One place to add observability</li>
+<li>Components don&rsquo;t know HTTP exists</li>
+</ul>
+
+<h2 id="strategy-chain">The strategy chain</h2>
+<p>For each request, strategies execute in this order:</p>
+<ol>
+<li><strong>Allowlist</strong> — block if URL host is not allowlisted (decision <code>D-71</code>)</li>
+<li><strong>Auth</strong> — attach Bearer token, refresh once if 401 (single-flight, decision <code>D-72</code>)</li>
+<li><strong>Idempotency</strong> — auto-generate idempotency key on POST/PATCH/PUT/DELETE (decision <code>D-70</code>)</li>
+<li><strong>Dedupe</strong> — collapse concurrent identical requests (in-flight or windowed)</li>
+<li><strong>Concurrency</strong> — apply per-route policy (latest-only, serial, queue-bounded)</li>
+<li><strong>Backpressure</strong> — drop or queue if concurrency cap reached (with critical-priority bypass)</li>
+<li><strong>Circuit breaker</strong> — open after N failures, half-open after cooldown (per-route opt-in)</li>
+<li><strong>Timeout</strong> — abort with <code>AbortSignal.timeout()</code></li>
+<li><strong>Retry</strong> — retry on 5xx and network errors only, not 4xx (decision <code>D-73</code>) — except 408/429 honoring <code>Retry-After</code> header</li>
+<li><strong>Backoff</strong> — exponential with full-jitter when retrying</li>
+<li><strong>Fetch</strong> — the actual request</li>
+<li><strong>Response normalization</strong> — map server payload via the route&rsquo;s <code>responseMap</code></li>
+</ol>
+<p>Each strategy is configured via the <code>policies</code> key on the route. Default is &ldquo;everything off&rdquo; — opt in only what you need.</p>
+
+<h2 id="auth">Auth + single-flight refresh</h2>
+<pre><code class="language-typescript">broker.registerRoute({
+  id: 'protected-route',
+  on: 'customers.list.requested',
+  type: 'http',
+  request: { method: 'GET', url: '/api/customers' },
+  publishes: { success: 'customers.list.loaded', error: 'customers.list.failed' },
+  policies: {
+    auth: {
+      scheme: 'bearer',
+      getToken: () => sessionToken,
+      refresh: async () => {
+        const res = await fetch('/api/refresh', { method: 'POST' })
+        return (await res.json()).accessToken
+      },
+    },
+  },
+})
+</code></pre>
+<p>If multiple routes hit a 401 simultaneously, only one refresh is fired (<strong>single-flight</strong>); the others queue and retry with the new token.</p>
+
+<h2 id="dedupe">Dedupe</h2>
+<p>Two patterns:</p>
+<pre><code class="language-typescript">policies: {
+  dedupe: { window: 'inflight' },         // collapse concurrent identical requests
+}
+// or
+policies: {
+  dedupe: { window: 'time', ms: 500 },    // throttle: ignore identical requests within 500ms
+}
+</code></pre>
+<p>The dedupe key is the route id + canonical payload hash. Override with a custom key function if you want narrower or wider deduplication.</p>
+
+<h2 id="idempotency">Idempotency</h2>
+<p>For POST/PATCH/PUT/DELETE, the gateway can auto-generate an <code>Idempotency-Key</code> header (UUID v4 by default). The server decides whether to honor it. Useful when the user double-clicks &ldquo;Submit&rdquo;.</p>
+<pre><code class="language-typescript">policies: { idempotency: { auto: true } }
+</code></pre>
+
+<h2 id="allowlist">URL allowlist</h2>
+<p>Critical for security. Without an allowlist, any route definition can hit any URL (potentially data exfiltration if route definitions come from third-party plugins).</p>
+<pre><code class="language-typescript">// Global config
+gateway: {
+  allowlist: ['/api/', 'https://api.example.com/'],
+  onBlocked: (url) =&gt; broker.publish('system.security.blocked', { url }),
+}
+</code></pre>
+<p>Allowlisted prefixes apply to the final URL <em>after redirects</em> (decision <code>D-71</code>) — the gateway re-validates the destination if a redirect is followed.</p>
+
+<h2 id="errors">Sanitized errors</h2>
+<p>When a request fails, the gateway publishes the route&rsquo;s <code>error</code> topic with a sanitized payload (no stack, no original error, no internal details):</p>
+<pre><code class="language-typescript">{
+  code: 'http.timeout',
+  category: 'network',
+  message: 'Request timed out after 5000ms',
+  routeId: 'weather-fetch',
+  topic: 'weather.requested',
+  eventId: 'evt_xKp9N3...',
+}
+</code></pre>
+<p>The full error is logged via the Inspector (dev mode) but never leaks into application code that might display it to the user.</p>
+
+<h2 id="next">Where to next</h2>
+<div class="cards">
+  <a class="card" href="realtime.html"><div class="card-title">Realtime</div><div class="card-desc">SSE + WebSocket with auto-fallback and visibility-aware reconnection.</div></a>
+  <a class="card" href="../recipes/auth-token-refresh.html"><div class="card-title">Recipe: Auth + token refresh</div><div class="card-desc">Working example with token expiration and refresh.</div></a>
+</div>
+index.html">Welcome</a>
+  <a class="sidebar-link" href="<h1>HTTP gateway</h1>
+<p class="lead">A single observable layer for outbound HTTP. All <code>type: 'http'</code> routes share the same strategy chain — auth, retry, timeout, dedupe, idempotency, allowlist, circuit breaker, backpressure.</p>
+
+<h2 id="why">Why a gateway</h2>
+<p>The traditional pattern: <code>fetch('/api/...')</code> scattered across components. Each component duplicates auth headers, retry logic, error handling. Some forget. Some get it wrong. None of them are observable.</p>
+<p>The gateway centralizes all of this. Components publish topics; routes describe HTTP calls; the gateway runs every call through the same policy stack. The result:</p>
+<ul>
+<li>One place to add a new auth scheme</li>
+<li>One place to tune retry behavior</li>
+<li>One place to add observability</li>
+<li>Components don&rsquo;t know HTTP exists</li>
+</ul>
+
+<h2 id="strategy-chain">The strategy chain</h2>
+<p>For each request, strategies execute in this order:</p>
+<ol>
+<li><strong>Allowlist</strong> — block if URL host is not allowlisted (decision <code>D-71</code>)</li>
+<li><strong>Auth</strong> — attach Bearer token, refresh once if 401 (single-flight, decision <code>D-72</code>)</li>
+<li><strong>Idempotency</strong> — auto-generate idempotency key on POST/PATCH/PUT/DELETE (decision <code>D-70</code>)</li>
+<li><strong>Dedupe</strong> — collapse concurrent identical requests (in-flight or windowed)</li>
+<li><strong>Concurrency</strong> — apply per-route policy (latest-only, serial, queue-bounded)</li>
+<li><strong>Backpressure</strong> — drop or queue if concurrency cap reached (with critical-priority bypass)</li>
+<li><strong>Circuit breaker</strong> — open after N failures, half-open after cooldown (per-route opt-in)</li>
+<li><strong>Timeout</strong> — abort with <code>AbortSignal.timeout()</code></li>
+<li><strong>Retry</strong> — retry on 5xx and network errors only, not 4xx (decision <code>D-73</code>) — except 408/429 honoring <code>Retry-After</code> header</li>
+<li><strong>Backoff</strong> — exponential with full-jitter when retrying</li>
+<li><strong>Fetch</strong> — the actual request</li>
+<li><strong>Response normalization</strong> — map server payload via the route&rsquo;s <code>responseMap</code></li>
+</ol>
+<p>Each strategy is configured via the <code>policies</code> key on the route. Default is &ldquo;everything off&rdquo; — opt in only what you need.</p>
+
+<h2 id="auth">Auth + single-flight refresh</h2>
+<pre><code class="language-typescript">broker.registerRoute({
+  id: 'protected-route',
+  on: 'customers.list.requested',
+  type: 'http',
+  request: { method: 'GET', url: '/api/customers' },
+  publishes: { success: 'customers.list.loaded', error: 'customers.list.failed' },
+  policies: {
+    auth: {
+      scheme: 'bearer',
+      getToken: () => sessionToken,
+      refresh: async () => {
+        const res = await fetch('/api/refresh', { method: 'POST' })
+        return (await res.json()).accessToken
+      },
+    },
+  },
+})
+</code></pre>
+<p>If multiple routes hit a 401 simultaneously, only one refresh is fired (<strong>single-flight</strong>); the others queue and retry with the new token.</p>
+
+<h2 id="dedupe">Dedupe</h2>
+<p>Two patterns:</p>
+<pre><code class="language-typescript">policies: {
+  dedupe: { window: 'inflight' },         // collapse concurrent identical requests
+}
+// or
+policies: {
+  dedupe: { window: 'time', ms: 500 },    // throttle: ignore identical requests within 500ms
+}
+</code></pre>
+<p>The dedupe key is the route id + canonical payload hash. Override with a custom key function if you want narrower or wider deduplication.</p>
+
+<h2 id="idempotency">Idempotency</h2>
+<p>For POST/PATCH/PUT/DELETE, the gateway can auto-generate an <code>Idempotency-Key</code> header (UUID v4 by default). The server decides whether to honor it. Useful when the user double-clicks &ldquo;Submit&rdquo;.</p>
+<pre><code class="language-typescript">policies: { idempotency: { auto: true } }
+</code></pre>
+
+<h2 id="allowlist">URL allowlist</h2>
+<p>Critical for security. Without an allowlist, any route definition can hit any URL (potentially data exfiltration if route definitions come from third-party plugins).</p>
+<pre><code class="language-typescript">// Global config
+gateway: {
+  allowlist: ['/api/', 'https://api.example.com/'],
+  onBlocked: (url) =&gt; broker.publish('system.security.blocked', { url }),
+}
+</code></pre>
+<p>Allowlisted prefixes apply to the final URL <em>after redirects</em> (decision <code>D-71</code>) — the gateway re-validates the destination if a redirect is followed.</p>
+
+<h2 id="errors">Sanitized errors</h2>
+<p>When a request fails, the gateway publishes the route&rsquo;s <code>error</code> topic with a sanitized payload (no stack, no original error, no internal details):</p>
+<pre><code class="language-typescript">{
+  code: 'http.timeout',
+  category: 'network',
+  message: 'Request timed out after 5000ms',
+  routeId: 'weather-fetch',
+  topic: 'weather.requested',
+  eventId: 'evt_xKp9N3...',
+}
+</code></pre>
+<p>The full error is logged via the Inspector (dev mode) but never leaks into application code that might display it to the user.</p>
+
+<h2 id="next">Where to next</h2>
+<div class="cards">
+  <a class="card" href="realtime.html"><div class="card-title">Realtime</div><div class="card-desc">SSE + WebSocket with auto-fallback and visibility-aware reconnection.</div></a>
+  <a class="card" href="../recipes/auth-token-refresh.html"><div class="card-title">Recipe: Auth + token refresh</div><div class="card-desc">Working example with token expiration and refresh.</div></a>
+</div>
+getting-started.html">Getting started</a>
+</div>
+<div class="sidebar-section">
+  <div class="sidebar-section-title">Concepts</div>
+  <a class="sidebar-link" href="<h1>HTTP gateway</h1>
+<p class="lead">A single observable layer for outbound HTTP. All <code>type: 'http'</code> routes share the same strategy chain — auth, retry, timeout, dedupe, idempotency, allowlist, circuit breaker, backpressure.</p>
+
+<h2 id="why">Why a gateway</h2>
+<p>The traditional pattern: <code>fetch('/api/...')</code> scattered across components. Each component duplicates auth headers, retry logic, error handling. Some forget. Some get it wrong. None of them are observable.</p>
+<p>The gateway centralizes all of this. Components publish topics; routes describe HTTP calls; the gateway runs every call through the same policy stack. The result:</p>
+<ul>
+<li>One place to add a new auth scheme</li>
+<li>One place to tune retry behavior</li>
+<li>One place to add observability</li>
+<li>Components don&rsquo;t know HTTP exists</li>
+</ul>
+
+<h2 id="strategy-chain">The strategy chain</h2>
+<p>For each request, strategies execute in this order:</p>
+<ol>
+<li><strong>Allowlist</strong> — block if URL host is not allowlisted (decision <code>D-71</code>)</li>
+<li><strong>Auth</strong> — attach Bearer token, refresh once if 401 (single-flight, decision <code>D-72</code>)</li>
+<li><strong>Idempotency</strong> — auto-generate idempotency key on POST/PATCH/PUT/DELETE (decision <code>D-70</code>)</li>
+<li><strong>Dedupe</strong> — collapse concurrent identical requests (in-flight or windowed)</li>
+<li><strong>Concurrency</strong> — apply per-route policy (latest-only, serial, queue-bounded)</li>
+<li><strong>Backpressure</strong> — drop or queue if concurrency cap reached (with critical-priority bypass)</li>
+<li><strong>Circuit breaker</strong> — open after N failures, half-open after cooldown (per-route opt-in)</li>
+<li><strong>Timeout</strong> — abort with <code>AbortSignal.timeout()</code></li>
+<li><strong>Retry</strong> — retry on 5xx and network errors only, not 4xx (decision <code>D-73</code>) — except 408/429 honoring <code>Retry-After</code> header</li>
+<li><strong>Backoff</strong> — exponential with full-jitter when retrying</li>
+<li><strong>Fetch</strong> — the actual request</li>
+<li><strong>Response normalization</strong> — map server payload via the route&rsquo;s <code>responseMap</code></li>
+</ol>
+<p>Each strategy is configured via the <code>policies</code> key on the route. Default is &ldquo;everything off&rdquo; — opt in only what you need.</p>
+
+<h2 id="auth">Auth + single-flight refresh</h2>
+<pre><code class="language-typescript">broker.registerRoute({
+  id: 'protected-route',
+  on: 'customers.list.requested',
+  type: 'http',
+  request: { method: 'GET', url: '/api/customers' },
+  publishes: { success: 'customers.list.loaded', error: 'customers.list.failed' },
+  policies: {
+    auth: {
+      scheme: 'bearer',
+      getToken: () => sessionToken,
+      refresh: async () => {
+        const res = await fetch('/api/refresh', { method: 'POST' })
+        return (await res.json()).accessToken
+      },
+    },
+  },
+})
+</code></pre>
+<p>If multiple routes hit a 401 simultaneously, only one refresh is fired (<strong>single-flight</strong>); the others queue and retry with the new token.</p>
+
+<h2 id="dedupe">Dedupe</h2>
+<p>Two patterns:</p>
+<pre><code class="language-typescript">policies: {
+  dedupe: { window: 'inflight' },         // collapse concurrent identical requests
+}
+// or
+policies: {
+  dedupe: { window: 'time', ms: 500 },    // throttle: ignore identical requests within 500ms
+}
+</code></pre>
+<p>The dedupe key is the route id + canonical payload hash. Override with a custom key function if you want narrower or wider deduplication.</p>
+
+<h2 id="idempotency">Idempotency</h2>
+<p>For POST/PATCH/PUT/DELETE, the gateway can auto-generate an <code>Idempotency-Key</code> header (UUID v4 by default). The server decides whether to honor it. Useful when the user double-clicks &ldquo;Submit&rdquo;.</p>
+<pre><code class="language-typescript">policies: { idempotency: { auto: true } }
+</code></pre>
+
+<h2 id="allowlist">URL allowlist</h2>
+<p>Critical for security. Without an allowlist, any route definition can hit any URL (potentially data exfiltration if route definitions come from third-party plugins).</p>
+<pre><code class="language-typescript">// Global config
+gateway: {
+  allowlist: ['/api/', 'https://api.example.com/'],
+  onBlocked: (url) =&gt; broker.publish('system.security.blocked', { url }),
+}
+</code></pre>
+<p>Allowlisted prefixes apply to the final URL <em>after redirects</em> (decision <code>D-71</code>) — the gateway re-validates the destination if a redirect is followed.</p>
+
+<h2 id="errors">Sanitized errors</h2>
+<p>When a request fails, the gateway publishes the route&rsquo;s <code>error</code> topic with a sanitized payload (no stack, no original error, no internal details):</p>
+<pre><code class="language-typescript">{
+  code: 'http.timeout',
+  category: 'network',
+  message: 'Request timed out after 5000ms',
+  routeId: 'weather-fetch',
+  topic: 'weather.requested',
+  eventId: 'evt_xKp9N3...',
+}
+</code></pre>
+<p>The full error is logged via the Inspector (dev mode) but never leaks into application code that might display it to the user.</p>
+
+<h2 id="next">Where to next</h2>
+<div class="cards">
+  <a class="card" href="realtime.html"><div class="card-title">Realtime</div><div class="card-desc">SSE + WebSocket with auto-fallback and visibility-aware reconnection.</div></a>
+  <a class="card" href="../recipes/auth-token-refresh.html"><div class="card-title">Recipe: Auth + token refresh</div><div class="card-desc">Working example with token expiration and refresh.</div></a>
+</div>
+concepts/overview.html">Overview</a>
+  <a class="sidebar-link" href="<h1>HTTP gateway</h1>
+<p class="lead">A single observable layer for outbound HTTP. All <code>type: 'http'</code> routes share the same strategy chain — auth, retry, timeout, dedupe, idempotency, allowlist, circuit breaker, backpressure.</p>
+
+<h2 id="why">Why a gateway</h2>
+<p>The traditional pattern: <code>fetch('/api/...')</code> scattered across components. Each component duplicates auth headers, retry logic, error handling. Some forget. Some get it wrong. None of them are observable.</p>
+<p>The gateway centralizes all of this. Components publish topics; routes describe HTTP calls; the gateway runs every call through the same policy stack. The result:</p>
+<ul>
+<li>One place to add a new auth scheme</li>
+<li>One place to tune retry behavior</li>
+<li>One place to add observability</li>
+<li>Components don&rsquo;t know HTTP exists</li>
+</ul>
+
+<h2 id="strategy-chain">The strategy chain</h2>
+<p>For each request, strategies execute in this order:</p>
+<ol>
+<li><strong>Allowlist</strong> — block if URL host is not allowlisted (decision <code>D-71</code>)</li>
+<li><strong>Auth</strong> — attach Bearer token, refresh once if 401 (single-flight, decision <code>D-72</code>)</li>
+<li><strong>Idempotency</strong> — auto-generate idempotency key on POST/PATCH/PUT/DELETE (decision <code>D-70</code>)</li>
+<li><strong>Dedupe</strong> — collapse concurrent identical requests (in-flight or windowed)</li>
+<li><strong>Concurrency</strong> — apply per-route policy (latest-only, serial, queue-bounded)</li>
+<li><strong>Backpressure</strong> — drop or queue if concurrency cap reached (with critical-priority bypass)</li>
+<li><strong>Circuit breaker</strong> — open after N failures, half-open after cooldown (per-route opt-in)</li>
+<li><strong>Timeout</strong> — abort with <code>AbortSignal.timeout()</code></li>
+<li><strong>Retry</strong> — retry on 5xx and network errors only, not 4xx (decision <code>D-73</code>) — except 408/429 honoring <code>Retry-After</code> header</li>
+<li><strong>Backoff</strong> — exponential with full-jitter when retrying</li>
+<li><strong>Fetch</strong> — the actual request</li>
+<li><strong>Response normalization</strong> — map server payload via the route&rsquo;s <code>responseMap</code></li>
+</ol>
+<p>Each strategy is configured via the <code>policies</code> key on the route. Default is &ldquo;everything off&rdquo; — opt in only what you need.</p>
+
+<h2 id="auth">Auth + single-flight refresh</h2>
+<pre><code class="language-typescript">broker.registerRoute({
+  id: 'protected-route',
+  on: 'customers.list.requested',
+  type: 'http',
+  request: { method: 'GET', url: '/api/customers' },
+  publishes: { success: 'customers.list.loaded', error: 'customers.list.failed' },
+  policies: {
+    auth: {
+      scheme: 'bearer',
+      getToken: () => sessionToken,
+      refresh: async () => {
+        const res = await fetch('/api/refresh', { method: 'POST' })
+        return (await res.json()).accessToken
+      },
+    },
+  },
+})
+</code></pre>
+<p>If multiple routes hit a 401 simultaneously, only one refresh is fired (<strong>single-flight</strong>); the others queue and retry with the new token.</p>
+
+<h2 id="dedupe">Dedupe</h2>
+<p>Two patterns:</p>
+<pre><code class="language-typescript">policies: {
+  dedupe: { window: 'inflight' },         // collapse concurrent identical requests
+}
+// or
+policies: {
+  dedupe: { window: 'time', ms: 500 },    // throttle: ignore identical requests within 500ms
+}
+</code></pre>
+<p>The dedupe key is the route id + canonical payload hash. Override with a custom key function if you want narrower or wider deduplication.</p>
+
+<h2 id="idempotency">Idempotency</h2>
+<p>For POST/PATCH/PUT/DELETE, the gateway can auto-generate an <code>Idempotency-Key</code> header (UUID v4 by default). The server decides whether to honor it. Useful when the user double-clicks &ldquo;Submit&rdquo;.</p>
+<pre><code class="language-typescript">policies: { idempotency: { auto: true } }
+</code></pre>
+
+<h2 id="allowlist">URL allowlist</h2>
+<p>Critical for security. Without an allowlist, any route definition can hit any URL (potentially data exfiltration if route definitions come from third-party plugins).</p>
+<pre><code class="language-typescript">// Global config
+gateway: {
+  allowlist: ['/api/', 'https://api.example.com/'],
+  onBlocked: (url) =&gt; broker.publish('system.security.blocked', { url }),
+}
+</code></pre>
+<p>Allowlisted prefixes apply to the final URL <em>after redirects</em> (decision <code>D-71</code>) — the gateway re-validates the destination if a redirect is followed.</p>
+
+<h2 id="errors">Sanitized errors</h2>
+<p>When a request fails, the gateway publishes the route&rsquo;s <code>error</code> topic with a sanitized payload (no stack, no original error, no internal details):</p>
+<pre><code class="language-typescript">{
+  code: 'http.timeout',
+  category: 'network',
+  message: 'Request timed out after 5000ms',
+  routeId: 'weather-fetch',
+  topic: 'weather.requested',
+  eventId: 'evt_xKp9N3...',
+}
+</code></pre>
+<p>The full error is logged via the Inspector (dev mode) but never leaks into application code that might display it to the user.</p>
+
+<h2 id="next">Where to next</h2>
+<div class="cards">
+  <a class="card" href="realtime.html"><div class="card-title">Realtime</div><div class="card-desc">SSE + WebSocket with auto-fallback and visibility-aware reconnection.</div></a>
+  <a class="card" href="../recipes/auth-token-refresh.html"><div class="card-title">Recipe: Auth + token refresh</div><div class="card-desc">Working example with token expiration and refresh.</div></a>
+</div>
+concepts/broker.html">Broker</a>
+  <a class="sidebar-link" href="<h1>HTTP gateway</h1>
+<p class="lead">A single observable layer for outbound HTTP. All <code>type: 'http'</code> routes share the same strategy chain — auth, retry, timeout, dedupe, idempotency, allowlist, circuit breaker, backpressure.</p>
+
+<h2 id="why">Why a gateway</h2>
+<p>The traditional pattern: <code>fetch('/api/...')</code> scattered across components. Each component duplicates auth headers, retry logic, error handling. Some forget. Some get it wrong. None of them are observable.</p>
+<p>The gateway centralizes all of this. Components publish topics; routes describe HTTP calls; the gateway runs every call through the same policy stack. The result:</p>
+<ul>
+<li>One place to add a new auth scheme</li>
+<li>One place to tune retry behavior</li>
+<li>One place to add observability</li>
+<li>Components don&rsquo;t know HTTP exists</li>
+</ul>
+
+<h2 id="strategy-chain">The strategy chain</h2>
+<p>For each request, strategies execute in this order:</p>
+<ol>
+<li><strong>Allowlist</strong> — block if URL host is not allowlisted (decision <code>D-71</code>)</li>
+<li><strong>Auth</strong> — attach Bearer token, refresh once if 401 (single-flight, decision <code>D-72</code>)</li>
+<li><strong>Idempotency</strong> — auto-generate idempotency key on POST/PATCH/PUT/DELETE (decision <code>D-70</code>)</li>
+<li><strong>Dedupe</strong> — collapse concurrent identical requests (in-flight or windowed)</li>
+<li><strong>Concurrency</strong> — apply per-route policy (latest-only, serial, queue-bounded)</li>
+<li><strong>Backpressure</strong> — drop or queue if concurrency cap reached (with critical-priority bypass)</li>
+<li><strong>Circuit breaker</strong> — open after N failures, half-open after cooldown (per-route opt-in)</li>
+<li><strong>Timeout</strong> — abort with <code>AbortSignal.timeout()</code></li>
+<li><strong>Retry</strong> — retry on 5xx and network errors only, not 4xx (decision <code>D-73</code>) — except 408/429 honoring <code>Retry-After</code> header</li>
+<li><strong>Backoff</strong> — exponential with full-jitter when retrying</li>
+<li><strong>Fetch</strong> — the actual request</li>
+<li><strong>Response normalization</strong> — map server payload via the route&rsquo;s <code>responseMap</code></li>
+</ol>
+<p>Each strategy is configured via the <code>policies</code> key on the route. Default is &ldquo;everything off&rdquo; — opt in only what you need.</p>
+
+<h2 id="auth">Auth + single-flight refresh</h2>
+<pre><code class="language-typescript">broker.registerRoute({
+  id: 'protected-route',
+  on: 'customers.list.requested',
+  type: 'http',
+  request: { method: 'GET', url: '/api/customers' },
+  publishes: { success: 'customers.list.loaded', error: 'customers.list.failed' },
+  policies: {
+    auth: {
+      scheme: 'bearer',
+      getToken: () => sessionToken,
+      refresh: async () => {
+        const res = await fetch('/api/refresh', { method: 'POST' })
+        return (await res.json()).accessToken
+      },
+    },
+  },
+})
+</code></pre>
+<p>If multiple routes hit a 401 simultaneously, only one refresh is fired (<strong>single-flight</strong>); the others queue and retry with the new token.</p>
+
+<h2 id="dedupe">Dedupe</h2>
+<p>Two patterns:</p>
+<pre><code class="language-typescript">policies: {
+  dedupe: { window: 'inflight' },         // collapse concurrent identical requests
+}
+// or
+policies: {
+  dedupe: { window: 'time', ms: 500 },    // throttle: ignore identical requests within 500ms
+}
+</code></pre>
+<p>The dedupe key is the route id + canonical payload hash. Override with a custom key function if you want narrower or wider deduplication.</p>
+
+<h2 id="idempotency">Idempotency</h2>
+<p>For POST/PATCH/PUT/DELETE, the gateway can auto-generate an <code>Idempotency-Key</code> header (UUID v4 by default). The server decides whether to honor it. Useful when the user double-clicks &ldquo;Submit&rdquo;.</p>
+<pre><code class="language-typescript">policies: { idempotency: { auto: true } }
+</code></pre>
+
+<h2 id="allowlist">URL allowlist</h2>
+<p>Critical for security. Without an allowlist, any route definition can hit any URL (potentially data exfiltration if route definitions come from third-party plugins).</p>
+<pre><code class="language-typescript">// Global config
+gateway: {
+  allowlist: ['/api/', 'https://api.example.com/'],
+  onBlocked: (url) =&gt; broker.publish('system.security.blocked', { url }),
+}
+</code></pre>
+<p>Allowlisted prefixes apply to the final URL <em>after redirects</em> (decision <code>D-71</code>) — the gateway re-validates the destination if a redirect is followed.</p>
+
+<h2 id="errors">Sanitized errors</h2>
+<p>When a request fails, the gateway publishes the route&rsquo;s <code>error</code> topic with a sanitized payload (no stack, no original error, no internal details):</p>
+<pre><code class="language-typescript">{
+  code: 'http.timeout',
+  category: 'network',
+  message: 'Request timed out after 5000ms',
+  routeId: 'weather-fetch',
+  topic: 'weather.requested',
+  eventId: 'evt_xKp9N3...',
+}
+</code></pre>
+<p>The full error is logged via the Inspector (dev mode) but never leaks into application code that might display it to the user.</p>
+
+<h2 id="next">Where to next</h2>
+<div class="cards">
+  <a class="card" href="realtime.html"><div class="card-title">Realtime</div><div class="card-desc">SSE + WebSocket with auto-fallback and visibility-aware reconnection.</div></a>
+  <a class="card" href="../recipes/auth-token-refresh.html"><div class="card-title">Recipe: Auth + token refresh</div><div class="card-desc">Working example with token expiration and refresh.</div></a>
+</div>
+concepts/canonical-model.html">Canonical model</a>
+  <a class="sidebar-link" href="<h1>HTTP gateway</h1>
+<p class="lead">A single observable layer for outbound HTTP. All <code>type: 'http'</code> routes share the same strategy chain — auth, retry, timeout, dedupe, idempotency, allowlist, circuit breaker, backpressure.</p>
+
+<h2 id="why">Why a gateway</h2>
+<p>The traditional pattern: <code>fetch('/api/...')</code> scattered across components. Each component duplicates auth headers, retry logic, error handling. Some forget. Some get it wrong. None of them are observable.</p>
+<p>The gateway centralizes all of this. Components publish topics; routes describe HTTP calls; the gateway runs every call through the same policy stack. The result:</p>
+<ul>
+<li>One place to add a new auth scheme</li>
+<li>One place to tune retry behavior</li>
+<li>One place to add observability</li>
+<li>Components don&rsquo;t know HTTP exists</li>
+</ul>
+
+<h2 id="strategy-chain">The strategy chain</h2>
+<p>For each request, strategies execute in this order:</p>
+<ol>
+<li><strong>Allowlist</strong> — block if URL host is not allowlisted (decision <code>D-71</code>)</li>
+<li><strong>Auth</strong> — attach Bearer token, refresh once if 401 (single-flight, decision <code>D-72</code>)</li>
+<li><strong>Idempotency</strong> — auto-generate idempotency key on POST/PATCH/PUT/DELETE (decision <code>D-70</code>)</li>
+<li><strong>Dedupe</strong> — collapse concurrent identical requests (in-flight or windowed)</li>
+<li><strong>Concurrency</strong> — apply per-route policy (latest-only, serial, queue-bounded)</li>
+<li><strong>Backpressure</strong> — drop or queue if concurrency cap reached (with critical-priority bypass)</li>
+<li><strong>Circuit breaker</strong> — open after N failures, half-open after cooldown (per-route opt-in)</li>
+<li><strong>Timeout</strong> — abort with <code>AbortSignal.timeout()</code></li>
+<li><strong>Retry</strong> — retry on 5xx and network errors only, not 4xx (decision <code>D-73</code>) — except 408/429 honoring <code>Retry-After</code> header</li>
+<li><strong>Backoff</strong> — exponential with full-jitter when retrying</li>
+<li><strong>Fetch</strong> — the actual request</li>
+<li><strong>Response normalization</strong> — map server payload via the route&rsquo;s <code>responseMap</code></li>
+</ol>
+<p>Each strategy is configured via the <code>policies</code> key on the route. Default is &ldquo;everything off&rdquo; — opt in only what you need.</p>
+
+<h2 id="auth">Auth + single-flight refresh</h2>
+<pre><code class="language-typescript">broker.registerRoute({
+  id: 'protected-route',
+  on: 'customers.list.requested',
+  type: 'http',
+  request: { method: 'GET', url: '/api/customers' },
+  publishes: { success: 'customers.list.loaded', error: 'customers.list.failed' },
+  policies: {
+    auth: {
+      scheme: 'bearer',
+      getToken: () => sessionToken,
+      refresh: async () => {
+        const res = await fetch('/api/refresh', { method: 'POST' })
+        return (await res.json()).accessToken
+      },
+    },
+  },
+})
+</code></pre>
+<p>If multiple routes hit a 401 simultaneously, only one refresh is fired (<strong>single-flight</strong>); the others queue and retry with the new token.</p>
+
+<h2 id="dedupe">Dedupe</h2>
+<p>Two patterns:</p>
+<pre><code class="language-typescript">policies: {
+  dedupe: { window: 'inflight' },         // collapse concurrent identical requests
+}
+// or
+policies: {
+  dedupe: { window: 'time', ms: 500 },    // throttle: ignore identical requests within 500ms
+}
+</code></pre>
+<p>The dedupe key is the route id + canonical payload hash. Override with a custom key function if you want narrower or wider deduplication.</p>
+
+<h2 id="idempotency">Idempotency</h2>
+<p>For POST/PATCH/PUT/DELETE, the gateway can auto-generate an <code>Idempotency-Key</code> header (UUID v4 by default). The server decides whether to honor it. Useful when the user double-clicks &ldquo;Submit&rdquo;.</p>
+<pre><code class="language-typescript">policies: { idempotency: { auto: true } }
+</code></pre>
+
+<h2 id="allowlist">URL allowlist</h2>
+<p>Critical for security. Without an allowlist, any route definition can hit any URL (potentially data exfiltration if route definitions come from third-party plugins).</p>
+<pre><code class="language-typescript">// Global config
+gateway: {
+  allowlist: ['/api/', 'https://api.example.com/'],
+  onBlocked: (url) =&gt; broker.publish('system.security.blocked', { url }),
+}
+</code></pre>
+<p>Allowlisted prefixes apply to the final URL <em>after redirects</em> (decision <code>D-71</code>) — the gateway re-validates the destination if a redirect is followed.</p>
+
+<h2 id="errors">Sanitized errors</h2>
+<p>When a request fails, the gateway publishes the route&rsquo;s <code>error</code> topic with a sanitized payload (no stack, no original error, no internal details):</p>
+<pre><code class="language-typescript">{
+  code: 'http.timeout',
+  category: 'network',
+  message: 'Request timed out after 5000ms',
+  routeId: 'weather-fetch',
+  topic: 'weather.requested',
+  eventId: 'evt_xKp9N3...',
+}
+</code></pre>
+<p>The full error is logged via the Inspector (dev mode) but never leaks into application code that might display it to the user.</p>
+
+<h2 id="next">Where to next</h2>
+<div class="cards">
+  <a class="card" href="realtime.html"><div class="card-title">Realtime</div><div class="card-desc">SSE + WebSocket with auto-fallback and visibility-aware reconnection.</div></a>
+  <a class="card" href="../recipes/auth-token-refresh.html"><div class="card-title">Recipe: Auth + token refresh</div><div class="card-desc">Working example with token expiration and refresh.</div></a>
+</div>
+concepts/routing.html">Routing</a>
+  <a class="sidebar-link" href="<h1>HTTP gateway</h1>
+<p class="lead">A single observable layer for outbound HTTP. All <code>type: 'http'</code> routes share the same strategy chain — auth, retry, timeout, dedupe, idempotency, allowlist, circuit breaker, backpressure.</p>
+
+<h2 id="why">Why a gateway</h2>
+<p>The traditional pattern: <code>fetch('/api/...')</code> scattered across components. Each component duplicates auth headers, retry logic, error handling. Some forget. Some get it wrong. None of them are observable.</p>
+<p>The gateway centralizes all of this. Components publish topics; routes describe HTTP calls; the gateway runs every call through the same policy stack. The result:</p>
+<ul>
+<li>One place to add a new auth scheme</li>
+<li>One place to tune retry behavior</li>
+<li>One place to add observability</li>
+<li>Components don&rsquo;t know HTTP exists</li>
+</ul>
+
+<h2 id="strategy-chain">The strategy chain</h2>
+<p>For each request, strategies execute in this order:</p>
+<ol>
+<li><strong>Allowlist</strong> — block if URL host is not allowlisted (decision <code>D-71</code>)</li>
+<li><strong>Auth</strong> — attach Bearer token, refresh once if 401 (single-flight, decision <code>D-72</code>)</li>
+<li><strong>Idempotency</strong> — auto-generate idempotency key on POST/PATCH/PUT/DELETE (decision <code>D-70</code>)</li>
+<li><strong>Dedupe</strong> — collapse concurrent identical requests (in-flight or windowed)</li>
+<li><strong>Concurrency</strong> — apply per-route policy (latest-only, serial, queue-bounded)</li>
+<li><strong>Backpressure</strong> — drop or queue if concurrency cap reached (with critical-priority bypass)</li>
+<li><strong>Circuit breaker</strong> — open after N failures, half-open after cooldown (per-route opt-in)</li>
+<li><strong>Timeout</strong> — abort with <code>AbortSignal.timeout()</code></li>
+<li><strong>Retry</strong> — retry on 5xx and network errors only, not 4xx (decision <code>D-73</code>) — except 408/429 honoring <code>Retry-After</code> header</li>
+<li><strong>Backoff</strong> — exponential with full-jitter when retrying</li>
+<li><strong>Fetch</strong> — the actual request</li>
+<li><strong>Response normalization</strong> — map server payload via the route&rsquo;s <code>responseMap</code></li>
+</ol>
+<p>Each strategy is configured via the <code>policies</code> key on the route. Default is &ldquo;everything off&rdquo; — opt in only what you need.</p>
+
+<h2 id="auth">Auth + single-flight refresh</h2>
+<pre><code class="language-typescript">broker.registerRoute({
+  id: 'protected-route',
+  on: 'customers.list.requested',
+  type: 'http',
+  request: { method: 'GET', url: '/api/customers' },
+  publishes: { success: 'customers.list.loaded', error: 'customers.list.failed' },
+  policies: {
+    auth: {
+      scheme: 'bearer',
+      getToken: () => sessionToken,
+      refresh: async () => {
+        const res = await fetch('/api/refresh', { method: 'POST' })
+        return (await res.json()).accessToken
+      },
+    },
+  },
+})
+</code></pre>
+<p>If multiple routes hit a 401 simultaneously, only one refresh is fired (<strong>single-flight</strong>); the others queue and retry with the new token.</p>
+
+<h2 id="dedupe">Dedupe</h2>
+<p>Two patterns:</p>
+<pre><code class="language-typescript">policies: {
+  dedupe: { window: 'inflight' },         // collapse concurrent identical requests
+}
+// or
+policies: {
+  dedupe: { window: 'time', ms: 500 },    // throttle: ignore identical requests within 500ms
+}
+</code></pre>
+<p>The dedupe key is the route id + canonical payload hash. Override with a custom key function if you want narrower or wider deduplication.</p>
+
+<h2 id="idempotency">Idempotency</h2>
+<p>For POST/PATCH/PUT/DELETE, the gateway can auto-generate an <code>Idempotency-Key</code> header (UUID v4 by default). The server decides whether to honor it. Useful when the user double-clicks &ldquo;Submit&rdquo;.</p>
+<pre><code class="language-typescript">policies: { idempotency: { auto: true } }
+</code></pre>
+
+<h2 id="allowlist">URL allowlist</h2>
+<p>Critical for security. Without an allowlist, any route definition can hit any URL (potentially data exfiltration if route definitions come from third-party plugins).</p>
+<pre><code class="language-typescript">// Global config
+gateway: {
+  allowlist: ['/api/', 'https://api.example.com/'],
+  onBlocked: (url) =&gt; broker.publish('system.security.blocked', { url }),
+}
+</code></pre>
+<p>Allowlisted prefixes apply to the final URL <em>after redirects</em> (decision <code>D-71</code>) — the gateway re-validates the destination if a redirect is followed.</p>
+
+<h2 id="errors">Sanitized errors</h2>
+<p>When a request fails, the gateway publishes the route&rsquo;s <code>error</code> topic with a sanitized payload (no stack, no original error, no internal details):</p>
+<pre><code class="language-typescript">{
+  code: 'http.timeout',
+  category: 'network',
+  message: 'Request timed out after 5000ms',
+  routeId: 'weather-fetch',
+  topic: 'weather.requested',
+  eventId: 'evt_xKp9N3...',
+}
+</code></pre>
+<p>The full error is logged via the Inspector (dev mode) but never leaks into application code that might display it to the user.</p>
+
+<h2 id="next">Where to next</h2>
+<div class="cards">
+  <a class="card" href="realtime.html"><div class="card-title">Realtime</div><div class="card-desc">SSE + WebSocket with auto-fallback and visibility-aware reconnection.</div></a>
+  <a class="card" href="../recipes/auth-token-refresh.html"><div class="card-title">Recipe: Auth + token refresh</div><div class="card-desc">Working example with token expiration and refresh.</div></a>
+</div>
+concepts/gateway.html">HTTP gateway</a>
+  <a class="sidebar-link" href="<h1>HTTP gateway</h1>
+<p class="lead">A single observable layer for outbound HTTP. All <code>type: 'http'</code> routes share the same strategy chain — auth, retry, timeout, dedupe, idempotency, allowlist, circuit breaker, backpressure.</p>
+
+<h2 id="why">Why a gateway</h2>
+<p>The traditional pattern: <code>fetch('/api/...')</code> scattered across components. Each component duplicates auth headers, retry logic, error handling. Some forget. Some get it wrong. None of them are observable.</p>
+<p>The gateway centralizes all of this. Components publish topics; routes describe HTTP calls; the gateway runs every call through the same policy stack. The result:</p>
+<ul>
+<li>One place to add a new auth scheme</li>
+<li>One place to tune retry behavior</li>
+<li>One place to add observability</li>
+<li>Components don&rsquo;t know HTTP exists</li>
+</ul>
+
+<h2 id="strategy-chain">The strategy chain</h2>
+<p>For each request, strategies execute in this order:</p>
+<ol>
+<li><strong>Allowlist</strong> — block if URL host is not allowlisted (decision <code>D-71</code>)</li>
+<li><strong>Auth</strong> — attach Bearer token, refresh once if 401 (single-flight, decision <code>D-72</code>)</li>
+<li><strong>Idempotency</strong> — auto-generate idempotency key on POST/PATCH/PUT/DELETE (decision <code>D-70</code>)</li>
+<li><strong>Dedupe</strong> — collapse concurrent identical requests (in-flight or windowed)</li>
+<li><strong>Concurrency</strong> — apply per-route policy (latest-only, serial, queue-bounded)</li>
+<li><strong>Backpressure</strong> — drop or queue if concurrency cap reached (with critical-priority bypass)</li>
+<li><strong>Circuit breaker</strong> — open after N failures, half-open after cooldown (per-route opt-in)</li>
+<li><strong>Timeout</strong> — abort with <code>AbortSignal.timeout()</code></li>
+<li><strong>Retry</strong> — retry on 5xx and network errors only, not 4xx (decision <code>D-73</code>) — except 408/429 honoring <code>Retry-After</code> header</li>
+<li><strong>Backoff</strong> — exponential with full-jitter when retrying</li>
+<li><strong>Fetch</strong> — the actual request</li>
+<li><strong>Response normalization</strong> — map server payload via the route&rsquo;s <code>responseMap</code></li>
+</ol>
+<p>Each strategy is configured via the <code>policies</code> key on the route. Default is &ldquo;everything off&rdquo; — opt in only what you need.</p>
+
+<h2 id="auth">Auth + single-flight refresh</h2>
+<pre><code class="language-typescript">broker.registerRoute({
+  id: 'protected-route',
+  on: 'customers.list.requested',
+  type: 'http',
+  request: { method: 'GET', url: '/api/customers' },
+  publishes: { success: 'customers.list.loaded', error: 'customers.list.failed' },
+  policies: {
+    auth: {
+      scheme: 'bearer',
+      getToken: () => sessionToken,
+      refresh: async () => {
+        const res = await fetch('/api/refresh', { method: 'POST' })
+        return (await res.json()).accessToken
+      },
+    },
+  },
+})
+</code></pre>
+<p>If multiple routes hit a 401 simultaneously, only one refresh is fired (<strong>single-flight</strong>); the others queue and retry with the new token.</p>
+
+<h2 id="dedupe">Dedupe</h2>
+<p>Two patterns:</p>
+<pre><code class="language-typescript">policies: {
+  dedupe: { window: 'inflight' },         // collapse concurrent identical requests
+}
+// or
+policies: {
+  dedupe: { window: 'time', ms: 500 },    // throttle: ignore identical requests within 500ms
+}
+</code></pre>
+<p>The dedupe key is the route id + canonical payload hash. Override with a custom key function if you want narrower or wider deduplication.</p>
+
+<h2 id="idempotency">Idempotency</h2>
+<p>For POST/PATCH/PUT/DELETE, the gateway can auto-generate an <code>Idempotency-Key</code> header (UUID v4 by default). The server decides whether to honor it. Useful when the user double-clicks &ldquo;Submit&rdquo;.</p>
+<pre><code class="language-typescript">policies: { idempotency: { auto: true } }
+</code></pre>
+
+<h2 id="allowlist">URL allowlist</h2>
+<p>Critical for security. Without an allowlist, any route definition can hit any URL (potentially data exfiltration if route definitions come from third-party plugins).</p>
+<pre><code class="language-typescript">// Global config
+gateway: {
+  allowlist: ['/api/', 'https://api.example.com/'],
+  onBlocked: (url) =&gt; broker.publish('system.security.blocked', { url }),
+}
+</code></pre>
+<p>Allowlisted prefixes apply to the final URL <em>after redirects</em> (decision <code>D-71</code>) — the gateway re-validates the destination if a redirect is followed.</p>
+
+<h2 id="errors">Sanitized errors</h2>
+<p>When a request fails, the gateway publishes the route&rsquo;s <code>error</code> topic with a sanitized payload (no stack, no original error, no internal details):</p>
+<pre><code class="language-typescript">{
+  code: 'http.timeout',
+  category: 'network',
+  message: 'Request timed out after 5000ms',
+  routeId: 'weather-fetch',
+  topic: 'weather.requested',
+  eventId: 'evt_xKp9N3...',
+}
+</code></pre>
+<p>The full error is logged via the Inspector (dev mode) but never leaks into application code that might display it to the user.</p>
+
+<h2 id="next">Where to next</h2>
+<div class="cards">
+  <a class="card" href="realtime.html"><div class="card-title">Realtime</div><div class="card-desc">SSE + WebSocket with auto-fallback and visibility-aware reconnection.</div></a>
+  <a class="card" href="../recipes/auth-token-refresh.html"><div class="card-title">Recipe: Auth + token refresh</div><div class="card-desc">Working example with token expiration and refresh.</div></a>
+</div>
+concepts/realtime.html">Realtime</a>
+  <a class="sidebar-link" href="<h1>HTTP gateway</h1>
+<p class="lead">A single observable layer for outbound HTTP. All <code>type: 'http'</code> routes share the same strategy chain — auth, retry, timeout, dedupe, idempotency, allowlist, circuit breaker, backpressure.</p>
+
+<h2 id="why">Why a gateway</h2>
+<p>The traditional pattern: <code>fetch('/api/...')</code> scattered across components. Each component duplicates auth headers, retry logic, error handling. Some forget. Some get it wrong. None of them are observable.</p>
+<p>The gateway centralizes all of this. Components publish topics; routes describe HTTP calls; the gateway runs every call through the same policy stack. The result:</p>
+<ul>
+<li>One place to add a new auth scheme</li>
+<li>One place to tune retry behavior</li>
+<li>One place to add observability</li>
+<li>Components don&rsquo;t know HTTP exists</li>
+</ul>
+
+<h2 id="strategy-chain">The strategy chain</h2>
+<p>For each request, strategies execute in this order:</p>
+<ol>
+<li><strong>Allowlist</strong> — block if URL host is not allowlisted (decision <code>D-71</code>)</li>
+<li><strong>Auth</strong> — attach Bearer token, refresh once if 401 (single-flight, decision <code>D-72</code>)</li>
+<li><strong>Idempotency</strong> — auto-generate idempotency key on POST/PATCH/PUT/DELETE (decision <code>D-70</code>)</li>
+<li><strong>Dedupe</strong> — collapse concurrent identical requests (in-flight or windowed)</li>
+<li><strong>Concurrency</strong> — apply per-route policy (latest-only, serial, queue-bounded)</li>
+<li><strong>Backpressure</strong> — drop or queue if concurrency cap reached (with critical-priority bypass)</li>
+<li><strong>Circuit breaker</strong> — open after N failures, half-open after cooldown (per-route opt-in)</li>
+<li><strong>Timeout</strong> — abort with <code>AbortSignal.timeout()</code></li>
+<li><strong>Retry</strong> — retry on 5xx and network errors only, not 4xx (decision <code>D-73</code>) — except 408/429 honoring <code>Retry-After</code> header</li>
+<li><strong>Backoff</strong> — exponential with full-jitter when retrying</li>
+<li><strong>Fetch</strong> — the actual request</li>
+<li><strong>Response normalization</strong> — map server payload via the route&rsquo;s <code>responseMap</code></li>
+</ol>
+<p>Each strategy is configured via the <code>policies</code> key on the route. Default is &ldquo;everything off&rdquo; — opt in only what you need.</p>
+
+<h2 id="auth">Auth + single-flight refresh</h2>
+<pre><code class="language-typescript">broker.registerRoute({
+  id: 'protected-route',
+  on: 'customers.list.requested',
+  type: 'http',
+  request: { method: 'GET', url: '/api/customers' },
+  publishes: { success: 'customers.list.loaded', error: 'customers.list.failed' },
+  policies: {
+    auth: {
+      scheme: 'bearer',
+      getToken: () => sessionToken,
+      refresh: async () => {
+        const res = await fetch('/api/refresh', { method: 'POST' })
+        return (await res.json()).accessToken
+      },
+    },
+  },
+})
+</code></pre>
+<p>If multiple routes hit a 401 simultaneously, only one refresh is fired (<strong>single-flight</strong>); the others queue and retry with the new token.</p>
+
+<h2 id="dedupe">Dedupe</h2>
+<p>Two patterns:</p>
+<pre><code class="language-typescript">policies: {
+  dedupe: { window: 'inflight' },         // collapse concurrent identical requests
+}
+// or
+policies: {
+  dedupe: { window: 'time', ms: 500 },    // throttle: ignore identical requests within 500ms
+}
+</code></pre>
+<p>The dedupe key is the route id + canonical payload hash. Override with a custom key function if you want narrower or wider deduplication.</p>
+
+<h2 id="idempotency">Idempotency</h2>
+<p>For POST/PATCH/PUT/DELETE, the gateway can auto-generate an <code>Idempotency-Key</code> header (UUID v4 by default). The server decides whether to honor it. Useful when the user double-clicks &ldquo;Submit&rdquo;.</p>
+<pre><code class="language-typescript">policies: { idempotency: { auto: true } }
+</code></pre>
+
+<h2 id="allowlist">URL allowlist</h2>
+<p>Critical for security. Without an allowlist, any route definition can hit any URL (potentially data exfiltration if route definitions come from third-party plugins).</p>
+<pre><code class="language-typescript">// Global config
+gateway: {
+  allowlist: ['/api/', 'https://api.example.com/'],
+  onBlocked: (url) =&gt; broker.publish('system.security.blocked', { url }),
+}
+</code></pre>
+<p>Allowlisted prefixes apply to the final URL <em>after redirects</em> (decision <code>D-71</code>) — the gateway re-validates the destination if a redirect is followed.</p>
+
+<h2 id="errors">Sanitized errors</h2>
+<p>When a request fails, the gateway publishes the route&rsquo;s <code>error</code> topic with a sanitized payload (no stack, no original error, no internal details):</p>
+<pre><code class="language-typescript">{
+  code: 'http.timeout',
+  category: 'network',
+  message: 'Request timed out after 5000ms',
+  routeId: 'weather-fetch',
+  topic: 'weather.requested',
+  eventId: 'evt_xKp9N3...',
+}
+</code></pre>
+<p>The full error is logged via the Inspector (dev mode) but never leaks into application code that might display it to the user.</p>
+
+<h2 id="next">Where to next</h2>
+<div class="cards">
+  <a class="card" href="realtime.html"><div class="card-title">Realtime</div><div class="card-desc">SSE + WebSocket with auto-fallback and visibility-aware reconnection.</div></a>
+  <a class="card" href="../recipes/auth-token-refresh.html"><div class="card-title">Recipe: Auth + token refresh</div><div class="card-desc">Working example with token expiration and refresh.</div></a>
+</div>
+concepts/worker.html">Worker</a>
+  <a class="sidebar-link" href="<h1>HTTP gateway</h1>
+<p class="lead">A single observable layer for outbound HTTP. All <code>type: 'http'</code> routes share the same strategy chain — auth, retry, timeout, dedupe, idempotency, allowlist, circuit breaker, backpressure.</p>
+
+<h2 id="why">Why a gateway</h2>
+<p>The traditional pattern: <code>fetch('/api/...')</code> scattered across components. Each component duplicates auth headers, retry logic, error handling. Some forget. Some get it wrong. None of them are observable.</p>
+<p>The gateway centralizes all of this. Components publish topics; routes describe HTTP calls; the gateway runs every call through the same policy stack. The result:</p>
+<ul>
+<li>One place to add a new auth scheme</li>
+<li>One place to tune retry behavior</li>
+<li>One place to add observability</li>
+<li>Components don&rsquo;t know HTTP exists</li>
+</ul>
+
+<h2 id="strategy-chain">The strategy chain</h2>
+<p>For each request, strategies execute in this order:</p>
+<ol>
+<li><strong>Allowlist</strong> — block if URL host is not allowlisted (decision <code>D-71</code>)</li>
+<li><strong>Auth</strong> — attach Bearer token, refresh once if 401 (single-flight, decision <code>D-72</code>)</li>
+<li><strong>Idempotency</strong> — auto-generate idempotency key on POST/PATCH/PUT/DELETE (decision <code>D-70</code>)</li>
+<li><strong>Dedupe</strong> — collapse concurrent identical requests (in-flight or windowed)</li>
+<li><strong>Concurrency</strong> — apply per-route policy (latest-only, serial, queue-bounded)</li>
+<li><strong>Backpressure</strong> — drop or queue if concurrency cap reached (with critical-priority bypass)</li>
+<li><strong>Circuit breaker</strong> — open after N failures, half-open after cooldown (per-route opt-in)</li>
+<li><strong>Timeout</strong> — abort with <code>AbortSignal.timeout()</code></li>
+<li><strong>Retry</strong> — retry on 5xx and network errors only, not 4xx (decision <code>D-73</code>) — except 408/429 honoring <code>Retry-After</code> header</li>
+<li><strong>Backoff</strong> — exponential with full-jitter when retrying</li>
+<li><strong>Fetch</strong> — the actual request</li>
+<li><strong>Response normalization</strong> — map server payload via the route&rsquo;s <code>responseMap</code></li>
+</ol>
+<p>Each strategy is configured via the <code>policies</code> key on the route. Default is &ldquo;everything off&rdquo; — opt in only what you need.</p>
+
+<h2 id="auth">Auth + single-flight refresh</h2>
+<pre><code class="language-typescript">broker.registerRoute({
+  id: 'protected-route',
+  on: 'customers.list.requested',
+  type: 'http',
+  request: { method: 'GET', url: '/api/customers' },
+  publishes: { success: 'customers.list.loaded', error: 'customers.list.failed' },
+  policies: {
+    auth: {
+      scheme: 'bearer',
+      getToken: () => sessionToken,
+      refresh: async () => {
+        const res = await fetch('/api/refresh', { method: 'POST' })
+        return (await res.json()).accessToken
+      },
+    },
+  },
+})
+</code></pre>
+<p>If multiple routes hit a 401 simultaneously, only one refresh is fired (<strong>single-flight</strong>); the others queue and retry with the new token.</p>
+
+<h2 id="dedupe">Dedupe</h2>
+<p>Two patterns:</p>
+<pre><code class="language-typescript">policies: {
+  dedupe: { window: 'inflight' },         // collapse concurrent identical requests
+}
+// or
+policies: {
+  dedupe: { window: 'time', ms: 500 },    // throttle: ignore identical requests within 500ms
+}
+</code></pre>
+<p>The dedupe key is the route id + canonical payload hash. Override with a custom key function if you want narrower or wider deduplication.</p>
+
+<h2 id="idempotency">Idempotency</h2>
+<p>For POST/PATCH/PUT/DELETE, the gateway can auto-generate an <code>Idempotency-Key</code> header (UUID v4 by default). The server decides whether to honor it. Useful when the user double-clicks &ldquo;Submit&rdquo;.</p>
+<pre><code class="language-typescript">policies: { idempotency: { auto: true } }
+</code></pre>
+
+<h2 id="allowlist">URL allowlist</h2>
+<p>Critical for security. Without an allowlist, any route definition can hit any URL (potentially data exfiltration if route definitions come from third-party plugins).</p>
+<pre><code class="language-typescript">// Global config
+gateway: {
+  allowlist: ['/api/', 'https://api.example.com/'],
+  onBlocked: (url) =&gt; broker.publish('system.security.blocked', { url }),
+}
+</code></pre>
+<p>Allowlisted prefixes apply to the final URL <em>after redirects</em> (decision <code>D-71</code>) — the gateway re-validates the destination if a redirect is followed.</p>
+
+<h2 id="errors">Sanitized errors</h2>
+<p>When a request fails, the gateway publishes the route&rsquo;s <code>error</code> topic with a sanitized payload (no stack, no original error, no internal details):</p>
+<pre><code class="language-typescript">{
+  code: 'http.timeout',
+  category: 'network',
+  message: 'Request timed out after 5000ms',
+  routeId: 'weather-fetch',
+  topic: 'weather.requested',
+  eventId: 'evt_xKp9N3...',
+}
+</code></pre>
+<p>The full error is logged via the Inspector (dev mode) but never leaks into application code that might display it to the user.</p>
+
+<h2 id="next">Where to next</h2>
+<div class="cards">
+  <a class="card" href="realtime.html"><div class="card-title">Realtime</div><div class="card-desc">SSE + WebSocket with auto-fallback and visibility-aware reconnection.</div></a>
+  <a class="card" href="../recipes/auth-token-refresh.html"><div class="card-title">Recipe: Auth + token refresh</div><div class="card-desc">Working example with token expiration and refresh.</div></a>
+</div>
+concepts/cache.html">Cache</a>
+  <a class="sidebar-link" href="<h1>HTTP gateway</h1>
+<p class="lead">A single observable layer for outbound HTTP. All <code>type: 'http'</code> routes share the same strategy chain — auth, retry, timeout, dedupe, idempotency, allowlist, circuit breaker, backpressure.</p>
+
+<h2 id="why">Why a gateway</h2>
+<p>The traditional pattern: <code>fetch('/api/...')</code> scattered across components. Each component duplicates auth headers, retry logic, error handling. Some forget. Some get it wrong. None of them are observable.</p>
+<p>The gateway centralizes all of this. Components publish topics; routes describe HTTP calls; the gateway runs every call through the same policy stack. The result:</p>
+<ul>
+<li>One place to add a new auth scheme</li>
+<li>One place to tune retry behavior</li>
+<li>One place to add observability</li>
+<li>Components don&rsquo;t know HTTP exists</li>
+</ul>
+
+<h2 id="strategy-chain">The strategy chain</h2>
+<p>For each request, strategies execute in this order:</p>
+<ol>
+<li><strong>Allowlist</strong> — block if URL host is not allowlisted (decision <code>D-71</code>)</li>
+<li><strong>Auth</strong> — attach Bearer token, refresh once if 401 (single-flight, decision <code>D-72</code>)</li>
+<li><strong>Idempotency</strong> — auto-generate idempotency key on POST/PATCH/PUT/DELETE (decision <code>D-70</code>)</li>
+<li><strong>Dedupe</strong> — collapse concurrent identical requests (in-flight or windowed)</li>
+<li><strong>Concurrency</strong> — apply per-route policy (latest-only, serial, queue-bounded)</li>
+<li><strong>Backpressure</strong> — drop or queue if concurrency cap reached (with critical-priority bypass)</li>
+<li><strong>Circuit breaker</strong> — open after N failures, half-open after cooldown (per-route opt-in)</li>
+<li><strong>Timeout</strong> — abort with <code>AbortSignal.timeout()</code></li>
+<li><strong>Retry</strong> — retry on 5xx and network errors only, not 4xx (decision <code>D-73</code>) — except 408/429 honoring <code>Retry-After</code> header</li>
+<li><strong>Backoff</strong> — exponential with full-jitter when retrying</li>
+<li><strong>Fetch</strong> — the actual request</li>
+<li><strong>Response normalization</strong> — map server payload via the route&rsquo;s <code>responseMap</code></li>
+</ol>
+<p>Each strategy is configured via the <code>policies</code> key on the route. Default is &ldquo;everything off&rdquo; — opt in only what you need.</p>
+
+<h2 id="auth">Auth + single-flight refresh</h2>
+<pre><code class="language-typescript">broker.registerRoute({
+  id: 'protected-route',
+  on: 'customers.list.requested',
+  type: 'http',
+  request: { method: 'GET', url: '/api/customers' },
+  publishes: { success: 'customers.list.loaded', error: 'customers.list.failed' },
+  policies: {
+    auth: {
+      scheme: 'bearer',
+      getToken: () => sessionToken,
+      refresh: async () => {
+        const res = await fetch('/api/refresh', { method: 'POST' })
+        return (await res.json()).accessToken
+      },
+    },
+  },
+})
+</code></pre>
+<p>If multiple routes hit a 401 simultaneously, only one refresh is fired (<strong>single-flight</strong>); the others queue and retry with the new token.</p>
+
+<h2 id="dedupe">Dedupe</h2>
+<p>Two patterns:</p>
+<pre><code class="language-typescript">policies: {
+  dedupe: { window: 'inflight' },         // collapse concurrent identical requests
+}
+// or
+policies: {
+  dedupe: { window: 'time', ms: 500 },    // throttle: ignore identical requests within 500ms
+}
+</code></pre>
+<p>The dedupe key is the route id + canonical payload hash. Override with a custom key function if you want narrower or wider deduplication.</p>
+
+<h2 id="idempotency">Idempotency</h2>
+<p>For POST/PATCH/PUT/DELETE, the gateway can auto-generate an <code>Idempotency-Key</code> header (UUID v4 by default). The server decides whether to honor it. Useful when the user double-clicks &ldquo;Submit&rdquo;.</p>
+<pre><code class="language-typescript">policies: { idempotency: { auto: true } }
+</code></pre>
+
+<h2 id="allowlist">URL allowlist</h2>
+<p>Critical for security. Without an allowlist, any route definition can hit any URL (potentially data exfiltration if route definitions come from third-party plugins).</p>
+<pre><code class="language-typescript">// Global config
+gateway: {
+  allowlist: ['/api/', 'https://api.example.com/'],
+  onBlocked: (url) =&gt; broker.publish('system.security.blocked', { url }),
+}
+</code></pre>
+<p>Allowlisted prefixes apply to the final URL <em>after redirects</em> (decision <code>D-71</code>) — the gateway re-validates the destination if a redirect is followed.</p>
+
+<h2 id="errors">Sanitized errors</h2>
+<p>When a request fails, the gateway publishes the route&rsquo;s <code>error</code> topic with a sanitized payload (no stack, no original error, no internal details):</p>
+<pre><code class="language-typescript">{
+  code: 'http.timeout',
+  category: 'network',
+  message: 'Request timed out after 5000ms',
+  routeId: 'weather-fetch',
+  topic: 'weather.requested',
+  eventId: 'evt_xKp9N3...',
+}
+</code></pre>
+<p>The full error is logged via the Inspector (dev mode) but never leaks into application code that might display it to the user.</p>
+
+<h2 id="next">Where to next</h2>
+<div class="cards">
+  <a class="card" href="realtime.html"><div class="card-title">Realtime</div><div class="card-desc">SSE + WebSocket with auto-fallback and visibility-aware reconnection.</div></a>
+  <a class="card" href="../recipes/auth-token-refresh.html"><div class="card-title">Recipe: Auth + token refresh</div><div class="card-desc">Working example with token expiration and refresh.</div></a>
+</div>
+concepts/devtools.html">Devtools</a>
+</div>
+<div class="sidebar-section">
+  <div class="sidebar-section-title">API reference</div>
+  <a class="sidebar-link" href="<h1>HTTP gateway</h1>
+<p class="lead">A single observable layer for outbound HTTP. All <code>type: 'http'</code> routes share the same strategy chain — auth, retry, timeout, dedupe, idempotency, allowlist, circuit breaker, backpressure.</p>
+
+<h2 id="why">Why a gateway</h2>
+<p>The traditional pattern: <code>fetch('/api/...')</code> scattered across components. Each component duplicates auth headers, retry logic, error handling. Some forget. Some get it wrong. None of them are observable.</p>
+<p>The gateway centralizes all of this. Components publish topics; routes describe HTTP calls; the gateway runs every call through the same policy stack. The result:</p>
+<ul>
+<li>One place to add a new auth scheme</li>
+<li>One place to tune retry behavior</li>
+<li>One place to add observability</li>
+<li>Components don&rsquo;t know HTTP exists</li>
+</ul>
+
+<h2 id="strategy-chain">The strategy chain</h2>
+<p>For each request, strategies execute in this order:</p>
+<ol>
+<li><strong>Allowlist</strong> — block if URL host is not allowlisted (decision <code>D-71</code>)</li>
+<li><strong>Auth</strong> — attach Bearer token, refresh once if 401 (single-flight, decision <code>D-72</code>)</li>
+<li><strong>Idempotency</strong> — auto-generate idempotency key on POST/PATCH/PUT/DELETE (decision <code>D-70</code>)</li>
+<li><strong>Dedupe</strong> — collapse concurrent identical requests (in-flight or windowed)</li>
+<li><strong>Concurrency</strong> — apply per-route policy (latest-only, serial, queue-bounded)</li>
+<li><strong>Backpressure</strong> — drop or queue if concurrency cap reached (with critical-priority bypass)</li>
+<li><strong>Circuit breaker</strong> — open after N failures, half-open after cooldown (per-route opt-in)</li>
+<li><strong>Timeout</strong> — abort with <code>AbortSignal.timeout()</code></li>
+<li><strong>Retry</strong> — retry on 5xx and network errors only, not 4xx (decision <code>D-73</code>) — except 408/429 honoring <code>Retry-After</code> header</li>
+<li><strong>Backoff</strong> — exponential with full-jitter when retrying</li>
+<li><strong>Fetch</strong> — the actual request</li>
+<li><strong>Response normalization</strong> — map server payload via the route&rsquo;s <code>responseMap</code></li>
+</ol>
+<p>Each strategy is configured via the <code>policies</code> key on the route. Default is &ldquo;everything off&rdquo; — opt in only what you need.</p>
+
+<h2 id="auth">Auth + single-flight refresh</h2>
+<pre><code class="language-typescript">broker.registerRoute({
+  id: 'protected-route',
+  on: 'customers.list.requested',
+  type: 'http',
+  request: { method: 'GET', url: '/api/customers' },
+  publishes: { success: 'customers.list.loaded', error: 'customers.list.failed' },
+  policies: {
+    auth: {
+      scheme: 'bearer',
+      getToken: () => sessionToken,
+      refresh: async () => {
+        const res = await fetch('/api/refresh', { method: 'POST' })
+        return (await res.json()).accessToken
+      },
+    },
+  },
+})
+</code></pre>
+<p>If multiple routes hit a 401 simultaneously, only one refresh is fired (<strong>single-flight</strong>); the others queue and retry with the new token.</p>
+
+<h2 id="dedupe">Dedupe</h2>
+<p>Two patterns:</p>
+<pre><code class="language-typescript">policies: {
+  dedupe: { window: 'inflight' },         // collapse concurrent identical requests
+}
+// or
+policies: {
+  dedupe: { window: 'time', ms: 500 },    // throttle: ignore identical requests within 500ms
+}
+</code></pre>
+<p>The dedupe key is the route id + canonical payload hash. Override with a custom key function if you want narrower or wider deduplication.</p>
+
+<h2 id="idempotency">Idempotency</h2>
+<p>For POST/PATCH/PUT/DELETE, the gateway can auto-generate an <code>Idempotency-Key</code> header (UUID v4 by default). The server decides whether to honor it. Useful when the user double-clicks &ldquo;Submit&rdquo;.</p>
+<pre><code class="language-typescript">policies: { idempotency: { auto: true } }
+</code></pre>
+
+<h2 id="allowlist">URL allowlist</h2>
+<p>Critical for security. Without an allowlist, any route definition can hit any URL (potentially data exfiltration if route definitions come from third-party plugins).</p>
+<pre><code class="language-typescript">// Global config
+gateway: {
+  allowlist: ['/api/', 'https://api.example.com/'],
+  onBlocked: (url) =&gt; broker.publish('system.security.blocked', { url }),
+}
+</code></pre>
+<p>Allowlisted prefixes apply to the final URL <em>after redirects</em> (decision <code>D-71</code>) — the gateway re-validates the destination if a redirect is followed.</p>
+
+<h2 id="errors">Sanitized errors</h2>
+<p>When a request fails, the gateway publishes the route&rsquo;s <code>error</code> topic with a sanitized payload (no stack, no original error, no internal details):</p>
+<pre><code class="language-typescript">{
+  code: 'http.timeout',
+  category: 'network',
+  message: 'Request timed out after 5000ms',
+  routeId: 'weather-fetch',
+  topic: 'weather.requested',
+  eventId: 'evt_xKp9N3...',
+}
+</code></pre>
+<p>The full error is logged via the Inspector (dev mode) but never leaks into application code that might display it to the user.</p>
+
+<h2 id="next">Where to next</h2>
+<div class="cards">
+  <a class="card" href="realtime.html"><div class="card-title">Realtime</div><div class="card-desc">SSE + WebSocket with auto-fallback and visibility-aware reconnection.</div></a>
+  <a class="card" href="../recipes/auth-token-refresh.html"><div class="card-title">Recipe: Auth + token refresh</div><div class="card-desc">Working example with token expiration and refresh.</div></a>
+</div>
+api/gluezero.html">@gluezero/gluezero</a>
+  <a class="sidebar-link" href="<h1>HTTP gateway</h1>
+<p class="lead">A single observable layer for outbound HTTP. All <code>type: 'http'</code> routes share the same strategy chain — auth, retry, timeout, dedupe, idempotency, allowlist, circuit breaker, backpressure.</p>
+
+<h2 id="why">Why a gateway</h2>
+<p>The traditional pattern: <code>fetch('/api/...')</code> scattered across components. Each component duplicates auth headers, retry logic, error handling. Some forget. Some get it wrong. None of them are observable.</p>
+<p>The gateway centralizes all of this. Components publish topics; routes describe HTTP calls; the gateway runs every call through the same policy stack. The result:</p>
+<ul>
+<li>One place to add a new auth scheme</li>
+<li>One place to tune retry behavior</li>
+<li>One place to add observability</li>
+<li>Components don&rsquo;t know HTTP exists</li>
+</ul>
+
+<h2 id="strategy-chain">The strategy chain</h2>
+<p>For each request, strategies execute in this order:</p>
+<ol>
+<li><strong>Allowlist</strong> — block if URL host is not allowlisted (decision <code>D-71</code>)</li>
+<li><strong>Auth</strong> — attach Bearer token, refresh once if 401 (single-flight, decision <code>D-72</code>)</li>
+<li><strong>Idempotency</strong> — auto-generate idempotency key on POST/PATCH/PUT/DELETE (decision <code>D-70</code>)</li>
+<li><strong>Dedupe</strong> — collapse concurrent identical requests (in-flight or windowed)</li>
+<li><strong>Concurrency</strong> — apply per-route policy (latest-only, serial, queue-bounded)</li>
+<li><strong>Backpressure</strong> — drop or queue if concurrency cap reached (with critical-priority bypass)</li>
+<li><strong>Circuit breaker</strong> — open after N failures, half-open after cooldown (per-route opt-in)</li>
+<li><strong>Timeout</strong> — abort with <code>AbortSignal.timeout()</code></li>
+<li><strong>Retry</strong> — retry on 5xx and network errors only, not 4xx (decision <code>D-73</code>) — except 408/429 honoring <code>Retry-After</code> header</li>
+<li><strong>Backoff</strong> — exponential with full-jitter when retrying</li>
+<li><strong>Fetch</strong> — the actual request</li>
+<li><strong>Response normalization</strong> — map server payload via the route&rsquo;s <code>responseMap</code></li>
+</ol>
+<p>Each strategy is configured via the <code>policies</code> key on the route. Default is &ldquo;everything off&rdquo; — opt in only what you need.</p>
+
+<h2 id="auth">Auth + single-flight refresh</h2>
+<pre><code class="language-typescript">broker.registerRoute({
+  id: 'protected-route',
+  on: 'customers.list.requested',
+  type: 'http',
+  request: { method: 'GET', url: '/api/customers' },
+  publishes: { success: 'customers.list.loaded', error: 'customers.list.failed' },
+  policies: {
+    auth: {
+      scheme: 'bearer',
+      getToken: () => sessionToken,
+      refresh: async () => {
+        const res = await fetch('/api/refresh', { method: 'POST' })
+        return (await res.json()).accessToken
+      },
+    },
+  },
+})
+</code></pre>
+<p>If multiple routes hit a 401 simultaneously, only one refresh is fired (<strong>single-flight</strong>); the others queue and retry with the new token.</p>
+
+<h2 id="dedupe">Dedupe</h2>
+<p>Two patterns:</p>
+<pre><code class="language-typescript">policies: {
+  dedupe: { window: 'inflight' },         // collapse concurrent identical requests
+}
+// or
+policies: {
+  dedupe: { window: 'time', ms: 500 },    // throttle: ignore identical requests within 500ms
+}
+</code></pre>
+<p>The dedupe key is the route id + canonical payload hash. Override with a custom key function if you want narrower or wider deduplication.</p>
+
+<h2 id="idempotency">Idempotency</h2>
+<p>For POST/PATCH/PUT/DELETE, the gateway can auto-generate an <code>Idempotency-Key</code> header (UUID v4 by default). The server decides whether to honor it. Useful when the user double-clicks &ldquo;Submit&rdquo;.</p>
+<pre><code class="language-typescript">policies: { idempotency: { auto: true } }
+</code></pre>
+
+<h2 id="allowlist">URL allowlist</h2>
+<p>Critical for security. Without an allowlist, any route definition can hit any URL (potentially data exfiltration if route definitions come from third-party plugins).</p>
+<pre><code class="language-typescript">// Global config
+gateway: {
+  allowlist: ['/api/', 'https://api.example.com/'],
+  onBlocked: (url) =&gt; broker.publish('system.security.blocked', { url }),
+}
+</code></pre>
+<p>Allowlisted prefixes apply to the final URL <em>after redirects</em> (decision <code>D-71</code>) — the gateway re-validates the destination if a redirect is followed.</p>
+
+<h2 id="errors">Sanitized errors</h2>
+<p>When a request fails, the gateway publishes the route&rsquo;s <code>error</code> topic with a sanitized payload (no stack, no original error, no internal details):</p>
+<pre><code class="language-typescript">{
+  code: 'http.timeout',
+  category: 'network',
+  message: 'Request timed out after 5000ms',
+  routeId: 'weather-fetch',
+  topic: 'weather.requested',
+  eventId: 'evt_xKp9N3...',
+}
+</code></pre>
+<p>The full error is logged via the Inspector (dev mode) but never leaks into application code that might display it to the user.</p>
+
+<h2 id="next">Where to next</h2>
+<div class="cards">
+  <a class="card" href="realtime.html"><div class="card-title">Realtime</div><div class="card-desc">SSE + WebSocket with auto-fallback and visibility-aware reconnection.</div></a>
+  <a class="card" href="../recipes/auth-token-refresh.html"><div class="card-title">Recipe: Auth + token refresh</div><div class="card-desc">Working example with token expiration and refresh.</div></a>
+</div>
+api/core.html">@gluezero/core</a>
+  <a class="sidebar-link" href="<h1>HTTP gateway</h1>
+<p class="lead">A single observable layer for outbound HTTP. All <code>type: 'http'</code> routes share the same strategy chain — auth, retry, timeout, dedupe, idempotency, allowlist, circuit breaker, backpressure.</p>
+
+<h2 id="why">Why a gateway</h2>
+<p>The traditional pattern: <code>fetch('/api/...')</code> scattered across components. Each component duplicates auth headers, retry logic, error handling. Some forget. Some get it wrong. None of them are observable.</p>
+<p>The gateway centralizes all of this. Components publish topics; routes describe HTTP calls; the gateway runs every call through the same policy stack. The result:</p>
+<ul>
+<li>One place to add a new auth scheme</li>
+<li>One place to tune retry behavior</li>
+<li>One place to add observability</li>
+<li>Components don&rsquo;t know HTTP exists</li>
+</ul>
+
+<h2 id="strategy-chain">The strategy chain</h2>
+<p>For each request, strategies execute in this order:</p>
+<ol>
+<li><strong>Allowlist</strong> — block if URL host is not allowlisted (decision <code>D-71</code>)</li>
+<li><strong>Auth</strong> — attach Bearer token, refresh once if 401 (single-flight, decision <code>D-72</code>)</li>
+<li><strong>Idempotency</strong> — auto-generate idempotency key on POST/PATCH/PUT/DELETE (decision <code>D-70</code>)</li>
+<li><strong>Dedupe</strong> — collapse concurrent identical requests (in-flight or windowed)</li>
+<li><strong>Concurrency</strong> — apply per-route policy (latest-only, serial, queue-bounded)</li>
+<li><strong>Backpressure</strong> — drop or queue if concurrency cap reached (with critical-priority bypass)</li>
+<li><strong>Circuit breaker</strong> — open after N failures, half-open after cooldown (per-route opt-in)</li>
+<li><strong>Timeout</strong> — abort with <code>AbortSignal.timeout()</code></li>
+<li><strong>Retry</strong> — retry on 5xx and network errors only, not 4xx (decision <code>D-73</code>) — except 408/429 honoring <code>Retry-After</code> header</li>
+<li><strong>Backoff</strong> — exponential with full-jitter when retrying</li>
+<li><strong>Fetch</strong> — the actual request</li>
+<li><strong>Response normalization</strong> — map server payload via the route&rsquo;s <code>responseMap</code></li>
+</ol>
+<p>Each strategy is configured via the <code>policies</code> key on the route. Default is &ldquo;everything off&rdquo; — opt in only what you need.</p>
+
+<h2 id="auth">Auth + single-flight refresh</h2>
+<pre><code class="language-typescript">broker.registerRoute({
+  id: 'protected-route',
+  on: 'customers.list.requested',
+  type: 'http',
+  request: { method: 'GET', url: '/api/customers' },
+  publishes: { success: 'customers.list.loaded', error: 'customers.list.failed' },
+  policies: {
+    auth: {
+      scheme: 'bearer',
+      getToken: () => sessionToken,
+      refresh: async () => {
+        const res = await fetch('/api/refresh', { method: 'POST' })
+        return (await res.json()).accessToken
+      },
+    },
+  },
+})
+</code></pre>
+<p>If multiple routes hit a 401 simultaneously, only one refresh is fired (<strong>single-flight</strong>); the others queue and retry with the new token.</p>
+
+<h2 id="dedupe">Dedupe</h2>
+<p>Two patterns:</p>
+<pre><code class="language-typescript">policies: {
+  dedupe: { window: 'inflight' },         // collapse concurrent identical requests
+}
+// or
+policies: {
+  dedupe: { window: 'time', ms: 500 },    // throttle: ignore identical requests within 500ms
+}
+</code></pre>
+<p>The dedupe key is the route id + canonical payload hash. Override with a custom key function if you want narrower or wider deduplication.</p>
+
+<h2 id="idempotency">Idempotency</h2>
+<p>For POST/PATCH/PUT/DELETE, the gateway can auto-generate an <code>Idempotency-Key</code> header (UUID v4 by default). The server decides whether to honor it. Useful when the user double-clicks &ldquo;Submit&rdquo;.</p>
+<pre><code class="language-typescript">policies: { idempotency: { auto: true } }
+</code></pre>
+
+<h2 id="allowlist">URL allowlist</h2>
+<p>Critical for security. Without an allowlist, any route definition can hit any URL (potentially data exfiltration if route definitions come from third-party plugins).</p>
+<pre><code class="language-typescript">// Global config
+gateway: {
+  allowlist: ['/api/', 'https://api.example.com/'],
+  onBlocked: (url) =&gt; broker.publish('system.security.blocked', { url }),
+}
+</code></pre>
+<p>Allowlisted prefixes apply to the final URL <em>after redirects</em> (decision <code>D-71</code>) — the gateway re-validates the destination if a redirect is followed.</p>
+
+<h2 id="errors">Sanitized errors</h2>
+<p>When a request fails, the gateway publishes the route&rsquo;s <code>error</code> topic with a sanitized payload (no stack, no original error, no internal details):</p>
+<pre><code class="language-typescript">{
+  code: 'http.timeout',
+  category: 'network',
+  message: 'Request timed out after 5000ms',
+  routeId: 'weather-fetch',
+  topic: 'weather.requested',
+  eventId: 'evt_xKp9N3...',
+}
+</code></pre>
+<p>The full error is logged via the Inspector (dev mode) but never leaks into application code that might display it to the user.</p>
+
+<h2 id="next">Where to next</h2>
+<div class="cards">
+  <a class="card" href="realtime.html"><div class="card-title">Realtime</div><div class="card-desc">SSE + WebSocket with auto-fallback and visibility-aware reconnection.</div></a>
+  <a class="card" href="../recipes/auth-token-refresh.html"><div class="card-title">Recipe: Auth + token refresh</div><div class="card-desc">Working example with token expiration and refresh.</div></a>
+</div>
+api/mapper.html">@gluezero/mapper</a>
+  <a class="sidebar-link" href="<h1>HTTP gateway</h1>
+<p class="lead">A single observable layer for outbound HTTP. All <code>type: 'http'</code> routes share the same strategy chain — auth, retry, timeout, dedupe, idempotency, allowlist, circuit breaker, backpressure.</p>
+
+<h2 id="why">Why a gateway</h2>
+<p>The traditional pattern: <code>fetch('/api/...')</code> scattered across components. Each component duplicates auth headers, retry logic, error handling. Some forget. Some get it wrong. None of them are observable.</p>
+<p>The gateway centralizes all of this. Components publish topics; routes describe HTTP calls; the gateway runs every call through the same policy stack. The result:</p>
+<ul>
+<li>One place to add a new auth scheme</li>
+<li>One place to tune retry behavior</li>
+<li>One place to add observability</li>
+<li>Components don&rsquo;t know HTTP exists</li>
+</ul>
+
+<h2 id="strategy-chain">The strategy chain</h2>
+<p>For each request, strategies execute in this order:</p>
+<ol>
+<li><strong>Allowlist</strong> — block if URL host is not allowlisted (decision <code>D-71</code>)</li>
+<li><strong>Auth</strong> — attach Bearer token, refresh once if 401 (single-flight, decision <code>D-72</code>)</li>
+<li><strong>Idempotency</strong> — auto-generate idempotency key on POST/PATCH/PUT/DELETE (decision <code>D-70</code>)</li>
+<li><strong>Dedupe</strong> — collapse concurrent identical requests (in-flight or windowed)</li>
+<li><strong>Concurrency</strong> — apply per-route policy (latest-only, serial, queue-bounded)</li>
+<li><strong>Backpressure</strong> — drop or queue if concurrency cap reached (with critical-priority bypass)</li>
+<li><strong>Circuit breaker</strong> — open after N failures, half-open after cooldown (per-route opt-in)</li>
+<li><strong>Timeout</strong> — abort with <code>AbortSignal.timeout()</code></li>
+<li><strong>Retry</strong> — retry on 5xx and network errors only, not 4xx (decision <code>D-73</code>) — except 408/429 honoring <code>Retry-After</code> header</li>
+<li><strong>Backoff</strong> — exponential with full-jitter when retrying</li>
+<li><strong>Fetch</strong> — the actual request</li>
+<li><strong>Response normalization</strong> — map server payload via the route&rsquo;s <code>responseMap</code></li>
+</ol>
+<p>Each strategy is configured via the <code>policies</code> key on the route. Default is &ldquo;everything off&rdquo; — opt in only what you need.</p>
+
+<h2 id="auth">Auth + single-flight refresh</h2>
+<pre><code class="language-typescript">broker.registerRoute({
+  id: 'protected-route',
+  on: 'customers.list.requested',
+  type: 'http',
+  request: { method: 'GET', url: '/api/customers' },
+  publishes: { success: 'customers.list.loaded', error: 'customers.list.failed' },
+  policies: {
+    auth: {
+      scheme: 'bearer',
+      getToken: () => sessionToken,
+      refresh: async () => {
+        const res = await fetch('/api/refresh', { method: 'POST' })
+        return (await res.json()).accessToken
+      },
+    },
+  },
+})
+</code></pre>
+<p>If multiple routes hit a 401 simultaneously, only one refresh is fired (<strong>single-flight</strong>); the others queue and retry with the new token.</p>
+
+<h2 id="dedupe">Dedupe</h2>
+<p>Two patterns:</p>
+<pre><code class="language-typescript">policies: {
+  dedupe: { window: 'inflight' },         // collapse concurrent identical requests
+}
+// or
+policies: {
+  dedupe: { window: 'time', ms: 500 },    // throttle: ignore identical requests within 500ms
+}
+</code></pre>
+<p>The dedupe key is the route id + canonical payload hash. Override with a custom key function if you want narrower or wider deduplication.</p>
+
+<h2 id="idempotency">Idempotency</h2>
+<p>For POST/PATCH/PUT/DELETE, the gateway can auto-generate an <code>Idempotency-Key</code> header (UUID v4 by default). The server decides whether to honor it. Useful when the user double-clicks &ldquo;Submit&rdquo;.</p>
+<pre><code class="language-typescript">policies: { idempotency: { auto: true } }
+</code></pre>
+
+<h2 id="allowlist">URL allowlist</h2>
+<p>Critical for security. Without an allowlist, any route definition can hit any URL (potentially data exfiltration if route definitions come from third-party plugins).</p>
+<pre><code class="language-typescript">// Global config
+gateway: {
+  allowlist: ['/api/', 'https://api.example.com/'],
+  onBlocked: (url) =&gt; broker.publish('system.security.blocked', { url }),
+}
+</code></pre>
+<p>Allowlisted prefixes apply to the final URL <em>after redirects</em> (decision <code>D-71</code>) — the gateway re-validates the destination if a redirect is followed.</p>
+
+<h2 id="errors">Sanitized errors</h2>
+<p>When a request fails, the gateway publishes the route&rsquo;s <code>error</code> topic with a sanitized payload (no stack, no original error, no internal details):</p>
+<pre><code class="language-typescript">{
+  code: 'http.timeout',
+  category: 'network',
+  message: 'Request timed out after 5000ms',
+  routeId: 'weather-fetch',
+  topic: 'weather.requested',
+  eventId: 'evt_xKp9N3...',
+}
+</code></pre>
+<p>The full error is logged via the Inspector (dev mode) but never leaks into application code that might display it to the user.</p>
+
+<h2 id="next">Where to next</h2>
+<div class="cards">
+  <a class="card" href="realtime.html"><div class="card-title">Realtime</div><div class="card-desc">SSE + WebSocket with auto-fallback and visibility-aware reconnection.</div></a>
+  <a class="card" href="../recipes/auth-token-refresh.html"><div class="card-title">Recipe: Auth + token refresh</div><div class="card-desc">Working example with token expiration and refresh.</div></a>
+</div>
+api/routing.html">@gluezero/routing</a>
+  <a class="sidebar-link" href="<h1>HTTP gateway</h1>
+<p class="lead">A single observable layer for outbound HTTP. All <code>type: 'http'</code> routes share the same strategy chain — auth, retry, timeout, dedupe, idempotency, allowlist, circuit breaker, backpressure.</p>
+
+<h2 id="why">Why a gateway</h2>
+<p>The traditional pattern: <code>fetch('/api/...')</code> scattered across components. Each component duplicates auth headers, retry logic, error handling. Some forget. Some get it wrong. None of them are observable.</p>
+<p>The gateway centralizes all of this. Components publish topics; routes describe HTTP calls; the gateway runs every call through the same policy stack. The result:</p>
+<ul>
+<li>One place to add a new auth scheme</li>
+<li>One place to tune retry behavior</li>
+<li>One place to add observability</li>
+<li>Components don&rsquo;t know HTTP exists</li>
+</ul>
+
+<h2 id="strategy-chain">The strategy chain</h2>
+<p>For each request, strategies execute in this order:</p>
+<ol>
+<li><strong>Allowlist</strong> — block if URL host is not allowlisted (decision <code>D-71</code>)</li>
+<li><strong>Auth</strong> — attach Bearer token, refresh once if 401 (single-flight, decision <code>D-72</code>)</li>
+<li><strong>Idempotency</strong> — auto-generate idempotency key on POST/PATCH/PUT/DELETE (decision <code>D-70</code>)</li>
+<li><strong>Dedupe</strong> — collapse concurrent identical requests (in-flight or windowed)</li>
+<li><strong>Concurrency</strong> — apply per-route policy (latest-only, serial, queue-bounded)</li>
+<li><strong>Backpressure</strong> — drop or queue if concurrency cap reached (with critical-priority bypass)</li>
+<li><strong>Circuit breaker</strong> — open after N failures, half-open after cooldown (per-route opt-in)</li>
+<li><strong>Timeout</strong> — abort with <code>AbortSignal.timeout()</code></li>
+<li><strong>Retry</strong> — retry on 5xx and network errors only, not 4xx (decision <code>D-73</code>) — except 408/429 honoring <code>Retry-After</code> header</li>
+<li><strong>Backoff</strong> — exponential with full-jitter when retrying</li>
+<li><strong>Fetch</strong> — the actual request</li>
+<li><strong>Response normalization</strong> — map server payload via the route&rsquo;s <code>responseMap</code></li>
+</ol>
+<p>Each strategy is configured via the <code>policies</code> key on the route. Default is &ldquo;everything off&rdquo; — opt in only what you need.</p>
+
+<h2 id="auth">Auth + single-flight refresh</h2>
+<pre><code class="language-typescript">broker.registerRoute({
+  id: 'protected-route',
+  on: 'customers.list.requested',
+  type: 'http',
+  request: { method: 'GET', url: '/api/customers' },
+  publishes: { success: 'customers.list.loaded', error: 'customers.list.failed' },
+  policies: {
+    auth: {
+      scheme: 'bearer',
+      getToken: () => sessionToken,
+      refresh: async () => {
+        const res = await fetch('/api/refresh', { method: 'POST' })
+        return (await res.json()).accessToken
+      },
+    },
+  },
+})
+</code></pre>
+<p>If multiple routes hit a 401 simultaneously, only one refresh is fired (<strong>single-flight</strong>); the others queue and retry with the new token.</p>
+
+<h2 id="dedupe">Dedupe</h2>
+<p>Two patterns:</p>
+<pre><code class="language-typescript">policies: {
+  dedupe: { window: 'inflight' },         // collapse concurrent identical requests
+}
+// or
+policies: {
+  dedupe: { window: 'time', ms: 500 },    // throttle: ignore identical requests within 500ms
+}
+</code></pre>
+<p>The dedupe key is the route id + canonical payload hash. Override with a custom key function if you want narrower or wider deduplication.</p>
+
+<h2 id="idempotency">Idempotency</h2>
+<p>For POST/PATCH/PUT/DELETE, the gateway can auto-generate an <code>Idempotency-Key</code> header (UUID v4 by default). The server decides whether to honor it. Useful when the user double-clicks &ldquo;Submit&rdquo;.</p>
+<pre><code class="language-typescript">policies: { idempotency: { auto: true } }
+</code></pre>
+
+<h2 id="allowlist">URL allowlist</h2>
+<p>Critical for security. Without an allowlist, any route definition can hit any URL (potentially data exfiltration if route definitions come from third-party plugins).</p>
+<pre><code class="language-typescript">// Global config
+gateway: {
+  allowlist: ['/api/', 'https://api.example.com/'],
+  onBlocked: (url) =&gt; broker.publish('system.security.blocked', { url }),
+}
+</code></pre>
+<p>Allowlisted prefixes apply to the final URL <em>after redirects</em> (decision <code>D-71</code>) — the gateway re-validates the destination if a redirect is followed.</p>
+
+<h2 id="errors">Sanitized errors</h2>
+<p>When a request fails, the gateway publishes the route&rsquo;s <code>error</code> topic with a sanitized payload (no stack, no original error, no internal details):</p>
+<pre><code class="language-typescript">{
+  code: 'http.timeout',
+  category: 'network',
+  message: 'Request timed out after 5000ms',
+  routeId: 'weather-fetch',
+  topic: 'weather.requested',
+  eventId: 'evt_xKp9N3...',
+}
+</code></pre>
+<p>The full error is logged via the Inspector (dev mode) but never leaks into application code that might display it to the user.</p>
+
+<h2 id="next">Where to next</h2>
+<div class="cards">
+  <a class="card" href="realtime.html"><div class="card-title">Realtime</div><div class="card-desc">SSE + WebSocket with auto-fallback and visibility-aware reconnection.</div></a>
+  <a class="card" href="../recipes/auth-token-refresh.html"><div class="card-title">Recipe: Auth + token refresh</div><div class="card-desc">Working example with token expiration and refresh.</div></a>
+</div>
+api/gateway.html">@gluezero/gateway</a>
+  <a class="sidebar-link" href="<h1>HTTP gateway</h1>
+<p class="lead">A single observable layer for outbound HTTP. All <code>type: 'http'</code> routes share the same strategy chain — auth, retry, timeout, dedupe, idempotency, allowlist, circuit breaker, backpressure.</p>
+
+<h2 id="why">Why a gateway</h2>
+<p>The traditional pattern: <code>fetch('/api/...')</code> scattered across components. Each component duplicates auth headers, retry logic, error handling. Some forget. Some get it wrong. None of them are observable.</p>
+<p>The gateway centralizes all of this. Components publish topics; routes describe HTTP calls; the gateway runs every call through the same policy stack. The result:</p>
+<ul>
+<li>One place to add a new auth scheme</li>
+<li>One place to tune retry behavior</li>
+<li>One place to add observability</li>
+<li>Components don&rsquo;t know HTTP exists</li>
+</ul>
+
+<h2 id="strategy-chain">The strategy chain</h2>
+<p>For each request, strategies execute in this order:</p>
+<ol>
+<li><strong>Allowlist</strong> — block if URL host is not allowlisted (decision <code>D-71</code>)</li>
+<li><strong>Auth</strong> — attach Bearer token, refresh once if 401 (single-flight, decision <code>D-72</code>)</li>
+<li><strong>Idempotency</strong> — auto-generate idempotency key on POST/PATCH/PUT/DELETE (decision <code>D-70</code>)</li>
+<li><strong>Dedupe</strong> — collapse concurrent identical requests (in-flight or windowed)</li>
+<li><strong>Concurrency</strong> — apply per-route policy (latest-only, serial, queue-bounded)</li>
+<li><strong>Backpressure</strong> — drop or queue if concurrency cap reached (with critical-priority bypass)</li>
+<li><strong>Circuit breaker</strong> — open after N failures, half-open after cooldown (per-route opt-in)</li>
+<li><strong>Timeout</strong> — abort with <code>AbortSignal.timeout()</code></li>
+<li><strong>Retry</strong> — retry on 5xx and network errors only, not 4xx (decision <code>D-73</code>) — except 408/429 honoring <code>Retry-After</code> header</li>
+<li><strong>Backoff</strong> — exponential with full-jitter when retrying</li>
+<li><strong>Fetch</strong> — the actual request</li>
+<li><strong>Response normalization</strong> — map server payload via the route&rsquo;s <code>responseMap</code></li>
+</ol>
+<p>Each strategy is configured via the <code>policies</code> key on the route. Default is &ldquo;everything off&rdquo; — opt in only what you need.</p>
+
+<h2 id="auth">Auth + single-flight refresh</h2>
+<pre><code class="language-typescript">broker.registerRoute({
+  id: 'protected-route',
+  on: 'customers.list.requested',
+  type: 'http',
+  request: { method: 'GET', url: '/api/customers' },
+  publishes: { success: 'customers.list.loaded', error: 'customers.list.failed' },
+  policies: {
+    auth: {
+      scheme: 'bearer',
+      getToken: () => sessionToken,
+      refresh: async () => {
+        const res = await fetch('/api/refresh', { method: 'POST' })
+        return (await res.json()).accessToken
+      },
+    },
+  },
+})
+</code></pre>
+<p>If multiple routes hit a 401 simultaneously, only one refresh is fired (<strong>single-flight</strong>); the others queue and retry with the new token.</p>
+
+<h2 id="dedupe">Dedupe</h2>
+<p>Two patterns:</p>
+<pre><code class="language-typescript">policies: {
+  dedupe: { window: 'inflight' },         // collapse concurrent identical requests
+}
+// or
+policies: {
+  dedupe: { window: 'time', ms: 500 },    // throttle: ignore identical requests within 500ms
+}
+</code></pre>
+<p>The dedupe key is the route id + canonical payload hash. Override with a custom key function if you want narrower or wider deduplication.</p>
+
+<h2 id="idempotency">Idempotency</h2>
+<p>For POST/PATCH/PUT/DELETE, the gateway can auto-generate an <code>Idempotency-Key</code> header (UUID v4 by default). The server decides whether to honor it. Useful when the user double-clicks &ldquo;Submit&rdquo;.</p>
+<pre><code class="language-typescript">policies: { idempotency: { auto: true } }
+</code></pre>
+
+<h2 id="allowlist">URL allowlist</h2>
+<p>Critical for security. Without an allowlist, any route definition can hit any URL (potentially data exfiltration if route definitions come from third-party plugins).</p>
+<pre><code class="language-typescript">// Global config
+gateway: {
+  allowlist: ['/api/', 'https://api.example.com/'],
+  onBlocked: (url) =&gt; broker.publish('system.security.blocked', { url }),
+}
+</code></pre>
+<p>Allowlisted prefixes apply to the final URL <em>after redirects</em> (decision <code>D-71</code>) — the gateway re-validates the destination if a redirect is followed.</p>
+
+<h2 id="errors">Sanitized errors</h2>
+<p>When a request fails, the gateway publishes the route&rsquo;s <code>error</code> topic with a sanitized payload (no stack, no original error, no internal details):</p>
+<pre><code class="language-typescript">{
+  code: 'http.timeout',
+  category: 'network',
+  message: 'Request timed out after 5000ms',
+  routeId: 'weather-fetch',
+  topic: 'weather.requested',
+  eventId: 'evt_xKp9N3...',
+}
+</code></pre>
+<p>The full error is logged via the Inspector (dev mode) but never leaks into application code that might display it to the user.</p>
+
+<h2 id="next">Where to next</h2>
+<div class="cards">
+  <a class="card" href="realtime.html"><div class="card-title">Realtime</div><div class="card-desc">SSE + WebSocket with auto-fallback and visibility-aware reconnection.</div></a>
+  <a class="card" href="../recipes/auth-token-refresh.html"><div class="card-title">Recipe: Auth + token refresh</div><div class="card-desc">Working example with token expiration and refresh.</div></a>
+</div>
+api/worker.html">@gluezero/worker</a>
+  <a class="sidebar-link" href="<h1>HTTP gateway</h1>
+<p class="lead">A single observable layer for outbound HTTP. All <code>type: 'http'</code> routes share the same strategy chain — auth, retry, timeout, dedupe, idempotency, allowlist, circuit breaker, backpressure.</p>
+
+<h2 id="why">Why a gateway</h2>
+<p>The traditional pattern: <code>fetch('/api/...')</code> scattered across components. Each component duplicates auth headers, retry logic, error handling. Some forget. Some get it wrong. None of them are observable.</p>
+<p>The gateway centralizes all of this. Components publish topics; routes describe HTTP calls; the gateway runs every call through the same policy stack. The result:</p>
+<ul>
+<li>One place to add a new auth scheme</li>
+<li>One place to tune retry behavior</li>
+<li>One place to add observability</li>
+<li>Components don&rsquo;t know HTTP exists</li>
+</ul>
+
+<h2 id="strategy-chain">The strategy chain</h2>
+<p>For each request, strategies execute in this order:</p>
+<ol>
+<li><strong>Allowlist</strong> — block if URL host is not allowlisted (decision <code>D-71</code>)</li>
+<li><strong>Auth</strong> — attach Bearer token, refresh once if 401 (single-flight, decision <code>D-72</code>)</li>
+<li><strong>Idempotency</strong> — auto-generate idempotency key on POST/PATCH/PUT/DELETE (decision <code>D-70</code>)</li>
+<li><strong>Dedupe</strong> — collapse concurrent identical requests (in-flight or windowed)</li>
+<li><strong>Concurrency</strong> — apply per-route policy (latest-only, serial, queue-bounded)</li>
+<li><strong>Backpressure</strong> — drop or queue if concurrency cap reached (with critical-priority bypass)</li>
+<li><strong>Circuit breaker</strong> — open after N failures, half-open after cooldown (per-route opt-in)</li>
+<li><strong>Timeout</strong> — abort with <code>AbortSignal.timeout()</code></li>
+<li><strong>Retry</strong> — retry on 5xx and network errors only, not 4xx (decision <code>D-73</code>) — except 408/429 honoring <code>Retry-After</code> header</li>
+<li><strong>Backoff</strong> — exponential with full-jitter when retrying</li>
+<li><strong>Fetch</strong> — the actual request</li>
+<li><strong>Response normalization</strong> — map server payload via the route&rsquo;s <code>responseMap</code></li>
+</ol>
+<p>Each strategy is configured via the <code>policies</code> key on the route. Default is &ldquo;everything off&rdquo; — opt in only what you need.</p>
+
+<h2 id="auth">Auth + single-flight refresh</h2>
+<pre><code class="language-typescript">broker.registerRoute({
+  id: 'protected-route',
+  on: 'customers.list.requested',
+  type: 'http',
+  request: { method: 'GET', url: '/api/customers' },
+  publishes: { success: 'customers.list.loaded', error: 'customers.list.failed' },
+  policies: {
+    auth: {
+      scheme: 'bearer',
+      getToken: () => sessionToken,
+      refresh: async () => {
+        const res = await fetch('/api/refresh', { method: 'POST' })
+        return (await res.json()).accessToken
+      },
+    },
+  },
+})
+</code></pre>
+<p>If multiple routes hit a 401 simultaneously, only one refresh is fired (<strong>single-flight</strong>); the others queue and retry with the new token.</p>
+
+<h2 id="dedupe">Dedupe</h2>
+<p>Two patterns:</p>
+<pre><code class="language-typescript">policies: {
+  dedupe: { window: 'inflight' },         // collapse concurrent identical requests
+}
+// or
+policies: {
+  dedupe: { window: 'time', ms: 500 },    // throttle: ignore identical requests within 500ms
+}
+</code></pre>
+<p>The dedupe key is the route id + canonical payload hash. Override with a custom key function if you want narrower or wider deduplication.</p>
+
+<h2 id="idempotency">Idempotency</h2>
+<p>For POST/PATCH/PUT/DELETE, the gateway can auto-generate an <code>Idempotency-Key</code> header (UUID v4 by default). The server decides whether to honor it. Useful when the user double-clicks &ldquo;Submit&rdquo;.</p>
+<pre><code class="language-typescript">policies: { idempotency: { auto: true } }
+</code></pre>
+
+<h2 id="allowlist">URL allowlist</h2>
+<p>Critical for security. Without an allowlist, any route definition can hit any URL (potentially data exfiltration if route definitions come from third-party plugins).</p>
+<pre><code class="language-typescript">// Global config
+gateway: {
+  allowlist: ['/api/', 'https://api.example.com/'],
+  onBlocked: (url) =&gt; broker.publish('system.security.blocked', { url }),
+}
+</code></pre>
+<p>Allowlisted prefixes apply to the final URL <em>after redirects</em> (decision <code>D-71</code>) — the gateway re-validates the destination if a redirect is followed.</p>
+
+<h2 id="errors">Sanitized errors</h2>
+<p>When a request fails, the gateway publishes the route&rsquo;s <code>error</code> topic with a sanitized payload (no stack, no original error, no internal details):</p>
+<pre><code class="language-typescript">{
+  code: 'http.timeout',
+  category: 'network',
+  message: 'Request timed out after 5000ms',
+  routeId: 'weather-fetch',
+  topic: 'weather.requested',
+  eventId: 'evt_xKp9N3...',
+}
+</code></pre>
+<p>The full error is logged via the Inspector (dev mode) but never leaks into application code that might display it to the user.</p>
+
+<h2 id="next">Where to next</h2>
+<div class="cards">
+  <a class="card" href="realtime.html"><div class="card-title">Realtime</div><div class="card-desc">SSE + WebSocket with auto-fallback and visibility-aware reconnection.</div></a>
+  <a class="card" href="../recipes/auth-token-refresh.html"><div class="card-title">Recipe: Auth + token refresh</div><div class="card-desc">Working example with token expiration and refresh.</div></a>
+</div>
+api/cache.html">@gluezero/cache</a>
+  <a class="sidebar-link" href="<h1>HTTP gateway</h1>
+<p class="lead">A single observable layer for outbound HTTP. All <code>type: 'http'</code> routes share the same strategy chain — auth, retry, timeout, dedupe, idempotency, allowlist, circuit breaker, backpressure.</p>
+
+<h2 id="why">Why a gateway</h2>
+<p>The traditional pattern: <code>fetch('/api/...')</code> scattered across components. Each component duplicates auth headers, retry logic, error handling. Some forget. Some get it wrong. None of them are observable.</p>
+<p>The gateway centralizes all of this. Components publish topics; routes describe HTTP calls; the gateway runs every call through the same policy stack. The result:</p>
+<ul>
+<li>One place to add a new auth scheme</li>
+<li>One place to tune retry behavior</li>
+<li>One place to add observability</li>
+<li>Components don&rsquo;t know HTTP exists</li>
+</ul>
+
+<h2 id="strategy-chain">The strategy chain</h2>
+<p>For each request, strategies execute in this order:</p>
+<ol>
+<li><strong>Allowlist</strong> — block if URL host is not allowlisted (decision <code>D-71</code>)</li>
+<li><strong>Auth</strong> — attach Bearer token, refresh once if 401 (single-flight, decision <code>D-72</code>)</li>
+<li><strong>Idempotency</strong> — auto-generate idempotency key on POST/PATCH/PUT/DELETE (decision <code>D-70</code>)</li>
+<li><strong>Dedupe</strong> — collapse concurrent identical requests (in-flight or windowed)</li>
+<li><strong>Concurrency</strong> — apply per-route policy (latest-only, serial, queue-bounded)</li>
+<li><strong>Backpressure</strong> — drop or queue if concurrency cap reached (with critical-priority bypass)</li>
+<li><strong>Circuit breaker</strong> — open after N failures, half-open after cooldown (per-route opt-in)</li>
+<li><strong>Timeout</strong> — abort with <code>AbortSignal.timeout()</code></li>
+<li><strong>Retry</strong> — retry on 5xx and network errors only, not 4xx (decision <code>D-73</code>) — except 408/429 honoring <code>Retry-After</code> header</li>
+<li><strong>Backoff</strong> — exponential with full-jitter when retrying</li>
+<li><strong>Fetch</strong> — the actual request</li>
+<li><strong>Response normalization</strong> — map server payload via the route&rsquo;s <code>responseMap</code></li>
+</ol>
+<p>Each strategy is configured via the <code>policies</code> key on the route. Default is &ldquo;everything off&rdquo; — opt in only what you need.</p>
+
+<h2 id="auth">Auth + single-flight refresh</h2>
+<pre><code class="language-typescript">broker.registerRoute({
+  id: 'protected-route',
+  on: 'customers.list.requested',
+  type: 'http',
+  request: { method: 'GET', url: '/api/customers' },
+  publishes: { success: 'customers.list.loaded', error: 'customers.list.failed' },
+  policies: {
+    auth: {
+      scheme: 'bearer',
+      getToken: () => sessionToken,
+      refresh: async () => {
+        const res = await fetch('/api/refresh', { method: 'POST' })
+        return (await res.json()).accessToken
+      },
+    },
+  },
+})
+</code></pre>
+<p>If multiple routes hit a 401 simultaneously, only one refresh is fired (<strong>single-flight</strong>); the others queue and retry with the new token.</p>
+
+<h2 id="dedupe">Dedupe</h2>
+<p>Two patterns:</p>
+<pre><code class="language-typescript">policies: {
+  dedupe: { window: 'inflight' },         // collapse concurrent identical requests
+}
+// or
+policies: {
+  dedupe: { window: 'time', ms: 500 },    // throttle: ignore identical requests within 500ms
+}
+</code></pre>
+<p>The dedupe key is the route id + canonical payload hash. Override with a custom key function if you want narrower or wider deduplication.</p>
+
+<h2 id="idempotency">Idempotency</h2>
+<p>For POST/PATCH/PUT/DELETE, the gateway can auto-generate an <code>Idempotency-Key</code> header (UUID v4 by default). The server decides whether to honor it. Useful when the user double-clicks &ldquo;Submit&rdquo;.</p>
+<pre><code class="language-typescript">policies: { idempotency: { auto: true } }
+</code></pre>
+
+<h2 id="allowlist">URL allowlist</h2>
+<p>Critical for security. Without an allowlist, any route definition can hit any URL (potentially data exfiltration if route definitions come from third-party plugins).</p>
+<pre><code class="language-typescript">// Global config
+gateway: {
+  allowlist: ['/api/', 'https://api.example.com/'],
+  onBlocked: (url) =&gt; broker.publish('system.security.blocked', { url }),
+}
+</code></pre>
+<p>Allowlisted prefixes apply to the final URL <em>after redirects</em> (decision <code>D-71</code>) — the gateway re-validates the destination if a redirect is followed.</p>
+
+<h2 id="errors">Sanitized errors</h2>
+<p>When a request fails, the gateway publishes the route&rsquo;s <code>error</code> topic with a sanitized payload (no stack, no original error, no internal details):</p>
+<pre><code class="language-typescript">{
+  code: 'http.timeout',
+  category: 'network',
+  message: 'Request timed out after 5000ms',
+  routeId: 'weather-fetch',
+  topic: 'weather.requested',
+  eventId: 'evt_xKp9N3...',
+}
+</code></pre>
+<p>The full error is logged via the Inspector (dev mode) but never leaks into application code that might display it to the user.</p>
+
+<h2 id="next">Where to next</h2>
+<div class="cards">
+  <a class="card" href="realtime.html"><div class="card-title">Realtime</div><div class="card-desc">SSE + WebSocket with auto-fallback and visibility-aware reconnection.</div></a>
+  <a class="card" href="../recipes/auth-token-refresh.html"><div class="card-title">Recipe: Auth + token refresh</div><div class="card-desc">Working example with token expiration and refresh.</div></a>
+</div>
+api/devtools.html">@gluezero/devtools</a>
+</div>
+<div class="sidebar-section">
+  <div class="sidebar-section-title">Recipes</div>
+  <a class="sidebar-link" href="<h1>HTTP gateway</h1>
+<p class="lead">A single observable layer for outbound HTTP. All <code>type: 'http'</code> routes share the same strategy chain — auth, retry, timeout, dedupe, idempotency, allowlist, circuit breaker, backpressure.</p>
+
+<h2 id="why">Why a gateway</h2>
+<p>The traditional pattern: <code>fetch('/api/...')</code> scattered across components. Each component duplicates auth headers, retry logic, error handling. Some forget. Some get it wrong. None of them are observable.</p>
+<p>The gateway centralizes all of this. Components publish topics; routes describe HTTP calls; the gateway runs every call through the same policy stack. The result:</p>
+<ul>
+<li>One place to add a new auth scheme</li>
+<li>One place to tune retry behavior</li>
+<li>One place to add observability</li>
+<li>Components don&rsquo;t know HTTP exists</li>
+</ul>
+
+<h2 id="strategy-chain">The strategy chain</h2>
+<p>For each request, strategies execute in this order:</p>
+<ol>
+<li><strong>Allowlist</strong> — block if URL host is not allowlisted (decision <code>D-71</code>)</li>
+<li><strong>Auth</strong> — attach Bearer token, refresh once if 401 (single-flight, decision <code>D-72</code>)</li>
+<li><strong>Idempotency</strong> — auto-generate idempotency key on POST/PATCH/PUT/DELETE (decision <code>D-70</code>)</li>
+<li><strong>Dedupe</strong> — collapse concurrent identical requests (in-flight or windowed)</li>
+<li><strong>Concurrency</strong> — apply per-route policy (latest-only, serial, queue-bounded)</li>
+<li><strong>Backpressure</strong> — drop or queue if concurrency cap reached (with critical-priority bypass)</li>
+<li><strong>Circuit breaker</strong> — open after N failures, half-open after cooldown (per-route opt-in)</li>
+<li><strong>Timeout</strong> — abort with <code>AbortSignal.timeout()</code></li>
+<li><strong>Retry</strong> — retry on 5xx and network errors only, not 4xx (decision <code>D-73</code>) — except 408/429 honoring <code>Retry-After</code> header</li>
+<li><strong>Backoff</strong> — exponential with full-jitter when retrying</li>
+<li><strong>Fetch</strong> — the actual request</li>
+<li><strong>Response normalization</strong> — map server payload via the route&rsquo;s <code>responseMap</code></li>
+</ol>
+<p>Each strategy is configured via the <code>policies</code> key on the route. Default is &ldquo;everything off&rdquo; — opt in only what you need.</p>
+
+<h2 id="auth">Auth + single-flight refresh</h2>
+<pre><code class="language-typescript">broker.registerRoute({
+  id: 'protected-route',
+  on: 'customers.list.requested',
+  type: 'http',
+  request: { method: 'GET', url: '/api/customers' },
+  publishes: { success: 'customers.list.loaded', error: 'customers.list.failed' },
+  policies: {
+    auth: {
+      scheme: 'bearer',
+      getToken: () => sessionToken,
+      refresh: async () => {
+        const res = await fetch('/api/refresh', { method: 'POST' })
+        return (await res.json()).accessToken
+      },
+    },
+  },
+})
+</code></pre>
+<p>If multiple routes hit a 401 simultaneously, only one refresh is fired (<strong>single-flight</strong>); the others queue and retry with the new token.</p>
+
+<h2 id="dedupe">Dedupe</h2>
+<p>Two patterns:</p>
+<pre><code class="language-typescript">policies: {
+  dedupe: { window: 'inflight' },         // collapse concurrent identical requests
+}
+// or
+policies: {
+  dedupe: { window: 'time', ms: 500 },    // throttle: ignore identical requests within 500ms
+}
+</code></pre>
+<p>The dedupe key is the route id + canonical payload hash. Override with a custom key function if you want narrower or wider deduplication.</p>
+
+<h2 id="idempotency">Idempotency</h2>
+<p>For POST/PATCH/PUT/DELETE, the gateway can auto-generate an <code>Idempotency-Key</code> header (UUID v4 by default). The server decides whether to honor it. Useful when the user double-clicks &ldquo;Submit&rdquo;.</p>
+<pre><code class="language-typescript">policies: { idempotency: { auto: true } }
+</code></pre>
+
+<h2 id="allowlist">URL allowlist</h2>
+<p>Critical for security. Without an allowlist, any route definition can hit any URL (potentially data exfiltration if route definitions come from third-party plugins).</p>
+<pre><code class="language-typescript">// Global config
+gateway: {
+  allowlist: ['/api/', 'https://api.example.com/'],
+  onBlocked: (url) =&gt; broker.publish('system.security.blocked', { url }),
+}
+</code></pre>
+<p>Allowlisted prefixes apply to the final URL <em>after redirects</em> (decision <code>D-71</code>) — the gateway re-validates the destination if a redirect is followed.</p>
+
+<h2 id="errors">Sanitized errors</h2>
+<p>When a request fails, the gateway publishes the route&rsquo;s <code>error</code> topic with a sanitized payload (no stack, no original error, no internal details):</p>
+<pre><code class="language-typescript">{
+  code: 'http.timeout',
+  category: 'network',
+  message: 'Request timed out after 5000ms',
+  routeId: 'weather-fetch',
+  topic: 'weather.requested',
+  eventId: 'evt_xKp9N3...',
+}
+</code></pre>
+<p>The full error is logged via the Inspector (dev mode) but never leaks into application code that might display it to the user.</p>
+
+<h2 id="next">Where to next</h2>
+<div class="cards">
+  <a class="card" href="realtime.html"><div class="card-title">Realtime</div><div class="card-desc">SSE + WebSocket with auto-fallback and visibility-aware reconnection.</div></a>
+  <a class="card" href="../recipes/auth-token-refresh.html"><div class="card-title">Recipe: Auth + token refresh</div><div class="card-desc">Working example with token expiration and refresh.</div></a>
+</div>
+recipes/auth-token-refresh.html">Auth + token refresh</a>
+  <a class="sidebar-link" href="<h1>HTTP gateway</h1>
+<p class="lead">A single observable layer for outbound HTTP. All <code>type: 'http'</code> routes share the same strategy chain — auth, retry, timeout, dedupe, idempotency, allowlist, circuit breaker, backpressure.</p>
+
+<h2 id="why">Why a gateway</h2>
+<p>The traditional pattern: <code>fetch('/api/...')</code> scattered across components. Each component duplicates auth headers, retry logic, error handling. Some forget. Some get it wrong. None of them are observable.</p>
+<p>The gateway centralizes all of this. Components publish topics; routes describe HTTP calls; the gateway runs every call through the same policy stack. The result:</p>
+<ul>
+<li>One place to add a new auth scheme</li>
+<li>One place to tune retry behavior</li>
+<li>One place to add observability</li>
+<li>Components don&rsquo;t know HTTP exists</li>
+</ul>
+
+<h2 id="strategy-chain">The strategy chain</h2>
+<p>For each request, strategies execute in this order:</p>
+<ol>
+<li><strong>Allowlist</strong> — block if URL host is not allowlisted (decision <code>D-71</code>)</li>
+<li><strong>Auth</strong> — attach Bearer token, refresh once if 401 (single-flight, decision <code>D-72</code>)</li>
+<li><strong>Idempotency</strong> — auto-generate idempotency key on POST/PATCH/PUT/DELETE (decision <code>D-70</code>)</li>
+<li><strong>Dedupe</strong> — collapse concurrent identical requests (in-flight or windowed)</li>
+<li><strong>Concurrency</strong> — apply per-route policy (latest-only, serial, queue-bounded)</li>
+<li><strong>Backpressure</strong> — drop or queue if concurrency cap reached (with critical-priority bypass)</li>
+<li><strong>Circuit breaker</strong> — open after N failures, half-open after cooldown (per-route opt-in)</li>
+<li><strong>Timeout</strong> — abort with <code>AbortSignal.timeout()</code></li>
+<li><strong>Retry</strong> — retry on 5xx and network errors only, not 4xx (decision <code>D-73</code>) — except 408/429 honoring <code>Retry-After</code> header</li>
+<li><strong>Backoff</strong> — exponential with full-jitter when retrying</li>
+<li><strong>Fetch</strong> — the actual request</li>
+<li><strong>Response normalization</strong> — map server payload via the route&rsquo;s <code>responseMap</code></li>
+</ol>
+<p>Each strategy is configured via the <code>policies</code> key on the route. Default is &ldquo;everything off&rdquo; — opt in only what you need.</p>
+
+<h2 id="auth">Auth + single-flight refresh</h2>
+<pre><code class="language-typescript">broker.registerRoute({
+  id: 'protected-route',
+  on: 'customers.list.requested',
+  type: 'http',
+  request: { method: 'GET', url: '/api/customers' },
+  publishes: { success: 'customers.list.loaded', error: 'customers.list.failed' },
+  policies: {
+    auth: {
+      scheme: 'bearer',
+      getToken: () => sessionToken,
+      refresh: async () => {
+        const res = await fetch('/api/refresh', { method: 'POST' })
+        return (await res.json()).accessToken
+      },
+    },
+  },
+})
+</code></pre>
+<p>If multiple routes hit a 401 simultaneously, only one refresh is fired (<strong>single-flight</strong>); the others queue and retry with the new token.</p>
+
+<h2 id="dedupe">Dedupe</h2>
+<p>Two patterns:</p>
+<pre><code class="language-typescript">policies: {
+  dedupe: { window: 'inflight' },         // collapse concurrent identical requests
+}
+// or
+policies: {
+  dedupe: { window: 'time', ms: 500 },    // throttle: ignore identical requests within 500ms
+}
+</code></pre>
+<p>The dedupe key is the route id + canonical payload hash. Override with a custom key function if you want narrower or wider deduplication.</p>
+
+<h2 id="idempotency">Idempotency</h2>
+<p>For POST/PATCH/PUT/DELETE, the gateway can auto-generate an <code>Idempotency-Key</code> header (UUID v4 by default). The server decides whether to honor it. Useful when the user double-clicks &ldquo;Submit&rdquo;.</p>
+<pre><code class="language-typescript">policies: { idempotency: { auto: true } }
+</code></pre>
+
+<h2 id="allowlist">URL allowlist</h2>
+<p>Critical for security. Without an allowlist, any route definition can hit any URL (potentially data exfiltration if route definitions come from third-party plugins).</p>
+<pre><code class="language-typescript">// Global config
+gateway: {
+  allowlist: ['/api/', 'https://api.example.com/'],
+  onBlocked: (url) =&gt; broker.publish('system.security.blocked', { url }),
+}
+</code></pre>
+<p>Allowlisted prefixes apply to the final URL <em>after redirects</em> (decision <code>D-71</code>) — the gateway re-validates the destination if a redirect is followed.</p>
+
+<h2 id="errors">Sanitized errors</h2>
+<p>When a request fails, the gateway publishes the route&rsquo;s <code>error</code> topic with a sanitized payload (no stack, no original error, no internal details):</p>
+<pre><code class="language-typescript">{
+  code: 'http.timeout',
+  category: 'network',
+  message: 'Request timed out after 5000ms',
+  routeId: 'weather-fetch',
+  topic: 'weather.requested',
+  eventId: 'evt_xKp9N3...',
+}
+</code></pre>
+<p>The full error is logged via the Inspector (dev mode) but never leaks into application code that might display it to the user.</p>
+
+<h2 id="next">Where to next</h2>
+<div class="cards">
+  <a class="card" href="realtime.html"><div class="card-title">Realtime</div><div class="card-desc">SSE + WebSocket with auto-fallback and visibility-aware reconnection.</div></a>
+  <a class="card" href="../recipes/auth-token-refresh.html"><div class="card-title">Recipe: Auth + token refresh</div><div class="card-desc">Working example with token expiration and refresh.</div></a>
+</div>
+recipes/multi-tenant-cache.html">Multi-tenant cache</a>
+  <a class="sidebar-link" href="<h1>HTTP gateway</h1>
+<p class="lead">A single observable layer for outbound HTTP. All <code>type: 'http'</code> routes share the same strategy chain — auth, retry, timeout, dedupe, idempotency, allowlist, circuit breaker, backpressure.</p>
+
+<h2 id="why">Why a gateway</h2>
+<p>The traditional pattern: <code>fetch('/api/...')</code> scattered across components. Each component duplicates auth headers, retry logic, error handling. Some forget. Some get it wrong. None of them are observable.</p>
+<p>The gateway centralizes all of this. Components publish topics; routes describe HTTP calls; the gateway runs every call through the same policy stack. The result:</p>
+<ul>
+<li>One place to add a new auth scheme</li>
+<li>One place to tune retry behavior</li>
+<li>One place to add observability</li>
+<li>Components don&rsquo;t know HTTP exists</li>
+</ul>
+
+<h2 id="strategy-chain">The strategy chain</h2>
+<p>For each request, strategies execute in this order:</p>
+<ol>
+<li><strong>Allowlist</strong> — block if URL host is not allowlisted (decision <code>D-71</code>)</li>
+<li><strong>Auth</strong> — attach Bearer token, refresh once if 401 (single-flight, decision <code>D-72</code>)</li>
+<li><strong>Idempotency</strong> — auto-generate idempotency key on POST/PATCH/PUT/DELETE (decision <code>D-70</code>)</li>
+<li><strong>Dedupe</strong> — collapse concurrent identical requests (in-flight or windowed)</li>
+<li><strong>Concurrency</strong> — apply per-route policy (latest-only, serial, queue-bounded)</li>
+<li><strong>Backpressure</strong> — drop or queue if concurrency cap reached (with critical-priority bypass)</li>
+<li><strong>Circuit breaker</strong> — open after N failures, half-open after cooldown (per-route opt-in)</li>
+<li><strong>Timeout</strong> — abort with <code>AbortSignal.timeout()</code></li>
+<li><strong>Retry</strong> — retry on 5xx and network errors only, not 4xx (decision <code>D-73</code>) — except 408/429 honoring <code>Retry-After</code> header</li>
+<li><strong>Backoff</strong> — exponential with full-jitter when retrying</li>
+<li><strong>Fetch</strong> — the actual request</li>
+<li><strong>Response normalization</strong> — map server payload via the route&rsquo;s <code>responseMap</code></li>
+</ol>
+<p>Each strategy is configured via the <code>policies</code> key on the route. Default is &ldquo;everything off&rdquo; — opt in only what you need.</p>
+
+<h2 id="auth">Auth + single-flight refresh</h2>
+<pre><code class="language-typescript">broker.registerRoute({
+  id: 'protected-route',
+  on: 'customers.list.requested',
+  type: 'http',
+  request: { method: 'GET', url: '/api/customers' },
+  publishes: { success: 'customers.list.loaded', error: 'customers.list.failed' },
+  policies: {
+    auth: {
+      scheme: 'bearer',
+      getToken: () => sessionToken,
+      refresh: async () => {
+        const res = await fetch('/api/refresh', { method: 'POST' })
+        return (await res.json()).accessToken
+      },
+    },
+  },
+})
+</code></pre>
+<p>If multiple routes hit a 401 simultaneously, only one refresh is fired (<strong>single-flight</strong>); the others queue and retry with the new token.</p>
+
+<h2 id="dedupe">Dedupe</h2>
+<p>Two patterns:</p>
+<pre><code class="language-typescript">policies: {
+  dedupe: { window: 'inflight' },         // collapse concurrent identical requests
+}
+// or
+policies: {
+  dedupe: { window: 'time', ms: 500 },    // throttle: ignore identical requests within 500ms
+}
+</code></pre>
+<p>The dedupe key is the route id + canonical payload hash. Override with a custom key function if you want narrower or wider deduplication.</p>
+
+<h2 id="idempotency">Idempotency</h2>
+<p>For POST/PATCH/PUT/DELETE, the gateway can auto-generate an <code>Idempotency-Key</code> header (UUID v4 by default). The server decides whether to honor it. Useful when the user double-clicks &ldquo;Submit&rdquo;.</p>
+<pre><code class="language-typescript">policies: { idempotency: { auto: true } }
+</code></pre>
+
+<h2 id="allowlist">URL allowlist</h2>
+<p>Critical for security. Without an allowlist, any route definition can hit any URL (potentially data exfiltration if route definitions come from third-party plugins).</p>
+<pre><code class="language-typescript">// Global config
+gateway: {
+  allowlist: ['/api/', 'https://api.example.com/'],
+  onBlocked: (url) =&gt; broker.publish('system.security.blocked', { url }),
+}
+</code></pre>
+<p>Allowlisted prefixes apply to the final URL <em>after redirects</em> (decision <code>D-71</code>) — the gateway re-validates the destination if a redirect is followed.</p>
+
+<h2 id="errors">Sanitized errors</h2>
+<p>When a request fails, the gateway publishes the route&rsquo;s <code>error</code> topic with a sanitized payload (no stack, no original error, no internal details):</p>
+<pre><code class="language-typescript">{
+  code: 'http.timeout',
+  category: 'network',
+  message: 'Request timed out after 5000ms',
+  routeId: 'weather-fetch',
+  topic: 'weather.requested',
+  eventId: 'evt_xKp9N3...',
+}
+</code></pre>
+<p>The full error is logged via the Inspector (dev mode) but never leaks into application code that might display it to the user.</p>
+
+<h2 id="next">Where to next</h2>
+<div class="cards">
+  <a class="card" href="realtime.html"><div class="card-title">Realtime</div><div class="card-desc">SSE + WebSocket with auto-fallback and visibility-aware reconnection.</div></a>
+  <a class="card" href="../recipes/auth-token-refresh.html"><div class="card-title">Recipe: Auth + token refresh</div><div class="card-desc">Working example with token expiration and refresh.</div></a>
+</div>
+recipes/reconnect-realtime.html">Reconnect SSE→WS</a>
+  <a class="sidebar-link" href="<h1>HTTP gateway</h1>
+<p class="lead">A single observable layer for outbound HTTP. All <code>type: 'http'</code> routes share the same strategy chain — auth, retry, timeout, dedupe, idempotency, allowlist, circuit breaker, backpressure.</p>
+
+<h2 id="why">Why a gateway</h2>
+<p>The traditional pattern: <code>fetch('/api/...')</code> scattered across components. Each component duplicates auth headers, retry logic, error handling. Some forget. Some get it wrong. None of them are observable.</p>
+<p>The gateway centralizes all of this. Components publish topics; routes describe HTTP calls; the gateway runs every call through the same policy stack. The result:</p>
+<ul>
+<li>One place to add a new auth scheme</li>
+<li>One place to tune retry behavior</li>
+<li>One place to add observability</li>
+<li>Components don&rsquo;t know HTTP exists</li>
+</ul>
+
+<h2 id="strategy-chain">The strategy chain</h2>
+<p>For each request, strategies execute in this order:</p>
+<ol>
+<li><strong>Allowlist</strong> — block if URL host is not allowlisted (decision <code>D-71</code>)</li>
+<li><strong>Auth</strong> — attach Bearer token, refresh once if 401 (single-flight, decision <code>D-72</code>)</li>
+<li><strong>Idempotency</strong> — auto-generate idempotency key on POST/PATCH/PUT/DELETE (decision <code>D-70</code>)</li>
+<li><strong>Dedupe</strong> — collapse concurrent identical requests (in-flight or windowed)</li>
+<li><strong>Concurrency</strong> — apply per-route policy (latest-only, serial, queue-bounded)</li>
+<li><strong>Backpressure</strong> — drop or queue if concurrency cap reached (with critical-priority bypass)</li>
+<li><strong>Circuit breaker</strong> — open after N failures, half-open after cooldown (per-route opt-in)</li>
+<li><strong>Timeout</strong> — abort with <code>AbortSignal.timeout()</code></li>
+<li><strong>Retry</strong> — retry on 5xx and network errors only, not 4xx (decision <code>D-73</code>) — except 408/429 honoring <code>Retry-After</code> header</li>
+<li><strong>Backoff</strong> — exponential with full-jitter when retrying</li>
+<li><strong>Fetch</strong> — the actual request</li>
+<li><strong>Response normalization</strong> — map server payload via the route&rsquo;s <code>responseMap</code></li>
+</ol>
+<p>Each strategy is configured via the <code>policies</code> key on the route. Default is &ldquo;everything off&rdquo; — opt in only what you need.</p>
+
+<h2 id="auth">Auth + single-flight refresh</h2>
+<pre><code class="language-typescript">broker.registerRoute({
+  id: 'protected-route',
+  on: 'customers.list.requested',
+  type: 'http',
+  request: { method: 'GET', url: '/api/customers' },
+  publishes: { success: 'customers.list.loaded', error: 'customers.list.failed' },
+  policies: {
+    auth: {
+      scheme: 'bearer',
+      getToken: () => sessionToken,
+      refresh: async () => {
+        const res = await fetch('/api/refresh', { method: 'POST' })
+        return (await res.json()).accessToken
+      },
+    },
+  },
+})
+</code></pre>
+<p>If multiple routes hit a 401 simultaneously, only one refresh is fired (<strong>single-flight</strong>); the others queue and retry with the new token.</p>
+
+<h2 id="dedupe">Dedupe</h2>
+<p>Two patterns:</p>
+<pre><code class="language-typescript">policies: {
+  dedupe: { window: 'inflight' },         // collapse concurrent identical requests
+}
+// or
+policies: {
+  dedupe: { window: 'time', ms: 500 },    // throttle: ignore identical requests within 500ms
+}
+</code></pre>
+<p>The dedupe key is the route id + canonical payload hash. Override with a custom key function if you want narrower or wider deduplication.</p>
+
+<h2 id="idempotency">Idempotency</h2>
+<p>For POST/PATCH/PUT/DELETE, the gateway can auto-generate an <code>Idempotency-Key</code> header (UUID v4 by default). The server decides whether to honor it. Useful when the user double-clicks &ldquo;Submit&rdquo;.</p>
+<pre><code class="language-typescript">policies: { idempotency: { auto: true } }
+</code></pre>
+
+<h2 id="allowlist">URL allowlist</h2>
+<p>Critical for security. Without an allowlist, any route definition can hit any URL (potentially data exfiltration if route definitions come from third-party plugins).</p>
+<pre><code class="language-typescript">// Global config
+gateway: {
+  allowlist: ['/api/', 'https://api.example.com/'],
+  onBlocked: (url) =&gt; broker.publish('system.security.blocked', { url }),
+}
+</code></pre>
+<p>Allowlisted prefixes apply to the final URL <em>after redirects</em> (decision <code>D-71</code>) — the gateway re-validates the destination if a redirect is followed.</p>
+
+<h2 id="errors">Sanitized errors</h2>
+<p>When a request fails, the gateway publishes the route&rsquo;s <code>error</code> topic with a sanitized payload (no stack, no original error, no internal details):</p>
+<pre><code class="language-typescript">{
+  code: 'http.timeout',
+  category: 'network',
+  message: 'Request timed out after 5000ms',
+  routeId: 'weather-fetch',
+  topic: 'weather.requested',
+  eventId: 'evt_xKp9N3...',
+}
+</code></pre>
+<p>The full error is logged via the Inspector (dev mode) but never leaks into application code that might display it to the user.</p>
+
+<h2 id="next">Where to next</h2>
+<div class="cards">
+  <a class="card" href="realtime.html"><div class="card-title">Realtime</div><div class="card-desc">SSE + WebSocket with auto-fallback and visibility-aware reconnection.</div></a>
+  <a class="card" href="../recipes/auth-token-refresh.html"><div class="card-title">Recipe: Auth + token refresh</div><div class="card-desc">Working example with token expiration and refresh.</div></a>
+</div>
+recipes/worker-progress.html">Worker progress</a>
+  <a class="sidebar-link" href="<h1>HTTP gateway</h1>
+<p class="lead">A single observable layer for outbound HTTP. All <code>type: 'http'</code> routes share the same strategy chain — auth, retry, timeout, dedupe, idempotency, allowlist, circuit breaker, backpressure.</p>
+
+<h2 id="why">Why a gateway</h2>
+<p>The traditional pattern: <code>fetch('/api/...')</code> scattered across components. Each component duplicates auth headers, retry logic, error handling. Some forget. Some get it wrong. None of them are observable.</p>
+<p>The gateway centralizes all of this. Components publish topics; routes describe HTTP calls; the gateway runs every call through the same policy stack. The result:</p>
+<ul>
+<li>One place to add a new auth scheme</li>
+<li>One place to tune retry behavior</li>
+<li>One place to add observability</li>
+<li>Components don&rsquo;t know HTTP exists</li>
+</ul>
+
+<h2 id="strategy-chain">The strategy chain</h2>
+<p>For each request, strategies execute in this order:</p>
+<ol>
+<li><strong>Allowlist</strong> — block if URL host is not allowlisted (decision <code>D-71</code>)</li>
+<li><strong>Auth</strong> — attach Bearer token, refresh once if 401 (single-flight, decision <code>D-72</code>)</li>
+<li><strong>Idempotency</strong> — auto-generate idempotency key on POST/PATCH/PUT/DELETE (decision <code>D-70</code>)</li>
+<li><strong>Dedupe</strong> — collapse concurrent identical requests (in-flight or windowed)</li>
+<li><strong>Concurrency</strong> — apply per-route policy (latest-only, serial, queue-bounded)</li>
+<li><strong>Backpressure</strong> — drop or queue if concurrency cap reached (with critical-priority bypass)</li>
+<li><strong>Circuit breaker</strong> — open after N failures, half-open after cooldown (per-route opt-in)</li>
+<li><strong>Timeout</strong> — abort with <code>AbortSignal.timeout()</code></li>
+<li><strong>Retry</strong> — retry on 5xx and network errors only, not 4xx (decision <code>D-73</code>) — except 408/429 honoring <code>Retry-After</code> header</li>
+<li><strong>Backoff</strong> — exponential with full-jitter when retrying</li>
+<li><strong>Fetch</strong> — the actual request</li>
+<li><strong>Response normalization</strong> — map server payload via the route&rsquo;s <code>responseMap</code></li>
+</ol>
+<p>Each strategy is configured via the <code>policies</code> key on the route. Default is &ldquo;everything off&rdquo; — opt in only what you need.</p>
+
+<h2 id="auth">Auth + single-flight refresh</h2>
+<pre><code class="language-typescript">broker.registerRoute({
+  id: 'protected-route',
+  on: 'customers.list.requested',
+  type: 'http',
+  request: { method: 'GET', url: '/api/customers' },
+  publishes: { success: 'customers.list.loaded', error: 'customers.list.failed' },
+  policies: {
+    auth: {
+      scheme: 'bearer',
+      getToken: () => sessionToken,
+      refresh: async () => {
+        const res = await fetch('/api/refresh', { method: 'POST' })
+        return (await res.json()).accessToken
+      },
+    },
+  },
+})
+</code></pre>
+<p>If multiple routes hit a 401 simultaneously, only one refresh is fired (<strong>single-flight</strong>); the others queue and retry with the new token.</p>
+
+<h2 id="dedupe">Dedupe</h2>
+<p>Two patterns:</p>
+<pre><code class="language-typescript">policies: {
+  dedupe: { window: 'inflight' },         // collapse concurrent identical requests
+}
+// or
+policies: {
+  dedupe: { window: 'time', ms: 500 },    // throttle: ignore identical requests within 500ms
+}
+</code></pre>
+<p>The dedupe key is the route id + canonical payload hash. Override with a custom key function if you want narrower or wider deduplication.</p>
+
+<h2 id="idempotency">Idempotency</h2>
+<p>For POST/PATCH/PUT/DELETE, the gateway can auto-generate an <code>Idempotency-Key</code> header (UUID v4 by default). The server decides whether to honor it. Useful when the user double-clicks &ldquo;Submit&rdquo;.</p>
+<pre><code class="language-typescript">policies: { idempotency: { auto: true } }
+</code></pre>
+
+<h2 id="allowlist">URL allowlist</h2>
+<p>Critical for security. Without an allowlist, any route definition can hit any URL (potentially data exfiltration if route definitions come from third-party plugins).</p>
+<pre><code class="language-typescript">// Global config
+gateway: {
+  allowlist: ['/api/', 'https://api.example.com/'],
+  onBlocked: (url) =&gt; broker.publish('system.security.blocked', { url }),
+}
+</code></pre>
+<p>Allowlisted prefixes apply to the final URL <em>after redirects</em> (decision <code>D-71</code>) — the gateway re-validates the destination if a redirect is followed.</p>
+
+<h2 id="errors">Sanitized errors</h2>
+<p>When a request fails, the gateway publishes the route&rsquo;s <code>error</code> topic with a sanitized payload (no stack, no original error, no internal details):</p>
+<pre><code class="language-typescript">{
+  code: 'http.timeout',
+  category: 'network',
+  message: 'Request timed out after 5000ms',
+  routeId: 'weather-fetch',
+  topic: 'weather.requested',
+  eventId: 'evt_xKp9N3...',
+}
+</code></pre>
+<p>The full error is logged via the Inspector (dev mode) but never leaks into application code that might display it to the user.</p>
+
+<h2 id="next">Where to next</h2>
+<div class="cards">
+  <a class="card" href="realtime.html"><div class="card-title">Realtime</div><div class="card-desc">SSE + WebSocket with auto-fallback and visibility-aware reconnection.</div></a>
+  <a class="card" href="../recipes/auth-token-refresh.html"><div class="card-title">Recipe: Auth + token refresh</div><div class="card-desc">Working example with token expiration and refresh.</div></a>
+</div>
+recipes/debug-flow.html">Debug with Inspector</a>
+  <a class="sidebar-link" href="<h1>HTTP gateway</h1>
+<p class="lead">A single observable layer for outbound HTTP. All <code>type: 'http'</code> routes share the same strategy chain — auth, retry, timeout, dedupe, idempotency, allowlist, circuit breaker, backpressure.</p>
+
+<h2 id="why">Why a gateway</h2>
+<p>The traditional pattern: <code>fetch('/api/...')</code> scattered across components. Each component duplicates auth headers, retry logic, error handling. Some forget. Some get it wrong. None of them are observable.</p>
+<p>The gateway centralizes all of this. Components publish topics; routes describe HTTP calls; the gateway runs every call through the same policy stack. The result:</p>
+<ul>
+<li>One place to add a new auth scheme</li>
+<li>One place to tune retry behavior</li>
+<li>One place to add observability</li>
+<li>Components don&rsquo;t know HTTP exists</li>
+</ul>
+
+<h2 id="strategy-chain">The strategy chain</h2>
+<p>For each request, strategies execute in this order:</p>
+<ol>
+<li><strong>Allowlist</strong> — block if URL host is not allowlisted (decision <code>D-71</code>)</li>
+<li><strong>Auth</strong> — attach Bearer token, refresh once if 401 (single-flight, decision <code>D-72</code>)</li>
+<li><strong>Idempotency</strong> — auto-generate idempotency key on POST/PATCH/PUT/DELETE (decision <code>D-70</code>)</li>
+<li><strong>Dedupe</strong> — collapse concurrent identical requests (in-flight or windowed)</li>
+<li><strong>Concurrency</strong> — apply per-route policy (latest-only, serial, queue-bounded)</li>
+<li><strong>Backpressure</strong> — drop or queue if concurrency cap reached (with critical-priority bypass)</li>
+<li><strong>Circuit breaker</strong> — open after N failures, half-open after cooldown (per-route opt-in)</li>
+<li><strong>Timeout</strong> — abort with <code>AbortSignal.timeout()</code></li>
+<li><strong>Retry</strong> — retry on 5xx and network errors only, not 4xx (decision <code>D-73</code>) — except 408/429 honoring <code>Retry-After</code> header</li>
+<li><strong>Backoff</strong> — exponential with full-jitter when retrying</li>
+<li><strong>Fetch</strong> — the actual request</li>
+<li><strong>Response normalization</strong> — map server payload via the route&rsquo;s <code>responseMap</code></li>
+</ol>
+<p>Each strategy is configured via the <code>policies</code> key on the route. Default is &ldquo;everything off&rdquo; — opt in only what you need.</p>
+
+<h2 id="auth">Auth + single-flight refresh</h2>
+<pre><code class="language-typescript">broker.registerRoute({
+  id: 'protected-route',
+  on: 'customers.list.requested',
+  type: 'http',
+  request: { method: 'GET', url: '/api/customers' },
+  publishes: { success: 'customers.list.loaded', error: 'customers.list.failed' },
+  policies: {
+    auth: {
+      scheme: 'bearer',
+      getToken: () => sessionToken,
+      refresh: async () => {
+        const res = await fetch('/api/refresh', { method: 'POST' })
+        return (await res.json()).accessToken
+      },
+    },
+  },
+})
+</code></pre>
+<p>If multiple routes hit a 401 simultaneously, only one refresh is fired (<strong>single-flight</strong>); the others queue and retry with the new token.</p>
+
+<h2 id="dedupe">Dedupe</h2>
+<p>Two patterns:</p>
+<pre><code class="language-typescript">policies: {
+  dedupe: { window: 'inflight' },         // collapse concurrent identical requests
+}
+// or
+policies: {
+  dedupe: { window: 'time', ms: 500 },    // throttle: ignore identical requests within 500ms
+}
+</code></pre>
+<p>The dedupe key is the route id + canonical payload hash. Override with a custom key function if you want narrower or wider deduplication.</p>
+
+<h2 id="idempotency">Idempotency</h2>
+<p>For POST/PATCH/PUT/DELETE, the gateway can auto-generate an <code>Idempotency-Key</code> header (UUID v4 by default). The server decides whether to honor it. Useful when the user double-clicks &ldquo;Submit&rdquo;.</p>
+<pre><code class="language-typescript">policies: { idempotency: { auto: true } }
+</code></pre>
+
+<h2 id="allowlist">URL allowlist</h2>
+<p>Critical for security. Without an allowlist, any route definition can hit any URL (potentially data exfiltration if route definitions come from third-party plugins).</p>
+<pre><code class="language-typescript">// Global config
+gateway: {
+  allowlist: ['/api/', 'https://api.example.com/'],
+  onBlocked: (url) =&gt; broker.publish('system.security.blocked', { url }),
+}
+</code></pre>
+<p>Allowlisted prefixes apply to the final URL <em>after redirects</em> (decision <code>D-71</code>) — the gateway re-validates the destination if a redirect is followed.</p>
+
+<h2 id="errors">Sanitized errors</h2>
+<p>When a request fails, the gateway publishes the route&rsquo;s <code>error</code> topic with a sanitized payload (no stack, no original error, no internal details):</p>
+<pre><code class="language-typescript">{
+  code: 'http.timeout',
+  category: 'network',
+  message: 'Request timed out after 5000ms',
+  routeId: 'weather-fetch',
+  topic: 'weather.requested',
+  eventId: 'evt_xKp9N3...',
+}
+</code></pre>
+<p>The full error is logged via the Inspector (dev mode) but never leaks into application code that might display it to the user.</p>
+
+<h2 id="next">Where to next</h2>
+<div class="cards">
+  <a class="card" href="realtime.html"><div class="card-title">Realtime</div><div class="card-desc">SSE + WebSocket with auto-fallback and visibility-aware reconnection.</div></a>
+  <a class="card" href="../recipes/auth-token-refresh.html"><div class="card-title">Recipe: Auth + token refresh</div><div class="card-desc">Working example with token expiration and refresh.</div></a>
+</div>
+recipes/react-integration.html">React integration</a>
+</div>
+<div class="sidebar-section">
+  <div class="sidebar-section-title">Reference</div>
+  <a class="sidebar-link" href="<h1>HTTP gateway</h1>
+<p class="lead">A single observable layer for outbound HTTP. All <code>type: 'http'</code> routes share the same strategy chain — auth, retry, timeout, dedupe, idempotency, allowlist, circuit breaker, backpressure.</p>
+
+<h2 id="why">Why a gateway</h2>
+<p>The traditional pattern: <code>fetch('/api/...')</code> scattered across components. Each component duplicates auth headers, retry logic, error handling. Some forget. Some get it wrong. None of them are observable.</p>
+<p>The gateway centralizes all of this. Components publish topics; routes describe HTTP calls; the gateway runs every call through the same policy stack. The result:</p>
+<ul>
+<li>One place to add a new auth scheme</li>
+<li>One place to tune retry behavior</li>
+<li>One place to add observability</li>
+<li>Components don&rsquo;t know HTTP exists</li>
+</ul>
+
+<h2 id="strategy-chain">The strategy chain</h2>
+<p>For each request, strategies execute in this order:</p>
+<ol>
+<li><strong>Allowlist</strong> — block if URL host is not allowlisted (decision <code>D-71</code>)</li>
+<li><strong>Auth</strong> — attach Bearer token, refresh once if 401 (single-flight, decision <code>D-72</code>)</li>
+<li><strong>Idempotency</strong> — auto-generate idempotency key on POST/PATCH/PUT/DELETE (decision <code>D-70</code>)</li>
+<li><strong>Dedupe</strong> — collapse concurrent identical requests (in-flight or windowed)</li>
+<li><strong>Concurrency</strong> — apply per-route policy (latest-only, serial, queue-bounded)</li>
+<li><strong>Backpressure</strong> — drop or queue if concurrency cap reached (with critical-priority bypass)</li>
+<li><strong>Circuit breaker</strong> — open after N failures, half-open after cooldown (per-route opt-in)</li>
+<li><strong>Timeout</strong> — abort with <code>AbortSignal.timeout()</code></li>
+<li><strong>Retry</strong> — retry on 5xx and network errors only, not 4xx (decision <code>D-73</code>) — except 408/429 honoring <code>Retry-After</code> header</li>
+<li><strong>Backoff</strong> — exponential with full-jitter when retrying</li>
+<li><strong>Fetch</strong> — the actual request</li>
+<li><strong>Response normalization</strong> — map server payload via the route&rsquo;s <code>responseMap</code></li>
+</ol>
+<p>Each strategy is configured via the <code>policies</code> key on the route. Default is &ldquo;everything off&rdquo; — opt in only what you need.</p>
+
+<h2 id="auth">Auth + single-flight refresh</h2>
+<pre><code class="language-typescript">broker.registerRoute({
+  id: 'protected-route',
+  on: 'customers.list.requested',
+  type: 'http',
+  request: { method: 'GET', url: '/api/customers' },
+  publishes: { success: 'customers.list.loaded', error: 'customers.list.failed' },
+  policies: {
+    auth: {
+      scheme: 'bearer',
+      getToken: () => sessionToken,
+      refresh: async () => {
+        const res = await fetch('/api/refresh', { method: 'POST' })
+        return (await res.json()).accessToken
+      },
+    },
+  },
+})
+</code></pre>
+<p>If multiple routes hit a 401 simultaneously, only one refresh is fired (<strong>single-flight</strong>); the others queue and retry with the new token.</p>
+
+<h2 id="dedupe">Dedupe</h2>
+<p>Two patterns:</p>
+<pre><code class="language-typescript">policies: {
+  dedupe: { window: 'inflight' },         // collapse concurrent identical requests
+}
+// or
+policies: {
+  dedupe: { window: 'time', ms: 500 },    // throttle: ignore identical requests within 500ms
+}
+</code></pre>
+<p>The dedupe key is the route id + canonical payload hash. Override with a custom key function if you want narrower or wider deduplication.</p>
+
+<h2 id="idempotency">Idempotency</h2>
+<p>For POST/PATCH/PUT/DELETE, the gateway can auto-generate an <code>Idempotency-Key</code> header (UUID v4 by default). The server decides whether to honor it. Useful when the user double-clicks &ldquo;Submit&rdquo;.</p>
+<pre><code class="language-typescript">policies: { idempotency: { auto: true } }
+</code></pre>
+
+<h2 id="allowlist">URL allowlist</h2>
+<p>Critical for security. Without an allowlist, any route definition can hit any URL (potentially data exfiltration if route definitions come from third-party plugins).</p>
+<pre><code class="language-typescript">// Global config
+gateway: {
+  allowlist: ['/api/', 'https://api.example.com/'],
+  onBlocked: (url) =&gt; broker.publish('system.security.blocked', { url }),
+}
+</code></pre>
+<p>Allowlisted prefixes apply to the final URL <em>after redirects</em> (decision <code>D-71</code>) — the gateway re-validates the destination if a redirect is followed.</p>
+
+<h2 id="errors">Sanitized errors</h2>
+<p>When a request fails, the gateway publishes the route&rsquo;s <code>error</code> topic with a sanitized payload (no stack, no original error, no internal details):</p>
+<pre><code class="language-typescript">{
+  code: 'http.timeout',
+  category: 'network',
+  message: 'Request timed out after 5000ms',
+  routeId: 'weather-fetch',
+  topic: 'weather.requested',
+  eventId: 'evt_xKp9N3...',
+}
+</code></pre>
+<p>The full error is logged via the Inspector (dev mode) but never leaks into application code that might display it to the user.</p>
+
+<h2 id="next">Where to next</h2>
+<div class="cards">
+  <a class="card" href="realtime.html"><div class="card-title">Realtime</div><div class="card-desc">SSE + WebSocket with auto-fallback and visibility-aware reconnection.</div></a>
+  <a class="card" href="../recipes/auth-token-refresh.html"><div class="card-title">Recipe: Auth + token refresh</div><div class="card-desc">Working example with token expiration and refresh.</div></a>
+</div>
+decisions.html">Architectural decisions</a>
+  <a class="sidebar-link" href="<h1>HTTP gateway</h1>
+<p class="lead">A single observable layer for outbound HTTP. All <code>type: 'http'</code> routes share the same strategy chain — auth, retry, timeout, dedupe, idempotency, allowlist, circuit breaker, backpressure.</p>
+
+<h2 id="why">Why a gateway</h2>
+<p>The traditional pattern: <code>fetch('/api/...')</code> scattered across components. Each component duplicates auth headers, retry logic, error handling. Some forget. Some get it wrong. None of them are observable.</p>
+<p>The gateway centralizes all of this. Components publish topics; routes describe HTTP calls; the gateway runs every call through the same policy stack. The result:</p>
+<ul>
+<li>One place to add a new auth scheme</li>
+<li>One place to tune retry behavior</li>
+<li>One place to add observability</li>
+<li>Components don&rsquo;t know HTTP exists</li>
+</ul>
+
+<h2 id="strategy-chain">The strategy chain</h2>
+<p>For each request, strategies execute in this order:</p>
+<ol>
+<li><strong>Allowlist</strong> — block if URL host is not allowlisted (decision <code>D-71</code>)</li>
+<li><strong>Auth</strong> — attach Bearer token, refresh once if 401 (single-flight, decision <code>D-72</code>)</li>
+<li><strong>Idempotency</strong> — auto-generate idempotency key on POST/PATCH/PUT/DELETE (decision <code>D-70</code>)</li>
+<li><strong>Dedupe</strong> — collapse concurrent identical requests (in-flight or windowed)</li>
+<li><strong>Concurrency</strong> — apply per-route policy (latest-only, serial, queue-bounded)</li>
+<li><strong>Backpressure</strong> — drop or queue if concurrency cap reached (with critical-priority bypass)</li>
+<li><strong>Circuit breaker</strong> — open after N failures, half-open after cooldown (per-route opt-in)</li>
+<li><strong>Timeout</strong> — abort with <code>AbortSignal.timeout()</code></li>
+<li><strong>Retry</strong> — retry on 5xx and network errors only, not 4xx (decision <code>D-73</code>) — except 408/429 honoring <code>Retry-After</code> header</li>
+<li><strong>Backoff</strong> — exponential with full-jitter when retrying</li>
+<li><strong>Fetch</strong> — the actual request</li>
+<li><strong>Response normalization</strong> — map server payload via the route&rsquo;s <code>responseMap</code></li>
+</ol>
+<p>Each strategy is configured via the <code>policies</code> key on the route. Default is &ldquo;everything off&rdquo; — opt in only what you need.</p>
+
+<h2 id="auth">Auth + single-flight refresh</h2>
+<pre><code class="language-typescript">broker.registerRoute({
+  id: 'protected-route',
+  on: 'customers.list.requested',
+  type: 'http',
+  request: { method: 'GET', url: '/api/customers' },
+  publishes: { success: 'customers.list.loaded', error: 'customers.list.failed' },
+  policies: {
+    auth: {
+      scheme: 'bearer',
+      getToken: () => sessionToken,
+      refresh: async () => {
+        const res = await fetch('/api/refresh', { method: 'POST' })
+        return (await res.json()).accessToken
+      },
+    },
+  },
+})
+</code></pre>
+<p>If multiple routes hit a 401 simultaneously, only one refresh is fired (<strong>single-flight</strong>); the others queue and retry with the new token.</p>
+
+<h2 id="dedupe">Dedupe</h2>
+<p>Two patterns:</p>
+<pre><code class="language-typescript">policies: {
+  dedupe: { window: 'inflight' },         // collapse concurrent identical requests
+}
+// or
+policies: {
+  dedupe: { window: 'time', ms: 500 },    // throttle: ignore identical requests within 500ms
+}
+</code></pre>
+<p>The dedupe key is the route id + canonical payload hash. Override with a custom key function if you want narrower or wider deduplication.</p>
+
+<h2 id="idempotency">Idempotency</h2>
+<p>For POST/PATCH/PUT/DELETE, the gateway can auto-generate an <code>Idempotency-Key</code> header (UUID v4 by default). The server decides whether to honor it. Useful when the user double-clicks &ldquo;Submit&rdquo;.</p>
+<pre><code class="language-typescript">policies: { idempotency: { auto: true } }
+</code></pre>
+
+<h2 id="allowlist">URL allowlist</h2>
+<p>Critical for security. Without an allowlist, any route definition can hit any URL (potentially data exfiltration if route definitions come from third-party plugins).</p>
+<pre><code class="language-typescript">// Global config
+gateway: {
+  allowlist: ['/api/', 'https://api.example.com/'],
+  onBlocked: (url) =&gt; broker.publish('system.security.blocked', { url }),
+}
+</code></pre>
+<p>Allowlisted prefixes apply to the final URL <em>after redirects</em> (decision <code>D-71</code>) — the gateway re-validates the destination if a redirect is followed.</p>
+
+<h2 id="errors">Sanitized errors</h2>
+<p>When a request fails, the gateway publishes the route&rsquo;s <code>error</code> topic with a sanitized payload (no stack, no original error, no internal details):</p>
+<pre><code class="language-typescript">{
+  code: 'http.timeout',
+  category: 'network',
+  message: 'Request timed out after 5000ms',
+  routeId: 'weather-fetch',
+  topic: 'weather.requested',
+  eventId: 'evt_xKp9N3...',
+}
+</code></pre>
+<p>The full error is logged via the Inspector (dev mode) but never leaks into application code that might display it to the user.</p>
+
+<h2 id="next">Where to next</h2>
+<div class="cards">
+  <a class="card" href="realtime.html"><div class="card-title">Realtime</div><div class="card-desc">SSE + WebSocket with auto-fallback and visibility-aware reconnection.</div></a>
+  <a class="card" href="../recipes/auth-token-refresh.html"><div class="card-title">Recipe: Auth + token refresh</div><div class="card-desc">Working example with token expiration and refresh.</div></a>
+</div>
+faq.html">FAQ</a>
+</div>
+</nav>
+<main class="content" role="main">
+<div class="content-inner">
+<nav class="breadcrumb" aria-label="Breadcrumb"><a href="<h1>HTTP gateway</h1>
+<p class="lead">A single observable layer for outbound HTTP. All <code>type: 'http'</code> routes share the same strategy chain — auth, retry, timeout, dedupe, idempotency, allowlist, circuit breaker, backpressure.</p>
+
+<h2 id="why">Why a gateway</h2>
+<p>The traditional pattern: <code>fetch('/api/...')</code> scattered across components. Each component duplicates auth headers, retry logic, error handling. Some forget. Some get it wrong. None of them are observable.</p>
+<p>The gateway centralizes all of this. Components publish topics; routes describe HTTP calls; the gateway runs every call through the same policy stack. The result:</p>
+<ul>
+<li>One place to add a new auth scheme</li>
+<li>One place to tune retry behavior</li>
+<li>One place to add observability</li>
+<li>Components don&rsquo;t know HTTP exists</li>
+</ul>
+
+<h2 id="strategy-chain">The strategy chain</h2>
+<p>For each request, strategies execute in this order:</p>
+<ol>
+<li><strong>Allowlist</strong> — block if URL host is not allowlisted (decision <code>D-71</code>)</li>
+<li><strong>Auth</strong> — attach Bearer token, refresh once if 401 (single-flight, decision <code>D-72</code>)</li>
+<li><strong>Idempotency</strong> — auto-generate idempotency key on POST/PATCH/PUT/DELETE (decision <code>D-70</code>)</li>
+<li><strong>Dedupe</strong> — collapse concurrent identical requests (in-flight or windowed)</li>
+<li><strong>Concurrency</strong> — apply per-route policy (latest-only, serial, queue-bounded)</li>
+<li><strong>Backpressure</strong> — drop or queue if concurrency cap reached (with critical-priority bypass)</li>
+<li><strong>Circuit breaker</strong> — open after N failures, half-open after cooldown (per-route opt-in)</li>
+<li><strong>Timeout</strong> — abort with <code>AbortSignal.timeout()</code></li>
+<li><strong>Retry</strong> — retry on 5xx and network errors only, not 4xx (decision <code>D-73</code>) — except 408/429 honoring <code>Retry-After</code> header</li>
+<li><strong>Backoff</strong> — exponential with full-jitter when retrying</li>
+<li><strong>Fetch</strong> — the actual request</li>
+<li><strong>Response normalization</strong> — map server payload via the route&rsquo;s <code>responseMap</code></li>
+</ol>
+<p>Each strategy is configured via the <code>policies</code> key on the route. Default is &ldquo;everything off&rdquo; — opt in only what you need.</p>
+
+<h2 id="auth">Auth + single-flight refresh</h2>
+<pre><code class="language-typescript">broker.registerRoute({
+  id: 'protected-route',
+  on: 'customers.list.requested',
+  type: 'http',
+  request: { method: 'GET', url: '/api/customers' },
+  publishes: { success: 'customers.list.loaded', error: 'customers.list.failed' },
+  policies: {
+    auth: {
+      scheme: 'bearer',
+      getToken: () => sessionToken,
+      refresh: async () => {
+        const res = await fetch('/api/refresh', { method: 'POST' })
+        return (await res.json()).accessToken
+      },
+    },
+  },
+})
+</code></pre>
+<p>If multiple routes hit a 401 simultaneously, only one refresh is fired (<strong>single-flight</strong>); the others queue and retry with the new token.</p>
+
+<h2 id="dedupe">Dedupe</h2>
+<p>Two patterns:</p>
+<pre><code class="language-typescript">policies: {
+  dedupe: { window: 'inflight' },         // collapse concurrent identical requests
+}
+// or
+policies: {
+  dedupe: { window: 'time', ms: 500 },    // throttle: ignore identical requests within 500ms
+}
+</code></pre>
+<p>The dedupe key is the route id + canonical payload hash. Override with a custom key function if you want narrower or wider deduplication.</p>
+
+<h2 id="idempotency">Idempotency</h2>
+<p>For POST/PATCH/PUT/DELETE, the gateway can auto-generate an <code>Idempotency-Key</code> header (UUID v4 by default). The server decides whether to honor it. Useful when the user double-clicks &ldquo;Submit&rdquo;.</p>
+<pre><code class="language-typescript">policies: { idempotency: { auto: true } }
+</code></pre>
+
+<h2 id="allowlist">URL allowlist</h2>
+<p>Critical for security. Without an allowlist, any route definition can hit any URL (potentially data exfiltration if route definitions come from third-party plugins).</p>
+<pre><code class="language-typescript">// Global config
+gateway: {
+  allowlist: ['/api/', 'https://api.example.com/'],
+  onBlocked: (url) =&gt; broker.publish('system.security.blocked', { url }),
+}
+</code></pre>
+<p>Allowlisted prefixes apply to the final URL <em>after redirects</em> (decision <code>D-71</code>) — the gateway re-validates the destination if a redirect is followed.</p>
+
+<h2 id="errors">Sanitized errors</h2>
+<p>When a request fails, the gateway publishes the route&rsquo;s <code>error</code> topic with a sanitized payload (no stack, no original error, no internal details):</p>
+<pre><code class="language-typescript">{
+  code: 'http.timeout',
+  category: 'network',
+  message: 'Request timed out after 5000ms',
+  routeId: 'weather-fetch',
+  topic: 'weather.requested',
+  eventId: 'evt_xKp9N3...',
+}
+</code></pre>
+<p>The full error is logged via the Inspector (dev mode) but never leaks into application code that might display it to the user.</p>
+
+<h2 id="next">Where to next</h2>
+<div class="cards">
+  <a class="card" href="realtime.html"><div class="card-title">Realtime</div><div class="card-desc">SSE + WebSocket with auto-fallback and visibility-aware reconnection.</div></a>
+  <a class="card" href="../recipes/auth-token-refresh.html"><div class="card-title">Recipe: Auth + token refresh</div><div class="card-desc">Working example with token expiration and refresh.</div></a>
+</div>
+index.html">Docs</a> / Concepts</nav>
+../
+<footer class="footer">
+  <div>GlueZero v1.0.0 — MIT License</div>
+  <div>
+    <a href="https://gluezero.org">gluezero.org</a> ·
+    <a href="https://github.com/omardimarzio/GlueZero">GitHub</a> ·
+    <a href="https://www.npmjs.com/package/@gluezero/gluezero">npm</a>
+  </div>
+</footer>
+</div>
+</main>
+<script src="<h1>HTTP gateway</h1>
+<p class="lead">A single observable layer for outbound HTTP. All <code>type: 'http'</code> routes share the same strategy chain — auth, retry, timeout, dedupe, idempotency, allowlist, circuit breaker, backpressure.</p>
+
+<h2 id="why">Why a gateway</h2>
+<p>The traditional pattern: <code>fetch('/api/...')</code> scattered across components. Each component duplicates auth headers, retry logic, error handling. Some forget. Some get it wrong. None of them are observable.</p>
+<p>The gateway centralizes all of this. Components publish topics; routes describe HTTP calls; the gateway runs every call through the same policy stack. The result:</p>
+<ul>
+<li>One place to add a new auth scheme</li>
+<li>One place to tune retry behavior</li>
+<li>One place to add observability</li>
+<li>Components don&rsquo;t know HTTP exists</li>
+</ul>
+
+<h2 id="strategy-chain">The strategy chain</h2>
+<p>For each request, strategies execute in this order:</p>
+<ol>
+<li><strong>Allowlist</strong> — block if URL host is not allowlisted (decision <code>D-71</code>)</li>
+<li><strong>Auth</strong> — attach Bearer token, refresh once if 401 (single-flight, decision <code>D-72</code>)</li>
+<li><strong>Idempotency</strong> — auto-generate idempotency key on POST/PATCH/PUT/DELETE (decision <code>D-70</code>)</li>
+<li><strong>Dedupe</strong> — collapse concurrent identical requests (in-flight or windowed)</li>
+<li><strong>Concurrency</strong> — apply per-route policy (latest-only, serial, queue-bounded)</li>
+<li><strong>Backpressure</strong> — drop or queue if concurrency cap reached (with critical-priority bypass)</li>
+<li><strong>Circuit breaker</strong> — open after N failures, half-open after cooldown (per-route opt-in)</li>
+<li><strong>Timeout</strong> — abort with <code>AbortSignal.timeout()</code></li>
+<li><strong>Retry</strong> — retry on 5xx and network errors only, not 4xx (decision <code>D-73</code>) — except 408/429 honoring <code>Retry-After</code> header</li>
+<li><strong>Backoff</strong> — exponential with full-jitter when retrying</li>
+<li><strong>Fetch</strong> — the actual request</li>
+<li><strong>Response normalization</strong> — map server payload via the route&rsquo;s <code>responseMap</code></li>
+</ol>
+<p>Each strategy is configured via the <code>policies</code> key on the route. Default is &ldquo;everything off&rdquo; — opt in only what you need.</p>
+
+<h2 id="auth">Auth + single-flight refresh</h2>
+<pre><code class="language-typescript">broker.registerRoute({
+  id: 'protected-route',
+  on: 'customers.list.requested',
+  type: 'http',
+  request: { method: 'GET', url: '/api/customers' },
+  publishes: { success: 'customers.list.loaded', error: 'customers.list.failed' },
+  policies: {
+    auth: {
+      scheme: 'bearer',
+      getToken: () => sessionToken,
+      refresh: async () => {
+        const res = await fetch('/api/refresh', { method: 'POST' })
+        return (await res.json()).accessToken
+      },
+    },
+  },
+})
+</code></pre>
+<p>If multiple routes hit a 401 simultaneously, only one refresh is fired (<strong>single-flight</strong>); the others queue and retry with the new token.</p>
+
+<h2 id="dedupe">Dedupe</h2>
+<p>Two patterns:</p>
+<pre><code class="language-typescript">policies: {
+  dedupe: { window: 'inflight' },         // collapse concurrent identical requests
+}
+// or
+policies: {
+  dedupe: { window: 'time', ms: 500 },    // throttle: ignore identical requests within 500ms
+}
+</code></pre>
+<p>The dedupe key is the route id + canonical payload hash. Override with a custom key function if you want narrower or wider deduplication.</p>
+
+<h2 id="idempotency">Idempotency</h2>
+<p>For POST/PATCH/PUT/DELETE, the gateway can auto-generate an <code>Idempotency-Key</code> header (UUID v4 by default). The server decides whether to honor it. Useful when the user double-clicks &ldquo;Submit&rdquo;.</p>
+<pre><code class="language-typescript">policies: { idempotency: { auto: true } }
+</code></pre>
+
+<h2 id="allowlist">URL allowlist</h2>
+<p>Critical for security. Without an allowlist, any route definition can hit any URL (potentially data exfiltration if route definitions come from third-party plugins).</p>
+<pre><code class="language-typescript">// Global config
+gateway: {
+  allowlist: ['/api/', 'https://api.example.com/'],
+  onBlocked: (url) =&gt; broker.publish('system.security.blocked', { url }),
+}
+</code></pre>
+<p>Allowlisted prefixes apply to the final URL <em>after redirects</em> (decision <code>D-71</code>) — the gateway re-validates the destination if a redirect is followed.</p>
+
+<h2 id="errors">Sanitized errors</h2>
+<p>When a request fails, the gateway publishes the route&rsquo;s <code>error</code> topic with a sanitized payload (no stack, no original error, no internal details):</p>
+<pre><code class="language-typescript">{
+  code: 'http.timeout',
+  category: 'network',
+  message: 'Request timed out after 5000ms',
+  routeId: 'weather-fetch',
+  topic: 'weather.requested',
+  eventId: 'evt_xKp9N3...',
+}
+</code></pre>
+<p>The full error is logged via the Inspector (dev mode) but never leaks into application code that might display it to the user.</p>
+
+<h2 id="next">Where to next</h2>
+<div class="cards">
+  <a class="card" href="realtime.html"><div class="card-title">Realtime</div><div class="card-desc">SSE + WebSocket with auto-fallback and visibility-aware reconnection.</div></a>
+  <a class="card" href="../recipes/auth-token-refresh.html"><div class="card-title">Recipe: Auth + token refresh</div><div class="card-desc">Working example with token expiration and refresh.</div></a>
+</div>
+assets/docs.js"></script>
+</body>
+</html>

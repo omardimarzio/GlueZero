@@ -1,0 +1,164 @@
+[
+  {
+    "title": "Welcome",
+    "section": "Get started",
+    "keywords": "gluezero browser frontend integration runtime pub-sub broker",
+    "url": "index.html"
+  },
+  {
+    "title": "Getting started",
+    "section": "Get started",
+    "keywords": "install npm pnpm tutorial first event hello world weather",
+    "url": "getting-started.html"
+  },
+  {
+    "title": "Overview",
+    "section": "Concepts",
+    "keywords": "mental model events routes canonical lifecycle pipeline architecture",
+    "url": "concepts/overview.html"
+  },
+  {
+    "title": "Broker",
+    "section": "Concepts",
+    "keywords": "broker pub-sub topics wildcards subscribe publish handler unsubscribe lifecycle plugin cascade",
+    "url": "concepts/broker.html"
+  },
+  {
+    "title": "Canonical model",
+    "section": "Concepts",
+    "keywords": "canonical model alias mapper plugin field translation input output map transform validation",
+    "url": "concepts/canonical-model.html"
+  },
+  {
+    "title": "Routing",
+    "section": "Concepts",
+    "keywords": "routing route types local http realtime worker cache composite policy chain resolver",
+    "url": "concepts/routing.html"
+  },
+  {
+    "title": "HTTP gateway",
+    "section": "Concepts",
+    "keywords": "gateway http policy retry timeout dedupe auth bearer single-flight idempotency allowlist circuit-breaker backpressure",
+    "url": "concepts/gateway.html"
+  },
+  {
+    "title": "Realtime",
+    "section": "Concepts",
+    "keywords": "realtime sse server-sent-events websocket reconnect auto-fallback ping pong visibility last-event-id",
+    "url": "concepts/realtime.html"
+  },
+  {
+    "title": "Worker",
+    "section": "Concepts",
+    "keywords": "worker web-worker comlink pool registry cancellation progress serialization transferable",
+    "url": "concepts/worker.html"
+  },
+  {
+    "title": "Cache",
+    "section": "Concepts",
+    "keywords": "cache lru ttl scope strategy cache-first network-first cache-then-network adapter memory invalidation",
+    "url": "concepts/cache.html"
+  },
+  {
+    "title": "Devtools",
+    "section": "Concepts",
+    "keywords": "devtools inspector metrics openmetrics prometheus reservoir cardinality cap pause-controller debug snapshot",
+    "url": "concepts/devtools.html"
+  },
+  {
+    "title": "@gluezero/gluezero",
+    "section": "API reference",
+    "keywords": "api gluezero aggregate createGlueZero factory chain",
+    "url": "api/gluezero.html"
+  },
+  {
+    "title": "@gluezero/core",
+    "section": "API reference",
+    "keywords": "api core broker subscribe publish createBroker",
+    "url": "api/core.html"
+  },
+  {
+    "title": "@gluezero/mapper",
+    "section": "API reference",
+    "keywords": "api mapper canonical alias transform",
+    "url": "api/mapper.html"
+  },
+  {
+    "title": "@gluezero/routing",
+    "section": "API reference",
+    "keywords": "api routing route registerRoute resolver",
+    "url": "api/routing.html"
+  },
+  {
+    "title": "@gluezero/gateway",
+    "section": "API reference",
+    "keywords": "api gateway http sse websocket strategy",
+    "url": "api/gateway.html"
+  },
+  {
+    "title": "@gluezero/worker",
+    "section": "API reference",
+    "keywords": "api worker registerWorker pool bridge",
+    "url": "api/worker.html"
+  },
+  {
+    "title": "@gluezero/cache",
+    "section": "API reference",
+    "keywords": "api cache adapter lru memory strategies",
+    "url": "api/cache.html"
+  },
+  {
+    "title": "@gluezero/devtools",
+    "section": "API reference",
+    "keywords": "api devtools inspector metrics pause",
+    "url": "api/devtools.html"
+  },
+  {
+    "title": "Auth + token refresh",
+    "section": "Recipes",
+    "keywords": "recipe auth bearer token refresh single-flight",
+    "url": "recipes/auth-token-refresh.html"
+  },
+  {
+    "title": "Multi-tenant cache",
+    "section": "Recipes",
+    "keywords": "recipe cache scope multi-tenant fail-secure",
+    "url": "recipes/multi-tenant-cache.html"
+  },
+  {
+    "title": "Reconnect SSE\u2192WS",
+    "section": "Recipes",
+    "keywords": "recipe realtime reconnect auto-fallback",
+    "url": "recipes/reconnect-realtime.html"
+  },
+  {
+    "title": "Worker progress",
+    "section": "Recipes",
+    "keywords": "recipe worker progress events background job",
+    "url": "recipes/worker-progress.html"
+  },
+  {
+    "title": "Debug with Inspector",
+    "section": "Recipes",
+    "keywords": "recipe debug inspector flow event lifecycle",
+    "url": "recipes/debug-flow.html"
+  },
+  {
+    "title": "React integration",
+    "section": "Recipes",
+    "keywords": "recipe react hook useBroker integration",
+    "url": "recipes/react-integration.html"
+  },
+  {
+    "title": "Architectural decisions",
+    "section": "Reference",
+    "keywords": "decisions architectural design rationale 170 indexed",
+    "url": "decisions.html"
+  },
+  {
+    "title": "FAQ",
+    "section": "Reference",
+    "keywords": "faq questions answers comparison redux rxjs",
+    "url": "faq.html"
+  }
+]
