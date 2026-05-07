@@ -1,7 +1,7 @@
 {
   "name": "@gluezero/gluezero",
   "version": "1.0.0",
-  "description": "GlueZero aggregato pubblico (Phase 6 — re-exports core + mapper + routing + gateway + worker + cache + devtools + factory createGlueZero milestone v1.0)",
+  "description": "GlueZero aggregato pubblico (Phase 6 \u2014 re-exports core + mapper + routing + gateway + worker + cache + devtools + factory createGlueZero milestone v1.0)",
   "license": "MIT",
   "author": "",
   "type": "module",
@@ -53,5 +53,12 @@
     "tsup": "8.5.1",
     "typescript": "6.0.3",
     "vitest": "4.1.5"
-  }
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/omardimarzio/GlueZero.git",
+    "directory": "packages/gluezero"
+  },
+  "homepage": "https://github.com/omardimarzio/GlueZero/tree/main/packages/gluezero#readme",
+  "bugs": "https://github.com/omardimarzio/GlueZero/issues"
 }

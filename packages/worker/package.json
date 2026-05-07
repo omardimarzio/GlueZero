@@ -1,7 +1,7 @@
 {
   "name": "@gluezero/worker",
   "version": "1.0.0",
-  "description": "Worker Runtime per GlueZero (Phase 5 — Comlink-based RPC + bounded pool + state machine atomico Pitfall 2C + WK-07 closure serializzazione documentata)",
+  "description": "Worker Runtime per GlueZero (Phase 5 \u2014 Comlink-based RPC + bounded pool + state machine atomico Pitfall 2C + WK-07 closure serializzazione documentata)",
   "license": "MIT",
   "author": "",
   "type": "module",
@@ -60,5 +60,12 @@
     "tsup": "8.5.1",
     "typescript": "6.0.3",
     "vitest": "4.1.5"
-  }
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/omardimarzio/GlueZero.git",
+    "directory": "packages/worker"
+  },
+  "homepage": "https://github.com/omardimarzio/GlueZero/tree/main/packages/worker#readme",
+  "bugs": "https://github.com/omardimarzio/GlueZero/issues"
 }

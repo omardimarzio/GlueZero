@@ -33,6 +33,6 @@ export default defineConfig({
     'valibot',
   ],
   banner: {
-    js: '/* @gluezero/gluezero — MIT — https://github.com/<TBD>/gluezero */',
+    js: '/* @gluezero/gluezero — MIT — https://github.com/omardimarzio/GlueZero */',
   },
 })

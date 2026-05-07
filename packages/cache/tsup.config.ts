@@ -36,6 +36,6 @@ export default defineConfig({
     '@gluezero/gateway',
   ],
   banner: {
-    js: '/* @gluezero/cache — MIT — https://github.com/<TBD>/gluezero */',
+    js: '/* @gluezero/cache — MIT — https://github.com/omardimarzio/GlueZero */',
   },
 })

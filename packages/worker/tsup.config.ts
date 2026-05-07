@@ -37,6 +37,6 @@ export default defineConfig({
     'comlink',
   ],
   banner: {
-    js: '/* @gluezero/worker — MIT — https://github.com/<TBD>/gluezero */',
+    js: '/* @gluezero/worker — MIT — https://github.com/omardimarzio/GlueZero */',
   },
 })

@@ -53,5 +53,12 @@
       "limit": "8 KB",
       "gzip": true
     }
-  ]
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/omardimarzio/GlueZero.git",
+    "directory": "packages/core"
+  },
+  "homepage": "https://github.com/omardimarzio/GlueZero/tree/main/packages/core#readme",
+  "bugs": "https://github.com/omardimarzio/GlueZero/issues"
 }

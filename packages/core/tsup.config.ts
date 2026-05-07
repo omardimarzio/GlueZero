@@ -13,6 +13,6 @@ export default defineConfig({
   platform: 'browser',
   external: [/^node:/],
   banner: {
-    js: '/* @gluezero/core — MIT — https://github.com/<TBD>/gluezero */',
+    js: '/* @gluezero/core — MIT — https://github.com/omardimarzio/GlueZero */',
   },
 })

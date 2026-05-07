@@ -36,6 +36,6 @@ export default defineConfig({
   platform: 'browser',
   external: [/^node:/, '@gluezero/core', '@gluezero/mapper'],
   banner: {
-    js: '/* @gluezero/gateway — MIT — https://github.com/<TBD>/gluezero */',
+    js: '/* @gluezero/gateway — MIT — https://github.com/omardimarzio/GlueZero */',
   },
 })

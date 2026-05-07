@@ -55,5 +55,12 @@
     "typescript": "6.0.3",
     "vitest": "4.1.5",
     "jsdom": "29.1.0"
-  }
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/omardimarzio/GlueZero.git",
+    "directory": "packages/routing"
+  },
+  "homepage": "https://github.com/omardimarzio/GlueZero/tree/main/packages/routing#readme",
+  "bugs": "https://github.com/omardimarzio/GlueZero/issues"
 }

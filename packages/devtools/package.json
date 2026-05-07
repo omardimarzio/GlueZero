@@ -1,7 +1,7 @@
 {
   "name": "@gluezero/devtools",
   "version": "1.0.0",
-  "description": "Developer tooling per GlueZero (Phase 6 — Tap registry chain D-159 + EventInspector + RouteInspector + MetricsCollector simil-OpenMetrics + pauseTopic queue — D-159..D-170 / chiude PRD §39 #10 TOOL-05)",
+  "description": "Developer tooling per GlueZero (Phase 6 \u2014 Tap registry chain D-159 + EventInspector + RouteInspector + MetricsCollector simil-OpenMetrics + pauseTopic queue \u2014 D-159..D-170 / chiude PRD \u00a739 #10 TOOL-05)",
   "license": "MIT",
   "author": "",
   "type": "module",
@@ -58,5 +58,12 @@
     "tsup": "8.5.1",
     "typescript": "6.0.3",
     "vitest": "4.1.5"
-  }
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/omardimarzio/GlueZero.git",
+    "directory": "packages/devtools"
+  },
+  "homepage": "https://github.com/omardimarzio/GlueZero/tree/main/packages/devtools#readme",
+  "bugs": "https://github.com/omardimarzio/GlueZero/issues"
 }
