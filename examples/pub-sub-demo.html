@@ -400,6 +400,12 @@ broker.<span class="fn">publish</span>(<span class="str">'message.posted'</span>
           <div class="feed" id="feed">
             <div class="feed-empty">Waiting for <code>message.posted</code>…</div>
           </div>
+          <div class="code-snippet"><span class="com">// Subscribe + render the message</span>
+broker.<span class="fn">subscribe</span>(<span class="str">'message.posted'</span>, (event) =&gt; {
+  <span class="com">// payload mapping: read from + text + ts</span>
+  <span class="kw">const</span> { from, text, ts } = event.payload
+  feedEl.<span class="fn">appendChild</span>(<span class="fn">renderItem</span>(from, text, ts))
+})</div>
         </div>
       </div>
 
@@ -429,6 +435,13 @@ broker.<span class="fn">publish</span>(<span class="str">'message.posted'</span>
               <div class="stat-value" id="stat-avg">0<span class="stat-unit">chars</span></div>
             </div>
           </div>
+          <div class="code-snippet"><span class="com">// Subscribe + aggregate counters</span>
+broker.<span class="fn">subscribe</span>(<span class="str">'message.posted'</span>, (event) =&gt; {
+  total++
+  totalChars += event.payload.text.length
+  senders.<span class="fn">add</span>(event.payload.from)
+  <span class="fn">renderStats</span>(total, senders.size, totalChars)
+})</div>
         </div>
       </div>
 
@@ -443,6 +456,13 @@ broker.<span class="fn">publish</span>(<span class="str">'message.posted'</span>
           <div id="latest">
             <div class="latest-empty">No messages yet.</div>
           </div>
+          <div class="code-snippet"><span class="com">// Subscribe returns a handle — store it for unsubscribe</span>
+<span class="kw">const</span> sub = broker.<span class="fn">subscribe</span>(<span class="str">'message.posted'</span>, (event) =&gt; {
+  <span class="fn">renderLatest</span>(event.payload, event.id)
+})
+
+<span class="com">// Toggle off → release the subscription (LIFE-02 cleanup)</span>
+sub.<span class="fn">unsubscribe</span>()</div>
         </div>
       </div>
 
@@ -460,6 +480,11 @@ broker.<span class="fn">publish</span>(<span class="str">'message.posted'</span>
             <span id="hist-peak">peak: 0/sec</span>
             <span>now</span>
           </div>
+          <div class="code-snippet"><span class="com">// Subscribe + bucket per second (sliding window 30s)</span>
+<span class="kw">const</span> sub = broker.<span class="fn">subscribe</span>(<span class="str">'message.posted'</span>, (event) =&gt; {
+  buckets[buckets.length - <span class="kw">1</span>]++
+  <span class="fn">renderHistogram</span>()
+})</div>
         </div>
       </div>
 
