@@ -39,6 +39,60 @@ parte_b_status: pending_user_actions (gh repo rename + npm org @gluezero + pnpm 
 | Modello attivo | `claude-opus-4-7-1` (opus) — override esplicito su tutti i sub-agent |
 | Graphify watch | PID 8702 attivo (debounce 3s, log `graphify-out/.watch.log`) — bootstrap iniziale `/graphify .` ancora pending |
 
+## 🚢 SHIPPED v1.0.0 — 2026-05-07T09:48:47Z
+
+**8 package live su npm:**
+
+```
+@gluezero/core      1.0.0  →  https://www.npmjs.com/package/@gluezero/core
+@gluezero/mapper    1.0.0  →  https://www.npmjs.com/package/@gluezero/mapper
+@gluezero/routing   1.0.0  →  https://www.npmjs.com/package/@gluezero/routing
+@gluezero/gateway   1.0.0  →  https://www.npmjs.com/package/@gluezero/gateway
+@gluezero/worker    1.0.0  →  https://www.npmjs.com/package/@gluezero/worker
+@gluezero/cache     1.0.0  →  https://www.npmjs.com/package/@gluezero/cache
+@gluezero/devtools  1.0.0  →  https://www.npmjs.com/package/@gluezero/devtools
+@gluezero/gluezero  1.0.0  →  https://www.npmjs.com/package/@gluezero/gluezero
+```
+
+**GitHub:**
+- Repo: https://github.com/omardimarzio/GlueZero
+- Release: https://github.com/omardimarzio/GlueZero/releases/tag/%40gluezero%2Fgluezero%401.0.0
+- Tag pushed: 16 (8 tag-name primario + 8 tag refs)
+
+**Sequenza release Parte B:**
+
+| Step | Outcome | Commit |
+|------|---------|--------|
+| `gh repo rename glueZero → GlueZero` | ✅ ok (GitHub redirige URL vecchie) | — |
+| `git remote add origin` | ✅ ok | — |
+| `pnpm release` (1° tentativo) | ❌ EUSAGE provenance:true non supportato da CI:null | — |
+| Fix `provenance: true` rimosso da 8 package.json | ✅ | `d14e04c` |
+| `pnpm release` (2° tentativo) | ❌ 403 npm 2FA enforcement | — |
+| Token granular `@gluezero/*` Read+Write configurato in `~/.npmrc` | ✅ user-side | — |
+| `pnpm release` (3° tentativo) | ✅ 8/8 published successfully | — |
+| `git push --follow-tags origin main` | ✅ main + 8 tag pushed | — |
+| `gh release create @gluezero/gluezero@1.0.0 --latest` | ✅ release "GlueZero v1.0.0" Latest | — |
+
+**Igiene post-release (TODO utente entro oggi):**
+
+- [ ] Revoca token npm condiviso (incollato in chat → compromesso): https://www.npmjs.com/settings/omardimarzio/tokens
+- [ ] Rimuovi `_authToken=npm_J5Ui...` da `~/.npmrc`
+- [ ] Abilita 2FA livello "Authorization and writes" su npm profile
+- [ ] (Opz.) Setup workflow `.github/workflows/release.yml` con `changeset/action@v1` + secret `NPM_TOKEN`
+
+**V1.x roadmap (deferred opt-ins):**
+
+- @gluezero/cache-idb (IndexedDB persistence)
+- @gluezero/metrics-prometheus / @gluezero/metrics-otel exporters
+- superjson adapter pluggable per worker serialization
+- Custom histogram bucketing per route
+- Anti-flap pause/resume debounce
+- Worker retry policy idempotent opt-in
+- PRD §39 #11 PIPE-01 (cross-fase pipeline ordering canonical doc)
+- Workflow CI release automation (changeset-action) + provenance Sigstore re-enabled
+- Dominio gluezero (utente)
+- Annuncio social (utente)
+
 ## Parte A cleanup pre-release — 2026-05-06 ✅ COMPLETE
 
 > **Sezione manuale** (NON gestita dall'hook auto-update di `## Ultimo step completato`).
