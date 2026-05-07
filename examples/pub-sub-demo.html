@@ -114,6 +114,82 @@
   }
   @media (max-width: 700px) { .subscribers-grid { grid-template-columns: 1fr; } }
 
+  /* Canonical broker panel — full width above subscribers */
+  .canonical-panel {
+    margin-bottom: 16px;
+    border: 2px solid var(--accent);
+    border-radius: 10px;
+    overflow: hidden;
+    background: var(--accent-soft);
+  }
+  [data-theme="dark"] .canonical-panel {
+    background: rgba(99, 102, 241, 0.08);
+  }
+  .canonical-header {
+    padding: 10px 14px;
+    background: var(--accent);
+    color: white;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .canonical-header h2 {
+    font-size: 12px; font-weight: 700; margin: 0;
+    text-transform: uppercase; letter-spacing: 0.06em;
+  }
+  .canonical-header .role {
+    font-family: var(--font-mono); font-size: 10px;
+    padding: 1px 6px; border-radius: 3px;
+    background: rgba(255,255,255,0.2); color: white; font-weight: 600;
+  }
+  .canonical-header .status {
+    margin-left: auto; font-family: var(--font-mono); font-size: 11px;
+    color: rgba(255,255,255,0.85);
+  }
+  .canonical-body {
+    padding: 16px;
+  }
+  .canonical-explainer {
+    font-size: 13px; color: var(--text-muted); margin: 0 0 12px;
+    line-height: 1.55;
+  }
+  .canonical-explainer strong { color: var(--text); }
+  .canonical-payload {
+    font-family: var(--font-mono); font-size: 13.5px;
+    background: var(--bg-code); color: #E2E8F0;
+    padding: 14px 16px; border-radius: 6px;
+    overflow-x: auto; white-space: pre;
+    margin: 0;
+  }
+  .canonical-payload .key { color: #93C5FD; }
+  .canonical-payload .str { color: #6EE7B7; }
+  .canonical-payload .num { color: #FCA5A5; }
+  .canonical-empty {
+    color: var(--text-subtle); font-style: italic;
+    padding: 16px; text-align: center;
+  }
+  .canonical-flow {
+    margin-top: 12px;
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr 1fr;
+    gap: 8px;
+    font-family: var(--font-mono); font-size: 11.5px;
+  }
+  @media (max-width: 700px) { .canonical-flow { grid-template-columns: 1fr 1fr; } }
+  .canonical-flow-item {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 8px 10px;
+  }
+  .canonical-flow-label {
+    font-size: 9.5px; text-transform: uppercase; letter-spacing: 0.05em;
+    color: var(--text-muted); font-weight: 600; margin-bottom: 4px;
+    font-family: var(--font-sans);
+  }
+  .canonical-flow-fields { color: var(--text); }
+  .canonical-flow-fields .arrow { color: var(--accent); margin: 0 4px; }
+
   .panel {
     border: 1px solid var(--border);
     border-radius: 10px;
@@ -398,6 +474,51 @@ ctx.broker.<span class="fn">publish</span>(<span class="str">'message.posted'</s
     </div>
 
     <!-- ============ SUBSCRIBERS ============ -->
+    <div>
+    <!-- ============ CANONICAL EVENT (inside broker) ============ -->
+    <div class="canonical-panel">
+      <div class="canonical-header">
+        <h2>Canonical event — inside the broker</h2>
+        <span class="role">CANONICAL SCHEMA</span>
+        <span class="status" id="canonical-count">0 events</span>
+      </div>
+      <div class="canonical-body">
+        <p class="canonical-explainer">
+          This is what the broker actually stores. The Italian publisher emits
+          <code>{ mittente, messaggio, ora }</code> → outputMap translates to canonical →
+          broker keeps <strong>this</strong>. Then each subscriber&rsquo;s inputMap translates
+          canonical → its own local vocabulary. <strong>One shape, three local renames.</strong>
+        </p>
+        <pre class="canonical-payload" id="canonical-payload"><span class="canonical-empty">Send a message to see the canonical payload here.</span></pre>
+        <div class="canonical-flow">
+          <div class="canonical-flow-item">
+            <div class="canonical-flow-label">Publisher emits</div>
+            <div class="canonical-flow-fields">mittente <span class="arrow">→</span> author</div>
+            <div class="canonical-flow-fields">messaggio <span class="arrow">→</span> body</div>
+            <div class="canonical-flow-fields">ora <span class="arrow">→</span> sent_at</div>
+          </div>
+          <div class="canonical-flow-item">
+            <div class="canonical-flow-label">Sub 1 receives (italian)</div>
+            <div class="canonical-flow-fields">author <span class="arrow">→</span> mittente</div>
+            <div class="canonical-flow-fields">body <span class="arrow">→</span> messaggio</div>
+            <div class="canonical-flow-fields">sent_at <span class="arrow">→</span> ora</div>
+          </div>
+          <div class="canonical-flow-item">
+            <div class="canonical-flow-label">Sub 2 receives (english)</div>
+            <div class="canonical-flow-fields">author <span class="arrow">→</span> from</div>
+            <div class="canonical-flow-fields">body <span class="arrow">→</span> text</div>
+            <div class="canonical-flow-fields">sent_at <span class="arrow">→</span> timestamp</div>
+          </div>
+          <div class="canonical-flow-item">
+            <div class="canonical-flow-label">Sub 3 receives (compact)</div>
+            <div class="canonical-flow-fields">author <span class="arrow">→</span> who</div>
+            <div class="canonical-flow-fields">body <span class="arrow">→</span> msg</div>
+            <div class="canonical-flow-fields">sent_at <span class="arrow">→</span> when</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <div class="subscribers-grid">
 
       <!-- SUBSCRIBER 1: Feed (italian vocab) -->
@@ -535,6 +656,7 @@ broker.<span class="fn">unregisterPlugin</span>(<span class="str">'compact-lates
       </div>
 
     </div>
+    </div>
   </div>
 
 </main>
@@ -631,6 +753,36 @@ broker.<span class="fn">unregisterPlugin</span>(<span class="str">'compact-lates
       setTimeout(() => publishMessage(s, samples[i]), i * 200)
     })
   })
+
+  // ============================================================
+  // CANONICAL OBSERVER — bare subscribe, no inputMap.
+  // Without an inputMap the payload arrives in canonical form.
+  // ============================================================
+  let canonicalCount = 0
+  const canonicalPayloadEl = document.getElementById('canonical-payload')
+  const canonicalCountEl = document.getElementById('canonical-count')
+
+  broker.subscribe('message.posted', (event) => {
+    canonicalCount++
+    canonicalCountEl.textContent = `${canonicalCount} event${canonicalCount === 1 ? '' : 's'}`
+    canonicalPayloadEl.innerHTML = formatCanonicalJson(event.payload)
+  })
+
+  function formatCanonicalJson(payload) {
+    const lines = ['{']
+    const keys = Object.keys(payload)
+    keys.forEach((k, i) => {
+      const v = payload[k]
+      const last = i === keys.length - 1
+      let valStr
+      if (typeof v === 'string') valStr = `<span class="str">${escapeHtml(JSON.stringify(v))}</span>`
+      else if (typeof v === 'number') valStr = `<span class="num">${v}</span>`
+      else valStr = escapeHtml(JSON.stringify(v))
+      lines.push(`  <span class="key">${escapeHtml(JSON.stringify(k))}</span>: ${valStr}${last ? '' : ','}`)
+    })
+    lines.push('}')
+    return lines.join('\n')
+  }
 
   // ============================================================
   // SUBSCRIBER 1 — Italian Feed: payload arrives with local italian names
@@ -814,8 +966,11 @@ broker.<span class="fn">unregisterPlugin</span>(<span class="str">'compact-lates
   // ============================================================
   document.getElementById('reset-all').addEventListener('click', () => {
     sub1Count = 0; sub2Count = 0; sub3Count = 0; sub4Count = 0
+    canonicalCount = 0
     publishedCount = 0
     totalChars = 0; senders.clear()
+    canonicalCountEl.textContent = '0 events'
+    canonicalPayloadEl.innerHTML = '<span class="canonical-empty">Send a message to see the canonical payload here.</span>'
     feedEl.innerHTML = '<div class="feed-empty">Cleared. Send a new message…</div>'
     feedEmpty = true
     document.getElementById('pub-count').textContent = '0 sent'
