@@ -20,6 +20,10 @@ It connects components, plugins, backend APIs, realtime events, cache and Web Wo
 > Not just an event emitter.  
 > **A frontend integration runtime for modular browser applications.**
 
+### 🎮 Try it live
+
+[**examples/weather-demo.html**](./examples/weather-demo.html) — open in browser, no build step. Two plugins with different naming conventions interoperating through canonical mapping, mocked HTTP route, optional cache, simulated failure mode, live event log, debug snapshot.
+
 ---
 
 ## Why GlueZero exists
