@@ -5,13 +5,250 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>@gluezero/gateway — GlueZero docs</title>
 <meta name="description" content="API reference — GlueZero v1.0.0 documentation">
-<link rel="stylesheet" href="../assets/styles.css">
+<link rel="stylesheet" href="<h1><code>@gluezero/gateway</code></h1>
+<p class="lead">HTTP gateway and SSE/WebSocket realtime adapters. Two sub-modules: <code>@gluezero/gateway/http</code> and <code>@gluezero/gateway/sse-ws</code>.</p>
+
+<h2 id="createRealtimeBroker"><code>createRealtimeBroker(config)</code></h2>
+<pre><code class="language-typescript">function createRealtimeBroker(config?: RealtimeBrokerConfig): RealtimeBroker
+
+interface RealtimeBrokerConfig extends RoutingBrokerConfig {
+  realtime?: {
+    adapter?: 'sse' | 'websocket' | 'auto'        // default: 'auto'
+    fallbackThreshold?: number                    // SSE failures before WS switch
+    cycleCap?: number                             // max reconnect cycles
+    visibilityAware?: boolean                     // pause when tab hidden, default: true
+    pingIntervalMs?: number                       // WS app-level ping, default: 30000
+    staleTimeoutMs?: number                       // WS pong timeout, default: 60000
+  }
+}
+</code></pre>
+
+<h2 id="connect"><code>broker.connectRealtime()</code> / <code>disconnectRealtime()</code></h2>
+<pre><code class="language-typescript">function connectRealtime(): void
+function disconnectRealtime(reason?: string): void
+</code></pre>
+<p>Triggers connection of all <code>realtime-inbound</code> routes. Disconnect aborts all in-flight EventSource/WebSocket instances and prevents auto-reconnect.</p>
+
+<h2 id="auth-policy"><code>AuthPolicy</code></h2>
+<pre><code class="language-typescript">interface AuthPolicy {
+  scheme: 'bearer' | 'basic' | 'cookie' | 'custom'
+  getToken?: () =&gt; string | Promise&lt;string&gt;
+  refresh?: () =&gt; Promise&lt;string&gt;                 // single-flight refresh on 401
+  customHeaders?: () =&gt; Record&lt;string, string&gt;
+}
+</code></pre>
+<p>Single-flight refresh: if multiple requests hit 401 simultaneously, only one <code>refresh()</code> call fires; others queue and retry with the new token (decision <code>D-72</code>).</p>
+
+<h2 id="backpressure"><code>BackpressurePolicy</code></h2>
+<pre><code class="language-typescript">type BackpressurePolicy =
+  | { mode: 'drop-oldest'; max: number }
+  | { mode: 'drop-newest'; max: number }
+  | { mode: 'reject'; max: number }
+  | { mode: 'queue-bounded'; max: number }
+  | { mode: 'sliding-window'; max: number }
+  | { mode: 'critical-bypass'; max: number; bypass: 'critical' }
+</code></pre>
+<p>Critical-priority events bypass backpressure caps when <code>mode: 'critical-bypass'</code> (decision <code>D-75</code>, used for <code>system.error</code> etc.).</p>
+
+<h2 id="frame"><code>RealtimeFrame</code></h2>
+<pre><code class="language-typescript">interface RealtimeFrame {
+  topic: string                       // server-decided topic
+  data: unknown                       // payload (will be canonical-validated)
+  id?: string                         // for Last-Event-ID resume on SSE
+}
+</code></pre>
+
+<h2 id="sub-modules">Sub-modules</h2>
+
+<h3 id="http-module"><code>@gluezero/gateway/http</code></h3>
+<p>Re-exports the strategies for advanced use cases (custom route handler, custom adapter):</p>
+<ul>
+<li><code>createTimeoutStrategy(config)</code></li>
+<li><code>createRetryStrategy(config)</code></li>
+<li><code>createBackoffStrategy(config)</code></li>
+<li><code>createDedupeStrategy(config)</code></li>
+<li><code>createAuthStrategy(config)</code></li>
+<li><code>createIdempotencyStrategy(config)</code></li>
+<li><code>createBackpressureStrategy(config)</code></li>
+<li><code>createCircuitBreakerStrategy(config)</code></li>
+</ul>
+<p>Each is a stateful object with <code>execute(request, next)</code> middleware signature.</p>
+
+<h3 id="sse-ws-module"><code>@gluezero/gateway/sse-ws</code></h3>
+<p>Re-exports the realtime building blocks for advanced use cases:</p>
+<ul>
+<li><code>SseAdapter</code> class</li>
+<li><code>WebSocketAdapter</code> class</li>
+<li><code>RealtimeChannelManager</code> class</li>
+<li><code>createReconnectStrategy(config)</code></li>
+<li><code>createVisibilityDetector(config)</code></li>
+<li><code>parseFrame(text)</code> / <code>serializeFrame(frame)</code></li>
+</ul>
+assets/styles.css">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect width='24' height='24' rx='6' fill='%236366F1'/%3E%3Ctext x='12' y='17' text-anchor='middle' fill='white' font-family='sans-serif' font-weight='800' font-size='12'%3EGZ%3C/text%3E%3C/svg%3E">
 </head>
-<body data-base="../">
+<body data-base="<h1><code>@gluezero/gateway</code></h1>
+<p class="lead">HTTP gateway and SSE/WebSocket realtime adapters. Two sub-modules: <code>@gluezero/gateway/http</code> and <code>@gluezero/gateway/sse-ws</code>.</p>
+
+<h2 id="createRealtimeBroker"><code>createRealtimeBroker(config)</code></h2>
+<pre><code class="language-typescript">function createRealtimeBroker(config?: RealtimeBrokerConfig): RealtimeBroker
+
+interface RealtimeBrokerConfig extends RoutingBrokerConfig {
+  realtime?: {
+    adapter?: 'sse' | 'websocket' | 'auto'        // default: 'auto'
+    fallbackThreshold?: number                    // SSE failures before WS switch
+    cycleCap?: number                             // max reconnect cycles
+    visibilityAware?: boolean                     // pause when tab hidden, default: true
+    pingIntervalMs?: number                       // WS app-level ping, default: 30000
+    staleTimeoutMs?: number                       // WS pong timeout, default: 60000
+  }
+}
+</code></pre>
+
+<h2 id="connect"><code>broker.connectRealtime()</code> / <code>disconnectRealtime()</code></h2>
+<pre><code class="language-typescript">function connectRealtime(): void
+function disconnectRealtime(reason?: string): void
+</code></pre>
+<p>Triggers connection of all <code>realtime-inbound</code> routes. Disconnect aborts all in-flight EventSource/WebSocket instances and prevents auto-reconnect.</p>
+
+<h2 id="auth-policy"><code>AuthPolicy</code></h2>
+<pre><code class="language-typescript">interface AuthPolicy {
+  scheme: 'bearer' | 'basic' | 'cookie' | 'custom'
+  getToken?: () =&gt; string | Promise&lt;string&gt;
+  refresh?: () =&gt; Promise&lt;string&gt;                 // single-flight refresh on 401
+  customHeaders?: () =&gt; Record&lt;string, string&gt;
+}
+</code></pre>
+<p>Single-flight refresh: if multiple requests hit 401 simultaneously, only one <code>refresh()</code> call fires; others queue and retry with the new token (decision <code>D-72</code>).</p>
+
+<h2 id="backpressure"><code>BackpressurePolicy</code></h2>
+<pre><code class="language-typescript">type BackpressurePolicy =
+  | { mode: 'drop-oldest'; max: number }
+  | { mode: 'drop-newest'; max: number }
+  | { mode: 'reject'; max: number }
+  | { mode: 'queue-bounded'; max: number }
+  | { mode: 'sliding-window'; max: number }
+  | { mode: 'critical-bypass'; max: number; bypass: 'critical' }
+</code></pre>
+<p>Critical-priority events bypass backpressure caps when <code>mode: 'critical-bypass'</code> (decision <code>D-75</code>, used for <code>system.error</code> etc.).</p>
+
+<h2 id="frame"><code>RealtimeFrame</code></h2>
+<pre><code class="language-typescript">interface RealtimeFrame {
+  topic: string                       // server-decided topic
+  data: unknown                       // payload (will be canonical-validated)
+  id?: string                         // for Last-Event-ID resume on SSE
+}
+</code></pre>
+
+<h2 id="sub-modules">Sub-modules</h2>
+
+<h3 id="http-module"><code>@gluezero/gateway/http</code></h3>
+<p>Re-exports the strategies for advanced use cases (custom route handler, custom adapter):</p>
+<ul>
+<li><code>createTimeoutStrategy(config)</code></li>
+<li><code>createRetryStrategy(config)</code></li>
+<li><code>createBackoffStrategy(config)</code></li>
+<li><code>createDedupeStrategy(config)</code></li>
+<li><code>createAuthStrategy(config)</code></li>
+<li><code>createIdempotencyStrategy(config)</code></li>
+<li><code>createBackpressureStrategy(config)</code></li>
+<li><code>createCircuitBreakerStrategy(config)</code></li>
+</ul>
+<p>Each is a stateful object with <code>execute(request, next)</code> middleware signature.</p>
+
+<h3 id="sse-ws-module"><code>@gluezero/gateway/sse-ws</code></h3>
+<p>Re-exports the realtime building blocks for advanced use cases:</p>
+<ul>
+<li><code>SseAdapter</code> class</li>
+<li><code>WebSocketAdapter</code> class</li>
+<li><code>RealtimeChannelManager</code> class</li>
+<li><code>createReconnectStrategy(config)</code></li>
+<li><code>createVisibilityDetector(config)</code></li>
+<li><code>parseFrame(text)</code> / <code>serializeFrame(frame)</code></li>
+</ul>
+">
 <header class="topbar" role="banner">
   <button class="menu-toggle" aria-label="Toggle navigation">☰</button>
-  <a class="topbar-brand" href="../index.html">
+  <a class="topbar-brand" href="<h1><code>@gluezero/gateway</code></h1>
+<p class="lead">HTTP gateway and SSE/WebSocket realtime adapters. Two sub-modules: <code>@gluezero/gateway/http</code> and <code>@gluezero/gateway/sse-ws</code>.</p>
+
+<h2 id="createRealtimeBroker"><code>createRealtimeBroker(config)</code></h2>
+<pre><code class="language-typescript">function createRealtimeBroker(config?: RealtimeBrokerConfig): RealtimeBroker
+
+interface RealtimeBrokerConfig extends RoutingBrokerConfig {
+  realtime?: {
+    adapter?: 'sse' | 'websocket' | 'auto'        // default: 'auto'
+    fallbackThreshold?: number                    // SSE failures before WS switch
+    cycleCap?: number                             // max reconnect cycles
+    visibilityAware?: boolean                     // pause when tab hidden, default: true
+    pingIntervalMs?: number                       // WS app-level ping, default: 30000
+    staleTimeoutMs?: number                       // WS pong timeout, default: 60000
+  }
+}
+</code></pre>
+
+<h2 id="connect"><code>broker.connectRealtime()</code> / <code>disconnectRealtime()</code></h2>
+<pre><code class="language-typescript">function connectRealtime(): void
+function disconnectRealtime(reason?: string): void
+</code></pre>
+<p>Triggers connection of all <code>realtime-inbound</code> routes. Disconnect aborts all in-flight EventSource/WebSocket instances and prevents auto-reconnect.</p>
+
+<h2 id="auth-policy"><code>AuthPolicy</code></h2>
+<pre><code class="language-typescript">interface AuthPolicy {
+  scheme: 'bearer' | 'basic' | 'cookie' | 'custom'
+  getToken?: () =&gt; string | Promise&lt;string&gt;
+  refresh?: () =&gt; Promise&lt;string&gt;                 // single-flight refresh on 401
+  customHeaders?: () =&gt; Record&lt;string, string&gt;
+}
+</code></pre>
+<p>Single-flight refresh: if multiple requests hit 401 simultaneously, only one <code>refresh()</code> call fires; others queue and retry with the new token (decision <code>D-72</code>).</p>
+
+<h2 id="backpressure"><code>BackpressurePolicy</code></h2>
+<pre><code class="language-typescript">type BackpressurePolicy =
+  | { mode: 'drop-oldest'; max: number }
+  | { mode: 'drop-newest'; max: number }
+  | { mode: 'reject'; max: number }
+  | { mode: 'queue-bounded'; max: number }
+  | { mode: 'sliding-window'; max: number }
+  | { mode: 'critical-bypass'; max: number; bypass: 'critical' }
+</code></pre>
+<p>Critical-priority events bypass backpressure caps when <code>mode: 'critical-bypass'</code> (decision <code>D-75</code>, used for <code>system.error</code> etc.).</p>
+
+<h2 id="frame"><code>RealtimeFrame</code></h2>
+<pre><code class="language-typescript">interface RealtimeFrame {
+  topic: string                       // server-decided topic
+  data: unknown                       // payload (will be canonical-validated)
+  id?: string                         // for Last-Event-ID resume on SSE
+}
+</code></pre>
+
+<h2 id="sub-modules">Sub-modules</h2>
+
+<h3 id="http-module"><code>@gluezero/gateway/http</code></h3>
+<p>Re-exports the strategies for advanced use cases (custom route handler, custom adapter):</p>
+<ul>
+<li><code>createTimeoutStrategy(config)</code></li>
+<li><code>createRetryStrategy(config)</code></li>
+<li><code>createBackoffStrategy(config)</code></li>
+<li><code>createDedupeStrategy(config)</code></li>
+<li><code>createAuthStrategy(config)</code></li>
+<li><code>createIdempotencyStrategy(config)</code></li>
+<li><code>createBackpressureStrategy(config)</code></li>
+<li><code>createCircuitBreakerStrategy(config)</code></li>
+</ul>
+<p>Each is a stateful object with <code>execute(request, next)</code> middleware signature.</p>
+
+<h3 id="sse-ws-module"><code>@gluezero/gateway/sse-ws</code></h3>
+<p>Re-exports the realtime building blocks for advanced use cases:</p>
+<ul>
+<li><code>SseAdapter</code> class</li>
+<li><code>WebSocketAdapter</code> class</li>
+<li><code>RealtimeChannelManager</code> class</li>
+<li><code>createReconnectStrategy(config)</code></li>
+<li><code>createVisibilityDetector(config)</code></li>
+<li><code>parseFrame(text)</code> / <code>serializeFrame(frame)</code></li>
+</ul>
+index.html">
     <span class="topbar-brand-mark">GZ</span>
     <span>GlueZero</span>
     <span class="topbar-version">v1.0.0</span>
@@ -30,53 +267,2263 @@
 <nav class="sidebar" aria-label="Documentation navigation">
 <div class="sidebar-section">
   <div class="sidebar-section-title">Get started</div>
-  <a class="sidebar-link" href="../index.html">Welcome</a>
-  <a class="sidebar-link" href="../getting-started.html">Getting started</a>
+  <a class="sidebar-link" href="<h1><code>@gluezero/gateway</code></h1>
+<p class="lead">HTTP gateway and SSE/WebSocket realtime adapters. Two sub-modules: <code>@gluezero/gateway/http</code> and <code>@gluezero/gateway/sse-ws</code>.</p>
+
+<h2 id="createRealtimeBroker"><code>createRealtimeBroker(config)</code></h2>
+<pre><code class="language-typescript">function createRealtimeBroker(config?: RealtimeBrokerConfig): RealtimeBroker
+
+interface RealtimeBrokerConfig extends RoutingBrokerConfig {
+  realtime?: {
+    adapter?: 'sse' | 'websocket' | 'auto'        // default: 'auto'
+    fallbackThreshold?: number                    // SSE failures before WS switch
+    cycleCap?: number                             // max reconnect cycles
+    visibilityAware?: boolean                     // pause when tab hidden, default: true
+    pingIntervalMs?: number                       // WS app-level ping, default: 30000
+    staleTimeoutMs?: number                       // WS pong timeout, default: 60000
+  }
+}
+</code></pre>
+
+<h2 id="connect"><code>broker.connectRealtime()</code> / <code>disconnectRealtime()</code></h2>
+<pre><code class="language-typescript">function connectRealtime(): void
+function disconnectRealtime(reason?: string): void
+</code></pre>
+<p>Triggers connection of all <code>realtime-inbound</code> routes. Disconnect aborts all in-flight EventSource/WebSocket instances and prevents auto-reconnect.</p>
+
+<h2 id="auth-policy"><code>AuthPolicy</code></h2>
+<pre><code class="language-typescript">interface AuthPolicy {
+  scheme: 'bearer' | 'basic' | 'cookie' | 'custom'
+  getToken?: () =&gt; string | Promise&lt;string&gt;
+  refresh?: () =&gt; Promise&lt;string&gt;                 // single-flight refresh on 401
+  customHeaders?: () =&gt; Record&lt;string, string&gt;
+}
+</code></pre>
+<p>Single-flight refresh: if multiple requests hit 401 simultaneously, only one <code>refresh()</code> call fires; others queue and retry with the new token (decision <code>D-72</code>).</p>
+
+<h2 id="backpressure"><code>BackpressurePolicy</code></h2>
+<pre><code class="language-typescript">type BackpressurePolicy =
+  | { mode: 'drop-oldest'; max: number }
+  | { mode: 'drop-newest'; max: number }
+  | { mode: 'reject'; max: number }
+  | { mode: 'queue-bounded'; max: number }
+  | { mode: 'sliding-window'; max: number }
+  | { mode: 'critical-bypass'; max: number; bypass: 'critical' }
+</code></pre>
+<p>Critical-priority events bypass backpressure caps when <code>mode: 'critical-bypass'</code> (decision <code>D-75</code>, used for <code>system.error</code> etc.).</p>
+
+<h2 id="frame"><code>RealtimeFrame</code></h2>
+<pre><code class="language-typescript">interface RealtimeFrame {
+  topic: string                       // server-decided topic
+  data: unknown                       // payload (will be canonical-validated)
+  id?: string                         // for Last-Event-ID resume on SSE
+}
+</code></pre>
+
+<h2 id="sub-modules">Sub-modules</h2>
+
+<h3 id="http-module"><code>@gluezero/gateway/http</code></h3>
+<p>Re-exports the strategies for advanced use cases (custom route handler, custom adapter):</p>
+<ul>
+<li><code>createTimeoutStrategy(config)</code></li>
+<li><code>createRetryStrategy(config)</code></li>
+<li><code>createBackoffStrategy(config)</code></li>
+<li><code>createDedupeStrategy(config)</code></li>
+<li><code>createAuthStrategy(config)</code></li>
+<li><code>createIdempotencyStrategy(config)</code></li>
+<li><code>createBackpressureStrategy(config)</code></li>
+<li><code>createCircuitBreakerStrategy(config)</code></li>
+</ul>
+<p>Each is a stateful object with <code>execute(request, next)</code> middleware signature.</p>
+
+<h3 id="sse-ws-module"><code>@gluezero/gateway/sse-ws</code></h3>
+<p>Re-exports the realtime building blocks for advanced use cases:</p>
+<ul>
+<li><code>SseAdapter</code> class</li>
+<li><code>WebSocketAdapter</code> class</li>
+<li><code>RealtimeChannelManager</code> class</li>
+<li><code>createReconnectStrategy(config)</code></li>
+<li><code>createVisibilityDetector(config)</code></li>
+<li><code>parseFrame(text)</code> / <code>serializeFrame(frame)</code></li>
+</ul>
+index.html">Welcome</a>
+  <a class="sidebar-link" href="<h1><code>@gluezero/gateway</code></h1>
+<p class="lead">HTTP gateway and SSE/WebSocket realtime adapters. Two sub-modules: <code>@gluezero/gateway/http</code> and <code>@gluezero/gateway/sse-ws</code>.</p>
+
+<h2 id="createRealtimeBroker"><code>createRealtimeBroker(config)</code></h2>
+<pre><code class="language-typescript">function createRealtimeBroker(config?: RealtimeBrokerConfig): RealtimeBroker
+
+interface RealtimeBrokerConfig extends RoutingBrokerConfig {
+  realtime?: {
+    adapter?: 'sse' | 'websocket' | 'auto'        // default: 'auto'
+    fallbackThreshold?: number                    // SSE failures before WS switch
+    cycleCap?: number                             // max reconnect cycles
+    visibilityAware?: boolean                     // pause when tab hidden, default: true
+    pingIntervalMs?: number                       // WS app-level ping, default: 30000
+    staleTimeoutMs?: number                       // WS pong timeout, default: 60000
+  }
+}
+</code></pre>
+
+<h2 id="connect"><code>broker.connectRealtime()</code> / <code>disconnectRealtime()</code></h2>
+<pre><code class="language-typescript">function connectRealtime(): void
+function disconnectRealtime(reason?: string): void
+</code></pre>
+<p>Triggers connection of all <code>realtime-inbound</code> routes. Disconnect aborts all in-flight EventSource/WebSocket instances and prevents auto-reconnect.</p>
+
+<h2 id="auth-policy"><code>AuthPolicy</code></h2>
+<pre><code class="language-typescript">interface AuthPolicy {
+  scheme: 'bearer' | 'basic' | 'cookie' | 'custom'
+  getToken?: () =&gt; string | Promise&lt;string&gt;
+  refresh?: () =&gt; Promise&lt;string&gt;                 // single-flight refresh on 401
+  customHeaders?: () =&gt; Record&lt;string, string&gt;
+}
+</code></pre>
+<p>Single-flight refresh: if multiple requests hit 401 simultaneously, only one <code>refresh()</code> call fires; others queue and retry with the new token (decision <code>D-72</code>).</p>
+
+<h2 id="backpressure"><code>BackpressurePolicy</code></h2>
+<pre><code class="language-typescript">type BackpressurePolicy =
+  | { mode: 'drop-oldest'; max: number }
+  | { mode: 'drop-newest'; max: number }
+  | { mode: 'reject'; max: number }
+  | { mode: 'queue-bounded'; max: number }
+  | { mode: 'sliding-window'; max: number }
+  | { mode: 'critical-bypass'; max: number; bypass: 'critical' }
+</code></pre>
+<p>Critical-priority events bypass backpressure caps when <code>mode: 'critical-bypass'</code> (decision <code>D-75</code>, used for <code>system.error</code> etc.).</p>
+
+<h2 id="frame"><code>RealtimeFrame</code></h2>
+<pre><code class="language-typescript">interface RealtimeFrame {
+  topic: string                       // server-decided topic
+  data: unknown                       // payload (will be canonical-validated)
+  id?: string                         // for Last-Event-ID resume on SSE
+}
+</code></pre>
+
+<h2 id="sub-modules">Sub-modules</h2>
+
+<h3 id="http-module"><code>@gluezero/gateway/http</code></h3>
+<p>Re-exports the strategies for advanced use cases (custom route handler, custom adapter):</p>
+<ul>
+<li><code>createTimeoutStrategy(config)</code></li>
+<li><code>createRetryStrategy(config)</code></li>
+<li><code>createBackoffStrategy(config)</code></li>
+<li><code>createDedupeStrategy(config)</code></li>
+<li><code>createAuthStrategy(config)</code></li>
+<li><code>createIdempotencyStrategy(config)</code></li>
+<li><code>createBackpressureStrategy(config)</code></li>
+<li><code>createCircuitBreakerStrategy(config)</code></li>
+</ul>
+<p>Each is a stateful object with <code>execute(request, next)</code> middleware signature.</p>
+
+<h3 id="sse-ws-module"><code>@gluezero/gateway/sse-ws</code></h3>
+<p>Re-exports the realtime building blocks for advanced use cases:</p>
+<ul>
+<li><code>SseAdapter</code> class</li>
+<li><code>WebSocketAdapter</code> class</li>
+<li><code>RealtimeChannelManager</code> class</li>
+<li><code>createReconnectStrategy(config)</code></li>
+<li><code>createVisibilityDetector(config)</code></li>
+<li><code>parseFrame(text)</code> / <code>serializeFrame(frame)</code></li>
+</ul>
+getting-started.html">Getting started</a>
 </div>
 <div class="sidebar-section">
   <div class="sidebar-section-title">Concepts</div>
-  <a class="sidebar-link" href="../concepts/overview.html">Overview</a>
-  <a class="sidebar-link" href="../concepts/broker.html">Broker</a>
-  <a class="sidebar-link" href="../concepts/canonical-model.html">Canonical model</a>
-  <a class="sidebar-link" href="../concepts/routing.html">Routing</a>
-  <a class="sidebar-link" href="../concepts/gateway.html">HTTP gateway</a>
-  <a class="sidebar-link" href="../concepts/realtime.html">Realtime</a>
-  <a class="sidebar-link" href="../concepts/worker.html">Worker</a>
-  <a class="sidebar-link" href="../concepts/cache.html">Cache</a>
-  <a class="sidebar-link" href="../concepts/devtools.html">Devtools</a>
+  <a class="sidebar-link" href="<h1><code>@gluezero/gateway</code></h1>
+<p class="lead">HTTP gateway and SSE/WebSocket realtime adapters. Two sub-modules: <code>@gluezero/gateway/http</code> and <code>@gluezero/gateway/sse-ws</code>.</p>
+
+<h2 id="createRealtimeBroker"><code>createRealtimeBroker(config)</code></h2>
+<pre><code class="language-typescript">function createRealtimeBroker(config?: RealtimeBrokerConfig): RealtimeBroker
+
+interface RealtimeBrokerConfig extends RoutingBrokerConfig {
+  realtime?: {
+    adapter?: 'sse' | 'websocket' | 'auto'        // default: 'auto'
+    fallbackThreshold?: number                    // SSE failures before WS switch
+    cycleCap?: number                             // max reconnect cycles
+    visibilityAware?: boolean                     // pause when tab hidden, default: true
+    pingIntervalMs?: number                       // WS app-level ping, default: 30000
+    staleTimeoutMs?: number                       // WS pong timeout, default: 60000
+  }
+}
+</code></pre>
+
+<h2 id="connect"><code>broker.connectRealtime()</code> / <code>disconnectRealtime()</code></h2>
+<pre><code class="language-typescript">function connectRealtime(): void
+function disconnectRealtime(reason?: string): void
+</code></pre>
+<p>Triggers connection of all <code>realtime-inbound</code> routes. Disconnect aborts all in-flight EventSource/WebSocket instances and prevents auto-reconnect.</p>
+
+<h2 id="auth-policy"><code>AuthPolicy</code></h2>
+<pre><code class="language-typescript">interface AuthPolicy {
+  scheme: 'bearer' | 'basic' | 'cookie' | 'custom'
+  getToken?: () =&gt; string | Promise&lt;string&gt;
+  refresh?: () =&gt; Promise&lt;string&gt;                 // single-flight refresh on 401
+  customHeaders?: () =&gt; Record&lt;string, string&gt;
+}
+</code></pre>
+<p>Single-flight refresh: if multiple requests hit 401 simultaneously, only one <code>refresh()</code> call fires; others queue and retry with the new token (decision <code>D-72</code>).</p>
+
+<h2 id="backpressure"><code>BackpressurePolicy</code></h2>
+<pre><code class="language-typescript">type BackpressurePolicy =
+  | { mode: 'drop-oldest'; max: number }
+  | { mode: 'drop-newest'; max: number }
+  | { mode: 'reject'; max: number }
+  | { mode: 'queue-bounded'; max: number }
+  | { mode: 'sliding-window'; max: number }
+  | { mode: 'critical-bypass'; max: number; bypass: 'critical' }
+</code></pre>
+<p>Critical-priority events bypass backpressure caps when <code>mode: 'critical-bypass'</code> (decision <code>D-75</code>, used for <code>system.error</code> etc.).</p>
+
+<h2 id="frame"><code>RealtimeFrame</code></h2>
+<pre><code class="language-typescript">interface RealtimeFrame {
+  topic: string                       // server-decided topic
+  data: unknown                       // payload (will be canonical-validated)
+  id?: string                         // for Last-Event-ID resume on SSE
+}
+</code></pre>
+
+<h2 id="sub-modules">Sub-modules</h2>
+
+<h3 id="http-module"><code>@gluezero/gateway/http</code></h3>
+<p>Re-exports the strategies for advanced use cases (custom route handler, custom adapter):</p>
+<ul>
+<li><code>createTimeoutStrategy(config)</code></li>
+<li><code>createRetryStrategy(config)</code></li>
+<li><code>createBackoffStrategy(config)</code></li>
+<li><code>createDedupeStrategy(config)</code></li>
+<li><code>createAuthStrategy(config)</code></li>
+<li><code>createIdempotencyStrategy(config)</code></li>
+<li><code>createBackpressureStrategy(config)</code></li>
+<li><code>createCircuitBreakerStrategy(config)</code></li>
+</ul>
+<p>Each is a stateful object with <code>execute(request, next)</code> middleware signature.</p>
+
+<h3 id="sse-ws-module"><code>@gluezero/gateway/sse-ws</code></h3>
+<p>Re-exports the realtime building blocks for advanced use cases:</p>
+<ul>
+<li><code>SseAdapter</code> class</li>
+<li><code>WebSocketAdapter</code> class</li>
+<li><code>RealtimeChannelManager</code> class</li>
+<li><code>createReconnectStrategy(config)</code></li>
+<li><code>createVisibilityDetector(config)</code></li>
+<li><code>parseFrame(text)</code> / <code>serializeFrame(frame)</code></li>
+</ul>
+concepts/overview.html">Overview</a>
+  <a class="sidebar-link" href="<h1><code>@gluezero/gateway</code></h1>
+<p class="lead">HTTP gateway and SSE/WebSocket realtime adapters. Two sub-modules: <code>@gluezero/gateway/http</code> and <code>@gluezero/gateway/sse-ws</code>.</p>
+
+<h2 id="createRealtimeBroker"><code>createRealtimeBroker(config)</code></h2>
+<pre><code class="language-typescript">function createRealtimeBroker(config?: RealtimeBrokerConfig): RealtimeBroker
+
+interface RealtimeBrokerConfig extends RoutingBrokerConfig {
+  realtime?: {
+    adapter?: 'sse' | 'websocket' | 'auto'        // default: 'auto'
+    fallbackThreshold?: number                    // SSE failures before WS switch
+    cycleCap?: number                             // max reconnect cycles
+    visibilityAware?: boolean                     // pause when tab hidden, default: true
+    pingIntervalMs?: number                       // WS app-level ping, default: 30000
+    staleTimeoutMs?: number                       // WS pong timeout, default: 60000
+  }
+}
+</code></pre>
+
+<h2 id="connect"><code>broker.connectRealtime()</code> / <code>disconnectRealtime()</code></h2>
+<pre><code class="language-typescript">function connectRealtime(): void
+function disconnectRealtime(reason?: string): void
+</code></pre>
+<p>Triggers connection of all <code>realtime-inbound</code> routes. Disconnect aborts all in-flight EventSource/WebSocket instances and prevents auto-reconnect.</p>
+
+<h2 id="auth-policy"><code>AuthPolicy</code></h2>
+<pre><code class="language-typescript">interface AuthPolicy {
+  scheme: 'bearer' | 'basic' | 'cookie' | 'custom'
+  getToken?: () =&gt; string | Promise&lt;string&gt;
+  refresh?: () =&gt; Promise&lt;string&gt;                 // single-flight refresh on 401
+  customHeaders?: () =&gt; Record&lt;string, string&gt;
+}
+</code></pre>
+<p>Single-flight refresh: if multiple requests hit 401 simultaneously, only one <code>refresh()</code> call fires; others queue and retry with the new token (decision <code>D-72</code>).</p>
+
+<h2 id="backpressure"><code>BackpressurePolicy</code></h2>
+<pre><code class="language-typescript">type BackpressurePolicy =
+  | { mode: 'drop-oldest'; max: number }
+  | { mode: 'drop-newest'; max: number }
+  | { mode: 'reject'; max: number }
+  | { mode: 'queue-bounded'; max: number }
+  | { mode: 'sliding-window'; max: number }
+  | { mode: 'critical-bypass'; max: number; bypass: 'critical' }
+</code></pre>
+<p>Critical-priority events bypass backpressure caps when <code>mode: 'critical-bypass'</code> (decision <code>D-75</code>, used for <code>system.error</code> etc.).</p>
+
+<h2 id="frame"><code>RealtimeFrame</code></h2>
+<pre><code class="language-typescript">interface RealtimeFrame {
+  topic: string                       // server-decided topic
+  data: unknown                       // payload (will be canonical-validated)
+  id?: string                         // for Last-Event-ID resume on SSE
+}
+</code></pre>
+
+<h2 id="sub-modules">Sub-modules</h2>
+
+<h3 id="http-module"><code>@gluezero/gateway/http</code></h3>
+<p>Re-exports the strategies for advanced use cases (custom route handler, custom adapter):</p>
+<ul>
+<li><code>createTimeoutStrategy(config)</code></li>
+<li><code>createRetryStrategy(config)</code></li>
+<li><code>createBackoffStrategy(config)</code></li>
+<li><code>createDedupeStrategy(config)</code></li>
+<li><code>createAuthStrategy(config)</code></li>
+<li><code>createIdempotencyStrategy(config)</code></li>
+<li><code>createBackpressureStrategy(config)</code></li>
+<li><code>createCircuitBreakerStrategy(config)</code></li>
+</ul>
+<p>Each is a stateful object with <code>execute(request, next)</code> middleware signature.</p>
+
+<h3 id="sse-ws-module"><code>@gluezero/gateway/sse-ws</code></h3>
+<p>Re-exports the realtime building blocks for advanced use cases:</p>
+<ul>
+<li><code>SseAdapter</code> class</li>
+<li><code>WebSocketAdapter</code> class</li>
+<li><code>RealtimeChannelManager</code> class</li>
+<li><code>createReconnectStrategy(config)</code></li>
+<li><code>createVisibilityDetector(config)</code></li>
+<li><code>parseFrame(text)</code> / <code>serializeFrame(frame)</code></li>
+</ul>
+concepts/broker.html">Broker</a>
+  <a class="sidebar-link" href="<h1><code>@gluezero/gateway</code></h1>
+<p class="lead">HTTP gateway and SSE/WebSocket realtime adapters. Two sub-modules: <code>@gluezero/gateway/http</code> and <code>@gluezero/gateway/sse-ws</code>.</p>
+
+<h2 id="createRealtimeBroker"><code>createRealtimeBroker(config)</code></h2>
+<pre><code class="language-typescript">function createRealtimeBroker(config?: RealtimeBrokerConfig): RealtimeBroker
+
+interface RealtimeBrokerConfig extends RoutingBrokerConfig {
+  realtime?: {
+    adapter?: 'sse' | 'websocket' | 'auto'        // default: 'auto'
+    fallbackThreshold?: number                    // SSE failures before WS switch
+    cycleCap?: number                             // max reconnect cycles
+    visibilityAware?: boolean                     // pause when tab hidden, default: true
+    pingIntervalMs?: number                       // WS app-level ping, default: 30000
+    staleTimeoutMs?: number                       // WS pong timeout, default: 60000
+  }
+}
+</code></pre>
+
+<h2 id="connect"><code>broker.connectRealtime()</code> / <code>disconnectRealtime()</code></h2>
+<pre><code class="language-typescript">function connectRealtime(): void
+function disconnectRealtime(reason?: string): void
+</code></pre>
+<p>Triggers connection of all <code>realtime-inbound</code> routes. Disconnect aborts all in-flight EventSource/WebSocket instances and prevents auto-reconnect.</p>
+
+<h2 id="auth-policy"><code>AuthPolicy</code></h2>
+<pre><code class="language-typescript">interface AuthPolicy {
+  scheme: 'bearer' | 'basic' | 'cookie' | 'custom'
+  getToken?: () =&gt; string | Promise&lt;string&gt;
+  refresh?: () =&gt; Promise&lt;string&gt;                 // single-flight refresh on 401
+  customHeaders?: () =&gt; Record&lt;string, string&gt;
+}
+</code></pre>
+<p>Single-flight refresh: if multiple requests hit 401 simultaneously, only one <code>refresh()</code> call fires; others queue and retry with the new token (decision <code>D-72</code>).</p>
+
+<h2 id="backpressure"><code>BackpressurePolicy</code></h2>
+<pre><code class="language-typescript">type BackpressurePolicy =
+  | { mode: 'drop-oldest'; max: number }
+  | { mode: 'drop-newest'; max: number }
+  | { mode: 'reject'; max: number }
+  | { mode: 'queue-bounded'; max: number }
+  | { mode: 'sliding-window'; max: number }
+  | { mode: 'critical-bypass'; max: number; bypass: 'critical' }
+</code></pre>
+<p>Critical-priority events bypass backpressure caps when <code>mode: 'critical-bypass'</code> (decision <code>D-75</code>, used for <code>system.error</code> etc.).</p>
+
+<h2 id="frame"><code>RealtimeFrame</code></h2>
+<pre><code class="language-typescript">interface RealtimeFrame {
+  topic: string                       // server-decided topic
+  data: unknown                       // payload (will be canonical-validated)
+  id?: string                         // for Last-Event-ID resume on SSE
+}
+</code></pre>
+
+<h2 id="sub-modules">Sub-modules</h2>
+
+<h3 id="http-module"><code>@gluezero/gateway/http</code></h3>
+<p>Re-exports the strategies for advanced use cases (custom route handler, custom adapter):</p>
+<ul>
+<li><code>createTimeoutStrategy(config)</code></li>
+<li><code>createRetryStrategy(config)</code></li>
+<li><code>createBackoffStrategy(config)</code></li>
+<li><code>createDedupeStrategy(config)</code></li>
+<li><code>createAuthStrategy(config)</code></li>
+<li><code>createIdempotencyStrategy(config)</code></li>
+<li><code>createBackpressureStrategy(config)</code></li>
+<li><code>createCircuitBreakerStrategy(config)</code></li>
+</ul>
+<p>Each is a stateful object with <code>execute(request, next)</code> middleware signature.</p>
+
+<h3 id="sse-ws-module"><code>@gluezero/gateway/sse-ws</code></h3>
+<p>Re-exports the realtime building blocks for advanced use cases:</p>
+<ul>
+<li><code>SseAdapter</code> class</li>
+<li><code>WebSocketAdapter</code> class</li>
+<li><code>RealtimeChannelManager</code> class</li>
+<li><code>createReconnectStrategy(config)</code></li>
+<li><code>createVisibilityDetector(config)</code></li>
+<li><code>parseFrame(text)</code> / <code>serializeFrame(frame)</code></li>
+</ul>
+concepts/canonical-model.html">Canonical model</a>
+  <a class="sidebar-link" href="<h1><code>@gluezero/gateway</code></h1>
+<p class="lead">HTTP gateway and SSE/WebSocket realtime adapters. Two sub-modules: <code>@gluezero/gateway/http</code> and <code>@gluezero/gateway/sse-ws</code>.</p>
+
+<h2 id="createRealtimeBroker"><code>createRealtimeBroker(config)</code></h2>
+<pre><code class="language-typescript">function createRealtimeBroker(config?: RealtimeBrokerConfig): RealtimeBroker
+
+interface RealtimeBrokerConfig extends RoutingBrokerConfig {
+  realtime?: {
+    adapter?: 'sse' | 'websocket' | 'auto'        // default: 'auto'
+    fallbackThreshold?: number                    // SSE failures before WS switch
+    cycleCap?: number                             // max reconnect cycles
+    visibilityAware?: boolean                     // pause when tab hidden, default: true
+    pingIntervalMs?: number                       // WS app-level ping, default: 30000
+    staleTimeoutMs?: number                       // WS pong timeout, default: 60000
+  }
+}
+</code></pre>
+
+<h2 id="connect"><code>broker.connectRealtime()</code> / <code>disconnectRealtime()</code></h2>
+<pre><code class="language-typescript">function connectRealtime(): void
+function disconnectRealtime(reason?: string): void
+</code></pre>
+<p>Triggers connection of all <code>realtime-inbound</code> routes. Disconnect aborts all in-flight EventSource/WebSocket instances and prevents auto-reconnect.</p>
+
+<h2 id="auth-policy"><code>AuthPolicy</code></h2>
+<pre><code class="language-typescript">interface AuthPolicy {
+  scheme: 'bearer' | 'basic' | 'cookie' | 'custom'
+  getToken?: () =&gt; string | Promise&lt;string&gt;
+  refresh?: () =&gt; Promise&lt;string&gt;                 // single-flight refresh on 401
+  customHeaders?: () =&gt; Record&lt;string, string&gt;
+}
+</code></pre>
+<p>Single-flight refresh: if multiple requests hit 401 simultaneously, only one <code>refresh()</code> call fires; others queue and retry with the new token (decision <code>D-72</code>).</p>
+
+<h2 id="backpressure"><code>BackpressurePolicy</code></h2>
+<pre><code class="language-typescript">type BackpressurePolicy =
+  | { mode: 'drop-oldest'; max: number }
+  | { mode: 'drop-newest'; max: number }
+  | { mode: 'reject'; max: number }
+  | { mode: 'queue-bounded'; max: number }
+  | { mode: 'sliding-window'; max: number }
+  | { mode: 'critical-bypass'; max: number; bypass: 'critical' }
+</code></pre>
+<p>Critical-priority events bypass backpressure caps when <code>mode: 'critical-bypass'</code> (decision <code>D-75</code>, used for <code>system.error</code> etc.).</p>
+
+<h2 id="frame"><code>RealtimeFrame</code></h2>
+<pre><code class="language-typescript">interface RealtimeFrame {
+  topic: string                       // server-decided topic
+  data: unknown                       // payload (will be canonical-validated)
+  id?: string                         // for Last-Event-ID resume on SSE
+}
+</code></pre>
+
+<h2 id="sub-modules">Sub-modules</h2>
+
+<h3 id="http-module"><code>@gluezero/gateway/http</code></h3>
+<p>Re-exports the strategies for advanced use cases (custom route handler, custom adapter):</p>
+<ul>
+<li><code>createTimeoutStrategy(config)</code></li>
+<li><code>createRetryStrategy(config)</code></li>
+<li><code>createBackoffStrategy(config)</code></li>
+<li><code>createDedupeStrategy(config)</code></li>
+<li><code>createAuthStrategy(config)</code></li>
+<li><code>createIdempotencyStrategy(config)</code></li>
+<li><code>createBackpressureStrategy(config)</code></li>
+<li><code>createCircuitBreakerStrategy(config)</code></li>
+</ul>
+<p>Each is a stateful object with <code>execute(request, next)</code> middleware signature.</p>
+
+<h3 id="sse-ws-module"><code>@gluezero/gateway/sse-ws</code></h3>
+<p>Re-exports the realtime building blocks for advanced use cases:</p>
+<ul>
+<li><code>SseAdapter</code> class</li>
+<li><code>WebSocketAdapter</code> class</li>
+<li><code>RealtimeChannelManager</code> class</li>
+<li><code>createReconnectStrategy(config)</code></li>
+<li><code>createVisibilityDetector(config)</code></li>
+<li><code>parseFrame(text)</code> / <code>serializeFrame(frame)</code></li>
+</ul>
+concepts/routing.html">Routing</a>
+  <a class="sidebar-link" href="<h1><code>@gluezero/gateway</code></h1>
+<p class="lead">HTTP gateway and SSE/WebSocket realtime adapters. Two sub-modules: <code>@gluezero/gateway/http</code> and <code>@gluezero/gateway/sse-ws</code>.</p>
+
+<h2 id="createRealtimeBroker"><code>createRealtimeBroker(config)</code></h2>
+<pre><code class="language-typescript">function createRealtimeBroker(config?: RealtimeBrokerConfig): RealtimeBroker
+
+interface RealtimeBrokerConfig extends RoutingBrokerConfig {
+  realtime?: {
+    adapter?: 'sse' | 'websocket' | 'auto'        // default: 'auto'
+    fallbackThreshold?: number                    // SSE failures before WS switch
+    cycleCap?: number                             // max reconnect cycles
+    visibilityAware?: boolean                     // pause when tab hidden, default: true
+    pingIntervalMs?: number                       // WS app-level ping, default: 30000
+    staleTimeoutMs?: number                       // WS pong timeout, default: 60000
+  }
+}
+</code></pre>
+
+<h2 id="connect"><code>broker.connectRealtime()</code> / <code>disconnectRealtime()</code></h2>
+<pre><code class="language-typescript">function connectRealtime(): void
+function disconnectRealtime(reason?: string): void
+</code></pre>
+<p>Triggers connection of all <code>realtime-inbound</code> routes. Disconnect aborts all in-flight EventSource/WebSocket instances and prevents auto-reconnect.</p>
+
+<h2 id="auth-policy"><code>AuthPolicy</code></h2>
+<pre><code class="language-typescript">interface AuthPolicy {
+  scheme: 'bearer' | 'basic' | 'cookie' | 'custom'
+  getToken?: () =&gt; string | Promise&lt;string&gt;
+  refresh?: () =&gt; Promise&lt;string&gt;                 // single-flight refresh on 401
+  customHeaders?: () =&gt; Record&lt;string, string&gt;
+}
+</code></pre>
+<p>Single-flight refresh: if multiple requests hit 401 simultaneously, only one <code>refresh()</code> call fires; others queue and retry with the new token (decision <code>D-72</code>).</p>
+
+<h2 id="backpressure"><code>BackpressurePolicy</code></h2>
+<pre><code class="language-typescript">type BackpressurePolicy =
+  | { mode: 'drop-oldest'; max: number }
+  | { mode: 'drop-newest'; max: number }
+  | { mode: 'reject'; max: number }
+  | { mode: 'queue-bounded'; max: number }
+  | { mode: 'sliding-window'; max: number }
+  | { mode: 'critical-bypass'; max: number; bypass: 'critical' }
+</code></pre>
+<p>Critical-priority events bypass backpressure caps when <code>mode: 'critical-bypass'</code> (decision <code>D-75</code>, used for <code>system.error</code> etc.).</p>
+
+<h2 id="frame"><code>RealtimeFrame</code></h2>
+<pre><code class="language-typescript">interface RealtimeFrame {
+  topic: string                       // server-decided topic
+  data: unknown                       // payload (will be canonical-validated)
+  id?: string                         // for Last-Event-ID resume on SSE
+}
+</code></pre>
+
+<h2 id="sub-modules">Sub-modules</h2>
+
+<h3 id="http-module"><code>@gluezero/gateway/http</code></h3>
+<p>Re-exports the strategies for advanced use cases (custom route handler, custom adapter):</p>
+<ul>
+<li><code>createTimeoutStrategy(config)</code></li>
+<li><code>createRetryStrategy(config)</code></li>
+<li><code>createBackoffStrategy(config)</code></li>
+<li><code>createDedupeStrategy(config)</code></li>
+<li><code>createAuthStrategy(config)</code></li>
+<li><code>createIdempotencyStrategy(config)</code></li>
+<li><code>createBackpressureStrategy(config)</code></li>
+<li><code>createCircuitBreakerStrategy(config)</code></li>
+</ul>
+<p>Each is a stateful object with <code>execute(request, next)</code> middleware signature.</p>
+
+<h3 id="sse-ws-module"><code>@gluezero/gateway/sse-ws</code></h3>
+<p>Re-exports the realtime building blocks for advanced use cases:</p>
+<ul>
+<li><code>SseAdapter</code> class</li>
+<li><code>WebSocketAdapter</code> class</li>
+<li><code>RealtimeChannelManager</code> class</li>
+<li><code>createReconnectStrategy(config)</code></li>
+<li><code>createVisibilityDetector(config)</code></li>
+<li><code>parseFrame(text)</code> / <code>serializeFrame(frame)</code></li>
+</ul>
+concepts/gateway.html">HTTP gateway</a>
+  <a class="sidebar-link" href="<h1><code>@gluezero/gateway</code></h1>
+<p class="lead">HTTP gateway and SSE/WebSocket realtime adapters. Two sub-modules: <code>@gluezero/gateway/http</code> and <code>@gluezero/gateway/sse-ws</code>.</p>
+
+<h2 id="createRealtimeBroker"><code>createRealtimeBroker(config)</code></h2>
+<pre><code class="language-typescript">function createRealtimeBroker(config?: RealtimeBrokerConfig): RealtimeBroker
+
+interface RealtimeBrokerConfig extends RoutingBrokerConfig {
+  realtime?: {
+    adapter?: 'sse' | 'websocket' | 'auto'        // default: 'auto'
+    fallbackThreshold?: number                    // SSE failures before WS switch
+    cycleCap?: number                             // max reconnect cycles
+    visibilityAware?: boolean                     // pause when tab hidden, default: true
+    pingIntervalMs?: number                       // WS app-level ping, default: 30000
+    staleTimeoutMs?: number                       // WS pong timeout, default: 60000
+  }
+}
+</code></pre>
+
+<h2 id="connect"><code>broker.connectRealtime()</code> / <code>disconnectRealtime()</code></h2>
+<pre><code class="language-typescript">function connectRealtime(): void
+function disconnectRealtime(reason?: string): void
+</code></pre>
+<p>Triggers connection of all <code>realtime-inbound</code> routes. Disconnect aborts all in-flight EventSource/WebSocket instances and prevents auto-reconnect.</p>
+
+<h2 id="auth-policy"><code>AuthPolicy</code></h2>
+<pre><code class="language-typescript">interface AuthPolicy {
+  scheme: 'bearer' | 'basic' | 'cookie' | 'custom'
+  getToken?: () =&gt; string | Promise&lt;string&gt;
+  refresh?: () =&gt; Promise&lt;string&gt;                 // single-flight refresh on 401
+  customHeaders?: () =&gt; Record&lt;string, string&gt;
+}
+</code></pre>
+<p>Single-flight refresh: if multiple requests hit 401 simultaneously, only one <code>refresh()</code> call fires; others queue and retry with the new token (decision <code>D-72</code>).</p>
+
+<h2 id="backpressure"><code>BackpressurePolicy</code></h2>
+<pre><code class="language-typescript">type BackpressurePolicy =
+  | { mode: 'drop-oldest'; max: number }
+  | { mode: 'drop-newest'; max: number }
+  | { mode: 'reject'; max: number }
+  | { mode: 'queue-bounded'; max: number }
+  | { mode: 'sliding-window'; max: number }
+  | { mode: 'critical-bypass'; max: number; bypass: 'critical' }
+</code></pre>
+<p>Critical-priority events bypass backpressure caps when <code>mode: 'critical-bypass'</code> (decision <code>D-75</code>, used for <code>system.error</code> etc.).</p>
+
+<h2 id="frame"><code>RealtimeFrame</code></h2>
+<pre><code class="language-typescript">interface RealtimeFrame {
+  topic: string                       // server-decided topic
+  data: unknown                       // payload (will be canonical-validated)
+  id?: string                         // for Last-Event-ID resume on SSE
+}
+</code></pre>
+
+<h2 id="sub-modules">Sub-modules</h2>
+
+<h3 id="http-module"><code>@gluezero/gateway/http</code></h3>
+<p>Re-exports the strategies for advanced use cases (custom route handler, custom adapter):</p>
+<ul>
+<li><code>createTimeoutStrategy(config)</code></li>
+<li><code>createRetryStrategy(config)</code></li>
+<li><code>createBackoffStrategy(config)</code></li>
+<li><code>createDedupeStrategy(config)</code></li>
+<li><code>createAuthStrategy(config)</code></li>
+<li><code>createIdempotencyStrategy(config)</code></li>
+<li><code>createBackpressureStrategy(config)</code></li>
+<li><code>createCircuitBreakerStrategy(config)</code></li>
+</ul>
+<p>Each is a stateful object with <code>execute(request, next)</code> middleware signature.</p>
+
+<h3 id="sse-ws-module"><code>@gluezero/gateway/sse-ws</code></h3>
+<p>Re-exports the realtime building blocks for advanced use cases:</p>
+<ul>
+<li><code>SseAdapter</code> class</li>
+<li><code>WebSocketAdapter</code> class</li>
+<li><code>RealtimeChannelManager</code> class</li>
+<li><code>createReconnectStrategy(config)</code></li>
+<li><code>createVisibilityDetector(config)</code></li>
+<li><code>parseFrame(text)</code> / <code>serializeFrame(frame)</code></li>
+</ul>
+concepts/realtime.html">Realtime</a>
+  <a class="sidebar-link" href="<h1><code>@gluezero/gateway</code></h1>
+<p class="lead">HTTP gateway and SSE/WebSocket realtime adapters. Two sub-modules: <code>@gluezero/gateway/http</code> and <code>@gluezero/gateway/sse-ws</code>.</p>
+
+<h2 id="createRealtimeBroker"><code>createRealtimeBroker(config)</code></h2>
+<pre><code class="language-typescript">function createRealtimeBroker(config?: RealtimeBrokerConfig): RealtimeBroker
+
+interface RealtimeBrokerConfig extends RoutingBrokerConfig {
+  realtime?: {
+    adapter?: 'sse' | 'websocket' | 'auto'        // default: 'auto'
+    fallbackThreshold?: number                    // SSE failures before WS switch
+    cycleCap?: number                             // max reconnect cycles
+    visibilityAware?: boolean                     // pause when tab hidden, default: true
+    pingIntervalMs?: number                       // WS app-level ping, default: 30000
+    staleTimeoutMs?: number                       // WS pong timeout, default: 60000
+  }
+}
+</code></pre>
+
+<h2 id="connect"><code>broker.connectRealtime()</code> / <code>disconnectRealtime()</code></h2>
+<pre><code class="language-typescript">function connectRealtime(): void
+function disconnectRealtime(reason?: string): void
+</code></pre>
+<p>Triggers connection of all <code>realtime-inbound</code> routes. Disconnect aborts all in-flight EventSource/WebSocket instances and prevents auto-reconnect.</p>
+
+<h2 id="auth-policy"><code>AuthPolicy</code></h2>
+<pre><code class="language-typescript">interface AuthPolicy {
+  scheme: 'bearer' | 'basic' | 'cookie' | 'custom'
+  getToken?: () =&gt; string | Promise&lt;string&gt;
+  refresh?: () =&gt; Promise&lt;string&gt;                 // single-flight refresh on 401
+  customHeaders?: () =&gt; Record&lt;string, string&gt;
+}
+</code></pre>
+<p>Single-flight refresh: if multiple requests hit 401 simultaneously, only one <code>refresh()</code> call fires; others queue and retry with the new token (decision <code>D-72</code>).</p>
+
+<h2 id="backpressure"><code>BackpressurePolicy</code></h2>
+<pre><code class="language-typescript">type BackpressurePolicy =
+  | { mode: 'drop-oldest'; max: number }
+  | { mode: 'drop-newest'; max: number }
+  | { mode: 'reject'; max: number }
+  | { mode: 'queue-bounded'; max: number }
+  | { mode: 'sliding-window'; max: number }
+  | { mode: 'critical-bypass'; max: number; bypass: 'critical' }
+</code></pre>
+<p>Critical-priority events bypass backpressure caps when <code>mode: 'critical-bypass'</code> (decision <code>D-75</code>, used for <code>system.error</code> etc.).</p>
+
+<h2 id="frame"><code>RealtimeFrame</code></h2>
+<pre><code class="language-typescript">interface RealtimeFrame {
+  topic: string                       // server-decided topic
+  data: unknown                       // payload (will be canonical-validated)
+  id?: string                         // for Last-Event-ID resume on SSE
+}
+</code></pre>
+
+<h2 id="sub-modules">Sub-modules</h2>
+
+<h3 id="http-module"><code>@gluezero/gateway/http</code></h3>
+<p>Re-exports the strategies for advanced use cases (custom route handler, custom adapter):</p>
+<ul>
+<li><code>createTimeoutStrategy(config)</code></li>
+<li><code>createRetryStrategy(config)</code></li>
+<li><code>createBackoffStrategy(config)</code></li>
+<li><code>createDedupeStrategy(config)</code></li>
+<li><code>createAuthStrategy(config)</code></li>
+<li><code>createIdempotencyStrategy(config)</code></li>
+<li><code>createBackpressureStrategy(config)</code></li>
+<li><code>createCircuitBreakerStrategy(config)</code></li>
+</ul>
+<p>Each is a stateful object with <code>execute(request, next)</code> middleware signature.</p>
+
+<h3 id="sse-ws-module"><code>@gluezero/gateway/sse-ws</code></h3>
+<p>Re-exports the realtime building blocks for advanced use cases:</p>
+<ul>
+<li><code>SseAdapter</code> class</li>
+<li><code>WebSocketAdapter</code> class</li>
+<li><code>RealtimeChannelManager</code> class</li>
+<li><code>createReconnectStrategy(config)</code></li>
+<li><code>createVisibilityDetector(config)</code></li>
+<li><code>parseFrame(text)</code> / <code>serializeFrame(frame)</code></li>
+</ul>
+concepts/worker.html">Worker</a>
+  <a class="sidebar-link" href="<h1><code>@gluezero/gateway</code></h1>
+<p class="lead">HTTP gateway and SSE/WebSocket realtime adapters. Two sub-modules: <code>@gluezero/gateway/http</code> and <code>@gluezero/gateway/sse-ws</code>.</p>
+
+<h2 id="createRealtimeBroker"><code>createRealtimeBroker(config)</code></h2>
+<pre><code class="language-typescript">function createRealtimeBroker(config?: RealtimeBrokerConfig): RealtimeBroker
+
+interface RealtimeBrokerConfig extends RoutingBrokerConfig {
+  realtime?: {
+    adapter?: 'sse' | 'websocket' | 'auto'        // default: 'auto'
+    fallbackThreshold?: number                    // SSE failures before WS switch
+    cycleCap?: number                             // max reconnect cycles
+    visibilityAware?: boolean                     // pause when tab hidden, default: true
+    pingIntervalMs?: number                       // WS app-level ping, default: 30000
+    staleTimeoutMs?: number                       // WS pong timeout, default: 60000
+  }
+}
+</code></pre>
+
+<h2 id="connect"><code>broker.connectRealtime()</code> / <code>disconnectRealtime()</code></h2>
+<pre><code class="language-typescript">function connectRealtime(): void
+function disconnectRealtime(reason?: string): void
+</code></pre>
+<p>Triggers connection of all <code>realtime-inbound</code> routes. Disconnect aborts all in-flight EventSource/WebSocket instances and prevents auto-reconnect.</p>
+
+<h2 id="auth-policy"><code>AuthPolicy</code></h2>
+<pre><code class="language-typescript">interface AuthPolicy {
+  scheme: 'bearer' | 'basic' | 'cookie' | 'custom'
+  getToken?: () =&gt; string | Promise&lt;string&gt;
+  refresh?: () =&gt; Promise&lt;string&gt;                 // single-flight refresh on 401
+  customHeaders?: () =&gt; Record&lt;string, string&gt;
+}
+</code></pre>
+<p>Single-flight refresh: if multiple requests hit 401 simultaneously, only one <code>refresh()</code> call fires; others queue and retry with the new token (decision <code>D-72</code>).</p>
+
+<h2 id="backpressure"><code>BackpressurePolicy</code></h2>
+<pre><code class="language-typescript">type BackpressurePolicy =
+  | { mode: 'drop-oldest'; max: number }
+  | { mode: 'drop-newest'; max: number }
+  | { mode: 'reject'; max: number }
+  | { mode: 'queue-bounded'; max: number }
+  | { mode: 'sliding-window'; max: number }
+  | { mode: 'critical-bypass'; max: number; bypass: 'critical' }
+</code></pre>
+<p>Critical-priority events bypass backpressure caps when <code>mode: 'critical-bypass'</code> (decision <code>D-75</code>, used for <code>system.error</code> etc.).</p>
+
+<h2 id="frame"><code>RealtimeFrame</code></h2>
+<pre><code class="language-typescript">interface RealtimeFrame {
+  topic: string                       // server-decided topic
+  data: unknown                       // payload (will be canonical-validated)
+  id?: string                         // for Last-Event-ID resume on SSE
+}
+</code></pre>
+
+<h2 id="sub-modules">Sub-modules</h2>
+
+<h3 id="http-module"><code>@gluezero/gateway/http</code></h3>
+<p>Re-exports the strategies for advanced use cases (custom route handler, custom adapter):</p>
+<ul>
+<li><code>createTimeoutStrategy(config)</code></li>
+<li><code>createRetryStrategy(config)</code></li>
+<li><code>createBackoffStrategy(config)</code></li>
+<li><code>createDedupeStrategy(config)</code></li>
+<li><code>createAuthStrategy(config)</code></li>
+<li><code>createIdempotencyStrategy(config)</code></li>
+<li><code>createBackpressureStrategy(config)</code></li>
+<li><code>createCircuitBreakerStrategy(config)</code></li>
+</ul>
+<p>Each is a stateful object with <code>execute(request, next)</code> middleware signature.</p>
+
+<h3 id="sse-ws-module"><code>@gluezero/gateway/sse-ws</code></h3>
+<p>Re-exports the realtime building blocks for advanced use cases:</p>
+<ul>
+<li><code>SseAdapter</code> class</li>
+<li><code>WebSocketAdapter</code> class</li>
+<li><code>RealtimeChannelManager</code> class</li>
+<li><code>createReconnectStrategy(config)</code></li>
+<li><code>createVisibilityDetector(config)</code></li>
+<li><code>parseFrame(text)</code> / <code>serializeFrame(frame)</code></li>
+</ul>
+concepts/cache.html">Cache</a>
+  <a class="sidebar-link" href="<h1><code>@gluezero/gateway</code></h1>
+<p class="lead">HTTP gateway and SSE/WebSocket realtime adapters. Two sub-modules: <code>@gluezero/gateway/http</code> and <code>@gluezero/gateway/sse-ws</code>.</p>
+
+<h2 id="createRealtimeBroker"><code>createRealtimeBroker(config)</code></h2>
+<pre><code class="language-typescript">function createRealtimeBroker(config?: RealtimeBrokerConfig): RealtimeBroker
+
+interface RealtimeBrokerConfig extends RoutingBrokerConfig {
+  realtime?: {
+    adapter?: 'sse' | 'websocket' | 'auto'        // default: 'auto'
+    fallbackThreshold?: number                    // SSE failures before WS switch
+    cycleCap?: number                             // max reconnect cycles
+    visibilityAware?: boolean                     // pause when tab hidden, default: true
+    pingIntervalMs?: number                       // WS app-level ping, default: 30000
+    staleTimeoutMs?: number                       // WS pong timeout, default: 60000
+  }
+}
+</code></pre>
+
+<h2 id="connect"><code>broker.connectRealtime()</code> / <code>disconnectRealtime()</code></h2>
+<pre><code class="language-typescript">function connectRealtime(): void
+function disconnectRealtime(reason?: string): void
+</code></pre>
+<p>Triggers connection of all <code>realtime-inbound</code> routes. Disconnect aborts all in-flight EventSource/WebSocket instances and prevents auto-reconnect.</p>
+
+<h2 id="auth-policy"><code>AuthPolicy</code></h2>
+<pre><code class="language-typescript">interface AuthPolicy {
+  scheme: 'bearer' | 'basic' | 'cookie' | 'custom'
+  getToken?: () =&gt; string | Promise&lt;string&gt;
+  refresh?: () =&gt; Promise&lt;string&gt;                 // single-flight refresh on 401
+  customHeaders?: () =&gt; Record&lt;string, string&gt;
+}
+</code></pre>
+<p>Single-flight refresh: if multiple requests hit 401 simultaneously, only one <code>refresh()</code> call fires; others queue and retry with the new token (decision <code>D-72</code>).</p>
+
+<h2 id="backpressure"><code>BackpressurePolicy</code></h2>
+<pre><code class="language-typescript">type BackpressurePolicy =
+  | { mode: 'drop-oldest'; max: number }
+  | { mode: 'drop-newest'; max: number }
+  | { mode: 'reject'; max: number }
+  | { mode: 'queue-bounded'; max: number }
+  | { mode: 'sliding-window'; max: number }
+  | { mode: 'critical-bypass'; max: number; bypass: 'critical' }
+</code></pre>
+<p>Critical-priority events bypass backpressure caps when <code>mode: 'critical-bypass'</code> (decision <code>D-75</code>, used for <code>system.error</code> etc.).</p>
+
+<h2 id="frame"><code>RealtimeFrame</code></h2>
+<pre><code class="language-typescript">interface RealtimeFrame {
+  topic: string                       // server-decided topic
+  data: unknown                       // payload (will be canonical-validated)
+  id?: string                         // for Last-Event-ID resume on SSE
+}
+</code></pre>
+
+<h2 id="sub-modules">Sub-modules</h2>
+
+<h3 id="http-module"><code>@gluezero/gateway/http</code></h3>
+<p>Re-exports the strategies for advanced use cases (custom route handler, custom adapter):</p>
+<ul>
+<li><code>createTimeoutStrategy(config)</code></li>
+<li><code>createRetryStrategy(config)</code></li>
+<li><code>createBackoffStrategy(config)</code></li>
+<li><code>createDedupeStrategy(config)</code></li>
+<li><code>createAuthStrategy(config)</code></li>
+<li><code>createIdempotencyStrategy(config)</code></li>
+<li><code>createBackpressureStrategy(config)</code></li>
+<li><code>createCircuitBreakerStrategy(config)</code></li>
+</ul>
+<p>Each is a stateful object with <code>execute(request, next)</code> middleware signature.</p>
+
+<h3 id="sse-ws-module"><code>@gluezero/gateway/sse-ws</code></h3>
+<p>Re-exports the realtime building blocks for advanced use cases:</p>
+<ul>
+<li><code>SseAdapter</code> class</li>
+<li><code>WebSocketAdapter</code> class</li>
+<li><code>RealtimeChannelManager</code> class</li>
+<li><code>createReconnectStrategy(config)</code></li>
+<li><code>createVisibilityDetector(config)</code></li>
+<li><code>parseFrame(text)</code> / <code>serializeFrame(frame)</code></li>
+</ul>
+concepts/devtools.html">Devtools</a>
 </div>
 <div class="sidebar-section">
   <div class="sidebar-section-title">API reference</div>
-  <a class="sidebar-link" href="../api/gluezero.html">@gluezero/gluezero</a>
-  <a class="sidebar-link" href="../api/core.html">@gluezero/core</a>
-  <a class="sidebar-link" href="../api/mapper.html">@gluezero/mapper</a>
-  <a class="sidebar-link" href="../api/routing.html">@gluezero/routing</a>
-  <a class="sidebar-link" href="../api/gateway.html">@gluezero/gateway</a>
-  <a class="sidebar-link" href="../api/worker.html">@gluezero/worker</a>
-  <a class="sidebar-link" href="../api/cache.html">@gluezero/cache</a>
-  <a class="sidebar-link" href="../api/devtools.html">@gluezero/devtools</a>
+  <a class="sidebar-link" href="<h1><code>@gluezero/gateway</code></h1>
+<p class="lead">HTTP gateway and SSE/WebSocket realtime adapters. Two sub-modules: <code>@gluezero/gateway/http</code> and <code>@gluezero/gateway/sse-ws</code>.</p>
+
+<h2 id="createRealtimeBroker"><code>createRealtimeBroker(config)</code></h2>
+<pre><code class="language-typescript">function createRealtimeBroker(config?: RealtimeBrokerConfig): RealtimeBroker
+
+interface RealtimeBrokerConfig extends RoutingBrokerConfig {
+  realtime?: {
+    adapter?: 'sse' | 'websocket' | 'auto'        // default: 'auto'
+    fallbackThreshold?: number                    // SSE failures before WS switch
+    cycleCap?: number                             // max reconnect cycles
+    visibilityAware?: boolean                     // pause when tab hidden, default: true
+    pingIntervalMs?: number                       // WS app-level ping, default: 30000
+    staleTimeoutMs?: number                       // WS pong timeout, default: 60000
+  }
+}
+</code></pre>
+
+<h2 id="connect"><code>broker.connectRealtime()</code> / <code>disconnectRealtime()</code></h2>
+<pre><code class="language-typescript">function connectRealtime(): void
+function disconnectRealtime(reason?: string): void
+</code></pre>
+<p>Triggers connection of all <code>realtime-inbound</code> routes. Disconnect aborts all in-flight EventSource/WebSocket instances and prevents auto-reconnect.</p>
+
+<h2 id="auth-policy"><code>AuthPolicy</code></h2>
+<pre><code class="language-typescript">interface AuthPolicy {
+  scheme: 'bearer' | 'basic' | 'cookie' | 'custom'
+  getToken?: () =&gt; string | Promise&lt;string&gt;
+  refresh?: () =&gt; Promise&lt;string&gt;                 // single-flight refresh on 401
+  customHeaders?: () =&gt; Record&lt;string, string&gt;
+}
+</code></pre>
+<p>Single-flight refresh: if multiple requests hit 401 simultaneously, only one <code>refresh()</code> call fires; others queue and retry with the new token (decision <code>D-72</code>).</p>
+
+<h2 id="backpressure"><code>BackpressurePolicy</code></h2>
+<pre><code class="language-typescript">type BackpressurePolicy =
+  | { mode: 'drop-oldest'; max: number }
+  | { mode: 'drop-newest'; max: number }
+  | { mode: 'reject'; max: number }
+  | { mode: 'queue-bounded'; max: number }
+  | { mode: 'sliding-window'; max: number }
+  | { mode: 'critical-bypass'; max: number; bypass: 'critical' }
+</code></pre>
+<p>Critical-priority events bypass backpressure caps when <code>mode: 'critical-bypass'</code> (decision <code>D-75</code>, used for <code>system.error</code> etc.).</p>
+
+<h2 id="frame"><code>RealtimeFrame</code></h2>
+<pre><code class="language-typescript">interface RealtimeFrame {
+  topic: string                       // server-decided topic
+  data: unknown                       // payload (will be canonical-validated)
+  id?: string                         // for Last-Event-ID resume on SSE
+}
+</code></pre>
+
+<h2 id="sub-modules">Sub-modules</h2>
+
+<h3 id="http-module"><code>@gluezero/gateway/http</code></h3>
+<p>Re-exports the strategies for advanced use cases (custom route handler, custom adapter):</p>
+<ul>
+<li><code>createTimeoutStrategy(config)</code></li>
+<li><code>createRetryStrategy(config)</code></li>
+<li><code>createBackoffStrategy(config)</code></li>
+<li><code>createDedupeStrategy(config)</code></li>
+<li><code>createAuthStrategy(config)</code></li>
+<li><code>createIdempotencyStrategy(config)</code></li>
+<li><code>createBackpressureStrategy(config)</code></li>
+<li><code>createCircuitBreakerStrategy(config)</code></li>
+</ul>
+<p>Each is a stateful object with <code>execute(request, next)</code> middleware signature.</p>
+
+<h3 id="sse-ws-module"><code>@gluezero/gateway/sse-ws</code></h3>
+<p>Re-exports the realtime building blocks for advanced use cases:</p>
+<ul>
+<li><code>SseAdapter</code> class</li>
+<li><code>WebSocketAdapter</code> class</li>
+<li><code>RealtimeChannelManager</code> class</li>
+<li><code>createReconnectStrategy(config)</code></li>
+<li><code>createVisibilityDetector(config)</code></li>
+<li><code>parseFrame(text)</code> / <code>serializeFrame(frame)</code></li>
+</ul>
+api/gluezero.html">@gluezero/gluezero</a>
+  <a class="sidebar-link" href="<h1><code>@gluezero/gateway</code></h1>
+<p class="lead">HTTP gateway and SSE/WebSocket realtime adapters. Two sub-modules: <code>@gluezero/gateway/http</code> and <code>@gluezero/gateway/sse-ws</code>.</p>
+
+<h2 id="createRealtimeBroker"><code>createRealtimeBroker(config)</code></h2>
+<pre><code class="language-typescript">function createRealtimeBroker(config?: RealtimeBrokerConfig): RealtimeBroker
+
+interface RealtimeBrokerConfig extends RoutingBrokerConfig {
+  realtime?: {
+    adapter?: 'sse' | 'websocket' | 'auto'        // default: 'auto'
+    fallbackThreshold?: number                    // SSE failures before WS switch
+    cycleCap?: number                             // max reconnect cycles
+    visibilityAware?: boolean                     // pause when tab hidden, default: true
+    pingIntervalMs?: number                       // WS app-level ping, default: 30000
+    staleTimeoutMs?: number                       // WS pong timeout, default: 60000
+  }
+}
+</code></pre>
+
+<h2 id="connect"><code>broker.connectRealtime()</code> / <code>disconnectRealtime()</code></h2>
+<pre><code class="language-typescript">function connectRealtime(): void
+function disconnectRealtime(reason?: string): void
+</code></pre>
+<p>Triggers connection of all <code>realtime-inbound</code> routes. Disconnect aborts all in-flight EventSource/WebSocket instances and prevents auto-reconnect.</p>
+
+<h2 id="auth-policy"><code>AuthPolicy</code></h2>
+<pre><code class="language-typescript">interface AuthPolicy {
+  scheme: 'bearer' | 'basic' | 'cookie' | 'custom'
+  getToken?: () =&gt; string | Promise&lt;string&gt;
+  refresh?: () =&gt; Promise&lt;string&gt;                 // single-flight refresh on 401
+  customHeaders?: () =&gt; Record&lt;string, string&gt;
+}
+</code></pre>
+<p>Single-flight refresh: if multiple requests hit 401 simultaneously, only one <code>refresh()</code> call fires; others queue and retry with the new token (decision <code>D-72</code>).</p>
+
+<h2 id="backpressure"><code>BackpressurePolicy</code></h2>
+<pre><code class="language-typescript">type BackpressurePolicy =
+  | { mode: 'drop-oldest'; max: number }
+  | { mode: 'drop-newest'; max: number }
+  | { mode: 'reject'; max: number }
+  | { mode: 'queue-bounded'; max: number }
+  | { mode: 'sliding-window'; max: number }
+  | { mode: 'critical-bypass'; max: number; bypass: 'critical' }
+</code></pre>
+<p>Critical-priority events bypass backpressure caps when <code>mode: 'critical-bypass'</code> (decision <code>D-75</code>, used for <code>system.error</code> etc.).</p>
+
+<h2 id="frame"><code>RealtimeFrame</code></h2>
+<pre><code class="language-typescript">interface RealtimeFrame {
+  topic: string                       // server-decided topic
+  data: unknown                       // payload (will be canonical-validated)
+  id?: string                         // for Last-Event-ID resume on SSE
+}
+</code></pre>
+
+<h2 id="sub-modules">Sub-modules</h2>
+
+<h3 id="http-module"><code>@gluezero/gateway/http</code></h3>
+<p>Re-exports the strategies for advanced use cases (custom route handler, custom adapter):</p>
+<ul>
+<li><code>createTimeoutStrategy(config)</code></li>
+<li><code>createRetryStrategy(config)</code></li>
+<li><code>createBackoffStrategy(config)</code></li>
+<li><code>createDedupeStrategy(config)</code></li>
+<li><code>createAuthStrategy(config)</code></li>
+<li><code>createIdempotencyStrategy(config)</code></li>
+<li><code>createBackpressureStrategy(config)</code></li>
+<li><code>createCircuitBreakerStrategy(config)</code></li>
+</ul>
+<p>Each is a stateful object with <code>execute(request, next)</code> middleware signature.</p>
+
+<h3 id="sse-ws-module"><code>@gluezero/gateway/sse-ws</code></h3>
+<p>Re-exports the realtime building blocks for advanced use cases:</p>
+<ul>
+<li><code>SseAdapter</code> class</li>
+<li><code>WebSocketAdapter</code> class</li>
+<li><code>RealtimeChannelManager</code> class</li>
+<li><code>createReconnectStrategy(config)</code></li>
+<li><code>createVisibilityDetector(config)</code></li>
+<li><code>parseFrame(text)</code> / <code>serializeFrame(frame)</code></li>
+</ul>
+api/core.html">@gluezero/core</a>
+  <a class="sidebar-link" href="<h1><code>@gluezero/gateway</code></h1>
+<p class="lead">HTTP gateway and SSE/WebSocket realtime adapters. Two sub-modules: <code>@gluezero/gateway/http</code> and <code>@gluezero/gateway/sse-ws</code>.</p>
+
+<h2 id="createRealtimeBroker"><code>createRealtimeBroker(config)</code></h2>
+<pre><code class="language-typescript">function createRealtimeBroker(config?: RealtimeBrokerConfig): RealtimeBroker
+
+interface RealtimeBrokerConfig extends RoutingBrokerConfig {
+  realtime?: {
+    adapter?: 'sse' | 'websocket' | 'auto'        // default: 'auto'
+    fallbackThreshold?: number                    // SSE failures before WS switch
+    cycleCap?: number                             // max reconnect cycles
+    visibilityAware?: boolean                     // pause when tab hidden, default: true
+    pingIntervalMs?: number                       // WS app-level ping, default: 30000
+    staleTimeoutMs?: number                       // WS pong timeout, default: 60000
+  }
+}
+</code></pre>
+
+<h2 id="connect"><code>broker.connectRealtime()</code> / <code>disconnectRealtime()</code></h2>
+<pre><code class="language-typescript">function connectRealtime(): void
+function disconnectRealtime(reason?: string): void
+</code></pre>
+<p>Triggers connection of all <code>realtime-inbound</code> routes. Disconnect aborts all in-flight EventSource/WebSocket instances and prevents auto-reconnect.</p>
+
+<h2 id="auth-policy"><code>AuthPolicy</code></h2>
+<pre><code class="language-typescript">interface AuthPolicy {
+  scheme: 'bearer' | 'basic' | 'cookie' | 'custom'
+  getToken?: () =&gt; string | Promise&lt;string&gt;
+  refresh?: () =&gt; Promise&lt;string&gt;                 // single-flight refresh on 401
+  customHeaders?: () =&gt; Record&lt;string, string&gt;
+}
+</code></pre>
+<p>Single-flight refresh: if multiple requests hit 401 simultaneously, only one <code>refresh()</code> call fires; others queue and retry with the new token (decision <code>D-72</code>).</p>
+
+<h2 id="backpressure"><code>BackpressurePolicy</code></h2>
+<pre><code class="language-typescript">type BackpressurePolicy =
+  | { mode: 'drop-oldest'; max: number }
+  | { mode: 'drop-newest'; max: number }
+  | { mode: 'reject'; max: number }
+  | { mode: 'queue-bounded'; max: number }
+  | { mode: 'sliding-window'; max: number }
+  | { mode: 'critical-bypass'; max: number; bypass: 'critical' }
+</code></pre>
+<p>Critical-priority events bypass backpressure caps when <code>mode: 'critical-bypass'</code> (decision <code>D-75</code>, used for <code>system.error</code> etc.).</p>
+
+<h2 id="frame"><code>RealtimeFrame</code></h2>
+<pre><code class="language-typescript">interface RealtimeFrame {
+  topic: string                       // server-decided topic
+  data: unknown                       // payload (will be canonical-validated)
+  id?: string                         // for Last-Event-ID resume on SSE
+}
+</code></pre>
+
+<h2 id="sub-modules">Sub-modules</h2>
+
+<h3 id="http-module"><code>@gluezero/gateway/http</code></h3>
+<p>Re-exports the strategies for advanced use cases (custom route handler, custom adapter):</p>
+<ul>
+<li><code>createTimeoutStrategy(config)</code></li>
+<li><code>createRetryStrategy(config)</code></li>
+<li><code>createBackoffStrategy(config)</code></li>
+<li><code>createDedupeStrategy(config)</code></li>
+<li><code>createAuthStrategy(config)</code></li>
+<li><code>createIdempotencyStrategy(config)</code></li>
+<li><code>createBackpressureStrategy(config)</code></li>
+<li><code>createCircuitBreakerStrategy(config)</code></li>
+</ul>
+<p>Each is a stateful object with <code>execute(request, next)</code> middleware signature.</p>
+
+<h3 id="sse-ws-module"><code>@gluezero/gateway/sse-ws</code></h3>
+<p>Re-exports the realtime building blocks for advanced use cases:</p>
+<ul>
+<li><code>SseAdapter</code> class</li>
+<li><code>WebSocketAdapter</code> class</li>
+<li><code>RealtimeChannelManager</code> class</li>
+<li><code>createReconnectStrategy(config)</code></li>
+<li><code>createVisibilityDetector(config)</code></li>
+<li><code>parseFrame(text)</code> / <code>serializeFrame(frame)</code></li>
+</ul>
+api/mapper.html">@gluezero/mapper</a>
+  <a class="sidebar-link" href="<h1><code>@gluezero/gateway</code></h1>
+<p class="lead">HTTP gateway and SSE/WebSocket realtime adapters. Two sub-modules: <code>@gluezero/gateway/http</code> and <code>@gluezero/gateway/sse-ws</code>.</p>
+
+<h2 id="createRealtimeBroker"><code>createRealtimeBroker(config)</code></h2>
+<pre><code class="language-typescript">function createRealtimeBroker(config?: RealtimeBrokerConfig): RealtimeBroker
+
+interface RealtimeBrokerConfig extends RoutingBrokerConfig {
+  realtime?: {
+    adapter?: 'sse' | 'websocket' | 'auto'        // default: 'auto'
+    fallbackThreshold?: number                    // SSE failures before WS switch
+    cycleCap?: number                             // max reconnect cycles
+    visibilityAware?: boolean                     // pause when tab hidden, default: true
+    pingIntervalMs?: number                       // WS app-level ping, default: 30000
+    staleTimeoutMs?: number                       // WS pong timeout, default: 60000
+  }
+}
+</code></pre>
+
+<h2 id="connect"><code>broker.connectRealtime()</code> / <code>disconnectRealtime()</code></h2>
+<pre><code class="language-typescript">function connectRealtime(): void
+function disconnectRealtime(reason?: string): void
+</code></pre>
+<p>Triggers connection of all <code>realtime-inbound</code> routes. Disconnect aborts all in-flight EventSource/WebSocket instances and prevents auto-reconnect.</p>
+
+<h2 id="auth-policy"><code>AuthPolicy</code></h2>
+<pre><code class="language-typescript">interface AuthPolicy {
+  scheme: 'bearer' | 'basic' | 'cookie' | 'custom'
+  getToken?: () =&gt; string | Promise&lt;string&gt;
+  refresh?: () =&gt; Promise&lt;string&gt;                 // single-flight refresh on 401
+  customHeaders?: () =&gt; Record&lt;string, string&gt;
+}
+</code></pre>
+<p>Single-flight refresh: if multiple requests hit 401 simultaneously, only one <code>refresh()</code> call fires; others queue and retry with the new token (decision <code>D-72</code>).</p>
+
+<h2 id="backpressure"><code>BackpressurePolicy</code></h2>
+<pre><code class="language-typescript">type BackpressurePolicy =
+  | { mode: 'drop-oldest'; max: number }
+  | { mode: 'drop-newest'; max: number }
+  | { mode: 'reject'; max: number }
+  | { mode: 'queue-bounded'; max: number }
+  | { mode: 'sliding-window'; max: number }
+  | { mode: 'critical-bypass'; max: number; bypass: 'critical' }
+</code></pre>
+<p>Critical-priority events bypass backpressure caps when <code>mode: 'critical-bypass'</code> (decision <code>D-75</code>, used for <code>system.error</code> etc.).</p>
+
+<h2 id="frame"><code>RealtimeFrame</code></h2>
+<pre><code class="language-typescript">interface RealtimeFrame {
+  topic: string                       // server-decided topic
+  data: unknown                       // payload (will be canonical-validated)
+  id?: string                         // for Last-Event-ID resume on SSE
+}
+</code></pre>
+
+<h2 id="sub-modules">Sub-modules</h2>
+
+<h3 id="http-module"><code>@gluezero/gateway/http</code></h3>
+<p>Re-exports the strategies for advanced use cases (custom route handler, custom adapter):</p>
+<ul>
+<li><code>createTimeoutStrategy(config)</code></li>
+<li><code>createRetryStrategy(config)</code></li>
+<li><code>createBackoffStrategy(config)</code></li>
+<li><code>createDedupeStrategy(config)</code></li>
+<li><code>createAuthStrategy(config)</code></li>
+<li><code>createIdempotencyStrategy(config)</code></li>
+<li><code>createBackpressureStrategy(config)</code></li>
+<li><code>createCircuitBreakerStrategy(config)</code></li>
+</ul>
+<p>Each is a stateful object with <code>execute(request, next)</code> middleware signature.</p>
+
+<h3 id="sse-ws-module"><code>@gluezero/gateway/sse-ws</code></h3>
+<p>Re-exports the realtime building blocks for advanced use cases:</p>
+<ul>
+<li><code>SseAdapter</code> class</li>
+<li><code>WebSocketAdapter</code> class</li>
+<li><code>RealtimeChannelManager</code> class</li>
+<li><code>createReconnectStrategy(config)</code></li>
+<li><code>createVisibilityDetector(config)</code></li>
+<li><code>parseFrame(text)</code> / <code>serializeFrame(frame)</code></li>
+</ul>
+api/routing.html">@gluezero/routing</a>
+  <a class="sidebar-link" href="<h1><code>@gluezero/gateway</code></h1>
+<p class="lead">HTTP gateway and SSE/WebSocket realtime adapters. Two sub-modules: <code>@gluezero/gateway/http</code> and <code>@gluezero/gateway/sse-ws</code>.</p>
+
+<h2 id="createRealtimeBroker"><code>createRealtimeBroker(config)</code></h2>
+<pre><code class="language-typescript">function createRealtimeBroker(config?: RealtimeBrokerConfig): RealtimeBroker
+
+interface RealtimeBrokerConfig extends RoutingBrokerConfig {
+  realtime?: {
+    adapter?: 'sse' | 'websocket' | 'auto'        // default: 'auto'
+    fallbackThreshold?: number                    // SSE failures before WS switch
+    cycleCap?: number                             // max reconnect cycles
+    visibilityAware?: boolean                     // pause when tab hidden, default: true
+    pingIntervalMs?: number                       // WS app-level ping, default: 30000
+    staleTimeoutMs?: number                       // WS pong timeout, default: 60000
+  }
+}
+</code></pre>
+
+<h2 id="connect"><code>broker.connectRealtime()</code> / <code>disconnectRealtime()</code></h2>
+<pre><code class="language-typescript">function connectRealtime(): void
+function disconnectRealtime(reason?: string): void
+</code></pre>
+<p>Triggers connection of all <code>realtime-inbound</code> routes. Disconnect aborts all in-flight EventSource/WebSocket instances and prevents auto-reconnect.</p>
+
+<h2 id="auth-policy"><code>AuthPolicy</code></h2>
+<pre><code class="language-typescript">interface AuthPolicy {
+  scheme: 'bearer' | 'basic' | 'cookie' | 'custom'
+  getToken?: () =&gt; string | Promise&lt;string&gt;
+  refresh?: () =&gt; Promise&lt;string&gt;                 // single-flight refresh on 401
+  customHeaders?: () =&gt; Record&lt;string, string&gt;
+}
+</code></pre>
+<p>Single-flight refresh: if multiple requests hit 401 simultaneously, only one <code>refresh()</code> call fires; others queue and retry with the new token (decision <code>D-72</code>).</p>
+
+<h2 id="backpressure"><code>BackpressurePolicy</code></h2>
+<pre><code class="language-typescript">type BackpressurePolicy =
+  | { mode: 'drop-oldest'; max: number }
+  | { mode: 'drop-newest'; max: number }
+  | { mode: 'reject'; max: number }
+  | { mode: 'queue-bounded'; max: number }
+  | { mode: 'sliding-window'; max: number }
+  | { mode: 'critical-bypass'; max: number; bypass: 'critical' }
+</code></pre>
+<p>Critical-priority events bypass backpressure caps when <code>mode: 'critical-bypass'</code> (decision <code>D-75</code>, used for <code>system.error</code> etc.).</p>
+
+<h2 id="frame"><code>RealtimeFrame</code></h2>
+<pre><code class="language-typescript">interface RealtimeFrame {
+  topic: string                       // server-decided topic
+  data: unknown                       // payload (will be canonical-validated)
+  id?: string                         // for Last-Event-ID resume on SSE
+}
+</code></pre>
+
+<h2 id="sub-modules">Sub-modules</h2>
+
+<h3 id="http-module"><code>@gluezero/gateway/http</code></h3>
+<p>Re-exports the strategies for advanced use cases (custom route handler, custom adapter):</p>
+<ul>
+<li><code>createTimeoutStrategy(config)</code></li>
+<li><code>createRetryStrategy(config)</code></li>
+<li><code>createBackoffStrategy(config)</code></li>
+<li><code>createDedupeStrategy(config)</code></li>
+<li><code>createAuthStrategy(config)</code></li>
+<li><code>createIdempotencyStrategy(config)</code></li>
+<li><code>createBackpressureStrategy(config)</code></li>
+<li><code>createCircuitBreakerStrategy(config)</code></li>
+</ul>
+<p>Each is a stateful object with <code>execute(request, next)</code> middleware signature.</p>
+
+<h3 id="sse-ws-module"><code>@gluezero/gateway/sse-ws</code></h3>
+<p>Re-exports the realtime building blocks for advanced use cases:</p>
+<ul>
+<li><code>SseAdapter</code> class</li>
+<li><code>WebSocketAdapter</code> class</li>
+<li><code>RealtimeChannelManager</code> class</li>
+<li><code>createReconnectStrategy(config)</code></li>
+<li><code>createVisibilityDetector(config)</code></li>
+<li><code>parseFrame(text)</code> / <code>serializeFrame(frame)</code></li>
+</ul>
+api/gateway.html">@gluezero/gateway</a>
+  <a class="sidebar-link" href="<h1><code>@gluezero/gateway</code></h1>
+<p class="lead">HTTP gateway and SSE/WebSocket realtime adapters. Two sub-modules: <code>@gluezero/gateway/http</code> and <code>@gluezero/gateway/sse-ws</code>.</p>
+
+<h2 id="createRealtimeBroker"><code>createRealtimeBroker(config)</code></h2>
+<pre><code class="language-typescript">function createRealtimeBroker(config?: RealtimeBrokerConfig): RealtimeBroker
+
+interface RealtimeBrokerConfig extends RoutingBrokerConfig {
+  realtime?: {
+    adapter?: 'sse' | 'websocket' | 'auto'        // default: 'auto'
+    fallbackThreshold?: number                    // SSE failures before WS switch
+    cycleCap?: number                             // max reconnect cycles
+    visibilityAware?: boolean                     // pause when tab hidden, default: true
+    pingIntervalMs?: number                       // WS app-level ping, default: 30000
+    staleTimeoutMs?: number                       // WS pong timeout, default: 60000
+  }
+}
+</code></pre>
+
+<h2 id="connect"><code>broker.connectRealtime()</code> / <code>disconnectRealtime()</code></h2>
+<pre><code class="language-typescript">function connectRealtime(): void
+function disconnectRealtime(reason?: string): void
+</code></pre>
+<p>Triggers connection of all <code>realtime-inbound</code> routes. Disconnect aborts all in-flight EventSource/WebSocket instances and prevents auto-reconnect.</p>
+
+<h2 id="auth-policy"><code>AuthPolicy</code></h2>
+<pre><code class="language-typescript">interface AuthPolicy {
+  scheme: 'bearer' | 'basic' | 'cookie' | 'custom'
+  getToken?: () =&gt; string | Promise&lt;string&gt;
+  refresh?: () =&gt; Promise&lt;string&gt;                 // single-flight refresh on 401
+  customHeaders?: () =&gt; Record&lt;string, string&gt;
+}
+</code></pre>
+<p>Single-flight refresh: if multiple requests hit 401 simultaneously, only one <code>refresh()</code> call fires; others queue and retry with the new token (decision <code>D-72</code>).</p>
+
+<h2 id="backpressure"><code>BackpressurePolicy</code></h2>
+<pre><code class="language-typescript">type BackpressurePolicy =
+  | { mode: 'drop-oldest'; max: number }
+  | { mode: 'drop-newest'; max: number }
+  | { mode: 'reject'; max: number }
+  | { mode: 'queue-bounded'; max: number }
+  | { mode: 'sliding-window'; max: number }
+  | { mode: 'critical-bypass'; max: number; bypass: 'critical' }
+</code></pre>
+<p>Critical-priority events bypass backpressure caps when <code>mode: 'critical-bypass'</code> (decision <code>D-75</code>, used for <code>system.error</code> etc.).</p>
+
+<h2 id="frame"><code>RealtimeFrame</code></h2>
+<pre><code class="language-typescript">interface RealtimeFrame {
+  topic: string                       // server-decided topic
+  data: unknown                       // payload (will be canonical-validated)
+  id?: string                         // for Last-Event-ID resume on SSE
+}
+</code></pre>
+
+<h2 id="sub-modules">Sub-modules</h2>
+
+<h3 id="http-module"><code>@gluezero/gateway/http</code></h3>
+<p>Re-exports the strategies for advanced use cases (custom route handler, custom adapter):</p>
+<ul>
+<li><code>createTimeoutStrategy(config)</code></li>
+<li><code>createRetryStrategy(config)</code></li>
+<li><code>createBackoffStrategy(config)</code></li>
+<li><code>createDedupeStrategy(config)</code></li>
+<li><code>createAuthStrategy(config)</code></li>
+<li><code>createIdempotencyStrategy(config)</code></li>
+<li><code>createBackpressureStrategy(config)</code></li>
+<li><code>createCircuitBreakerStrategy(config)</code></li>
+</ul>
+<p>Each is a stateful object with <code>execute(request, next)</code> middleware signature.</p>
+
+<h3 id="sse-ws-module"><code>@gluezero/gateway/sse-ws</code></h3>
+<p>Re-exports the realtime building blocks for advanced use cases:</p>
+<ul>
+<li><code>SseAdapter</code> class</li>
+<li><code>WebSocketAdapter</code> class</li>
+<li><code>RealtimeChannelManager</code> class</li>
+<li><code>createReconnectStrategy(config)</code></li>
+<li><code>createVisibilityDetector(config)</code></li>
+<li><code>parseFrame(text)</code> / <code>serializeFrame(frame)</code></li>
+</ul>
+api/worker.html">@gluezero/worker</a>
+  <a class="sidebar-link" href="<h1><code>@gluezero/gateway</code></h1>
+<p class="lead">HTTP gateway and SSE/WebSocket realtime adapters. Two sub-modules: <code>@gluezero/gateway/http</code> and <code>@gluezero/gateway/sse-ws</code>.</p>
+
+<h2 id="createRealtimeBroker"><code>createRealtimeBroker(config)</code></h2>
+<pre><code class="language-typescript">function createRealtimeBroker(config?: RealtimeBrokerConfig): RealtimeBroker
+
+interface RealtimeBrokerConfig extends RoutingBrokerConfig {
+  realtime?: {
+    adapter?: 'sse' | 'websocket' | 'auto'        // default: 'auto'
+    fallbackThreshold?: number                    // SSE failures before WS switch
+    cycleCap?: number                             // max reconnect cycles
+    visibilityAware?: boolean                     // pause when tab hidden, default: true
+    pingIntervalMs?: number                       // WS app-level ping, default: 30000
+    staleTimeoutMs?: number                       // WS pong timeout, default: 60000
+  }
+}
+</code></pre>
+
+<h2 id="connect"><code>broker.connectRealtime()</code> / <code>disconnectRealtime()</code></h2>
+<pre><code class="language-typescript">function connectRealtime(): void
+function disconnectRealtime(reason?: string): void
+</code></pre>
+<p>Triggers connection of all <code>realtime-inbound</code> routes. Disconnect aborts all in-flight EventSource/WebSocket instances and prevents auto-reconnect.</p>
+
+<h2 id="auth-policy"><code>AuthPolicy</code></h2>
+<pre><code class="language-typescript">interface AuthPolicy {
+  scheme: 'bearer' | 'basic' | 'cookie' | 'custom'
+  getToken?: () =&gt; string | Promise&lt;string&gt;
+  refresh?: () =&gt; Promise&lt;string&gt;                 // single-flight refresh on 401
+  customHeaders?: () =&gt; Record&lt;string, string&gt;
+}
+</code></pre>
+<p>Single-flight refresh: if multiple requests hit 401 simultaneously, only one <code>refresh()</code> call fires; others queue and retry with the new token (decision <code>D-72</code>).</p>
+
+<h2 id="backpressure"><code>BackpressurePolicy</code></h2>
+<pre><code class="language-typescript">type BackpressurePolicy =
+  | { mode: 'drop-oldest'; max: number }
+  | { mode: 'drop-newest'; max: number }
+  | { mode: 'reject'; max: number }
+  | { mode: 'queue-bounded'; max: number }
+  | { mode: 'sliding-window'; max: number }
+  | { mode: 'critical-bypass'; max: number; bypass: 'critical' }
+</code></pre>
+<p>Critical-priority events bypass backpressure caps when <code>mode: 'critical-bypass'</code> (decision <code>D-75</code>, used for <code>system.error</code> etc.).</p>
+
+<h2 id="frame"><code>RealtimeFrame</code></h2>
+<pre><code class="language-typescript">interface RealtimeFrame {
+  topic: string                       // server-decided topic
+  data: unknown                       // payload (will be canonical-validated)
+  id?: string                         // for Last-Event-ID resume on SSE
+}
+</code></pre>
+
+<h2 id="sub-modules">Sub-modules</h2>
+
+<h3 id="http-module"><code>@gluezero/gateway/http</code></h3>
+<p>Re-exports the strategies for advanced use cases (custom route handler, custom adapter):</p>
+<ul>
+<li><code>createTimeoutStrategy(config)</code></li>
+<li><code>createRetryStrategy(config)</code></li>
+<li><code>createBackoffStrategy(config)</code></li>
+<li><code>createDedupeStrategy(config)</code></li>
+<li><code>createAuthStrategy(config)</code></li>
+<li><code>createIdempotencyStrategy(config)</code></li>
+<li><code>createBackpressureStrategy(config)</code></li>
+<li><code>createCircuitBreakerStrategy(config)</code></li>
+</ul>
+<p>Each is a stateful object with <code>execute(request, next)</code> middleware signature.</p>
+
+<h3 id="sse-ws-module"><code>@gluezero/gateway/sse-ws</code></h3>
+<p>Re-exports the realtime building blocks for advanced use cases:</p>
+<ul>
+<li><code>SseAdapter</code> class</li>
+<li><code>WebSocketAdapter</code> class</li>
+<li><code>RealtimeChannelManager</code> class</li>
+<li><code>createReconnectStrategy(config)</code></li>
+<li><code>createVisibilityDetector(config)</code></li>
+<li><code>parseFrame(text)</code> / <code>serializeFrame(frame)</code></li>
+</ul>
+api/cache.html">@gluezero/cache</a>
+  <a class="sidebar-link" href="<h1><code>@gluezero/gateway</code></h1>
+<p class="lead">HTTP gateway and SSE/WebSocket realtime adapters. Two sub-modules: <code>@gluezero/gateway/http</code> and <code>@gluezero/gateway/sse-ws</code>.</p>
+
+<h2 id="createRealtimeBroker"><code>createRealtimeBroker(config)</code></h2>
+<pre><code class="language-typescript">function createRealtimeBroker(config?: RealtimeBrokerConfig): RealtimeBroker
+
+interface RealtimeBrokerConfig extends RoutingBrokerConfig {
+  realtime?: {
+    adapter?: 'sse' | 'websocket' | 'auto'        // default: 'auto'
+    fallbackThreshold?: number                    // SSE failures before WS switch
+    cycleCap?: number                             // max reconnect cycles
+    visibilityAware?: boolean                     // pause when tab hidden, default: true
+    pingIntervalMs?: number                       // WS app-level ping, default: 30000
+    staleTimeoutMs?: number                       // WS pong timeout, default: 60000
+  }
+}
+</code></pre>
+
+<h2 id="connect"><code>broker.connectRealtime()</code> / <code>disconnectRealtime()</code></h2>
+<pre><code class="language-typescript">function connectRealtime(): void
+function disconnectRealtime(reason?: string): void
+</code></pre>
+<p>Triggers connection of all <code>realtime-inbound</code> routes. Disconnect aborts all in-flight EventSource/WebSocket instances and prevents auto-reconnect.</p>
+
+<h2 id="auth-policy"><code>AuthPolicy</code></h2>
+<pre><code class="language-typescript">interface AuthPolicy {
+  scheme: 'bearer' | 'basic' | 'cookie' | 'custom'
+  getToken?: () =&gt; string | Promise&lt;string&gt;
+  refresh?: () =&gt; Promise&lt;string&gt;                 // single-flight refresh on 401
+  customHeaders?: () =&gt; Record&lt;string, string&gt;
+}
+</code></pre>
+<p>Single-flight refresh: if multiple requests hit 401 simultaneously, only one <code>refresh()</code> call fires; others queue and retry with the new token (decision <code>D-72</code>).</p>
+
+<h2 id="backpressure"><code>BackpressurePolicy</code></h2>
+<pre><code class="language-typescript">type BackpressurePolicy =
+  | { mode: 'drop-oldest'; max: number }
+  | { mode: 'drop-newest'; max: number }
+  | { mode: 'reject'; max: number }
+  | { mode: 'queue-bounded'; max: number }
+  | { mode: 'sliding-window'; max: number }
+  | { mode: 'critical-bypass'; max: number; bypass: 'critical' }
+</code></pre>
+<p>Critical-priority events bypass backpressure caps when <code>mode: 'critical-bypass'</code> (decision <code>D-75</code>, used for <code>system.error</code> etc.).</p>
+
+<h2 id="frame"><code>RealtimeFrame</code></h2>
+<pre><code class="language-typescript">interface RealtimeFrame {
+  topic: string                       // server-decided topic
+  data: unknown                       // payload (will be canonical-validated)
+  id?: string                         // for Last-Event-ID resume on SSE
+}
+</code></pre>
+
+<h2 id="sub-modules">Sub-modules</h2>
+
+<h3 id="http-module"><code>@gluezero/gateway/http</code></h3>
+<p>Re-exports the strategies for advanced use cases (custom route handler, custom adapter):</p>
+<ul>
+<li><code>createTimeoutStrategy(config)</code></li>
+<li><code>createRetryStrategy(config)</code></li>
+<li><code>createBackoffStrategy(config)</code></li>
+<li><code>createDedupeStrategy(config)</code></li>
+<li><code>createAuthStrategy(config)</code></li>
+<li><code>createIdempotencyStrategy(config)</code></li>
+<li><code>createBackpressureStrategy(config)</code></li>
+<li><code>createCircuitBreakerStrategy(config)</code></li>
+</ul>
+<p>Each is a stateful object with <code>execute(request, next)</code> middleware signature.</p>
+
+<h3 id="sse-ws-module"><code>@gluezero/gateway/sse-ws</code></h3>
+<p>Re-exports the realtime building blocks for advanced use cases:</p>
+<ul>
+<li><code>SseAdapter</code> class</li>
+<li><code>WebSocketAdapter</code> class</li>
+<li><code>RealtimeChannelManager</code> class</li>
+<li><code>createReconnectStrategy(config)</code></li>
+<li><code>createVisibilityDetector(config)</code></li>
+<li><code>parseFrame(text)</code> / <code>serializeFrame(frame)</code></li>
+</ul>
+api/devtools.html">@gluezero/devtools</a>
 </div>
 <div class="sidebar-section">
   <div class="sidebar-section-title">Recipes</div>
-  <a class="sidebar-link" href="../recipes/auth-token-refresh.html">Auth + token refresh</a>
-  <a class="sidebar-link" href="../recipes/multi-tenant-cache.html">Multi-tenant cache</a>
-  <a class="sidebar-link" href="../recipes/reconnect-realtime.html">Reconnect SSE→WS</a>
-  <a class="sidebar-link" href="../recipes/worker-progress.html">Worker progress</a>
-  <a class="sidebar-link" href="../recipes/debug-flow.html">Debug with Inspector</a>
-  <a class="sidebar-link" href="../recipes/react-integration.html">React integration</a>
+  <a class="sidebar-link" href="<h1><code>@gluezero/gateway</code></h1>
+<p class="lead">HTTP gateway and SSE/WebSocket realtime adapters. Two sub-modules: <code>@gluezero/gateway/http</code> and <code>@gluezero/gateway/sse-ws</code>.</p>
+
+<h2 id="createRealtimeBroker"><code>createRealtimeBroker(config)</code></h2>
+<pre><code class="language-typescript">function createRealtimeBroker(config?: RealtimeBrokerConfig): RealtimeBroker
+
+interface RealtimeBrokerConfig extends RoutingBrokerConfig {
+  realtime?: {
+    adapter?: 'sse' | 'websocket' | 'auto'        // default: 'auto'
+    fallbackThreshold?: number                    // SSE failures before WS switch
+    cycleCap?: number                             // max reconnect cycles
+    visibilityAware?: boolean                     // pause when tab hidden, default: true
+    pingIntervalMs?: number                       // WS app-level ping, default: 30000
+    staleTimeoutMs?: number                       // WS pong timeout, default: 60000
+  }
+}
+</code></pre>
+
+<h2 id="connect"><code>broker.connectRealtime()</code> / <code>disconnectRealtime()</code></h2>
+<pre><code class="language-typescript">function connectRealtime(): void
+function disconnectRealtime(reason?: string): void
+</code></pre>
+<p>Triggers connection of all <code>realtime-inbound</code> routes. Disconnect aborts all in-flight EventSource/WebSocket instances and prevents auto-reconnect.</p>
+
+<h2 id="auth-policy"><code>AuthPolicy</code></h2>
+<pre><code class="language-typescript">interface AuthPolicy {
+  scheme: 'bearer' | 'basic' | 'cookie' | 'custom'
+  getToken?: () =&gt; string | Promise&lt;string&gt;
+  refresh?: () =&gt; Promise&lt;string&gt;                 // single-flight refresh on 401
+  customHeaders?: () =&gt; Record&lt;string, string&gt;
+}
+</code></pre>
+<p>Single-flight refresh: if multiple requests hit 401 simultaneously, only one <code>refresh()</code> call fires; others queue and retry with the new token (decision <code>D-72</code>).</p>
+
+<h2 id="backpressure"><code>BackpressurePolicy</code></h2>
+<pre><code class="language-typescript">type BackpressurePolicy =
+  | { mode: 'drop-oldest'; max: number }
+  | { mode: 'drop-newest'; max: number }
+  | { mode: 'reject'; max: number }
+  | { mode: 'queue-bounded'; max: number }
+  | { mode: 'sliding-window'; max: number }
+  | { mode: 'critical-bypass'; max: number; bypass: 'critical' }
+</code></pre>
+<p>Critical-priority events bypass backpressure caps when <code>mode: 'critical-bypass'</code> (decision <code>D-75</code>, used for <code>system.error</code> etc.).</p>
+
+<h2 id="frame"><code>RealtimeFrame</code></h2>
+<pre><code class="language-typescript">interface RealtimeFrame {
+  topic: string                       // server-decided topic
+  data: unknown                       // payload (will be canonical-validated)
+  id?: string                         // for Last-Event-ID resume on SSE
+}
+</code></pre>
+
+<h2 id="sub-modules">Sub-modules</h2>
+
+<h3 id="http-module"><code>@gluezero/gateway/http</code></h3>
+<p>Re-exports the strategies for advanced use cases (custom route handler, custom adapter):</p>
+<ul>
+<li><code>createTimeoutStrategy(config)</code></li>
+<li><code>createRetryStrategy(config)</code></li>
+<li><code>createBackoffStrategy(config)</code></li>
+<li><code>createDedupeStrategy(config)</code></li>
+<li><code>createAuthStrategy(config)</code></li>
+<li><code>createIdempotencyStrategy(config)</code></li>
+<li><code>createBackpressureStrategy(config)</code></li>
+<li><code>createCircuitBreakerStrategy(config)</code></li>
+</ul>
+<p>Each is a stateful object with <code>execute(request, next)</code> middleware signature.</p>
+
+<h3 id="sse-ws-module"><code>@gluezero/gateway/sse-ws</code></h3>
+<p>Re-exports the realtime building blocks for advanced use cases:</p>
+<ul>
+<li><code>SseAdapter</code> class</li>
+<li><code>WebSocketAdapter</code> class</li>
+<li><code>RealtimeChannelManager</code> class</li>
+<li><code>createReconnectStrategy(config)</code></li>
+<li><code>createVisibilityDetector(config)</code></li>
+<li><code>parseFrame(text)</code> / <code>serializeFrame(frame)</code></li>
+</ul>
+recipes/auth-token-refresh.html">Auth + token refresh</a>
+  <a class="sidebar-link" href="<h1><code>@gluezero/gateway</code></h1>
+<p class="lead">HTTP gateway and SSE/WebSocket realtime adapters. Two sub-modules: <code>@gluezero/gateway/http</code> and <code>@gluezero/gateway/sse-ws</code>.</p>
+
+<h2 id="createRealtimeBroker"><code>createRealtimeBroker(config)</code></h2>
+<pre><code class="language-typescript">function createRealtimeBroker(config?: RealtimeBrokerConfig): RealtimeBroker
+
+interface RealtimeBrokerConfig extends RoutingBrokerConfig {
+  realtime?: {
+    adapter?: 'sse' | 'websocket' | 'auto'        // default: 'auto'
+    fallbackThreshold?: number                    // SSE failures before WS switch
+    cycleCap?: number                             // max reconnect cycles
+    visibilityAware?: boolean                     // pause when tab hidden, default: true
+    pingIntervalMs?: number                       // WS app-level ping, default: 30000
+    staleTimeoutMs?: number                       // WS pong timeout, default: 60000
+  }
+}
+</code></pre>
+
+<h2 id="connect"><code>broker.connectRealtime()</code> / <code>disconnectRealtime()</code></h2>
+<pre><code class="language-typescript">function connectRealtime(): void
+function disconnectRealtime(reason?: string): void
+</code></pre>
+<p>Triggers connection of all <code>realtime-inbound</code> routes. Disconnect aborts all in-flight EventSource/WebSocket instances and prevents auto-reconnect.</p>
+
+<h2 id="auth-policy"><code>AuthPolicy</code></h2>
+<pre><code class="language-typescript">interface AuthPolicy {
+  scheme: 'bearer' | 'basic' | 'cookie' | 'custom'
+  getToken?: () =&gt; string | Promise&lt;string&gt;
+  refresh?: () =&gt; Promise&lt;string&gt;                 // single-flight refresh on 401
+  customHeaders?: () =&gt; Record&lt;string, string&gt;
+}
+</code></pre>
+<p>Single-flight refresh: if multiple requests hit 401 simultaneously, only one <code>refresh()</code> call fires; others queue and retry with the new token (decision <code>D-72</code>).</p>
+
+<h2 id="backpressure"><code>BackpressurePolicy</code></h2>
+<pre><code class="language-typescript">type BackpressurePolicy =
+  | { mode: 'drop-oldest'; max: number }
+  | { mode: 'drop-newest'; max: number }
+  | { mode: 'reject'; max: number }
+  | { mode: 'queue-bounded'; max: number }
+  | { mode: 'sliding-window'; max: number }
+  | { mode: 'critical-bypass'; max: number; bypass: 'critical' }
+</code></pre>
+<p>Critical-priority events bypass backpressure caps when <code>mode: 'critical-bypass'</code> (decision <code>D-75</code>, used for <code>system.error</code> etc.).</p>
+
+<h2 id="frame"><code>RealtimeFrame</code></h2>
+<pre><code class="language-typescript">interface RealtimeFrame {
+  topic: string                       // server-decided topic
+  data: unknown                       // payload (will be canonical-validated)
+  id?: string                         // for Last-Event-ID resume on SSE
+}
+</code></pre>
+
+<h2 id="sub-modules">Sub-modules</h2>
+
+<h3 id="http-module"><code>@gluezero/gateway/http</code></h3>
+<p>Re-exports the strategies for advanced use cases (custom route handler, custom adapter):</p>
+<ul>
+<li><code>createTimeoutStrategy(config)</code></li>
+<li><code>createRetryStrategy(config)</code></li>
+<li><code>createBackoffStrategy(config)</code></li>
+<li><code>createDedupeStrategy(config)</code></li>
+<li><code>createAuthStrategy(config)</code></li>
+<li><code>createIdempotencyStrategy(config)</code></li>
+<li><code>createBackpressureStrategy(config)</code></li>
+<li><code>createCircuitBreakerStrategy(config)</code></li>
+</ul>
+<p>Each is a stateful object with <code>execute(request, next)</code> middleware signature.</p>
+
+<h3 id="sse-ws-module"><code>@gluezero/gateway/sse-ws</code></h3>
+<p>Re-exports the realtime building blocks for advanced use cases:</p>
+<ul>
+<li><code>SseAdapter</code> class</li>
+<li><code>WebSocketAdapter</code> class</li>
+<li><code>RealtimeChannelManager</code> class</li>
+<li><code>createReconnectStrategy(config)</code></li>
+<li><code>createVisibilityDetector(config)</code></li>
+<li><code>parseFrame(text)</code> / <code>serializeFrame(frame)</code></li>
+</ul>
+recipes/multi-tenant-cache.html">Multi-tenant cache</a>
+  <a class="sidebar-link" href="<h1><code>@gluezero/gateway</code></h1>
+<p class="lead">HTTP gateway and SSE/WebSocket realtime adapters. Two sub-modules: <code>@gluezero/gateway/http</code> and <code>@gluezero/gateway/sse-ws</code>.</p>
+
+<h2 id="createRealtimeBroker"><code>createRealtimeBroker(config)</code></h2>
+<pre><code class="language-typescript">function createRealtimeBroker(config?: RealtimeBrokerConfig): RealtimeBroker
+
+interface RealtimeBrokerConfig extends RoutingBrokerConfig {
+  realtime?: {
+    adapter?: 'sse' | 'websocket' | 'auto'        // default: 'auto'
+    fallbackThreshold?: number                    // SSE failures before WS switch
+    cycleCap?: number                             // max reconnect cycles
+    visibilityAware?: boolean                     // pause when tab hidden, default: true
+    pingIntervalMs?: number                       // WS app-level ping, default: 30000
+    staleTimeoutMs?: number                       // WS pong timeout, default: 60000
+  }
+}
+</code></pre>
+
+<h2 id="connect"><code>broker.connectRealtime()</code> / <code>disconnectRealtime()</code></h2>
+<pre><code class="language-typescript">function connectRealtime(): void
+function disconnectRealtime(reason?: string): void
+</code></pre>
+<p>Triggers connection of all <code>realtime-inbound</code> routes. Disconnect aborts all in-flight EventSource/WebSocket instances and prevents auto-reconnect.</p>
+
+<h2 id="auth-policy"><code>AuthPolicy</code></h2>
+<pre><code class="language-typescript">interface AuthPolicy {
+  scheme: 'bearer' | 'basic' | 'cookie' | 'custom'
+  getToken?: () =&gt; string | Promise&lt;string&gt;
+  refresh?: () =&gt; Promise&lt;string&gt;                 // single-flight refresh on 401
+  customHeaders?: () =&gt; Record&lt;string, string&gt;
+}
+</code></pre>
+<p>Single-flight refresh: if multiple requests hit 401 simultaneously, only one <code>refresh()</code> call fires; others queue and retry with the new token (decision <code>D-72</code>).</p>
+
+<h2 id="backpressure"><code>BackpressurePolicy</code></h2>
+<pre><code class="language-typescript">type BackpressurePolicy =
+  | { mode: 'drop-oldest'; max: number }
+  | { mode: 'drop-newest'; max: number }
+  | { mode: 'reject'; max: number }
+  | { mode: 'queue-bounded'; max: number }
+  | { mode: 'sliding-window'; max: number }
+  | { mode: 'critical-bypass'; max: number; bypass: 'critical' }
+</code></pre>
+<p>Critical-priority events bypass backpressure caps when <code>mode: 'critical-bypass'</code> (decision <code>D-75</code>, used for <code>system.error</code> etc.).</p>
+
+<h2 id="frame"><code>RealtimeFrame</code></h2>
+<pre><code class="language-typescript">interface RealtimeFrame {
+  topic: string                       // server-decided topic
+  data: unknown                       // payload (will be canonical-validated)
+  id?: string                         // for Last-Event-ID resume on SSE
+}
+</code></pre>
+
+<h2 id="sub-modules">Sub-modules</h2>
+
+<h3 id="http-module"><code>@gluezero/gateway/http</code></h3>
+<p>Re-exports the strategies for advanced use cases (custom route handler, custom adapter):</p>
+<ul>
+<li><code>createTimeoutStrategy(config)</code></li>
+<li><code>createRetryStrategy(config)</code></li>
+<li><code>createBackoffStrategy(config)</code></li>
+<li><code>createDedupeStrategy(config)</code></li>
+<li><code>createAuthStrategy(config)</code></li>
+<li><code>createIdempotencyStrategy(config)</code></li>
+<li><code>createBackpressureStrategy(config)</code></li>
+<li><code>createCircuitBreakerStrategy(config)</code></li>
+</ul>
+<p>Each is a stateful object with <code>execute(request, next)</code> middleware signature.</p>
+
+<h3 id="sse-ws-module"><code>@gluezero/gateway/sse-ws</code></h3>
+<p>Re-exports the realtime building blocks for advanced use cases:</p>
+<ul>
+<li><code>SseAdapter</code> class</li>
+<li><code>WebSocketAdapter</code> class</li>
+<li><code>RealtimeChannelManager</code> class</li>
+<li><code>createReconnectStrategy(config)</code></li>
+<li><code>createVisibilityDetector(config)</code></li>
+<li><code>parseFrame(text)</code> / <code>serializeFrame(frame)</code></li>
+</ul>
+recipes/reconnect-realtime.html">Reconnect SSE→WS</a>
+  <a class="sidebar-link" href="<h1><code>@gluezero/gateway</code></h1>
+<p class="lead">HTTP gateway and SSE/WebSocket realtime adapters. Two sub-modules: <code>@gluezero/gateway/http</code> and <code>@gluezero/gateway/sse-ws</code>.</p>
+
+<h2 id="createRealtimeBroker"><code>createRealtimeBroker(config)</code></h2>
+<pre><code class="language-typescript">function createRealtimeBroker(config?: RealtimeBrokerConfig): RealtimeBroker
+
+interface RealtimeBrokerConfig extends RoutingBrokerConfig {
+  realtime?: {
+    adapter?: 'sse' | 'websocket' | 'auto'        // default: 'auto'
+    fallbackThreshold?: number                    // SSE failures before WS switch
+    cycleCap?: number                             // max reconnect cycles
+    visibilityAware?: boolean                     // pause when tab hidden, default: true
+    pingIntervalMs?: number                       // WS app-level ping, default: 30000
+    staleTimeoutMs?: number                       // WS pong timeout, default: 60000
+  }
+}
+</code></pre>
+
+<h2 id="connect"><code>broker.connectRealtime()</code> / <code>disconnectRealtime()</code></h2>
+<pre><code class="language-typescript">function connectRealtime(): void
+function disconnectRealtime(reason?: string): void
+</code></pre>
+<p>Triggers connection of all <code>realtime-inbound</code> routes. Disconnect aborts all in-flight EventSource/WebSocket instances and prevents auto-reconnect.</p>
+
+<h2 id="auth-policy"><code>AuthPolicy</code></h2>
+<pre><code class="language-typescript">interface AuthPolicy {
+  scheme: 'bearer' | 'basic' | 'cookie' | 'custom'
+  getToken?: () =&gt; string | Promise&lt;string&gt;
+  refresh?: () =&gt; Promise&lt;string&gt;                 // single-flight refresh on 401
+  customHeaders?: () =&gt; Record&lt;string, string&gt;
+}
+</code></pre>
+<p>Single-flight refresh: if multiple requests hit 401 simultaneously, only one <code>refresh()</code> call fires; others queue and retry with the new token (decision <code>D-72</code>).</p>
+
+<h2 id="backpressure"><code>BackpressurePolicy</code></h2>
+<pre><code class="language-typescript">type BackpressurePolicy =
+  | { mode: 'drop-oldest'; max: number }
+  | { mode: 'drop-newest'; max: number }
+  | { mode: 'reject'; max: number }
+  | { mode: 'queue-bounded'; max: number }
+  | { mode: 'sliding-window'; max: number }
+  | { mode: 'critical-bypass'; max: number; bypass: 'critical' }
+</code></pre>
+<p>Critical-priority events bypass backpressure caps when <code>mode: 'critical-bypass'</code> (decision <code>D-75</code>, used for <code>system.error</code> etc.).</p>
+
+<h2 id="frame"><code>RealtimeFrame</code></h2>
+<pre><code class="language-typescript">interface RealtimeFrame {
+  topic: string                       // server-decided topic
+  data: unknown                       // payload (will be canonical-validated)
+  id?: string                         // for Last-Event-ID resume on SSE
+}
+</code></pre>
+
+<h2 id="sub-modules">Sub-modules</h2>
+
+<h3 id="http-module"><code>@gluezero/gateway/http</code></h3>
+<p>Re-exports the strategies for advanced use cases (custom route handler, custom adapter):</p>
+<ul>
+<li><code>createTimeoutStrategy(config)</code></li>
+<li><code>createRetryStrategy(config)</code></li>
+<li><code>createBackoffStrategy(config)</code></li>
+<li><code>createDedupeStrategy(config)</code></li>
+<li><code>createAuthStrategy(config)</code></li>
+<li><code>createIdempotencyStrategy(config)</code></li>
+<li><code>createBackpressureStrategy(config)</code></li>
+<li><code>createCircuitBreakerStrategy(config)</code></li>
+</ul>
+<p>Each is a stateful object with <code>execute(request, next)</code> middleware signature.</p>
+
+<h3 id="sse-ws-module"><code>@gluezero/gateway/sse-ws</code></h3>
+<p>Re-exports the realtime building blocks for advanced use cases:</p>
+<ul>
+<li><code>SseAdapter</code> class</li>
+<li><code>WebSocketAdapter</code> class</li>
+<li><code>RealtimeChannelManager</code> class</li>
+<li><code>createReconnectStrategy(config)</code></li>
+<li><code>createVisibilityDetector(config)</code></li>
+<li><code>parseFrame(text)</code> / <code>serializeFrame(frame)</code></li>
+</ul>
+recipes/worker-progress.html">Worker progress</a>
+  <a class="sidebar-link" href="<h1><code>@gluezero/gateway</code></h1>
+<p class="lead">HTTP gateway and SSE/WebSocket realtime adapters. Two sub-modules: <code>@gluezero/gateway/http</code> and <code>@gluezero/gateway/sse-ws</code>.</p>
+
+<h2 id="createRealtimeBroker"><code>createRealtimeBroker(config)</code></h2>
+<pre><code class="language-typescript">function createRealtimeBroker(config?: RealtimeBrokerConfig): RealtimeBroker
+
+interface RealtimeBrokerConfig extends RoutingBrokerConfig {
+  realtime?: {
+    adapter?: 'sse' | 'websocket' | 'auto'        // default: 'auto'
+    fallbackThreshold?: number                    // SSE failures before WS switch
+    cycleCap?: number                             // max reconnect cycles
+    visibilityAware?: boolean                     // pause when tab hidden, default: true
+    pingIntervalMs?: number                       // WS app-level ping, default: 30000
+    staleTimeoutMs?: number                       // WS pong timeout, default: 60000
+  }
+}
+</code></pre>
+
+<h2 id="connect"><code>broker.connectRealtime()</code> / <code>disconnectRealtime()</code></h2>
+<pre><code class="language-typescript">function connectRealtime(): void
+function disconnectRealtime(reason?: string): void
+</code></pre>
+<p>Triggers connection of all <code>realtime-inbound</code> routes. Disconnect aborts all in-flight EventSource/WebSocket instances and prevents auto-reconnect.</p>
+
+<h2 id="auth-policy"><code>AuthPolicy</code></h2>
+<pre><code class="language-typescript">interface AuthPolicy {
+  scheme: 'bearer' | 'basic' | 'cookie' | 'custom'
+  getToken?: () =&gt; string | Promise&lt;string&gt;
+  refresh?: () =&gt; Promise&lt;string&gt;                 // single-flight refresh on 401
+  customHeaders?: () =&gt; Record&lt;string, string&gt;
+}
+</code></pre>
+<p>Single-flight refresh: if multiple requests hit 401 simultaneously, only one <code>refresh()</code> call fires; others queue and retry with the new token (decision <code>D-72</code>).</p>
+
+<h2 id="backpressure"><code>BackpressurePolicy</code></h2>
+<pre><code class="language-typescript">type BackpressurePolicy =
+  | { mode: 'drop-oldest'; max: number }
+  | { mode: 'drop-newest'; max: number }
+  | { mode: 'reject'; max: number }
+  | { mode: 'queue-bounded'; max: number }
+  | { mode: 'sliding-window'; max: number }
+  | { mode: 'critical-bypass'; max: number; bypass: 'critical' }
+</code></pre>
+<p>Critical-priority events bypass backpressure caps when <code>mode: 'critical-bypass'</code> (decision <code>D-75</code>, used for <code>system.error</code> etc.).</p>
+
+<h2 id="frame"><code>RealtimeFrame</code></h2>
+<pre><code class="language-typescript">interface RealtimeFrame {
+  topic: string                       // server-decided topic
+  data: unknown                       // payload (will be canonical-validated)
+  id?: string                         // for Last-Event-ID resume on SSE
+}
+</code></pre>
+
+<h2 id="sub-modules">Sub-modules</h2>
+
+<h3 id="http-module"><code>@gluezero/gateway/http</code></h3>
+<p>Re-exports the strategies for advanced use cases (custom route handler, custom adapter):</p>
+<ul>
+<li><code>createTimeoutStrategy(config)</code></li>
+<li><code>createRetryStrategy(config)</code></li>
+<li><code>createBackoffStrategy(config)</code></li>
+<li><code>createDedupeStrategy(config)</code></li>
+<li><code>createAuthStrategy(config)</code></li>
+<li><code>createIdempotencyStrategy(config)</code></li>
+<li><code>createBackpressureStrategy(config)</code></li>
+<li><code>createCircuitBreakerStrategy(config)</code></li>
+</ul>
+<p>Each is a stateful object with <code>execute(request, next)</code> middleware signature.</p>
+
+<h3 id="sse-ws-module"><code>@gluezero/gateway/sse-ws</code></h3>
+<p>Re-exports the realtime building blocks for advanced use cases:</p>
+<ul>
+<li><code>SseAdapter</code> class</li>
+<li><code>WebSocketAdapter</code> class</li>
+<li><code>RealtimeChannelManager</code> class</li>
+<li><code>createReconnectStrategy(config)</code></li>
+<li><code>createVisibilityDetector(config)</code></li>
+<li><code>parseFrame(text)</code> / <code>serializeFrame(frame)</code></li>
+</ul>
+recipes/debug-flow.html">Debug with Inspector</a>
+  <a class="sidebar-link" href="<h1><code>@gluezero/gateway</code></h1>
+<p class="lead">HTTP gateway and SSE/WebSocket realtime adapters. Two sub-modules: <code>@gluezero/gateway/http</code> and <code>@gluezero/gateway/sse-ws</code>.</p>
+
+<h2 id="createRealtimeBroker"><code>createRealtimeBroker(config)</code></h2>
+<pre><code class="language-typescript">function createRealtimeBroker(config?: RealtimeBrokerConfig): RealtimeBroker
+
+interface RealtimeBrokerConfig extends RoutingBrokerConfig {
+  realtime?: {
+    adapter?: 'sse' | 'websocket' | 'auto'        // default: 'auto'
+    fallbackThreshold?: number                    // SSE failures before WS switch
+    cycleCap?: number                             // max reconnect cycles
+    visibilityAware?: boolean                     // pause when tab hidden, default: true
+    pingIntervalMs?: number                       // WS app-level ping, default: 30000
+    staleTimeoutMs?: number                       // WS pong timeout, default: 60000
+  }
+}
+</code></pre>
+
+<h2 id="connect"><code>broker.connectRealtime()</code> / <code>disconnectRealtime()</code></h2>
+<pre><code class="language-typescript">function connectRealtime(): void
+function disconnectRealtime(reason?: string): void
+</code></pre>
+<p>Triggers connection of all <code>realtime-inbound</code> routes. Disconnect aborts all in-flight EventSource/WebSocket instances and prevents auto-reconnect.</p>
+
+<h2 id="auth-policy"><code>AuthPolicy</code></h2>
+<pre><code class="language-typescript">interface AuthPolicy {
+  scheme: 'bearer' | 'basic' | 'cookie' | 'custom'
+  getToken?: () =&gt; string | Promise&lt;string&gt;
+  refresh?: () =&gt; Promise&lt;string&gt;                 // single-flight refresh on 401
+  customHeaders?: () =&gt; Record&lt;string, string&gt;
+}
+</code></pre>
+<p>Single-flight refresh: if multiple requests hit 401 simultaneously, only one <code>refresh()</code> call fires; others queue and retry with the new token (decision <code>D-72</code>).</p>
+
+<h2 id="backpressure"><code>BackpressurePolicy</code></h2>
+<pre><code class="language-typescript">type BackpressurePolicy =
+  | { mode: 'drop-oldest'; max: number }
+  | { mode: 'drop-newest'; max: number }
+  | { mode: 'reject'; max: number }
+  | { mode: 'queue-bounded'; max: number }
+  | { mode: 'sliding-window'; max: number }
+  | { mode: 'critical-bypass'; max: number; bypass: 'critical' }
+</code></pre>
+<p>Critical-priority events bypass backpressure caps when <code>mode: 'critical-bypass'</code> (decision <code>D-75</code>, used for <code>system.error</code> etc.).</p>
+
+<h2 id="frame"><code>RealtimeFrame</code></h2>
+<pre><code class="language-typescript">interface RealtimeFrame {
+  topic: string                       // server-decided topic
+  data: unknown                       // payload (will be canonical-validated)
+  id?: string                         // for Last-Event-ID resume on SSE
+}
+</code></pre>
+
+<h2 id="sub-modules">Sub-modules</h2>
+
+<h3 id="http-module"><code>@gluezero/gateway/http</code></h3>
+<p>Re-exports the strategies for advanced use cases (custom route handler, custom adapter):</p>
+<ul>
+<li><code>createTimeoutStrategy(config)</code></li>
+<li><code>createRetryStrategy(config)</code></li>
+<li><code>createBackoffStrategy(config)</code></li>
+<li><code>createDedupeStrategy(config)</code></li>
+<li><code>createAuthStrategy(config)</code></li>
+<li><code>createIdempotencyStrategy(config)</code></li>
+<li><code>createBackpressureStrategy(config)</code></li>
+<li><code>createCircuitBreakerStrategy(config)</code></li>
+</ul>
+<p>Each is a stateful object with <code>execute(request, next)</code> middleware signature.</p>
+
+<h3 id="sse-ws-module"><code>@gluezero/gateway/sse-ws</code></h3>
+<p>Re-exports the realtime building blocks for advanced use cases:</p>
+<ul>
+<li><code>SseAdapter</code> class</li>
+<li><code>WebSocketAdapter</code> class</li>
+<li><code>RealtimeChannelManager</code> class</li>
+<li><code>createReconnectStrategy(config)</code></li>
+<li><code>createVisibilityDetector(config)</code></li>
+<li><code>parseFrame(text)</code> / <code>serializeFrame(frame)</code></li>
+</ul>
+recipes/react-integration.html">React integration</a>
 </div>
 <div class="sidebar-section">
   <div class="sidebar-section-title">Reference</div>
-  <a class="sidebar-link" href="../decisions.html">Architectural decisions</a>
-  <a class="sidebar-link" href="../faq.html">FAQ</a>
+  <a class="sidebar-link" href="<h1><code>@gluezero/gateway</code></h1>
+<p class="lead">HTTP gateway and SSE/WebSocket realtime adapters. Two sub-modules: <code>@gluezero/gateway/http</code> and <code>@gluezero/gateway/sse-ws</code>.</p>
+
+<h2 id="createRealtimeBroker"><code>createRealtimeBroker(config)</code></h2>
+<pre><code class="language-typescript">function createRealtimeBroker(config?: RealtimeBrokerConfig): RealtimeBroker
+
+interface RealtimeBrokerConfig extends RoutingBrokerConfig {
+  realtime?: {
+    adapter?: 'sse' | 'websocket' | 'auto'        // default: 'auto'
+    fallbackThreshold?: number                    // SSE failures before WS switch
+    cycleCap?: number                             // max reconnect cycles
+    visibilityAware?: boolean                     // pause when tab hidden, default: true
+    pingIntervalMs?: number                       // WS app-level ping, default: 30000
+    staleTimeoutMs?: number                       // WS pong timeout, default: 60000
+  }
+}
+</code></pre>
+
+<h2 id="connect"><code>broker.connectRealtime()</code> / <code>disconnectRealtime()</code></h2>
+<pre><code class="language-typescript">function connectRealtime(): void
+function disconnectRealtime(reason?: string): void
+</code></pre>
+<p>Triggers connection of all <code>realtime-inbound</code> routes. Disconnect aborts all in-flight EventSource/WebSocket instances and prevents auto-reconnect.</p>
+
+<h2 id="auth-policy"><code>AuthPolicy</code></h2>
+<pre><code class="language-typescript">interface AuthPolicy {
+  scheme: 'bearer' | 'basic' | 'cookie' | 'custom'
+  getToken?: () =&gt; string | Promise&lt;string&gt;
+  refresh?: () =&gt; Promise&lt;string&gt;                 // single-flight refresh on 401
+  customHeaders?: () =&gt; Record&lt;string, string&gt;
+}
+</code></pre>
+<p>Single-flight refresh: if multiple requests hit 401 simultaneously, only one <code>refresh()</code> call fires; others queue and retry with the new token (decision <code>D-72</code>).</p>
+
+<h2 id="backpressure"><code>BackpressurePolicy</code></h2>
+<pre><code class="language-typescript">type BackpressurePolicy =
+  | { mode: 'drop-oldest'; max: number }
+  | { mode: 'drop-newest'; max: number }
+  | { mode: 'reject'; max: number }
+  | { mode: 'queue-bounded'; max: number }
+  | { mode: 'sliding-window'; max: number }
+  | { mode: 'critical-bypass'; max: number; bypass: 'critical' }
+</code></pre>
+<p>Critical-priority events bypass backpressure caps when <code>mode: 'critical-bypass'</code> (decision <code>D-75</code>, used for <code>system.error</code> etc.).</p>
+
+<h2 id="frame"><code>RealtimeFrame</code></h2>
+<pre><code class="language-typescript">interface RealtimeFrame {
+  topic: string                       // server-decided topic
+  data: unknown                       // payload (will be canonical-validated)
+  id?: string                         // for Last-Event-ID resume on SSE
+}
+</code></pre>
+
+<h2 id="sub-modules">Sub-modules</h2>
+
+<h3 id="http-module"><code>@gluezero/gateway/http</code></h3>
+<p>Re-exports the strategies for advanced use cases (custom route handler, custom adapter):</p>
+<ul>
+<li><code>createTimeoutStrategy(config)</code></li>
+<li><code>createRetryStrategy(config)</code></li>
+<li><code>createBackoffStrategy(config)</code></li>
+<li><code>createDedupeStrategy(config)</code></li>
+<li><code>createAuthStrategy(config)</code></li>
+<li><code>createIdempotencyStrategy(config)</code></li>
+<li><code>createBackpressureStrategy(config)</code></li>
+<li><code>createCircuitBreakerStrategy(config)</code></li>
+</ul>
+<p>Each is a stateful object with <code>execute(request, next)</code> middleware signature.</p>
+
+<h3 id="sse-ws-module"><code>@gluezero/gateway/sse-ws</code></h3>
+<p>Re-exports the realtime building blocks for advanced use cases:</p>
+<ul>
+<li><code>SseAdapter</code> class</li>
+<li><code>WebSocketAdapter</code> class</li>
+<li><code>RealtimeChannelManager</code> class</li>
+<li><code>createReconnectStrategy(config)</code></li>
+<li><code>createVisibilityDetector(config)</code></li>
+<li><code>parseFrame(text)</code> / <code>serializeFrame(frame)</code></li>
+</ul>
+decisions.html">Architectural decisions</a>
+  <a class="sidebar-link" href="<h1><code>@gluezero/gateway</code></h1>
+<p class="lead">HTTP gateway and SSE/WebSocket realtime adapters. Two sub-modules: <code>@gluezero/gateway/http</code> and <code>@gluezero/gateway/sse-ws</code>.</p>
+
+<h2 id="createRealtimeBroker"><code>createRealtimeBroker(config)</code></h2>
+<pre><code class="language-typescript">function createRealtimeBroker(config?: RealtimeBrokerConfig): RealtimeBroker
+
+interface RealtimeBrokerConfig extends RoutingBrokerConfig {
+  realtime?: {
+    adapter?: 'sse' | 'websocket' | 'auto'        // default: 'auto'
+    fallbackThreshold?: number                    // SSE failures before WS switch
+    cycleCap?: number                             // max reconnect cycles
+    visibilityAware?: boolean                     // pause when tab hidden, default: true
+    pingIntervalMs?: number                       // WS app-level ping, default: 30000
+    staleTimeoutMs?: number                       // WS pong timeout, default: 60000
+  }
+}
+</code></pre>
+
+<h2 id="connect"><code>broker.connectRealtime()</code> / <code>disconnectRealtime()</code></h2>
+<pre><code class="language-typescript">function connectRealtime(): void
+function disconnectRealtime(reason?: string): void
+</code></pre>
+<p>Triggers connection of all <code>realtime-inbound</code> routes. Disconnect aborts all in-flight EventSource/WebSocket instances and prevents auto-reconnect.</p>
+
+<h2 id="auth-policy"><code>AuthPolicy</code></h2>
+<pre><code class="language-typescript">interface AuthPolicy {
+  scheme: 'bearer' | 'basic' | 'cookie' | 'custom'
+  getToken?: () =&gt; string | Promise&lt;string&gt;
+  refresh?: () =&gt; Promise&lt;string&gt;                 // single-flight refresh on 401
+  customHeaders?: () =&gt; Record&lt;string, string&gt;
+}
+</code></pre>
+<p>Single-flight refresh: if multiple requests hit 401 simultaneously, only one <code>refresh()</code> call fires; others queue and retry with the new token (decision <code>D-72</code>).</p>
+
+<h2 id="backpressure"><code>BackpressurePolicy</code></h2>
+<pre><code class="language-typescript">type BackpressurePolicy =
+  | { mode: 'drop-oldest'; max: number }
+  | { mode: 'drop-newest'; max: number }
+  | { mode: 'reject'; max: number }
+  | { mode: 'queue-bounded'; max: number }
+  | { mode: 'sliding-window'; max: number }
+  | { mode: 'critical-bypass'; max: number; bypass: 'critical' }
+</code></pre>
+<p>Critical-priority events bypass backpressure caps when <code>mode: 'critical-bypass'</code> (decision <code>D-75</code>, used for <code>system.error</code> etc.).</p>
+
+<h2 id="frame"><code>RealtimeFrame</code></h2>
+<pre><code class="language-typescript">interface RealtimeFrame {
+  topic: string                       // server-decided topic
+  data: unknown                       // payload (will be canonical-validated)
+  id?: string                         // for Last-Event-ID resume on SSE
+}
+</code></pre>
+
+<h2 id="sub-modules">Sub-modules</h2>
+
+<h3 id="http-module"><code>@gluezero/gateway/http</code></h3>
+<p>Re-exports the strategies for advanced use cases (custom route handler, custom adapter):</p>
+<ul>
+<li><code>createTimeoutStrategy(config)</code></li>
+<li><code>createRetryStrategy(config)</code></li>
+<li><code>createBackoffStrategy(config)</code></li>
+<li><code>createDedupeStrategy(config)</code></li>
+<li><code>createAuthStrategy(config)</code></li>
+<li><code>createIdempotencyStrategy(config)</code></li>
+<li><code>createBackpressureStrategy(config)</code></li>
+<li><code>createCircuitBreakerStrategy(config)</code></li>
+</ul>
+<p>Each is a stateful object with <code>execute(request, next)</code> middleware signature.</p>
+
+<h3 id="sse-ws-module"><code>@gluezero/gateway/sse-ws</code></h3>
+<p>Re-exports the realtime building blocks for advanced use cases:</p>
+<ul>
+<li><code>SseAdapter</code> class</li>
+<li><code>WebSocketAdapter</code> class</li>
+<li><code>RealtimeChannelManager</code> class</li>
+<li><code>createReconnectStrategy(config)</code></li>
+<li><code>createVisibilityDetector(config)</code></li>
+<li><code>parseFrame(text)</code> / <code>serializeFrame(frame)</code></li>
+</ul>
+faq.html">FAQ</a>
 </div>
 </nav>
 <main class="content" role="main">
 <div class="content-inner">
-<nav class="breadcrumb" aria-label="Breadcrumb"><a href="../index.html">Docs</a> / API reference</nav>
-<h1>@gluezero/gateway</h1>
-<p class="lead">This page is under construction. Check back shortly for the full content.</p>
-<p><a href="../index.html">← Back to docs home</a></p>
+<nav class="breadcrumb" aria-label="Breadcrumb"><a href="<h1><code>@gluezero/gateway</code></h1>
+<p class="lead">HTTP gateway and SSE/WebSocket realtime adapters. Two sub-modules: <code>@gluezero/gateway/http</code> and <code>@gluezero/gateway/sse-ws</code>.</p>
+
+<h2 id="createRealtimeBroker"><code>createRealtimeBroker(config)</code></h2>
+<pre><code class="language-typescript">function createRealtimeBroker(config?: RealtimeBrokerConfig): RealtimeBroker
+
+interface RealtimeBrokerConfig extends RoutingBrokerConfig {
+  realtime?: {
+    adapter?: 'sse' | 'websocket' | 'auto'        // default: 'auto'
+    fallbackThreshold?: number                    // SSE failures before WS switch
+    cycleCap?: number                             // max reconnect cycles
+    visibilityAware?: boolean                     // pause when tab hidden, default: true
+    pingIntervalMs?: number                       // WS app-level ping, default: 30000
+    staleTimeoutMs?: number                       // WS pong timeout, default: 60000
+  }
+}
+</code></pre>
+
+<h2 id="connect"><code>broker.connectRealtime()</code> / <code>disconnectRealtime()</code></h2>
+<pre><code class="language-typescript">function connectRealtime(): void
+function disconnectRealtime(reason?: string): void
+</code></pre>
+<p>Triggers connection of all <code>realtime-inbound</code> routes. Disconnect aborts all in-flight EventSource/WebSocket instances and prevents auto-reconnect.</p>
+
+<h2 id="auth-policy"><code>AuthPolicy</code></h2>
+<pre><code class="language-typescript">interface AuthPolicy {
+  scheme: 'bearer' | 'basic' | 'cookie' | 'custom'
+  getToken?: () =&gt; string | Promise&lt;string&gt;
+  refresh?: () =&gt; Promise&lt;string&gt;                 // single-flight refresh on 401
+  customHeaders?: () =&gt; Record&lt;string, string&gt;
+}
+</code></pre>
+<p>Single-flight refresh: if multiple requests hit 401 simultaneously, only one <code>refresh()</code> call fires; others queue and retry with the new token (decision <code>D-72</code>).</p>
+
+<h2 id="backpressure"><code>BackpressurePolicy</code></h2>
+<pre><code class="language-typescript">type BackpressurePolicy =
+  | { mode: 'drop-oldest'; max: number }
+  | { mode: 'drop-newest'; max: number }
+  | { mode: 'reject'; max: number }
+  | { mode: 'queue-bounded'; max: number }
+  | { mode: 'sliding-window'; max: number }
+  | { mode: 'critical-bypass'; max: number; bypass: 'critical' }
+</code></pre>
+<p>Critical-priority events bypass backpressure caps when <code>mode: 'critical-bypass'</code> (decision <code>D-75</code>, used for <code>system.error</code> etc.).</p>
+
+<h2 id="frame"><code>RealtimeFrame</code></h2>
+<pre><code class="language-typescript">interface RealtimeFrame {
+  topic: string                       // server-decided topic
+  data: unknown                       // payload (will be canonical-validated)
+  id?: string                         // for Last-Event-ID resume on SSE
+}
+</code></pre>
+
+<h2 id="sub-modules">Sub-modules</h2>
+
+<h3 id="http-module"><code>@gluezero/gateway/http</code></h3>
+<p>Re-exports the strategies for advanced use cases (custom route handler, custom adapter):</p>
+<ul>
+<li><code>createTimeoutStrategy(config)</code></li>
+<li><code>createRetryStrategy(config)</code></li>
+<li><code>createBackoffStrategy(config)</code></li>
+<li><code>createDedupeStrategy(config)</code></li>
+<li><code>createAuthStrategy(config)</code></li>
+<li><code>createIdempotencyStrategy(config)</code></li>
+<li><code>createBackpressureStrategy(config)</code></li>
+<li><code>createCircuitBreakerStrategy(config)</code></li>
+</ul>
+<p>Each is a stateful object with <code>execute(request, next)</code> middleware signature.</p>
+
+<h3 id="sse-ws-module"><code>@gluezero/gateway/sse-ws</code></h3>
+<p>Re-exports the realtime building blocks for advanced use cases:</p>
+<ul>
+<li><code>SseAdapter</code> class</li>
+<li><code>WebSocketAdapter</code> class</li>
+<li><code>RealtimeChannelManager</code> class</li>
+<li><code>createReconnectStrategy(config)</code></li>
+<li><code>createVisibilityDetector(config)</code></li>
+<li><code>parseFrame(text)</code> / <code>serializeFrame(frame)</code></li>
+</ul>
+index.html">Docs</a> / API reference</nav>
+../
 <footer class="footer">
   <div>GlueZero v1.0.0 — MIT License</div>
   <div>
@@ -87,6 +2534,85 @@
 </footer>
 </div>
 </main>
-<script src="../assets/docs.js"></script>
+<script src="<h1><code>@gluezero/gateway</code></h1>
+<p class="lead">HTTP gateway and SSE/WebSocket realtime adapters. Two sub-modules: <code>@gluezero/gateway/http</code> and <code>@gluezero/gateway/sse-ws</code>.</p>
+
+<h2 id="createRealtimeBroker"><code>createRealtimeBroker(config)</code></h2>
+<pre><code class="language-typescript">function createRealtimeBroker(config?: RealtimeBrokerConfig): RealtimeBroker
+
+interface RealtimeBrokerConfig extends RoutingBrokerConfig {
+  realtime?: {
+    adapter?: 'sse' | 'websocket' | 'auto'        // default: 'auto'
+    fallbackThreshold?: number                    // SSE failures before WS switch
+    cycleCap?: number                             // max reconnect cycles
+    visibilityAware?: boolean                     // pause when tab hidden, default: true
+    pingIntervalMs?: number                       // WS app-level ping, default: 30000
+    staleTimeoutMs?: number                       // WS pong timeout, default: 60000
+  }
+}
+</code></pre>
+
+<h2 id="connect"><code>broker.connectRealtime()</code> / <code>disconnectRealtime()</code></h2>
+<pre><code class="language-typescript">function connectRealtime(): void
+function disconnectRealtime(reason?: string): void
+</code></pre>
+<p>Triggers connection of all <code>realtime-inbound</code> routes. Disconnect aborts all in-flight EventSource/WebSocket instances and prevents auto-reconnect.</p>
+
+<h2 id="auth-policy"><code>AuthPolicy</code></h2>
+<pre><code class="language-typescript">interface AuthPolicy {
+  scheme: 'bearer' | 'basic' | 'cookie' | 'custom'
+  getToken?: () =&gt; string | Promise&lt;string&gt;
+  refresh?: () =&gt; Promise&lt;string&gt;                 // single-flight refresh on 401
+  customHeaders?: () =&gt; Record&lt;string, string&gt;
+}
+</code></pre>
+<p>Single-flight refresh: if multiple requests hit 401 simultaneously, only one <code>refresh()</code> call fires; others queue and retry with the new token (decision <code>D-72</code>).</p>
+
+<h2 id="backpressure"><code>BackpressurePolicy</code></h2>
+<pre><code class="language-typescript">type BackpressurePolicy =
+  | { mode: 'drop-oldest'; max: number }
+  | { mode: 'drop-newest'; max: number }
+  | { mode: 'reject'; max: number }
+  | { mode: 'queue-bounded'; max: number }
+  | { mode: 'sliding-window'; max: number }
+  | { mode: 'critical-bypass'; max: number; bypass: 'critical' }
+</code></pre>
+<p>Critical-priority events bypass backpressure caps when <code>mode: 'critical-bypass'</code> (decision <code>D-75</code>, used for <code>system.error</code> etc.).</p>
+
+<h2 id="frame"><code>RealtimeFrame</code></h2>
+<pre><code class="language-typescript">interface RealtimeFrame {
+  topic: string                       // server-decided topic
+  data: unknown                       // payload (will be canonical-validated)
+  id?: string                         // for Last-Event-ID resume on SSE
+}
+</code></pre>
+
+<h2 id="sub-modules">Sub-modules</h2>
+
+<h3 id="http-module"><code>@gluezero/gateway/http</code></h3>
+<p>Re-exports the strategies for advanced use cases (custom route handler, custom adapter):</p>
+<ul>
+<li><code>createTimeoutStrategy(config)</code></li>
+<li><code>createRetryStrategy(config)</code></li>
+<li><code>createBackoffStrategy(config)</code></li>
+<li><code>createDedupeStrategy(config)</code></li>
+<li><code>createAuthStrategy(config)</code></li>
+<li><code>createIdempotencyStrategy(config)</code></li>
+<li><code>createBackpressureStrategy(config)</code></li>
+<li><code>createCircuitBreakerStrategy(config)</code></li>
+</ul>
+<p>Each is a stateful object with <code>execute(request, next)</code> middleware signature.</p>
+
+<h3 id="sse-ws-module"><code>@gluezero/gateway/sse-ws</code></h3>
+<p>Re-exports the realtime building blocks for advanced use cases:</p>
+<ul>
+<li><code>SseAdapter</code> class</li>
+<li><code>WebSocketAdapter</code> class</li>
+<li><code>RealtimeChannelManager</code> class</li>
+<li><code>createReconnectStrategy(config)</code></li>
+<li><code>createVisibilityDetector(config)</code></li>
+<li><code>parseFrame(text)</code> / <code>serializeFrame(frame)</code></li>
+</ul>
+assets/docs.js"></script>
 </body>
 </html>

@@ -5,13 +5,319 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>@gluezero/worker — GlueZero docs</title>
 <meta name="description" content="API reference — GlueZero v1.0.0 documentation">
-<link rel="stylesheet" href="../assets/styles.css">
+<link rel="stylesheet" href="<h1><code>@gluezero/worker</code></h1>
+<p class="lead">Web Worker runtime. Bounded pool, hybrid cancellation, transferable opt-in, dev-mode serialization checks. Built on Comlink under the hood.</p>
+
+<h2 id="createWorkerBroker"><code>createWorkerBroker(config)</code></h2>
+<pre><code class="language-typescript">function createWorkerBroker(config?: WorkerBrokerConfig): WorkerBroker
+
+interface WorkerBrokerConfig extends RealtimeBrokerConfig {
+  workers?: {
+    assertSerializable?: 'always' | 'dev' | 'off'   // default: 'dev'
+    progressThrottleMs?: number                     // default: 100
+    cancelGraceMs?: number                          // default: 2000
+    poolSize?: number                               // default: min(hwc, 4) cap 8
+  }
+}
+</code></pre>
+
+<h2 id="worker-descriptor"><code>WorkerDescriptor</code></h2>
+<pre><code class="language-typescript">interface WorkerDescriptor {
+  id: string
+  factory: () =&gt; Worker                  // lazy: called on first dispatch
+  tasks: readonly string[]               // declared task names (fail-fast on unknown)
+  poolSize?: number                      // override per worker
+  type?: 'module' | 'classic'            // default: 'module' (ESM)
+}
+</code></pre>
+
+<h2 id="register-worker"><code>broker.registerWorker(descriptor)</code></h2>
+<pre><code class="language-typescript">function registerWorker(descriptor: WorkerDescriptor): void
+</code></pre>
+<p>Validates the descriptor. The <code>factory()</code> is NOT called until the first dispatch — registration is cheap.</p>
+
+<h2 id="expose"><code>expose(api)</code> — inside the worker source</h2>
+<pre><code class="language-typescript">// Inside csv-worker.ts
+import { expose } from '@gluezero/worker'
+
+expose({
+  parseCSV: async (
+    fileBuffer: ArrayBuffer,
+    signal: AbortSignal,                 // proxied via Comlink
+    onProgress: (p: ProgressPayload) =&gt; void
+  ) =&gt; {
+    // ...
+    return parsedRows
+  },
+  validateCSV: async (...) =&gt; { /* ... */ },
+})
+
+interface ProgressPayload {
+  value: number          // 0..1 normalized
+  message?: string
+  partialResult?: unknown
+}
+</code></pre>
+
+<h2 id="task-state"><code>TaskState</code></h2>
+<pre><code class="language-typescript">type TaskState =
+  | 'pending'
+  | 'running'
+  | 'completed'
+  | 'failed'
+  | 'cancelled'
+  | 'timed-out'
+</code></pre>
+
+<h2 id="task-tracker"><code>broker.getTaskTracker()</code></h2>
+<pre><code class="language-typescript">interface TaskTracker {
+  list(): TaskInfo[]
+  get(id: string): TaskInfo | undefined
+}
+
+interface TaskInfo {
+  id: string
+  workerId: string
+  taskName: string
+  state: TaskState
+  startedAt: number
+  completedAt?: number
+  durationMs?: number
+  correlationId: string                 // matches BrokerEvent.id
+  topic: string
+}
+</code></pre>
+
+<h2 id="errors">Error codes</h2>
+<table>
+<thead><tr><th>Code</th><th>When</th></tr></thead>
+<tbody>
+<tr><td><code>worker.unknown</code></td><td>Dispatch to unregistered worker id</td></tr>
+<tr><td><code>worker.task.unknown</code></td><td>Task name not in <code>tasks</code> array (fail-fast)</td></tr>
+<tr><td><code>worker.timeout</code></td><td>Timeout policy fired</td></tr>
+<tr><td><code>worker.cancelled</code></td><td>AbortSignal cancellation</td></tr>
+<tr><td><code>worker.serialization.failed</code></td><td>Payload not structuredClone-able (dev mode)</td></tr>
+<tr><td><code>worker.pool.size.exceeded</code></td><td>poolSize > hard cap 8</td></tr>
+</tbody>
+</table>
+
+<h2 id="utilities">Utilities</h2>
+<ul>
+<li><code>assertSerializable(value, opts?)</code> — throws if value can&rsquo;t cross postMessage boundary</li>
+<li><code>extractTransferables(payload, jsonPaths)</code> — collect ArrayBuffer-like objects from payload</li>
+<li><code>deriveTopic(sourceTopic, suffix)</code> — <code>weather.requested</code> + <code>completed</code> → <code>weather.completed</code></li>
+</ul>
+assets/styles.css">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect width='24' height='24' rx='6' fill='%236366F1'/%3E%3Ctext x='12' y='17' text-anchor='middle' fill='white' font-family='sans-serif' font-weight='800' font-size='12'%3EGZ%3C/text%3E%3C/svg%3E">
 </head>
-<body data-base="../">
+<body data-base="<h1><code>@gluezero/worker</code></h1>
+<p class="lead">Web Worker runtime. Bounded pool, hybrid cancellation, transferable opt-in, dev-mode serialization checks. Built on Comlink under the hood.</p>
+
+<h2 id="createWorkerBroker"><code>createWorkerBroker(config)</code></h2>
+<pre><code class="language-typescript">function createWorkerBroker(config?: WorkerBrokerConfig): WorkerBroker
+
+interface WorkerBrokerConfig extends RealtimeBrokerConfig {
+  workers?: {
+    assertSerializable?: 'always' | 'dev' | 'off'   // default: 'dev'
+    progressThrottleMs?: number                     // default: 100
+    cancelGraceMs?: number                          // default: 2000
+    poolSize?: number                               // default: min(hwc, 4) cap 8
+  }
+}
+</code></pre>
+
+<h2 id="worker-descriptor"><code>WorkerDescriptor</code></h2>
+<pre><code class="language-typescript">interface WorkerDescriptor {
+  id: string
+  factory: () =&gt; Worker                  // lazy: called on first dispatch
+  tasks: readonly string[]               // declared task names (fail-fast on unknown)
+  poolSize?: number                      // override per worker
+  type?: 'module' | 'classic'            // default: 'module' (ESM)
+}
+</code></pre>
+
+<h2 id="register-worker"><code>broker.registerWorker(descriptor)</code></h2>
+<pre><code class="language-typescript">function registerWorker(descriptor: WorkerDescriptor): void
+</code></pre>
+<p>Validates the descriptor. The <code>factory()</code> is NOT called until the first dispatch — registration is cheap.</p>
+
+<h2 id="expose"><code>expose(api)</code> — inside the worker source</h2>
+<pre><code class="language-typescript">// Inside csv-worker.ts
+import { expose } from '@gluezero/worker'
+
+expose({
+  parseCSV: async (
+    fileBuffer: ArrayBuffer,
+    signal: AbortSignal,                 // proxied via Comlink
+    onProgress: (p: ProgressPayload) =&gt; void
+  ) =&gt; {
+    // ...
+    return parsedRows
+  },
+  validateCSV: async (...) =&gt; { /* ... */ },
+})
+
+interface ProgressPayload {
+  value: number          // 0..1 normalized
+  message?: string
+  partialResult?: unknown
+}
+</code></pre>
+
+<h2 id="task-state"><code>TaskState</code></h2>
+<pre><code class="language-typescript">type TaskState =
+  | 'pending'
+  | 'running'
+  | 'completed'
+  | 'failed'
+  | 'cancelled'
+  | 'timed-out'
+</code></pre>
+
+<h2 id="task-tracker"><code>broker.getTaskTracker()</code></h2>
+<pre><code class="language-typescript">interface TaskTracker {
+  list(): TaskInfo[]
+  get(id: string): TaskInfo | undefined
+}
+
+interface TaskInfo {
+  id: string
+  workerId: string
+  taskName: string
+  state: TaskState
+  startedAt: number
+  completedAt?: number
+  durationMs?: number
+  correlationId: string                 // matches BrokerEvent.id
+  topic: string
+}
+</code></pre>
+
+<h2 id="errors">Error codes</h2>
+<table>
+<thead><tr><th>Code</th><th>When</th></tr></thead>
+<tbody>
+<tr><td><code>worker.unknown</code></td><td>Dispatch to unregistered worker id</td></tr>
+<tr><td><code>worker.task.unknown</code></td><td>Task name not in <code>tasks</code> array (fail-fast)</td></tr>
+<tr><td><code>worker.timeout</code></td><td>Timeout policy fired</td></tr>
+<tr><td><code>worker.cancelled</code></td><td>AbortSignal cancellation</td></tr>
+<tr><td><code>worker.serialization.failed</code></td><td>Payload not structuredClone-able (dev mode)</td></tr>
+<tr><td><code>worker.pool.size.exceeded</code></td><td>poolSize > hard cap 8</td></tr>
+</tbody>
+</table>
+
+<h2 id="utilities">Utilities</h2>
+<ul>
+<li><code>assertSerializable(value, opts?)</code> — throws if value can&rsquo;t cross postMessage boundary</li>
+<li><code>extractTransferables(payload, jsonPaths)</code> — collect ArrayBuffer-like objects from payload</li>
+<li><code>deriveTopic(sourceTopic, suffix)</code> — <code>weather.requested</code> + <code>completed</code> → <code>weather.completed</code></li>
+</ul>
+">
 <header class="topbar" role="banner">
   <button class="menu-toggle" aria-label="Toggle navigation">☰</button>
-  <a class="topbar-brand" href="../index.html">
+  <a class="topbar-brand" href="<h1><code>@gluezero/worker</code></h1>
+<p class="lead">Web Worker runtime. Bounded pool, hybrid cancellation, transferable opt-in, dev-mode serialization checks. Built on Comlink under the hood.</p>
+
+<h2 id="createWorkerBroker"><code>createWorkerBroker(config)</code></h2>
+<pre><code class="language-typescript">function createWorkerBroker(config?: WorkerBrokerConfig): WorkerBroker
+
+interface WorkerBrokerConfig extends RealtimeBrokerConfig {
+  workers?: {
+    assertSerializable?: 'always' | 'dev' | 'off'   // default: 'dev'
+    progressThrottleMs?: number                     // default: 100
+    cancelGraceMs?: number                          // default: 2000
+    poolSize?: number                               // default: min(hwc, 4) cap 8
+  }
+}
+</code></pre>
+
+<h2 id="worker-descriptor"><code>WorkerDescriptor</code></h2>
+<pre><code class="language-typescript">interface WorkerDescriptor {
+  id: string
+  factory: () =&gt; Worker                  // lazy: called on first dispatch
+  tasks: readonly string[]               // declared task names (fail-fast on unknown)
+  poolSize?: number                      // override per worker
+  type?: 'module' | 'classic'            // default: 'module' (ESM)
+}
+</code></pre>
+
+<h2 id="register-worker"><code>broker.registerWorker(descriptor)</code></h2>
+<pre><code class="language-typescript">function registerWorker(descriptor: WorkerDescriptor): void
+</code></pre>
+<p>Validates the descriptor. The <code>factory()</code> is NOT called until the first dispatch — registration is cheap.</p>
+
+<h2 id="expose"><code>expose(api)</code> — inside the worker source</h2>
+<pre><code class="language-typescript">// Inside csv-worker.ts
+import { expose } from '@gluezero/worker'
+
+expose({
+  parseCSV: async (
+    fileBuffer: ArrayBuffer,
+    signal: AbortSignal,                 // proxied via Comlink
+    onProgress: (p: ProgressPayload) =&gt; void
+  ) =&gt; {
+    // ...
+    return parsedRows
+  },
+  validateCSV: async (...) =&gt; { /* ... */ },
+})
+
+interface ProgressPayload {
+  value: number          // 0..1 normalized
+  message?: string
+  partialResult?: unknown
+}
+</code></pre>
+
+<h2 id="task-state"><code>TaskState</code></h2>
+<pre><code class="language-typescript">type TaskState =
+  | 'pending'
+  | 'running'
+  | 'completed'
+  | 'failed'
+  | 'cancelled'
+  | 'timed-out'
+</code></pre>
+
+<h2 id="task-tracker"><code>broker.getTaskTracker()</code></h2>
+<pre><code class="language-typescript">interface TaskTracker {
+  list(): TaskInfo[]
+  get(id: string): TaskInfo | undefined
+}
+
+interface TaskInfo {
+  id: string
+  workerId: string
+  taskName: string
+  state: TaskState
+  startedAt: number
+  completedAt?: number
+  durationMs?: number
+  correlationId: string                 // matches BrokerEvent.id
+  topic: string
+}
+</code></pre>
+
+<h2 id="errors">Error codes</h2>
+<table>
+<thead><tr><th>Code</th><th>When</th></tr></thead>
+<tbody>
+<tr><td><code>worker.unknown</code></td><td>Dispatch to unregistered worker id</td></tr>
+<tr><td><code>worker.task.unknown</code></td><td>Task name not in <code>tasks</code> array (fail-fast)</td></tr>
+<tr><td><code>worker.timeout</code></td><td>Timeout policy fired</td></tr>
+<tr><td><code>worker.cancelled</code></td><td>AbortSignal cancellation</td></tr>
+<tr><td><code>worker.serialization.failed</code></td><td>Payload not structuredClone-able (dev mode)</td></tr>
+<tr><td><code>worker.pool.size.exceeded</code></td><td>poolSize > hard cap 8</td></tr>
+</tbody>
+</table>
+
+<h2 id="utilities">Utilities</h2>
+<ul>
+<li><code>assertSerializable(value, opts?)</code> — throws if value can&rsquo;t cross postMessage boundary</li>
+<li><code>extractTransferables(payload, jsonPaths)</code> — collect ArrayBuffer-like objects from payload</li>
+<li><code>deriveTopic(sourceTopic, suffix)</code> — <code>weather.requested</code> + <code>completed</code> → <code>weather.completed</code></li>
+</ul>
+index.html">
     <span class="topbar-brand-mark">GZ</span>
     <span>GlueZero</span>
     <span class="topbar-version">v1.0.0</span>
@@ -30,53 +336,2907 @@
 <nav class="sidebar" aria-label="Documentation navigation">
 <div class="sidebar-section">
   <div class="sidebar-section-title">Get started</div>
-  <a class="sidebar-link" href="../index.html">Welcome</a>
-  <a class="sidebar-link" href="../getting-started.html">Getting started</a>
+  <a class="sidebar-link" href="<h1><code>@gluezero/worker</code></h1>
+<p class="lead">Web Worker runtime. Bounded pool, hybrid cancellation, transferable opt-in, dev-mode serialization checks. Built on Comlink under the hood.</p>
+
+<h2 id="createWorkerBroker"><code>createWorkerBroker(config)</code></h2>
+<pre><code class="language-typescript">function createWorkerBroker(config?: WorkerBrokerConfig): WorkerBroker
+
+interface WorkerBrokerConfig extends RealtimeBrokerConfig {
+  workers?: {
+    assertSerializable?: 'always' | 'dev' | 'off'   // default: 'dev'
+    progressThrottleMs?: number                     // default: 100
+    cancelGraceMs?: number                          // default: 2000
+    poolSize?: number                               // default: min(hwc, 4) cap 8
+  }
+}
+</code></pre>
+
+<h2 id="worker-descriptor"><code>WorkerDescriptor</code></h2>
+<pre><code class="language-typescript">interface WorkerDescriptor {
+  id: string
+  factory: () =&gt; Worker                  // lazy: called on first dispatch
+  tasks: readonly string[]               // declared task names (fail-fast on unknown)
+  poolSize?: number                      // override per worker
+  type?: 'module' | 'classic'            // default: 'module' (ESM)
+}
+</code></pre>
+
+<h2 id="register-worker"><code>broker.registerWorker(descriptor)</code></h2>
+<pre><code class="language-typescript">function registerWorker(descriptor: WorkerDescriptor): void
+</code></pre>
+<p>Validates the descriptor. The <code>factory()</code> is NOT called until the first dispatch — registration is cheap.</p>
+
+<h2 id="expose"><code>expose(api)</code> — inside the worker source</h2>
+<pre><code class="language-typescript">// Inside csv-worker.ts
+import { expose } from '@gluezero/worker'
+
+expose({
+  parseCSV: async (
+    fileBuffer: ArrayBuffer,
+    signal: AbortSignal,                 // proxied via Comlink
+    onProgress: (p: ProgressPayload) =&gt; void
+  ) =&gt; {
+    // ...
+    return parsedRows
+  },
+  validateCSV: async (...) =&gt; { /* ... */ },
+})
+
+interface ProgressPayload {
+  value: number          // 0..1 normalized
+  message?: string
+  partialResult?: unknown
+}
+</code></pre>
+
+<h2 id="task-state"><code>TaskState</code></h2>
+<pre><code class="language-typescript">type TaskState =
+  | 'pending'
+  | 'running'
+  | 'completed'
+  | 'failed'
+  | 'cancelled'
+  | 'timed-out'
+</code></pre>
+
+<h2 id="task-tracker"><code>broker.getTaskTracker()</code></h2>
+<pre><code class="language-typescript">interface TaskTracker {
+  list(): TaskInfo[]
+  get(id: string): TaskInfo | undefined
+}
+
+interface TaskInfo {
+  id: string
+  workerId: string
+  taskName: string
+  state: TaskState
+  startedAt: number
+  completedAt?: number
+  durationMs?: number
+  correlationId: string                 // matches BrokerEvent.id
+  topic: string
+}
+</code></pre>
+
+<h2 id="errors">Error codes</h2>
+<table>
+<thead><tr><th>Code</th><th>When</th></tr></thead>
+<tbody>
+<tr><td><code>worker.unknown</code></td><td>Dispatch to unregistered worker id</td></tr>
+<tr><td><code>worker.task.unknown</code></td><td>Task name not in <code>tasks</code> array (fail-fast)</td></tr>
+<tr><td><code>worker.timeout</code></td><td>Timeout policy fired</td></tr>
+<tr><td><code>worker.cancelled</code></td><td>AbortSignal cancellation</td></tr>
+<tr><td><code>worker.serialization.failed</code></td><td>Payload not structuredClone-able (dev mode)</td></tr>
+<tr><td><code>worker.pool.size.exceeded</code></td><td>poolSize > hard cap 8</td></tr>
+</tbody>
+</table>
+
+<h2 id="utilities">Utilities</h2>
+<ul>
+<li><code>assertSerializable(value, opts?)</code> — throws if value can&rsquo;t cross postMessage boundary</li>
+<li><code>extractTransferables(payload, jsonPaths)</code> — collect ArrayBuffer-like objects from payload</li>
+<li><code>deriveTopic(sourceTopic, suffix)</code> — <code>weather.requested</code> + <code>completed</code> → <code>weather.completed</code></li>
+</ul>
+index.html">Welcome</a>
+  <a class="sidebar-link" href="<h1><code>@gluezero/worker</code></h1>
+<p class="lead">Web Worker runtime. Bounded pool, hybrid cancellation, transferable opt-in, dev-mode serialization checks. Built on Comlink under the hood.</p>
+
+<h2 id="createWorkerBroker"><code>createWorkerBroker(config)</code></h2>
+<pre><code class="language-typescript">function createWorkerBroker(config?: WorkerBrokerConfig): WorkerBroker
+
+interface WorkerBrokerConfig extends RealtimeBrokerConfig {
+  workers?: {
+    assertSerializable?: 'always' | 'dev' | 'off'   // default: 'dev'
+    progressThrottleMs?: number                     // default: 100
+    cancelGraceMs?: number                          // default: 2000
+    poolSize?: number                               // default: min(hwc, 4) cap 8
+  }
+}
+</code></pre>
+
+<h2 id="worker-descriptor"><code>WorkerDescriptor</code></h2>
+<pre><code class="language-typescript">interface WorkerDescriptor {
+  id: string
+  factory: () =&gt; Worker                  // lazy: called on first dispatch
+  tasks: readonly string[]               // declared task names (fail-fast on unknown)
+  poolSize?: number                      // override per worker
+  type?: 'module' | 'classic'            // default: 'module' (ESM)
+}
+</code></pre>
+
+<h2 id="register-worker"><code>broker.registerWorker(descriptor)</code></h2>
+<pre><code class="language-typescript">function registerWorker(descriptor: WorkerDescriptor): void
+</code></pre>
+<p>Validates the descriptor. The <code>factory()</code> is NOT called until the first dispatch — registration is cheap.</p>
+
+<h2 id="expose"><code>expose(api)</code> — inside the worker source</h2>
+<pre><code class="language-typescript">// Inside csv-worker.ts
+import { expose } from '@gluezero/worker'
+
+expose({
+  parseCSV: async (
+    fileBuffer: ArrayBuffer,
+    signal: AbortSignal,                 // proxied via Comlink
+    onProgress: (p: ProgressPayload) =&gt; void
+  ) =&gt; {
+    // ...
+    return parsedRows
+  },
+  validateCSV: async (...) =&gt; { /* ... */ },
+})
+
+interface ProgressPayload {
+  value: number          // 0..1 normalized
+  message?: string
+  partialResult?: unknown
+}
+</code></pre>
+
+<h2 id="task-state"><code>TaskState</code></h2>
+<pre><code class="language-typescript">type TaskState =
+  | 'pending'
+  | 'running'
+  | 'completed'
+  | 'failed'
+  | 'cancelled'
+  | 'timed-out'
+</code></pre>
+
+<h2 id="task-tracker"><code>broker.getTaskTracker()</code></h2>
+<pre><code class="language-typescript">interface TaskTracker {
+  list(): TaskInfo[]
+  get(id: string): TaskInfo | undefined
+}
+
+interface TaskInfo {
+  id: string
+  workerId: string
+  taskName: string
+  state: TaskState
+  startedAt: number
+  completedAt?: number
+  durationMs?: number
+  correlationId: string                 // matches BrokerEvent.id
+  topic: string
+}
+</code></pre>
+
+<h2 id="errors">Error codes</h2>
+<table>
+<thead><tr><th>Code</th><th>When</th></tr></thead>
+<tbody>
+<tr><td><code>worker.unknown</code></td><td>Dispatch to unregistered worker id</td></tr>
+<tr><td><code>worker.task.unknown</code></td><td>Task name not in <code>tasks</code> array (fail-fast)</td></tr>
+<tr><td><code>worker.timeout</code></td><td>Timeout policy fired</td></tr>
+<tr><td><code>worker.cancelled</code></td><td>AbortSignal cancellation</td></tr>
+<tr><td><code>worker.serialization.failed</code></td><td>Payload not structuredClone-able (dev mode)</td></tr>
+<tr><td><code>worker.pool.size.exceeded</code></td><td>poolSize > hard cap 8</td></tr>
+</tbody>
+</table>
+
+<h2 id="utilities">Utilities</h2>
+<ul>
+<li><code>assertSerializable(value, opts?)</code> — throws if value can&rsquo;t cross postMessage boundary</li>
+<li><code>extractTransferables(payload, jsonPaths)</code> — collect ArrayBuffer-like objects from payload</li>
+<li><code>deriveTopic(sourceTopic, suffix)</code> — <code>weather.requested</code> + <code>completed</code> → <code>weather.completed</code></li>
+</ul>
+getting-started.html">Getting started</a>
 </div>
 <div class="sidebar-section">
   <div class="sidebar-section-title">Concepts</div>
-  <a class="sidebar-link" href="../concepts/overview.html">Overview</a>
-  <a class="sidebar-link" href="../concepts/broker.html">Broker</a>
-  <a class="sidebar-link" href="../concepts/canonical-model.html">Canonical model</a>
-  <a class="sidebar-link" href="../concepts/routing.html">Routing</a>
-  <a class="sidebar-link" href="../concepts/gateway.html">HTTP gateway</a>
-  <a class="sidebar-link" href="../concepts/realtime.html">Realtime</a>
-  <a class="sidebar-link" href="../concepts/worker.html">Worker</a>
-  <a class="sidebar-link" href="../concepts/cache.html">Cache</a>
-  <a class="sidebar-link" href="../concepts/devtools.html">Devtools</a>
+  <a class="sidebar-link" href="<h1><code>@gluezero/worker</code></h1>
+<p class="lead">Web Worker runtime. Bounded pool, hybrid cancellation, transferable opt-in, dev-mode serialization checks. Built on Comlink under the hood.</p>
+
+<h2 id="createWorkerBroker"><code>createWorkerBroker(config)</code></h2>
+<pre><code class="language-typescript">function createWorkerBroker(config?: WorkerBrokerConfig): WorkerBroker
+
+interface WorkerBrokerConfig extends RealtimeBrokerConfig {
+  workers?: {
+    assertSerializable?: 'always' | 'dev' | 'off'   // default: 'dev'
+    progressThrottleMs?: number                     // default: 100
+    cancelGraceMs?: number                          // default: 2000
+    poolSize?: number                               // default: min(hwc, 4) cap 8
+  }
+}
+</code></pre>
+
+<h2 id="worker-descriptor"><code>WorkerDescriptor</code></h2>
+<pre><code class="language-typescript">interface WorkerDescriptor {
+  id: string
+  factory: () =&gt; Worker                  // lazy: called on first dispatch
+  tasks: readonly string[]               // declared task names (fail-fast on unknown)
+  poolSize?: number                      // override per worker
+  type?: 'module' | 'classic'            // default: 'module' (ESM)
+}
+</code></pre>
+
+<h2 id="register-worker"><code>broker.registerWorker(descriptor)</code></h2>
+<pre><code class="language-typescript">function registerWorker(descriptor: WorkerDescriptor): void
+</code></pre>
+<p>Validates the descriptor. The <code>factory()</code> is NOT called until the first dispatch — registration is cheap.</p>
+
+<h2 id="expose"><code>expose(api)</code> — inside the worker source</h2>
+<pre><code class="language-typescript">// Inside csv-worker.ts
+import { expose } from '@gluezero/worker'
+
+expose({
+  parseCSV: async (
+    fileBuffer: ArrayBuffer,
+    signal: AbortSignal,                 // proxied via Comlink
+    onProgress: (p: ProgressPayload) =&gt; void
+  ) =&gt; {
+    // ...
+    return parsedRows
+  },
+  validateCSV: async (...) =&gt; { /* ... */ },
+})
+
+interface ProgressPayload {
+  value: number          // 0..1 normalized
+  message?: string
+  partialResult?: unknown
+}
+</code></pre>
+
+<h2 id="task-state"><code>TaskState</code></h2>
+<pre><code class="language-typescript">type TaskState =
+  | 'pending'
+  | 'running'
+  | 'completed'
+  | 'failed'
+  | 'cancelled'
+  | 'timed-out'
+</code></pre>
+
+<h2 id="task-tracker"><code>broker.getTaskTracker()</code></h2>
+<pre><code class="language-typescript">interface TaskTracker {
+  list(): TaskInfo[]
+  get(id: string): TaskInfo | undefined
+}
+
+interface TaskInfo {
+  id: string
+  workerId: string
+  taskName: string
+  state: TaskState
+  startedAt: number
+  completedAt?: number
+  durationMs?: number
+  correlationId: string                 // matches BrokerEvent.id
+  topic: string
+}
+</code></pre>
+
+<h2 id="errors">Error codes</h2>
+<table>
+<thead><tr><th>Code</th><th>When</th></tr></thead>
+<tbody>
+<tr><td><code>worker.unknown</code></td><td>Dispatch to unregistered worker id</td></tr>
+<tr><td><code>worker.task.unknown</code></td><td>Task name not in <code>tasks</code> array (fail-fast)</td></tr>
+<tr><td><code>worker.timeout</code></td><td>Timeout policy fired</td></tr>
+<tr><td><code>worker.cancelled</code></td><td>AbortSignal cancellation</td></tr>
+<tr><td><code>worker.serialization.failed</code></td><td>Payload not structuredClone-able (dev mode)</td></tr>
+<tr><td><code>worker.pool.size.exceeded</code></td><td>poolSize > hard cap 8</td></tr>
+</tbody>
+</table>
+
+<h2 id="utilities">Utilities</h2>
+<ul>
+<li><code>assertSerializable(value, opts?)</code> — throws if value can&rsquo;t cross postMessage boundary</li>
+<li><code>extractTransferables(payload, jsonPaths)</code> — collect ArrayBuffer-like objects from payload</li>
+<li><code>deriveTopic(sourceTopic, suffix)</code> — <code>weather.requested</code> + <code>completed</code> → <code>weather.completed</code></li>
+</ul>
+concepts/overview.html">Overview</a>
+  <a class="sidebar-link" href="<h1><code>@gluezero/worker</code></h1>
+<p class="lead">Web Worker runtime. Bounded pool, hybrid cancellation, transferable opt-in, dev-mode serialization checks. Built on Comlink under the hood.</p>
+
+<h2 id="createWorkerBroker"><code>createWorkerBroker(config)</code></h2>
+<pre><code class="language-typescript">function createWorkerBroker(config?: WorkerBrokerConfig): WorkerBroker
+
+interface WorkerBrokerConfig extends RealtimeBrokerConfig {
+  workers?: {
+    assertSerializable?: 'always' | 'dev' | 'off'   // default: 'dev'
+    progressThrottleMs?: number                     // default: 100
+    cancelGraceMs?: number                          // default: 2000
+    poolSize?: number                               // default: min(hwc, 4) cap 8
+  }
+}
+</code></pre>
+
+<h2 id="worker-descriptor"><code>WorkerDescriptor</code></h2>
+<pre><code class="language-typescript">interface WorkerDescriptor {
+  id: string
+  factory: () =&gt; Worker                  // lazy: called on first dispatch
+  tasks: readonly string[]               // declared task names (fail-fast on unknown)
+  poolSize?: number                      // override per worker
+  type?: 'module' | 'classic'            // default: 'module' (ESM)
+}
+</code></pre>
+
+<h2 id="register-worker"><code>broker.registerWorker(descriptor)</code></h2>
+<pre><code class="language-typescript">function registerWorker(descriptor: WorkerDescriptor): void
+</code></pre>
+<p>Validates the descriptor. The <code>factory()</code> is NOT called until the first dispatch — registration is cheap.</p>
+
+<h2 id="expose"><code>expose(api)</code> — inside the worker source</h2>
+<pre><code class="language-typescript">// Inside csv-worker.ts
+import { expose } from '@gluezero/worker'
+
+expose({
+  parseCSV: async (
+    fileBuffer: ArrayBuffer,
+    signal: AbortSignal,                 // proxied via Comlink
+    onProgress: (p: ProgressPayload) =&gt; void
+  ) =&gt; {
+    // ...
+    return parsedRows
+  },
+  validateCSV: async (...) =&gt; { /* ... */ },
+})
+
+interface ProgressPayload {
+  value: number          // 0..1 normalized
+  message?: string
+  partialResult?: unknown
+}
+</code></pre>
+
+<h2 id="task-state"><code>TaskState</code></h2>
+<pre><code class="language-typescript">type TaskState =
+  | 'pending'
+  | 'running'
+  | 'completed'
+  | 'failed'
+  | 'cancelled'
+  | 'timed-out'
+</code></pre>
+
+<h2 id="task-tracker"><code>broker.getTaskTracker()</code></h2>
+<pre><code class="language-typescript">interface TaskTracker {
+  list(): TaskInfo[]
+  get(id: string): TaskInfo | undefined
+}
+
+interface TaskInfo {
+  id: string
+  workerId: string
+  taskName: string
+  state: TaskState
+  startedAt: number
+  completedAt?: number
+  durationMs?: number
+  correlationId: string                 // matches BrokerEvent.id
+  topic: string
+}
+</code></pre>
+
+<h2 id="errors">Error codes</h2>
+<table>
+<thead><tr><th>Code</th><th>When</th></tr></thead>
+<tbody>
+<tr><td><code>worker.unknown</code></td><td>Dispatch to unregistered worker id</td></tr>
+<tr><td><code>worker.task.unknown</code></td><td>Task name not in <code>tasks</code> array (fail-fast)</td></tr>
+<tr><td><code>worker.timeout</code></td><td>Timeout policy fired</td></tr>
+<tr><td><code>worker.cancelled</code></td><td>AbortSignal cancellation</td></tr>
+<tr><td><code>worker.serialization.failed</code></td><td>Payload not structuredClone-able (dev mode)</td></tr>
+<tr><td><code>worker.pool.size.exceeded</code></td><td>poolSize > hard cap 8</td></tr>
+</tbody>
+</table>
+
+<h2 id="utilities">Utilities</h2>
+<ul>
+<li><code>assertSerializable(value, opts?)</code> — throws if value can&rsquo;t cross postMessage boundary</li>
+<li><code>extractTransferables(payload, jsonPaths)</code> — collect ArrayBuffer-like objects from payload</li>
+<li><code>deriveTopic(sourceTopic, suffix)</code> — <code>weather.requested</code> + <code>completed</code> → <code>weather.completed</code></li>
+</ul>
+concepts/broker.html">Broker</a>
+  <a class="sidebar-link" href="<h1><code>@gluezero/worker</code></h1>
+<p class="lead">Web Worker runtime. Bounded pool, hybrid cancellation, transferable opt-in, dev-mode serialization checks. Built on Comlink under the hood.</p>
+
+<h2 id="createWorkerBroker"><code>createWorkerBroker(config)</code></h2>
+<pre><code class="language-typescript">function createWorkerBroker(config?: WorkerBrokerConfig): WorkerBroker
+
+interface WorkerBrokerConfig extends RealtimeBrokerConfig {
+  workers?: {
+    assertSerializable?: 'always' | 'dev' | 'off'   // default: 'dev'
+    progressThrottleMs?: number                     // default: 100
+    cancelGraceMs?: number                          // default: 2000
+    poolSize?: number                               // default: min(hwc, 4) cap 8
+  }
+}
+</code></pre>
+
+<h2 id="worker-descriptor"><code>WorkerDescriptor</code></h2>
+<pre><code class="language-typescript">interface WorkerDescriptor {
+  id: string
+  factory: () =&gt; Worker                  // lazy: called on first dispatch
+  tasks: readonly string[]               // declared task names (fail-fast on unknown)
+  poolSize?: number                      // override per worker
+  type?: 'module' | 'classic'            // default: 'module' (ESM)
+}
+</code></pre>
+
+<h2 id="register-worker"><code>broker.registerWorker(descriptor)</code></h2>
+<pre><code class="language-typescript">function registerWorker(descriptor: WorkerDescriptor): void
+</code></pre>
+<p>Validates the descriptor. The <code>factory()</code> is NOT called until the first dispatch — registration is cheap.</p>
+
+<h2 id="expose"><code>expose(api)</code> — inside the worker source</h2>
+<pre><code class="language-typescript">// Inside csv-worker.ts
+import { expose } from '@gluezero/worker'
+
+expose({
+  parseCSV: async (
+    fileBuffer: ArrayBuffer,
+    signal: AbortSignal,                 // proxied via Comlink
+    onProgress: (p: ProgressPayload) =&gt; void
+  ) =&gt; {
+    // ...
+    return parsedRows
+  },
+  validateCSV: async (...) =&gt; { /* ... */ },
+})
+
+interface ProgressPayload {
+  value: number          // 0..1 normalized
+  message?: string
+  partialResult?: unknown
+}
+</code></pre>
+
+<h2 id="task-state"><code>TaskState</code></h2>
+<pre><code class="language-typescript">type TaskState =
+  | 'pending'
+  | 'running'
+  | 'completed'
+  | 'failed'
+  | 'cancelled'
+  | 'timed-out'
+</code></pre>
+
+<h2 id="task-tracker"><code>broker.getTaskTracker()</code></h2>
+<pre><code class="language-typescript">interface TaskTracker {
+  list(): TaskInfo[]
+  get(id: string): TaskInfo | undefined
+}
+
+interface TaskInfo {
+  id: string
+  workerId: string
+  taskName: string
+  state: TaskState
+  startedAt: number
+  completedAt?: number
+  durationMs?: number
+  correlationId: string                 // matches BrokerEvent.id
+  topic: string
+}
+</code></pre>
+
+<h2 id="errors">Error codes</h2>
+<table>
+<thead><tr><th>Code</th><th>When</th></tr></thead>
+<tbody>
+<tr><td><code>worker.unknown</code></td><td>Dispatch to unregistered worker id</td></tr>
+<tr><td><code>worker.task.unknown</code></td><td>Task name not in <code>tasks</code> array (fail-fast)</td></tr>
+<tr><td><code>worker.timeout</code></td><td>Timeout policy fired</td></tr>
+<tr><td><code>worker.cancelled</code></td><td>AbortSignal cancellation</td></tr>
+<tr><td><code>worker.serialization.failed</code></td><td>Payload not structuredClone-able (dev mode)</td></tr>
+<tr><td><code>worker.pool.size.exceeded</code></td><td>poolSize > hard cap 8</td></tr>
+</tbody>
+</table>
+
+<h2 id="utilities">Utilities</h2>
+<ul>
+<li><code>assertSerializable(value, opts?)</code> — throws if value can&rsquo;t cross postMessage boundary</li>
+<li><code>extractTransferables(payload, jsonPaths)</code> — collect ArrayBuffer-like objects from payload</li>
+<li><code>deriveTopic(sourceTopic, suffix)</code> — <code>weather.requested</code> + <code>completed</code> → <code>weather.completed</code></li>
+</ul>
+concepts/canonical-model.html">Canonical model</a>
+  <a class="sidebar-link" href="<h1><code>@gluezero/worker</code></h1>
+<p class="lead">Web Worker runtime. Bounded pool, hybrid cancellation, transferable opt-in, dev-mode serialization checks. Built on Comlink under the hood.</p>
+
+<h2 id="createWorkerBroker"><code>createWorkerBroker(config)</code></h2>
+<pre><code class="language-typescript">function createWorkerBroker(config?: WorkerBrokerConfig): WorkerBroker
+
+interface WorkerBrokerConfig extends RealtimeBrokerConfig {
+  workers?: {
+    assertSerializable?: 'always' | 'dev' | 'off'   // default: 'dev'
+    progressThrottleMs?: number                     // default: 100
+    cancelGraceMs?: number                          // default: 2000
+    poolSize?: number                               // default: min(hwc, 4) cap 8
+  }
+}
+</code></pre>
+
+<h2 id="worker-descriptor"><code>WorkerDescriptor</code></h2>
+<pre><code class="language-typescript">interface WorkerDescriptor {
+  id: string
+  factory: () =&gt; Worker                  // lazy: called on first dispatch
+  tasks: readonly string[]               // declared task names (fail-fast on unknown)
+  poolSize?: number                      // override per worker
+  type?: 'module' | 'classic'            // default: 'module' (ESM)
+}
+</code></pre>
+
+<h2 id="register-worker"><code>broker.registerWorker(descriptor)</code></h2>
+<pre><code class="language-typescript">function registerWorker(descriptor: WorkerDescriptor): void
+</code></pre>
+<p>Validates the descriptor. The <code>factory()</code> is NOT called until the first dispatch — registration is cheap.</p>
+
+<h2 id="expose"><code>expose(api)</code> — inside the worker source</h2>
+<pre><code class="language-typescript">// Inside csv-worker.ts
+import { expose } from '@gluezero/worker'
+
+expose({
+  parseCSV: async (
+    fileBuffer: ArrayBuffer,
+    signal: AbortSignal,                 // proxied via Comlink
+    onProgress: (p: ProgressPayload) =&gt; void
+  ) =&gt; {
+    // ...
+    return parsedRows
+  },
+  validateCSV: async (...) =&gt; { /* ... */ },
+})
+
+interface ProgressPayload {
+  value: number          // 0..1 normalized
+  message?: string
+  partialResult?: unknown
+}
+</code></pre>
+
+<h2 id="task-state"><code>TaskState</code></h2>
+<pre><code class="language-typescript">type TaskState =
+  | 'pending'
+  | 'running'
+  | 'completed'
+  | 'failed'
+  | 'cancelled'
+  | 'timed-out'
+</code></pre>
+
+<h2 id="task-tracker"><code>broker.getTaskTracker()</code></h2>
+<pre><code class="language-typescript">interface TaskTracker {
+  list(): TaskInfo[]
+  get(id: string): TaskInfo | undefined
+}
+
+interface TaskInfo {
+  id: string
+  workerId: string
+  taskName: string
+  state: TaskState
+  startedAt: number
+  completedAt?: number
+  durationMs?: number
+  correlationId: string                 // matches BrokerEvent.id
+  topic: string
+}
+</code></pre>
+
+<h2 id="errors">Error codes</h2>
+<table>
+<thead><tr><th>Code</th><th>When</th></tr></thead>
+<tbody>
+<tr><td><code>worker.unknown</code></td><td>Dispatch to unregistered worker id</td></tr>
+<tr><td><code>worker.task.unknown</code></td><td>Task name not in <code>tasks</code> array (fail-fast)</td></tr>
+<tr><td><code>worker.timeout</code></td><td>Timeout policy fired</td></tr>
+<tr><td><code>worker.cancelled</code></td><td>AbortSignal cancellation</td></tr>
+<tr><td><code>worker.serialization.failed</code></td><td>Payload not structuredClone-able (dev mode)</td></tr>
+<tr><td><code>worker.pool.size.exceeded</code></td><td>poolSize > hard cap 8</td></tr>
+</tbody>
+</table>
+
+<h2 id="utilities">Utilities</h2>
+<ul>
+<li><code>assertSerializable(value, opts?)</code> — throws if value can&rsquo;t cross postMessage boundary</li>
+<li><code>extractTransferables(payload, jsonPaths)</code> — collect ArrayBuffer-like objects from payload</li>
+<li><code>deriveTopic(sourceTopic, suffix)</code> — <code>weather.requested</code> + <code>completed</code> → <code>weather.completed</code></li>
+</ul>
+concepts/routing.html">Routing</a>
+  <a class="sidebar-link" href="<h1><code>@gluezero/worker</code></h1>
+<p class="lead">Web Worker runtime. Bounded pool, hybrid cancellation, transferable opt-in, dev-mode serialization checks. Built on Comlink under the hood.</p>
+
+<h2 id="createWorkerBroker"><code>createWorkerBroker(config)</code></h2>
+<pre><code class="language-typescript">function createWorkerBroker(config?: WorkerBrokerConfig): WorkerBroker
+
+interface WorkerBrokerConfig extends RealtimeBrokerConfig {
+  workers?: {
+    assertSerializable?: 'always' | 'dev' | 'off'   // default: 'dev'
+    progressThrottleMs?: number                     // default: 100
+    cancelGraceMs?: number                          // default: 2000
+    poolSize?: number                               // default: min(hwc, 4) cap 8
+  }
+}
+</code></pre>
+
+<h2 id="worker-descriptor"><code>WorkerDescriptor</code></h2>
+<pre><code class="language-typescript">interface WorkerDescriptor {
+  id: string
+  factory: () =&gt; Worker                  // lazy: called on first dispatch
+  tasks: readonly string[]               // declared task names (fail-fast on unknown)
+  poolSize?: number                      // override per worker
+  type?: 'module' | 'classic'            // default: 'module' (ESM)
+}
+</code></pre>
+
+<h2 id="register-worker"><code>broker.registerWorker(descriptor)</code></h2>
+<pre><code class="language-typescript">function registerWorker(descriptor: WorkerDescriptor): void
+</code></pre>
+<p>Validates the descriptor. The <code>factory()</code> is NOT called until the first dispatch — registration is cheap.</p>
+
+<h2 id="expose"><code>expose(api)</code> — inside the worker source</h2>
+<pre><code class="language-typescript">// Inside csv-worker.ts
+import { expose } from '@gluezero/worker'
+
+expose({
+  parseCSV: async (
+    fileBuffer: ArrayBuffer,
+    signal: AbortSignal,                 // proxied via Comlink
+    onProgress: (p: ProgressPayload) =&gt; void
+  ) =&gt; {
+    // ...
+    return parsedRows
+  },
+  validateCSV: async (...) =&gt; { /* ... */ },
+})
+
+interface ProgressPayload {
+  value: number          // 0..1 normalized
+  message?: string
+  partialResult?: unknown
+}
+</code></pre>
+
+<h2 id="task-state"><code>TaskState</code></h2>
+<pre><code class="language-typescript">type TaskState =
+  | 'pending'
+  | 'running'
+  | 'completed'
+  | 'failed'
+  | 'cancelled'
+  | 'timed-out'
+</code></pre>
+
+<h2 id="task-tracker"><code>broker.getTaskTracker()</code></h2>
+<pre><code class="language-typescript">interface TaskTracker {
+  list(): TaskInfo[]
+  get(id: string): TaskInfo | undefined
+}
+
+interface TaskInfo {
+  id: string
+  workerId: string
+  taskName: string
+  state: TaskState
+  startedAt: number
+  completedAt?: number
+  durationMs?: number
+  correlationId: string                 // matches BrokerEvent.id
+  topic: string
+}
+</code></pre>
+
+<h2 id="errors">Error codes</h2>
+<table>
+<thead><tr><th>Code</th><th>When</th></tr></thead>
+<tbody>
+<tr><td><code>worker.unknown</code></td><td>Dispatch to unregistered worker id</td></tr>
+<tr><td><code>worker.task.unknown</code></td><td>Task name not in <code>tasks</code> array (fail-fast)</td></tr>
+<tr><td><code>worker.timeout</code></td><td>Timeout policy fired</td></tr>
+<tr><td><code>worker.cancelled</code></td><td>AbortSignal cancellation</td></tr>
+<tr><td><code>worker.serialization.failed</code></td><td>Payload not structuredClone-able (dev mode)</td></tr>
+<tr><td><code>worker.pool.size.exceeded</code></td><td>poolSize > hard cap 8</td></tr>
+</tbody>
+</table>
+
+<h2 id="utilities">Utilities</h2>
+<ul>
+<li><code>assertSerializable(value, opts?)</code> — throws if value can&rsquo;t cross postMessage boundary</li>
+<li><code>extractTransferables(payload, jsonPaths)</code> — collect ArrayBuffer-like objects from payload</li>
+<li><code>deriveTopic(sourceTopic, suffix)</code> — <code>weather.requested</code> + <code>completed</code> → <code>weather.completed</code></li>
+</ul>
+concepts/gateway.html">HTTP gateway</a>
+  <a class="sidebar-link" href="<h1><code>@gluezero/worker</code></h1>
+<p class="lead">Web Worker runtime. Bounded pool, hybrid cancellation, transferable opt-in, dev-mode serialization checks. Built on Comlink under the hood.</p>
+
+<h2 id="createWorkerBroker"><code>createWorkerBroker(config)</code></h2>
+<pre><code class="language-typescript">function createWorkerBroker(config?: WorkerBrokerConfig): WorkerBroker
+
+interface WorkerBrokerConfig extends RealtimeBrokerConfig {
+  workers?: {
+    assertSerializable?: 'always' | 'dev' | 'off'   // default: 'dev'
+    progressThrottleMs?: number                     // default: 100
+    cancelGraceMs?: number                          // default: 2000
+    poolSize?: number                               // default: min(hwc, 4) cap 8
+  }
+}
+</code></pre>
+
+<h2 id="worker-descriptor"><code>WorkerDescriptor</code></h2>
+<pre><code class="language-typescript">interface WorkerDescriptor {
+  id: string
+  factory: () =&gt; Worker                  // lazy: called on first dispatch
+  tasks: readonly string[]               // declared task names (fail-fast on unknown)
+  poolSize?: number                      // override per worker
+  type?: 'module' | 'classic'            // default: 'module' (ESM)
+}
+</code></pre>
+
+<h2 id="register-worker"><code>broker.registerWorker(descriptor)</code></h2>
+<pre><code class="language-typescript">function registerWorker(descriptor: WorkerDescriptor): void
+</code></pre>
+<p>Validates the descriptor. The <code>factory()</code> is NOT called until the first dispatch — registration is cheap.</p>
+
+<h2 id="expose"><code>expose(api)</code> — inside the worker source</h2>
+<pre><code class="language-typescript">// Inside csv-worker.ts
+import { expose } from '@gluezero/worker'
+
+expose({
+  parseCSV: async (
+    fileBuffer: ArrayBuffer,
+    signal: AbortSignal,                 // proxied via Comlink
+    onProgress: (p: ProgressPayload) =&gt; void
+  ) =&gt; {
+    // ...
+    return parsedRows
+  },
+  validateCSV: async (...) =&gt; { /* ... */ },
+})
+
+interface ProgressPayload {
+  value: number          // 0..1 normalized
+  message?: string
+  partialResult?: unknown
+}
+</code></pre>
+
+<h2 id="task-state"><code>TaskState</code></h2>
+<pre><code class="language-typescript">type TaskState =
+  | 'pending'
+  | 'running'
+  | 'completed'
+  | 'failed'
+  | 'cancelled'
+  | 'timed-out'
+</code></pre>
+
+<h2 id="task-tracker"><code>broker.getTaskTracker()</code></h2>
+<pre><code class="language-typescript">interface TaskTracker {
+  list(): TaskInfo[]
+  get(id: string): TaskInfo | undefined
+}
+
+interface TaskInfo {
+  id: string
+  workerId: string
+  taskName: string
+  state: TaskState
+  startedAt: number
+  completedAt?: number
+  durationMs?: number
+  correlationId: string                 // matches BrokerEvent.id
+  topic: string
+}
+</code></pre>
+
+<h2 id="errors">Error codes</h2>
+<table>
+<thead><tr><th>Code</th><th>When</th></tr></thead>
+<tbody>
+<tr><td><code>worker.unknown</code></td><td>Dispatch to unregistered worker id</td></tr>
+<tr><td><code>worker.task.unknown</code></td><td>Task name not in <code>tasks</code> array (fail-fast)</td></tr>
+<tr><td><code>worker.timeout</code></td><td>Timeout policy fired</td></tr>
+<tr><td><code>worker.cancelled</code></td><td>AbortSignal cancellation</td></tr>
+<tr><td><code>worker.serialization.failed</code></td><td>Payload not structuredClone-able (dev mode)</td></tr>
+<tr><td><code>worker.pool.size.exceeded</code></td><td>poolSize > hard cap 8</td></tr>
+</tbody>
+</table>
+
+<h2 id="utilities">Utilities</h2>
+<ul>
+<li><code>assertSerializable(value, opts?)</code> — throws if value can&rsquo;t cross postMessage boundary</li>
+<li><code>extractTransferables(payload, jsonPaths)</code> — collect ArrayBuffer-like objects from payload</li>
+<li><code>deriveTopic(sourceTopic, suffix)</code> — <code>weather.requested</code> + <code>completed</code> → <code>weather.completed</code></li>
+</ul>
+concepts/realtime.html">Realtime</a>
+  <a class="sidebar-link" href="<h1><code>@gluezero/worker</code></h1>
+<p class="lead">Web Worker runtime. Bounded pool, hybrid cancellation, transferable opt-in, dev-mode serialization checks. Built on Comlink under the hood.</p>
+
+<h2 id="createWorkerBroker"><code>createWorkerBroker(config)</code></h2>
+<pre><code class="language-typescript">function createWorkerBroker(config?: WorkerBrokerConfig): WorkerBroker
+
+interface WorkerBrokerConfig extends RealtimeBrokerConfig {
+  workers?: {
+    assertSerializable?: 'always' | 'dev' | 'off'   // default: 'dev'
+    progressThrottleMs?: number                     // default: 100
+    cancelGraceMs?: number                          // default: 2000
+    poolSize?: number                               // default: min(hwc, 4) cap 8
+  }
+}
+</code></pre>
+
+<h2 id="worker-descriptor"><code>WorkerDescriptor</code></h2>
+<pre><code class="language-typescript">interface WorkerDescriptor {
+  id: string
+  factory: () =&gt; Worker                  // lazy: called on first dispatch
+  tasks: readonly string[]               // declared task names (fail-fast on unknown)
+  poolSize?: number                      // override per worker
+  type?: 'module' | 'classic'            // default: 'module' (ESM)
+}
+</code></pre>
+
+<h2 id="register-worker"><code>broker.registerWorker(descriptor)</code></h2>
+<pre><code class="language-typescript">function registerWorker(descriptor: WorkerDescriptor): void
+</code></pre>
+<p>Validates the descriptor. The <code>factory()</code> is NOT called until the first dispatch — registration is cheap.</p>
+
+<h2 id="expose"><code>expose(api)</code> — inside the worker source</h2>
+<pre><code class="language-typescript">// Inside csv-worker.ts
+import { expose } from '@gluezero/worker'
+
+expose({
+  parseCSV: async (
+    fileBuffer: ArrayBuffer,
+    signal: AbortSignal,                 // proxied via Comlink
+    onProgress: (p: ProgressPayload) =&gt; void
+  ) =&gt; {
+    // ...
+    return parsedRows
+  },
+  validateCSV: async (...) =&gt; { /* ... */ },
+})
+
+interface ProgressPayload {
+  value: number          // 0..1 normalized
+  message?: string
+  partialResult?: unknown
+}
+</code></pre>
+
+<h2 id="task-state"><code>TaskState</code></h2>
+<pre><code class="language-typescript">type TaskState =
+  | 'pending'
+  | 'running'
+  | 'completed'
+  | 'failed'
+  | 'cancelled'
+  | 'timed-out'
+</code></pre>
+
+<h2 id="task-tracker"><code>broker.getTaskTracker()</code></h2>
+<pre><code class="language-typescript">interface TaskTracker {
+  list(): TaskInfo[]
+  get(id: string): TaskInfo | undefined
+}
+
+interface TaskInfo {
+  id: string
+  workerId: string
+  taskName: string
+  state: TaskState
+  startedAt: number
+  completedAt?: number
+  durationMs?: number
+  correlationId: string                 // matches BrokerEvent.id
+  topic: string
+}
+</code></pre>
+
+<h2 id="errors">Error codes</h2>
+<table>
+<thead><tr><th>Code</th><th>When</th></tr></thead>
+<tbody>
+<tr><td><code>worker.unknown</code></td><td>Dispatch to unregistered worker id</td></tr>
+<tr><td><code>worker.task.unknown</code></td><td>Task name not in <code>tasks</code> array (fail-fast)</td></tr>
+<tr><td><code>worker.timeout</code></td><td>Timeout policy fired</td></tr>
+<tr><td><code>worker.cancelled</code></td><td>AbortSignal cancellation</td></tr>
+<tr><td><code>worker.serialization.failed</code></td><td>Payload not structuredClone-able (dev mode)</td></tr>
+<tr><td><code>worker.pool.size.exceeded</code></td><td>poolSize > hard cap 8</td></tr>
+</tbody>
+</table>
+
+<h2 id="utilities">Utilities</h2>
+<ul>
+<li><code>assertSerializable(value, opts?)</code> — throws if value can&rsquo;t cross postMessage boundary</li>
+<li><code>extractTransferables(payload, jsonPaths)</code> — collect ArrayBuffer-like objects from payload</li>
+<li><code>deriveTopic(sourceTopic, suffix)</code> — <code>weather.requested</code> + <code>completed</code> → <code>weather.completed</code></li>
+</ul>
+concepts/worker.html">Worker</a>
+  <a class="sidebar-link" href="<h1><code>@gluezero/worker</code></h1>
+<p class="lead">Web Worker runtime. Bounded pool, hybrid cancellation, transferable opt-in, dev-mode serialization checks. Built on Comlink under the hood.</p>
+
+<h2 id="createWorkerBroker"><code>createWorkerBroker(config)</code></h2>
+<pre><code class="language-typescript">function createWorkerBroker(config?: WorkerBrokerConfig): WorkerBroker
+
+interface WorkerBrokerConfig extends RealtimeBrokerConfig {
+  workers?: {
+    assertSerializable?: 'always' | 'dev' | 'off'   // default: 'dev'
+    progressThrottleMs?: number                     // default: 100
+    cancelGraceMs?: number                          // default: 2000
+    poolSize?: number                               // default: min(hwc, 4) cap 8
+  }
+}
+</code></pre>
+
+<h2 id="worker-descriptor"><code>WorkerDescriptor</code></h2>
+<pre><code class="language-typescript">interface WorkerDescriptor {
+  id: string
+  factory: () =&gt; Worker                  // lazy: called on first dispatch
+  tasks: readonly string[]               // declared task names (fail-fast on unknown)
+  poolSize?: number                      // override per worker
+  type?: 'module' | 'classic'            // default: 'module' (ESM)
+}
+</code></pre>
+
+<h2 id="register-worker"><code>broker.registerWorker(descriptor)</code></h2>
+<pre><code class="language-typescript">function registerWorker(descriptor: WorkerDescriptor): void
+</code></pre>
+<p>Validates the descriptor. The <code>factory()</code> is NOT called until the first dispatch — registration is cheap.</p>
+
+<h2 id="expose"><code>expose(api)</code> — inside the worker source</h2>
+<pre><code class="language-typescript">// Inside csv-worker.ts
+import { expose } from '@gluezero/worker'
+
+expose({
+  parseCSV: async (
+    fileBuffer: ArrayBuffer,
+    signal: AbortSignal,                 // proxied via Comlink
+    onProgress: (p: ProgressPayload) =&gt; void
+  ) =&gt; {
+    // ...
+    return parsedRows
+  },
+  validateCSV: async (...) =&gt; { /* ... */ },
+})
+
+interface ProgressPayload {
+  value: number          // 0..1 normalized
+  message?: string
+  partialResult?: unknown
+}
+</code></pre>
+
+<h2 id="task-state"><code>TaskState</code></h2>
+<pre><code class="language-typescript">type TaskState =
+  | 'pending'
+  | 'running'
+  | 'completed'
+  | 'failed'
+  | 'cancelled'
+  | 'timed-out'
+</code></pre>
+
+<h2 id="task-tracker"><code>broker.getTaskTracker()</code></h2>
+<pre><code class="language-typescript">interface TaskTracker {
+  list(): TaskInfo[]
+  get(id: string): TaskInfo | undefined
+}
+
+interface TaskInfo {
+  id: string
+  workerId: string
+  taskName: string
+  state: TaskState
+  startedAt: number
+  completedAt?: number
+  durationMs?: number
+  correlationId: string                 // matches BrokerEvent.id
+  topic: string
+}
+</code></pre>
+
+<h2 id="errors">Error codes</h2>
+<table>
+<thead><tr><th>Code</th><th>When</th></tr></thead>
+<tbody>
+<tr><td><code>worker.unknown</code></td><td>Dispatch to unregistered worker id</td></tr>
+<tr><td><code>worker.task.unknown</code></td><td>Task name not in <code>tasks</code> array (fail-fast)</td></tr>
+<tr><td><code>worker.timeout</code></td><td>Timeout policy fired</td></tr>
+<tr><td><code>worker.cancelled</code></td><td>AbortSignal cancellation</td></tr>
+<tr><td><code>worker.serialization.failed</code></td><td>Payload not structuredClone-able (dev mode)</td></tr>
+<tr><td><code>worker.pool.size.exceeded</code></td><td>poolSize > hard cap 8</td></tr>
+</tbody>
+</table>
+
+<h2 id="utilities">Utilities</h2>
+<ul>
+<li><code>assertSerializable(value, opts?)</code> — throws if value can&rsquo;t cross postMessage boundary</li>
+<li><code>extractTransferables(payload, jsonPaths)</code> — collect ArrayBuffer-like objects from payload</li>
+<li><code>deriveTopic(sourceTopic, suffix)</code> — <code>weather.requested</code> + <code>completed</code> → <code>weather.completed</code></li>
+</ul>
+concepts/cache.html">Cache</a>
+  <a class="sidebar-link" href="<h1><code>@gluezero/worker</code></h1>
+<p class="lead">Web Worker runtime. Bounded pool, hybrid cancellation, transferable opt-in, dev-mode serialization checks. Built on Comlink under the hood.</p>
+
+<h2 id="createWorkerBroker"><code>createWorkerBroker(config)</code></h2>
+<pre><code class="language-typescript">function createWorkerBroker(config?: WorkerBrokerConfig): WorkerBroker
+
+interface WorkerBrokerConfig extends RealtimeBrokerConfig {
+  workers?: {
+    assertSerializable?: 'always' | 'dev' | 'off'   // default: 'dev'
+    progressThrottleMs?: number                     // default: 100
+    cancelGraceMs?: number                          // default: 2000
+    poolSize?: number                               // default: min(hwc, 4) cap 8
+  }
+}
+</code></pre>
+
+<h2 id="worker-descriptor"><code>WorkerDescriptor</code></h2>
+<pre><code class="language-typescript">interface WorkerDescriptor {
+  id: string
+  factory: () =&gt; Worker                  // lazy: called on first dispatch
+  tasks: readonly string[]               // declared task names (fail-fast on unknown)
+  poolSize?: number                      // override per worker
+  type?: 'module' | 'classic'            // default: 'module' (ESM)
+}
+</code></pre>
+
+<h2 id="register-worker"><code>broker.registerWorker(descriptor)</code></h2>
+<pre><code class="language-typescript">function registerWorker(descriptor: WorkerDescriptor): void
+</code></pre>
+<p>Validates the descriptor. The <code>factory()</code> is NOT called until the first dispatch — registration is cheap.</p>
+
+<h2 id="expose"><code>expose(api)</code> — inside the worker source</h2>
+<pre><code class="language-typescript">// Inside csv-worker.ts
+import { expose } from '@gluezero/worker'
+
+expose({
+  parseCSV: async (
+    fileBuffer: ArrayBuffer,
+    signal: AbortSignal,                 // proxied via Comlink
+    onProgress: (p: ProgressPayload) =&gt; void
+  ) =&gt; {
+    // ...
+    return parsedRows
+  },
+  validateCSV: async (...) =&gt; { /* ... */ },
+})
+
+interface ProgressPayload {
+  value: number          // 0..1 normalized
+  message?: string
+  partialResult?: unknown
+}
+</code></pre>
+
+<h2 id="task-state"><code>TaskState</code></h2>
+<pre><code class="language-typescript">type TaskState =
+  | 'pending'
+  | 'running'
+  | 'completed'
+  | 'failed'
+  | 'cancelled'
+  | 'timed-out'
+</code></pre>
+
+<h2 id="task-tracker"><code>broker.getTaskTracker()</code></h2>
+<pre><code class="language-typescript">interface TaskTracker {
+  list(): TaskInfo[]
+  get(id: string): TaskInfo | undefined
+}
+
+interface TaskInfo {
+  id: string
+  workerId: string
+  taskName: string
+  state: TaskState
+  startedAt: number
+  completedAt?: number
+  durationMs?: number
+  correlationId: string                 // matches BrokerEvent.id
+  topic: string
+}
+</code></pre>
+
+<h2 id="errors">Error codes</h2>
+<table>
+<thead><tr><th>Code</th><th>When</th></tr></thead>
+<tbody>
+<tr><td><code>worker.unknown</code></td><td>Dispatch to unregistered worker id</td></tr>
+<tr><td><code>worker.task.unknown</code></td><td>Task name not in <code>tasks</code> array (fail-fast)</td></tr>
+<tr><td><code>worker.timeout</code></td><td>Timeout policy fired</td></tr>
+<tr><td><code>worker.cancelled</code></td><td>AbortSignal cancellation</td></tr>
+<tr><td><code>worker.serialization.failed</code></td><td>Payload not structuredClone-able (dev mode)</td></tr>
+<tr><td><code>worker.pool.size.exceeded</code></td><td>poolSize > hard cap 8</td></tr>
+</tbody>
+</table>
+
+<h2 id="utilities">Utilities</h2>
+<ul>
+<li><code>assertSerializable(value, opts?)</code> — throws if value can&rsquo;t cross postMessage boundary</li>
+<li><code>extractTransferables(payload, jsonPaths)</code> — collect ArrayBuffer-like objects from payload</li>
+<li><code>deriveTopic(sourceTopic, suffix)</code> — <code>weather.requested</code> + <code>completed</code> → <code>weather.completed</code></li>
+</ul>
+concepts/devtools.html">Devtools</a>
 </div>
 <div class="sidebar-section">
   <div class="sidebar-section-title">API reference</div>
-  <a class="sidebar-link" href="../api/gluezero.html">@gluezero/gluezero</a>
-  <a class="sidebar-link" href="../api/core.html">@gluezero/core</a>
-  <a class="sidebar-link" href="../api/mapper.html">@gluezero/mapper</a>
-  <a class="sidebar-link" href="../api/routing.html">@gluezero/routing</a>
-  <a class="sidebar-link" href="../api/gateway.html">@gluezero/gateway</a>
-  <a class="sidebar-link" href="../api/worker.html">@gluezero/worker</a>
-  <a class="sidebar-link" href="../api/cache.html">@gluezero/cache</a>
-  <a class="sidebar-link" href="../api/devtools.html">@gluezero/devtools</a>
+  <a class="sidebar-link" href="<h1><code>@gluezero/worker</code></h1>
+<p class="lead">Web Worker runtime. Bounded pool, hybrid cancellation, transferable opt-in, dev-mode serialization checks. Built on Comlink under the hood.</p>
+
+<h2 id="createWorkerBroker"><code>createWorkerBroker(config)</code></h2>
+<pre><code class="language-typescript">function createWorkerBroker(config?: WorkerBrokerConfig): WorkerBroker
+
+interface WorkerBrokerConfig extends RealtimeBrokerConfig {
+  workers?: {
+    assertSerializable?: 'always' | 'dev' | 'off'   // default: 'dev'
+    progressThrottleMs?: number                     // default: 100
+    cancelGraceMs?: number                          // default: 2000
+    poolSize?: number                               // default: min(hwc, 4) cap 8
+  }
+}
+</code></pre>
+
+<h2 id="worker-descriptor"><code>WorkerDescriptor</code></h2>
+<pre><code class="language-typescript">interface WorkerDescriptor {
+  id: string
+  factory: () =&gt; Worker                  // lazy: called on first dispatch
+  tasks: readonly string[]               // declared task names (fail-fast on unknown)
+  poolSize?: number                      // override per worker
+  type?: 'module' | 'classic'            // default: 'module' (ESM)
+}
+</code></pre>
+
+<h2 id="register-worker"><code>broker.registerWorker(descriptor)</code></h2>
+<pre><code class="language-typescript">function registerWorker(descriptor: WorkerDescriptor): void
+</code></pre>
+<p>Validates the descriptor. The <code>factory()</code> is NOT called until the first dispatch — registration is cheap.</p>
+
+<h2 id="expose"><code>expose(api)</code> — inside the worker source</h2>
+<pre><code class="language-typescript">// Inside csv-worker.ts
+import { expose } from '@gluezero/worker'
+
+expose({
+  parseCSV: async (
+    fileBuffer: ArrayBuffer,
+    signal: AbortSignal,                 // proxied via Comlink
+    onProgress: (p: ProgressPayload) =&gt; void
+  ) =&gt; {
+    // ...
+    return parsedRows
+  },
+  validateCSV: async (...) =&gt; { /* ... */ },
+})
+
+interface ProgressPayload {
+  value: number          // 0..1 normalized
+  message?: string
+  partialResult?: unknown
+}
+</code></pre>
+
+<h2 id="task-state"><code>TaskState</code></h2>
+<pre><code class="language-typescript">type TaskState =
+  | 'pending'
+  | 'running'
+  | 'completed'
+  | 'failed'
+  | 'cancelled'
+  | 'timed-out'
+</code></pre>
+
+<h2 id="task-tracker"><code>broker.getTaskTracker()</code></h2>
+<pre><code class="language-typescript">interface TaskTracker {
+  list(): TaskInfo[]
+  get(id: string): TaskInfo | undefined
+}
+
+interface TaskInfo {
+  id: string
+  workerId: string
+  taskName: string
+  state: TaskState
+  startedAt: number
+  completedAt?: number
+  durationMs?: number
+  correlationId: string                 // matches BrokerEvent.id
+  topic: string
+}
+</code></pre>
+
+<h2 id="errors">Error codes</h2>
+<table>
+<thead><tr><th>Code</th><th>When</th></tr></thead>
+<tbody>
+<tr><td><code>worker.unknown</code></td><td>Dispatch to unregistered worker id</td></tr>
+<tr><td><code>worker.task.unknown</code></td><td>Task name not in <code>tasks</code> array (fail-fast)</td></tr>
+<tr><td><code>worker.timeout</code></td><td>Timeout policy fired</td></tr>
+<tr><td><code>worker.cancelled</code></td><td>AbortSignal cancellation</td></tr>
+<tr><td><code>worker.serialization.failed</code></td><td>Payload not structuredClone-able (dev mode)</td></tr>
+<tr><td><code>worker.pool.size.exceeded</code></td><td>poolSize > hard cap 8</td></tr>
+</tbody>
+</table>
+
+<h2 id="utilities">Utilities</h2>
+<ul>
+<li><code>assertSerializable(value, opts?)</code> — throws if value can&rsquo;t cross postMessage boundary</li>
+<li><code>extractTransferables(payload, jsonPaths)</code> — collect ArrayBuffer-like objects from payload</li>
+<li><code>deriveTopic(sourceTopic, suffix)</code> — <code>weather.requested</code> + <code>completed</code> → <code>weather.completed</code></li>
+</ul>
+api/gluezero.html">@gluezero/gluezero</a>
+  <a class="sidebar-link" href="<h1><code>@gluezero/worker</code></h1>
+<p class="lead">Web Worker runtime. Bounded pool, hybrid cancellation, transferable opt-in, dev-mode serialization checks. Built on Comlink under the hood.</p>
+
+<h2 id="createWorkerBroker"><code>createWorkerBroker(config)</code></h2>
+<pre><code class="language-typescript">function createWorkerBroker(config?: WorkerBrokerConfig): WorkerBroker
+
+interface WorkerBrokerConfig extends RealtimeBrokerConfig {
+  workers?: {
+    assertSerializable?: 'always' | 'dev' | 'off'   // default: 'dev'
+    progressThrottleMs?: number                     // default: 100
+    cancelGraceMs?: number                          // default: 2000
+    poolSize?: number                               // default: min(hwc, 4) cap 8
+  }
+}
+</code></pre>
+
+<h2 id="worker-descriptor"><code>WorkerDescriptor</code></h2>
+<pre><code class="language-typescript">interface WorkerDescriptor {
+  id: string
+  factory: () =&gt; Worker                  // lazy: called on first dispatch
+  tasks: readonly string[]               // declared task names (fail-fast on unknown)
+  poolSize?: number                      // override per worker
+  type?: 'module' | 'classic'            // default: 'module' (ESM)
+}
+</code></pre>
+
+<h2 id="register-worker"><code>broker.registerWorker(descriptor)</code></h2>
+<pre><code class="language-typescript">function registerWorker(descriptor: WorkerDescriptor): void
+</code></pre>
+<p>Validates the descriptor. The <code>factory()</code> is NOT called until the first dispatch — registration is cheap.</p>
+
+<h2 id="expose"><code>expose(api)</code> — inside the worker source</h2>
+<pre><code class="language-typescript">// Inside csv-worker.ts
+import { expose } from '@gluezero/worker'
+
+expose({
+  parseCSV: async (
+    fileBuffer: ArrayBuffer,
+    signal: AbortSignal,                 // proxied via Comlink
+    onProgress: (p: ProgressPayload) =&gt; void
+  ) =&gt; {
+    // ...
+    return parsedRows
+  },
+  validateCSV: async (...) =&gt; { /* ... */ },
+})
+
+interface ProgressPayload {
+  value: number          // 0..1 normalized
+  message?: string
+  partialResult?: unknown
+}
+</code></pre>
+
+<h2 id="task-state"><code>TaskState</code></h2>
+<pre><code class="language-typescript">type TaskState =
+  | 'pending'
+  | 'running'
+  | 'completed'
+  | 'failed'
+  | 'cancelled'
+  | 'timed-out'
+</code></pre>
+
+<h2 id="task-tracker"><code>broker.getTaskTracker()</code></h2>
+<pre><code class="language-typescript">interface TaskTracker {
+  list(): TaskInfo[]
+  get(id: string): TaskInfo | undefined
+}
+
+interface TaskInfo {
+  id: string
+  workerId: string
+  taskName: string
+  state: TaskState
+  startedAt: number
+  completedAt?: number
+  durationMs?: number
+  correlationId: string                 // matches BrokerEvent.id
+  topic: string
+}
+</code></pre>
+
+<h2 id="errors">Error codes</h2>
+<table>
+<thead><tr><th>Code</th><th>When</th></tr></thead>
+<tbody>
+<tr><td><code>worker.unknown</code></td><td>Dispatch to unregistered worker id</td></tr>
+<tr><td><code>worker.task.unknown</code></td><td>Task name not in <code>tasks</code> array (fail-fast)</td></tr>
+<tr><td><code>worker.timeout</code></td><td>Timeout policy fired</td></tr>
+<tr><td><code>worker.cancelled</code></td><td>AbortSignal cancellation</td></tr>
+<tr><td><code>worker.serialization.failed</code></td><td>Payload not structuredClone-able (dev mode)</td></tr>
+<tr><td><code>worker.pool.size.exceeded</code></td><td>poolSize > hard cap 8</td></tr>
+</tbody>
+</table>
+
+<h2 id="utilities">Utilities</h2>
+<ul>
+<li><code>assertSerializable(value, opts?)</code> — throws if value can&rsquo;t cross postMessage boundary</li>
+<li><code>extractTransferables(payload, jsonPaths)</code> — collect ArrayBuffer-like objects from payload</li>
+<li><code>deriveTopic(sourceTopic, suffix)</code> — <code>weather.requested</code> + <code>completed</code> → <code>weather.completed</code></li>
+</ul>
+api/core.html">@gluezero/core</a>
+  <a class="sidebar-link" href="<h1><code>@gluezero/worker</code></h1>
+<p class="lead">Web Worker runtime. Bounded pool, hybrid cancellation, transferable opt-in, dev-mode serialization checks. Built on Comlink under the hood.</p>
+
+<h2 id="createWorkerBroker"><code>createWorkerBroker(config)</code></h2>
+<pre><code class="language-typescript">function createWorkerBroker(config?: WorkerBrokerConfig): WorkerBroker
+
+interface WorkerBrokerConfig extends RealtimeBrokerConfig {
+  workers?: {
+    assertSerializable?: 'always' | 'dev' | 'off'   // default: 'dev'
+    progressThrottleMs?: number                     // default: 100
+    cancelGraceMs?: number                          // default: 2000
+    poolSize?: number                               // default: min(hwc, 4) cap 8
+  }
+}
+</code></pre>
+
+<h2 id="worker-descriptor"><code>WorkerDescriptor</code></h2>
+<pre><code class="language-typescript">interface WorkerDescriptor {
+  id: string
+  factory: () =&gt; Worker                  // lazy: called on first dispatch
+  tasks: readonly string[]               // declared task names (fail-fast on unknown)
+  poolSize?: number                      // override per worker
+  type?: 'module' | 'classic'            // default: 'module' (ESM)
+}
+</code></pre>
+
+<h2 id="register-worker"><code>broker.registerWorker(descriptor)</code></h2>
+<pre><code class="language-typescript">function registerWorker(descriptor: WorkerDescriptor): void
+</code></pre>
+<p>Validates the descriptor. The <code>factory()</code> is NOT called until the first dispatch — registration is cheap.</p>
+
+<h2 id="expose"><code>expose(api)</code> — inside the worker source</h2>
+<pre><code class="language-typescript">// Inside csv-worker.ts
+import { expose } from '@gluezero/worker'
+
+expose({
+  parseCSV: async (
+    fileBuffer: ArrayBuffer,
+    signal: AbortSignal,                 // proxied via Comlink
+    onProgress: (p: ProgressPayload) =&gt; void
+  ) =&gt; {
+    // ...
+    return parsedRows
+  },
+  validateCSV: async (...) =&gt; { /* ... */ },
+})
+
+interface ProgressPayload {
+  value: number          // 0..1 normalized
+  message?: string
+  partialResult?: unknown
+}
+</code></pre>
+
+<h2 id="task-state"><code>TaskState</code></h2>
+<pre><code class="language-typescript">type TaskState =
+  | 'pending'
+  | 'running'
+  | 'completed'
+  | 'failed'
+  | 'cancelled'
+  | 'timed-out'
+</code></pre>
+
+<h2 id="task-tracker"><code>broker.getTaskTracker()</code></h2>
+<pre><code class="language-typescript">interface TaskTracker {
+  list(): TaskInfo[]
+  get(id: string): TaskInfo | undefined
+}
+
+interface TaskInfo {
+  id: string
+  workerId: string
+  taskName: string
+  state: TaskState
+  startedAt: number
+  completedAt?: number
+  durationMs?: number
+  correlationId: string                 // matches BrokerEvent.id
+  topic: string
+}
+</code></pre>
+
+<h2 id="errors">Error codes</h2>
+<table>
+<thead><tr><th>Code</th><th>When</th></tr></thead>
+<tbody>
+<tr><td><code>worker.unknown</code></td><td>Dispatch to unregistered worker id</td></tr>
+<tr><td><code>worker.task.unknown</code></td><td>Task name not in <code>tasks</code> array (fail-fast)</td></tr>
+<tr><td><code>worker.timeout</code></td><td>Timeout policy fired</td></tr>
+<tr><td><code>worker.cancelled</code></td><td>AbortSignal cancellation</td></tr>
+<tr><td><code>worker.serialization.failed</code></td><td>Payload not structuredClone-able (dev mode)</td></tr>
+<tr><td><code>worker.pool.size.exceeded</code></td><td>poolSize > hard cap 8</td></tr>
+</tbody>
+</table>
+
+<h2 id="utilities">Utilities</h2>
+<ul>
+<li><code>assertSerializable(value, opts?)</code> — throws if value can&rsquo;t cross postMessage boundary</li>
+<li><code>extractTransferables(payload, jsonPaths)</code> — collect ArrayBuffer-like objects from payload</li>
+<li><code>deriveTopic(sourceTopic, suffix)</code> — <code>weather.requested</code> + <code>completed</code> → <code>weather.completed</code></li>
+</ul>
+api/mapper.html">@gluezero/mapper</a>
+  <a class="sidebar-link" href="<h1><code>@gluezero/worker</code></h1>
+<p class="lead">Web Worker runtime. Bounded pool, hybrid cancellation, transferable opt-in, dev-mode serialization checks. Built on Comlink under the hood.</p>
+
+<h2 id="createWorkerBroker"><code>createWorkerBroker(config)</code></h2>
+<pre><code class="language-typescript">function createWorkerBroker(config?: WorkerBrokerConfig): WorkerBroker
+
+interface WorkerBrokerConfig extends RealtimeBrokerConfig {
+  workers?: {
+    assertSerializable?: 'always' | 'dev' | 'off'   // default: 'dev'
+    progressThrottleMs?: number                     // default: 100
+    cancelGraceMs?: number                          // default: 2000
+    poolSize?: number                               // default: min(hwc, 4) cap 8
+  }
+}
+</code></pre>
+
+<h2 id="worker-descriptor"><code>WorkerDescriptor</code></h2>
+<pre><code class="language-typescript">interface WorkerDescriptor {
+  id: string
+  factory: () =&gt; Worker                  // lazy: called on first dispatch
+  tasks: readonly string[]               // declared task names (fail-fast on unknown)
+  poolSize?: number                      // override per worker
+  type?: 'module' | 'classic'            // default: 'module' (ESM)
+}
+</code></pre>
+
+<h2 id="register-worker"><code>broker.registerWorker(descriptor)</code></h2>
+<pre><code class="language-typescript">function registerWorker(descriptor: WorkerDescriptor): void
+</code></pre>
+<p>Validates the descriptor. The <code>factory()</code> is NOT called until the first dispatch — registration is cheap.</p>
+
+<h2 id="expose"><code>expose(api)</code> — inside the worker source</h2>
+<pre><code class="language-typescript">// Inside csv-worker.ts
+import { expose } from '@gluezero/worker'
+
+expose({
+  parseCSV: async (
+    fileBuffer: ArrayBuffer,
+    signal: AbortSignal,                 // proxied via Comlink
+    onProgress: (p: ProgressPayload) =&gt; void
+  ) =&gt; {
+    // ...
+    return parsedRows
+  },
+  validateCSV: async (...) =&gt; { /* ... */ },
+})
+
+interface ProgressPayload {
+  value: number          // 0..1 normalized
+  message?: string
+  partialResult?: unknown
+}
+</code></pre>
+
+<h2 id="task-state"><code>TaskState</code></h2>
+<pre><code class="language-typescript">type TaskState =
+  | 'pending'
+  | 'running'
+  | 'completed'
+  | 'failed'
+  | 'cancelled'
+  | 'timed-out'
+</code></pre>
+
+<h2 id="task-tracker"><code>broker.getTaskTracker()</code></h2>
+<pre><code class="language-typescript">interface TaskTracker {
+  list(): TaskInfo[]
+  get(id: string): TaskInfo | undefined
+}
+
+interface TaskInfo {
+  id: string
+  workerId: string
+  taskName: string
+  state: TaskState
+  startedAt: number
+  completedAt?: number
+  durationMs?: number
+  correlationId: string                 // matches BrokerEvent.id
+  topic: string
+}
+</code></pre>
+
+<h2 id="errors">Error codes</h2>
+<table>
+<thead><tr><th>Code</th><th>When</th></tr></thead>
+<tbody>
+<tr><td><code>worker.unknown</code></td><td>Dispatch to unregistered worker id</td></tr>
+<tr><td><code>worker.task.unknown</code></td><td>Task name not in <code>tasks</code> array (fail-fast)</td></tr>
+<tr><td><code>worker.timeout</code></td><td>Timeout policy fired</td></tr>
+<tr><td><code>worker.cancelled</code></td><td>AbortSignal cancellation</td></tr>
+<tr><td><code>worker.serialization.failed</code></td><td>Payload not structuredClone-able (dev mode)</td></tr>
+<tr><td><code>worker.pool.size.exceeded</code></td><td>poolSize > hard cap 8</td></tr>
+</tbody>
+</table>
+
+<h2 id="utilities">Utilities</h2>
+<ul>
+<li><code>assertSerializable(value, opts?)</code> — throws if value can&rsquo;t cross postMessage boundary</li>
+<li><code>extractTransferables(payload, jsonPaths)</code> — collect ArrayBuffer-like objects from payload</li>
+<li><code>deriveTopic(sourceTopic, suffix)</code> — <code>weather.requested</code> + <code>completed</code> → <code>weather.completed</code></li>
+</ul>
+api/routing.html">@gluezero/routing</a>
+  <a class="sidebar-link" href="<h1><code>@gluezero/worker</code></h1>
+<p class="lead">Web Worker runtime. Bounded pool, hybrid cancellation, transferable opt-in, dev-mode serialization checks. Built on Comlink under the hood.</p>
+
+<h2 id="createWorkerBroker"><code>createWorkerBroker(config)</code></h2>
+<pre><code class="language-typescript">function createWorkerBroker(config?: WorkerBrokerConfig): WorkerBroker
+
+interface WorkerBrokerConfig extends RealtimeBrokerConfig {
+  workers?: {
+    assertSerializable?: 'always' | 'dev' | 'off'   // default: 'dev'
+    progressThrottleMs?: number                     // default: 100
+    cancelGraceMs?: number                          // default: 2000
+    poolSize?: number                               // default: min(hwc, 4) cap 8
+  }
+}
+</code></pre>
+
+<h2 id="worker-descriptor"><code>WorkerDescriptor</code></h2>
+<pre><code class="language-typescript">interface WorkerDescriptor {
+  id: string
+  factory: () =&gt; Worker                  // lazy: called on first dispatch
+  tasks: readonly string[]               // declared task names (fail-fast on unknown)
+  poolSize?: number                      // override per worker
+  type?: 'module' | 'classic'            // default: 'module' (ESM)
+}
+</code></pre>
+
+<h2 id="register-worker"><code>broker.registerWorker(descriptor)</code></h2>
+<pre><code class="language-typescript">function registerWorker(descriptor: WorkerDescriptor): void
+</code></pre>
+<p>Validates the descriptor. The <code>factory()</code> is NOT called until the first dispatch — registration is cheap.</p>
+
+<h2 id="expose"><code>expose(api)</code> — inside the worker source</h2>
+<pre><code class="language-typescript">// Inside csv-worker.ts
+import { expose } from '@gluezero/worker'
+
+expose({
+  parseCSV: async (
+    fileBuffer: ArrayBuffer,
+    signal: AbortSignal,                 // proxied via Comlink
+    onProgress: (p: ProgressPayload) =&gt; void
+  ) =&gt; {
+    // ...
+    return parsedRows
+  },
+  validateCSV: async (...) =&gt; { /* ... */ },
+})
+
+interface ProgressPayload {
+  value: number          // 0..1 normalized
+  message?: string
+  partialResult?: unknown
+}
+</code></pre>
+
+<h2 id="task-state"><code>TaskState</code></h2>
+<pre><code class="language-typescript">type TaskState =
+  | 'pending'
+  | 'running'
+  | 'completed'
+  | 'failed'
+  | 'cancelled'
+  | 'timed-out'
+</code></pre>
+
+<h2 id="task-tracker"><code>broker.getTaskTracker()</code></h2>
+<pre><code class="language-typescript">interface TaskTracker {
+  list(): TaskInfo[]
+  get(id: string): TaskInfo | undefined
+}
+
+interface TaskInfo {
+  id: string
+  workerId: string
+  taskName: string
+  state: TaskState
+  startedAt: number
+  completedAt?: number
+  durationMs?: number
+  correlationId: string                 // matches BrokerEvent.id
+  topic: string
+}
+</code></pre>
+
+<h2 id="errors">Error codes</h2>
+<table>
+<thead><tr><th>Code</th><th>When</th></tr></thead>
+<tbody>
+<tr><td><code>worker.unknown</code></td><td>Dispatch to unregistered worker id</td></tr>
+<tr><td><code>worker.task.unknown</code></td><td>Task name not in <code>tasks</code> array (fail-fast)</td></tr>
+<tr><td><code>worker.timeout</code></td><td>Timeout policy fired</td></tr>
+<tr><td><code>worker.cancelled</code></td><td>AbortSignal cancellation</td></tr>
+<tr><td><code>worker.serialization.failed</code></td><td>Payload not structuredClone-able (dev mode)</td></tr>
+<tr><td><code>worker.pool.size.exceeded</code></td><td>poolSize > hard cap 8</td></tr>
+</tbody>
+</table>
+
+<h2 id="utilities">Utilities</h2>
+<ul>
+<li><code>assertSerializable(value, opts?)</code> — throws if value can&rsquo;t cross postMessage boundary</li>
+<li><code>extractTransferables(payload, jsonPaths)</code> — collect ArrayBuffer-like objects from payload</li>
+<li><code>deriveTopic(sourceTopic, suffix)</code> — <code>weather.requested</code> + <code>completed</code> → <code>weather.completed</code></li>
+</ul>
+api/gateway.html">@gluezero/gateway</a>
+  <a class="sidebar-link" href="<h1><code>@gluezero/worker</code></h1>
+<p class="lead">Web Worker runtime. Bounded pool, hybrid cancellation, transferable opt-in, dev-mode serialization checks. Built on Comlink under the hood.</p>
+
+<h2 id="createWorkerBroker"><code>createWorkerBroker(config)</code></h2>
+<pre><code class="language-typescript">function createWorkerBroker(config?: WorkerBrokerConfig): WorkerBroker
+
+interface WorkerBrokerConfig extends RealtimeBrokerConfig {
+  workers?: {
+    assertSerializable?: 'always' | 'dev' | 'off'   // default: 'dev'
+    progressThrottleMs?: number                     // default: 100
+    cancelGraceMs?: number                          // default: 2000
+    poolSize?: number                               // default: min(hwc, 4) cap 8
+  }
+}
+</code></pre>
+
+<h2 id="worker-descriptor"><code>WorkerDescriptor</code></h2>
+<pre><code class="language-typescript">interface WorkerDescriptor {
+  id: string
+  factory: () =&gt; Worker                  // lazy: called on first dispatch
+  tasks: readonly string[]               // declared task names (fail-fast on unknown)
+  poolSize?: number                      // override per worker
+  type?: 'module' | 'classic'            // default: 'module' (ESM)
+}
+</code></pre>
+
+<h2 id="register-worker"><code>broker.registerWorker(descriptor)</code></h2>
+<pre><code class="language-typescript">function registerWorker(descriptor: WorkerDescriptor): void
+</code></pre>
+<p>Validates the descriptor. The <code>factory()</code> is NOT called until the first dispatch — registration is cheap.</p>
+
+<h2 id="expose"><code>expose(api)</code> — inside the worker source</h2>
+<pre><code class="language-typescript">// Inside csv-worker.ts
+import { expose } from '@gluezero/worker'
+
+expose({
+  parseCSV: async (
+    fileBuffer: ArrayBuffer,
+    signal: AbortSignal,                 // proxied via Comlink
+    onProgress: (p: ProgressPayload) =&gt; void
+  ) =&gt; {
+    // ...
+    return parsedRows
+  },
+  validateCSV: async (...) =&gt; { /* ... */ },
+})
+
+interface ProgressPayload {
+  value: number          // 0..1 normalized
+  message?: string
+  partialResult?: unknown
+}
+</code></pre>
+
+<h2 id="task-state"><code>TaskState</code></h2>
+<pre><code class="language-typescript">type TaskState =
+  | 'pending'
+  | 'running'
+  | 'completed'
+  | 'failed'
+  | 'cancelled'
+  | 'timed-out'
+</code></pre>
+
+<h2 id="task-tracker"><code>broker.getTaskTracker()</code></h2>
+<pre><code class="language-typescript">interface TaskTracker {
+  list(): TaskInfo[]
+  get(id: string): TaskInfo | undefined
+}
+
+interface TaskInfo {
+  id: string
+  workerId: string
+  taskName: string
+  state: TaskState
+  startedAt: number
+  completedAt?: number
+  durationMs?: number
+  correlationId: string                 // matches BrokerEvent.id
+  topic: string
+}
+</code></pre>
+
+<h2 id="errors">Error codes</h2>
+<table>
+<thead><tr><th>Code</th><th>When</th></tr></thead>
+<tbody>
+<tr><td><code>worker.unknown</code></td><td>Dispatch to unregistered worker id</td></tr>
+<tr><td><code>worker.task.unknown</code></td><td>Task name not in <code>tasks</code> array (fail-fast)</td></tr>
+<tr><td><code>worker.timeout</code></td><td>Timeout policy fired</td></tr>
+<tr><td><code>worker.cancelled</code></td><td>AbortSignal cancellation</td></tr>
+<tr><td><code>worker.serialization.failed</code></td><td>Payload not structuredClone-able (dev mode)</td></tr>
+<tr><td><code>worker.pool.size.exceeded</code></td><td>poolSize > hard cap 8</td></tr>
+</tbody>
+</table>
+
+<h2 id="utilities">Utilities</h2>
+<ul>
+<li><code>assertSerializable(value, opts?)</code> — throws if value can&rsquo;t cross postMessage boundary</li>
+<li><code>extractTransferables(payload, jsonPaths)</code> — collect ArrayBuffer-like objects from payload</li>
+<li><code>deriveTopic(sourceTopic, suffix)</code> — <code>weather.requested</code> + <code>completed</code> → <code>weather.completed</code></li>
+</ul>
+api/worker.html">@gluezero/worker</a>
+  <a class="sidebar-link" href="<h1><code>@gluezero/worker</code></h1>
+<p class="lead">Web Worker runtime. Bounded pool, hybrid cancellation, transferable opt-in, dev-mode serialization checks. Built on Comlink under the hood.</p>
+
+<h2 id="createWorkerBroker"><code>createWorkerBroker(config)</code></h2>
+<pre><code class="language-typescript">function createWorkerBroker(config?: WorkerBrokerConfig): WorkerBroker
+
+interface WorkerBrokerConfig extends RealtimeBrokerConfig {
+  workers?: {
+    assertSerializable?: 'always' | 'dev' | 'off'   // default: 'dev'
+    progressThrottleMs?: number                     // default: 100
+    cancelGraceMs?: number                          // default: 2000
+    poolSize?: number                               // default: min(hwc, 4) cap 8
+  }
+}
+</code></pre>
+
+<h2 id="worker-descriptor"><code>WorkerDescriptor</code></h2>
+<pre><code class="language-typescript">interface WorkerDescriptor {
+  id: string
+  factory: () =&gt; Worker                  // lazy: called on first dispatch
+  tasks: readonly string[]               // declared task names (fail-fast on unknown)
+  poolSize?: number                      // override per worker
+  type?: 'module' | 'classic'            // default: 'module' (ESM)
+}
+</code></pre>
+
+<h2 id="register-worker"><code>broker.registerWorker(descriptor)</code></h2>
+<pre><code class="language-typescript">function registerWorker(descriptor: WorkerDescriptor): void
+</code></pre>
+<p>Validates the descriptor. The <code>factory()</code> is NOT called until the first dispatch — registration is cheap.</p>
+
+<h2 id="expose"><code>expose(api)</code> — inside the worker source</h2>
+<pre><code class="language-typescript">// Inside csv-worker.ts
+import { expose } from '@gluezero/worker'
+
+expose({
+  parseCSV: async (
+    fileBuffer: ArrayBuffer,
+    signal: AbortSignal,                 // proxied via Comlink
+    onProgress: (p: ProgressPayload) =&gt; void
+  ) =&gt; {
+    // ...
+    return parsedRows
+  },
+  validateCSV: async (...) =&gt; { /* ... */ },
+})
+
+interface ProgressPayload {
+  value: number          // 0..1 normalized
+  message?: string
+  partialResult?: unknown
+}
+</code></pre>
+
+<h2 id="task-state"><code>TaskState</code></h2>
+<pre><code class="language-typescript">type TaskState =
+  | 'pending'
+  | 'running'
+  | 'completed'
+  | 'failed'
+  | 'cancelled'
+  | 'timed-out'
+</code></pre>
+
+<h2 id="task-tracker"><code>broker.getTaskTracker()</code></h2>
+<pre><code class="language-typescript">interface TaskTracker {
+  list(): TaskInfo[]
+  get(id: string): TaskInfo | undefined
+}
+
+interface TaskInfo {
+  id: string
+  workerId: string
+  taskName: string
+  state: TaskState
+  startedAt: number
+  completedAt?: number
+  durationMs?: number
+  correlationId: string                 // matches BrokerEvent.id
+  topic: string
+}
+</code></pre>
+
+<h2 id="errors">Error codes</h2>
+<table>
+<thead><tr><th>Code</th><th>When</th></tr></thead>
+<tbody>
+<tr><td><code>worker.unknown</code></td><td>Dispatch to unregistered worker id</td></tr>
+<tr><td><code>worker.task.unknown</code></td><td>Task name not in <code>tasks</code> array (fail-fast)</td></tr>
+<tr><td><code>worker.timeout</code></td><td>Timeout policy fired</td></tr>
+<tr><td><code>worker.cancelled</code></td><td>AbortSignal cancellation</td></tr>
+<tr><td><code>worker.serialization.failed</code></td><td>Payload not structuredClone-able (dev mode)</td></tr>
+<tr><td><code>worker.pool.size.exceeded</code></td><td>poolSize > hard cap 8</td></tr>
+</tbody>
+</table>
+
+<h2 id="utilities">Utilities</h2>
+<ul>
+<li><code>assertSerializable(value, opts?)</code> — throws if value can&rsquo;t cross postMessage boundary</li>
+<li><code>extractTransferables(payload, jsonPaths)</code> — collect ArrayBuffer-like objects from payload</li>
+<li><code>deriveTopic(sourceTopic, suffix)</code> — <code>weather.requested</code> + <code>completed</code> → <code>weather.completed</code></li>
+</ul>
+api/cache.html">@gluezero/cache</a>
+  <a class="sidebar-link" href="<h1><code>@gluezero/worker</code></h1>
+<p class="lead">Web Worker runtime. Bounded pool, hybrid cancellation, transferable opt-in, dev-mode serialization checks. Built on Comlink under the hood.</p>
+
+<h2 id="createWorkerBroker"><code>createWorkerBroker(config)</code></h2>
+<pre><code class="language-typescript">function createWorkerBroker(config?: WorkerBrokerConfig): WorkerBroker
+
+interface WorkerBrokerConfig extends RealtimeBrokerConfig {
+  workers?: {
+    assertSerializable?: 'always' | 'dev' | 'off'   // default: 'dev'
+    progressThrottleMs?: number                     // default: 100
+    cancelGraceMs?: number                          // default: 2000
+    poolSize?: number                               // default: min(hwc, 4) cap 8
+  }
+}
+</code></pre>
+
+<h2 id="worker-descriptor"><code>WorkerDescriptor</code></h2>
+<pre><code class="language-typescript">interface WorkerDescriptor {
+  id: string
+  factory: () =&gt; Worker                  // lazy: called on first dispatch
+  tasks: readonly string[]               // declared task names (fail-fast on unknown)
+  poolSize?: number                      // override per worker
+  type?: 'module' | 'classic'            // default: 'module' (ESM)
+}
+</code></pre>
+
+<h2 id="register-worker"><code>broker.registerWorker(descriptor)</code></h2>
+<pre><code class="language-typescript">function registerWorker(descriptor: WorkerDescriptor): void
+</code></pre>
+<p>Validates the descriptor. The <code>factory()</code> is NOT called until the first dispatch — registration is cheap.</p>
+
+<h2 id="expose"><code>expose(api)</code> — inside the worker source</h2>
+<pre><code class="language-typescript">// Inside csv-worker.ts
+import { expose } from '@gluezero/worker'
+
+expose({
+  parseCSV: async (
+    fileBuffer: ArrayBuffer,
+    signal: AbortSignal,                 // proxied via Comlink
+    onProgress: (p: ProgressPayload) =&gt; void
+  ) =&gt; {
+    // ...
+    return parsedRows
+  },
+  validateCSV: async (...) =&gt; { /* ... */ },
+})
+
+interface ProgressPayload {
+  value: number          // 0..1 normalized
+  message?: string
+  partialResult?: unknown
+}
+</code></pre>
+
+<h2 id="task-state"><code>TaskState</code></h2>
+<pre><code class="language-typescript">type TaskState =
+  | 'pending'
+  | 'running'
+  | 'completed'
+  | 'failed'
+  | 'cancelled'
+  | 'timed-out'
+</code></pre>
+
+<h2 id="task-tracker"><code>broker.getTaskTracker()</code></h2>
+<pre><code class="language-typescript">interface TaskTracker {
+  list(): TaskInfo[]
+  get(id: string): TaskInfo | undefined
+}
+
+interface TaskInfo {
+  id: string
+  workerId: string
+  taskName: string
+  state: TaskState
+  startedAt: number
+  completedAt?: number
+  durationMs?: number
+  correlationId: string                 // matches BrokerEvent.id
+  topic: string
+}
+</code></pre>
+
+<h2 id="errors">Error codes</h2>
+<table>
+<thead><tr><th>Code</th><th>When</th></tr></thead>
+<tbody>
+<tr><td><code>worker.unknown</code></td><td>Dispatch to unregistered worker id</td></tr>
+<tr><td><code>worker.task.unknown</code></td><td>Task name not in <code>tasks</code> array (fail-fast)</td></tr>
+<tr><td><code>worker.timeout</code></td><td>Timeout policy fired</td></tr>
+<tr><td><code>worker.cancelled</code></td><td>AbortSignal cancellation</td></tr>
+<tr><td><code>worker.serialization.failed</code></td><td>Payload not structuredClone-able (dev mode)</td></tr>
+<tr><td><code>worker.pool.size.exceeded</code></td><td>poolSize > hard cap 8</td></tr>
+</tbody>
+</table>
+
+<h2 id="utilities">Utilities</h2>
+<ul>
+<li><code>assertSerializable(value, opts?)</code> — throws if value can&rsquo;t cross postMessage boundary</li>
+<li><code>extractTransferables(payload, jsonPaths)</code> — collect ArrayBuffer-like objects from payload</li>
+<li><code>deriveTopic(sourceTopic, suffix)</code> — <code>weather.requested</code> + <code>completed</code> → <code>weather.completed</code></li>
+</ul>
+api/devtools.html">@gluezero/devtools</a>
 </div>
 <div class="sidebar-section">
   <div class="sidebar-section-title">Recipes</div>
-  <a class="sidebar-link" href="../recipes/auth-token-refresh.html">Auth + token refresh</a>
-  <a class="sidebar-link" href="../recipes/multi-tenant-cache.html">Multi-tenant cache</a>
-  <a class="sidebar-link" href="../recipes/reconnect-realtime.html">Reconnect SSE→WS</a>
-  <a class="sidebar-link" href="../recipes/worker-progress.html">Worker progress</a>
-  <a class="sidebar-link" href="../recipes/debug-flow.html">Debug with Inspector</a>
-  <a class="sidebar-link" href="../recipes/react-integration.html">React integration</a>
+  <a class="sidebar-link" href="<h1><code>@gluezero/worker</code></h1>
+<p class="lead">Web Worker runtime. Bounded pool, hybrid cancellation, transferable opt-in, dev-mode serialization checks. Built on Comlink under the hood.</p>
+
+<h2 id="createWorkerBroker"><code>createWorkerBroker(config)</code></h2>
+<pre><code class="language-typescript">function createWorkerBroker(config?: WorkerBrokerConfig): WorkerBroker
+
+interface WorkerBrokerConfig extends RealtimeBrokerConfig {
+  workers?: {
+    assertSerializable?: 'always' | 'dev' | 'off'   // default: 'dev'
+    progressThrottleMs?: number                     // default: 100
+    cancelGraceMs?: number                          // default: 2000
+    poolSize?: number                               // default: min(hwc, 4) cap 8
+  }
+}
+</code></pre>
+
+<h2 id="worker-descriptor"><code>WorkerDescriptor</code></h2>
+<pre><code class="language-typescript">interface WorkerDescriptor {
+  id: string
+  factory: () =&gt; Worker                  // lazy: called on first dispatch
+  tasks: readonly string[]               // declared task names (fail-fast on unknown)
+  poolSize?: number                      // override per worker
+  type?: 'module' | 'classic'            // default: 'module' (ESM)
+}
+</code></pre>
+
+<h2 id="register-worker"><code>broker.registerWorker(descriptor)</code></h2>
+<pre><code class="language-typescript">function registerWorker(descriptor: WorkerDescriptor): void
+</code></pre>
+<p>Validates the descriptor. The <code>factory()</code> is NOT called until the first dispatch — registration is cheap.</p>
+
+<h2 id="expose"><code>expose(api)</code> — inside the worker source</h2>
+<pre><code class="language-typescript">// Inside csv-worker.ts
+import { expose } from '@gluezero/worker'
+
+expose({
+  parseCSV: async (
+    fileBuffer: ArrayBuffer,
+    signal: AbortSignal,                 // proxied via Comlink
+    onProgress: (p: ProgressPayload) =&gt; void
+  ) =&gt; {
+    // ...
+    return parsedRows
+  },
+  validateCSV: async (...) =&gt; { /* ... */ },
+})
+
+interface ProgressPayload {
+  value: number          // 0..1 normalized
+  message?: string
+  partialResult?: unknown
+}
+</code></pre>
+
+<h2 id="task-state"><code>TaskState</code></h2>
+<pre><code class="language-typescript">type TaskState =
+  | 'pending'
+  | 'running'
+  | 'completed'
+  | 'failed'
+  | 'cancelled'
+  | 'timed-out'
+</code></pre>
+
+<h2 id="task-tracker"><code>broker.getTaskTracker()</code></h2>
+<pre><code class="language-typescript">interface TaskTracker {
+  list(): TaskInfo[]
+  get(id: string): TaskInfo | undefined
+}
+
+interface TaskInfo {
+  id: string
+  workerId: string
+  taskName: string
+  state: TaskState
+  startedAt: number
+  completedAt?: number
+  durationMs?: number
+  correlationId: string                 // matches BrokerEvent.id
+  topic: string
+}
+</code></pre>
+
+<h2 id="errors">Error codes</h2>
+<table>
+<thead><tr><th>Code</th><th>When</th></tr></thead>
+<tbody>
+<tr><td><code>worker.unknown</code></td><td>Dispatch to unregistered worker id</td></tr>
+<tr><td><code>worker.task.unknown</code></td><td>Task name not in <code>tasks</code> array (fail-fast)</td></tr>
+<tr><td><code>worker.timeout</code></td><td>Timeout policy fired</td></tr>
+<tr><td><code>worker.cancelled</code></td><td>AbortSignal cancellation</td></tr>
+<tr><td><code>worker.serialization.failed</code></td><td>Payload not structuredClone-able (dev mode)</td></tr>
+<tr><td><code>worker.pool.size.exceeded</code></td><td>poolSize > hard cap 8</td></tr>
+</tbody>
+</table>
+
+<h2 id="utilities">Utilities</h2>
+<ul>
+<li><code>assertSerializable(value, opts?)</code> — throws if value can&rsquo;t cross postMessage boundary</li>
+<li><code>extractTransferables(payload, jsonPaths)</code> — collect ArrayBuffer-like objects from payload</li>
+<li><code>deriveTopic(sourceTopic, suffix)</code> — <code>weather.requested</code> + <code>completed</code> → <code>weather.completed</code></li>
+</ul>
+recipes/auth-token-refresh.html">Auth + token refresh</a>
+  <a class="sidebar-link" href="<h1><code>@gluezero/worker</code></h1>
+<p class="lead">Web Worker runtime. Bounded pool, hybrid cancellation, transferable opt-in, dev-mode serialization checks. Built on Comlink under the hood.</p>
+
+<h2 id="createWorkerBroker"><code>createWorkerBroker(config)</code></h2>
+<pre><code class="language-typescript">function createWorkerBroker(config?: WorkerBrokerConfig): WorkerBroker
+
+interface WorkerBrokerConfig extends RealtimeBrokerConfig {
+  workers?: {
+    assertSerializable?: 'always' | 'dev' | 'off'   // default: 'dev'
+    progressThrottleMs?: number                     // default: 100
+    cancelGraceMs?: number                          // default: 2000
+    poolSize?: number                               // default: min(hwc, 4) cap 8
+  }
+}
+</code></pre>
+
+<h2 id="worker-descriptor"><code>WorkerDescriptor</code></h2>
+<pre><code class="language-typescript">interface WorkerDescriptor {
+  id: string
+  factory: () =&gt; Worker                  // lazy: called on first dispatch
+  tasks: readonly string[]               // declared task names (fail-fast on unknown)
+  poolSize?: number                      // override per worker
+  type?: 'module' | 'classic'            // default: 'module' (ESM)
+}
+</code></pre>
+
+<h2 id="register-worker"><code>broker.registerWorker(descriptor)</code></h2>
+<pre><code class="language-typescript">function registerWorker(descriptor: WorkerDescriptor): void
+</code></pre>
+<p>Validates the descriptor. The <code>factory()</code> is NOT called until the first dispatch — registration is cheap.</p>
+
+<h2 id="expose"><code>expose(api)</code> — inside the worker source</h2>
+<pre><code class="language-typescript">// Inside csv-worker.ts
+import { expose } from '@gluezero/worker'
+
+expose({
+  parseCSV: async (
+    fileBuffer: ArrayBuffer,
+    signal: AbortSignal,                 // proxied via Comlink
+    onProgress: (p: ProgressPayload) =&gt; void
+  ) =&gt; {
+    // ...
+    return parsedRows
+  },
+  validateCSV: async (...) =&gt; { /* ... */ },
+})
+
+interface ProgressPayload {
+  value: number          // 0..1 normalized
+  message?: string
+  partialResult?: unknown
+}
+</code></pre>
+
+<h2 id="task-state"><code>TaskState</code></h2>
+<pre><code class="language-typescript">type TaskState =
+  | 'pending'
+  | 'running'
+  | 'completed'
+  | 'failed'
+  | 'cancelled'
+  | 'timed-out'
+</code></pre>
+
+<h2 id="task-tracker"><code>broker.getTaskTracker()</code></h2>
+<pre><code class="language-typescript">interface TaskTracker {
+  list(): TaskInfo[]
+  get(id: string): TaskInfo | undefined
+}
+
+interface TaskInfo {
+  id: string
+  workerId: string
+  taskName: string
+  state: TaskState
+  startedAt: number
+  completedAt?: number
+  durationMs?: number
+  correlationId: string                 // matches BrokerEvent.id
+  topic: string
+}
+</code></pre>
+
+<h2 id="errors">Error codes</h2>
+<table>
+<thead><tr><th>Code</th><th>When</th></tr></thead>
+<tbody>
+<tr><td><code>worker.unknown</code></td><td>Dispatch to unregistered worker id</td></tr>
+<tr><td><code>worker.task.unknown</code></td><td>Task name not in <code>tasks</code> array (fail-fast)</td></tr>
+<tr><td><code>worker.timeout</code></td><td>Timeout policy fired</td></tr>
+<tr><td><code>worker.cancelled</code></td><td>AbortSignal cancellation</td></tr>
+<tr><td><code>worker.serialization.failed</code></td><td>Payload not structuredClone-able (dev mode)</td></tr>
+<tr><td><code>worker.pool.size.exceeded</code></td><td>poolSize > hard cap 8</td></tr>
+</tbody>
+</table>
+
+<h2 id="utilities">Utilities</h2>
+<ul>
+<li><code>assertSerializable(value, opts?)</code> — throws if value can&rsquo;t cross postMessage boundary</li>
+<li><code>extractTransferables(payload, jsonPaths)</code> — collect ArrayBuffer-like objects from payload</li>
+<li><code>deriveTopic(sourceTopic, suffix)</code> — <code>weather.requested</code> + <code>completed</code> → <code>weather.completed</code></li>
+</ul>
+recipes/multi-tenant-cache.html">Multi-tenant cache</a>
+  <a class="sidebar-link" href="<h1><code>@gluezero/worker</code></h1>
+<p class="lead">Web Worker runtime. Bounded pool, hybrid cancellation, transferable opt-in, dev-mode serialization checks. Built on Comlink under the hood.</p>
+
+<h2 id="createWorkerBroker"><code>createWorkerBroker(config)</code></h2>
+<pre><code class="language-typescript">function createWorkerBroker(config?: WorkerBrokerConfig): WorkerBroker
+
+interface WorkerBrokerConfig extends RealtimeBrokerConfig {
+  workers?: {
+    assertSerializable?: 'always' | 'dev' | 'off'   // default: 'dev'
+    progressThrottleMs?: number                     // default: 100
+    cancelGraceMs?: number                          // default: 2000
+    poolSize?: number                               // default: min(hwc, 4) cap 8
+  }
+}
+</code></pre>
+
+<h2 id="worker-descriptor"><code>WorkerDescriptor</code></h2>
+<pre><code class="language-typescript">interface WorkerDescriptor {
+  id: string
+  factory: () =&gt; Worker                  // lazy: called on first dispatch
+  tasks: readonly string[]               // declared task names (fail-fast on unknown)
+  poolSize?: number                      // override per worker
+  type?: 'module' | 'classic'            // default: 'module' (ESM)
+}
+</code></pre>
+
+<h2 id="register-worker"><code>broker.registerWorker(descriptor)</code></h2>
+<pre><code class="language-typescript">function registerWorker(descriptor: WorkerDescriptor): void
+</code></pre>
+<p>Validates the descriptor. The <code>factory()</code> is NOT called until the first dispatch — registration is cheap.</p>
+
+<h2 id="expose"><code>expose(api)</code> — inside the worker source</h2>
+<pre><code class="language-typescript">// Inside csv-worker.ts
+import { expose } from '@gluezero/worker'
+
+expose({
+  parseCSV: async (
+    fileBuffer: ArrayBuffer,
+    signal: AbortSignal,                 // proxied via Comlink
+    onProgress: (p: ProgressPayload) =&gt; void
+  ) =&gt; {
+    // ...
+    return parsedRows
+  },
+  validateCSV: async (...) =&gt; { /* ... */ },
+})
+
+interface ProgressPayload {
+  value: number          // 0..1 normalized
+  message?: string
+  partialResult?: unknown
+}
+</code></pre>
+
+<h2 id="task-state"><code>TaskState</code></h2>
+<pre><code class="language-typescript">type TaskState =
+  | 'pending'
+  | 'running'
+  | 'completed'
+  | 'failed'
+  | 'cancelled'
+  | 'timed-out'
+</code></pre>
+
+<h2 id="task-tracker"><code>broker.getTaskTracker()</code></h2>
+<pre><code class="language-typescript">interface TaskTracker {
+  list(): TaskInfo[]
+  get(id: string): TaskInfo | undefined
+}
+
+interface TaskInfo {
+  id: string
+  workerId: string
+  taskName: string
+  state: TaskState
+  startedAt: number
+  completedAt?: number
+  durationMs?: number
+  correlationId: string                 // matches BrokerEvent.id
+  topic: string
+}
+</code></pre>
+
+<h2 id="errors">Error codes</h2>
+<table>
+<thead><tr><th>Code</th><th>When</th></tr></thead>
+<tbody>
+<tr><td><code>worker.unknown</code></td><td>Dispatch to unregistered worker id</td></tr>
+<tr><td><code>worker.task.unknown</code></td><td>Task name not in <code>tasks</code> array (fail-fast)</td></tr>
+<tr><td><code>worker.timeout</code></td><td>Timeout policy fired</td></tr>
+<tr><td><code>worker.cancelled</code></td><td>AbortSignal cancellation</td></tr>
+<tr><td><code>worker.serialization.failed</code></td><td>Payload not structuredClone-able (dev mode)</td></tr>
+<tr><td><code>worker.pool.size.exceeded</code></td><td>poolSize > hard cap 8</td></tr>
+</tbody>
+</table>
+
+<h2 id="utilities">Utilities</h2>
+<ul>
+<li><code>assertSerializable(value, opts?)</code> — throws if value can&rsquo;t cross postMessage boundary</li>
+<li><code>extractTransferables(payload, jsonPaths)</code> — collect ArrayBuffer-like objects from payload</li>
+<li><code>deriveTopic(sourceTopic, suffix)</code> — <code>weather.requested</code> + <code>completed</code> → <code>weather.completed</code></li>
+</ul>
+recipes/reconnect-realtime.html">Reconnect SSE→WS</a>
+  <a class="sidebar-link" href="<h1><code>@gluezero/worker</code></h1>
+<p class="lead">Web Worker runtime. Bounded pool, hybrid cancellation, transferable opt-in, dev-mode serialization checks. Built on Comlink under the hood.</p>
+
+<h2 id="createWorkerBroker"><code>createWorkerBroker(config)</code></h2>
+<pre><code class="language-typescript">function createWorkerBroker(config?: WorkerBrokerConfig): WorkerBroker
+
+interface WorkerBrokerConfig extends RealtimeBrokerConfig {
+  workers?: {
+    assertSerializable?: 'always' | 'dev' | 'off'   // default: 'dev'
+    progressThrottleMs?: number                     // default: 100
+    cancelGraceMs?: number                          // default: 2000
+    poolSize?: number                               // default: min(hwc, 4) cap 8
+  }
+}
+</code></pre>
+
+<h2 id="worker-descriptor"><code>WorkerDescriptor</code></h2>
+<pre><code class="language-typescript">interface WorkerDescriptor {
+  id: string
+  factory: () =&gt; Worker                  // lazy: called on first dispatch
+  tasks: readonly string[]               // declared task names (fail-fast on unknown)
+  poolSize?: number                      // override per worker
+  type?: 'module' | 'classic'            // default: 'module' (ESM)
+}
+</code></pre>
+
+<h2 id="register-worker"><code>broker.registerWorker(descriptor)</code></h2>
+<pre><code class="language-typescript">function registerWorker(descriptor: WorkerDescriptor): void
+</code></pre>
+<p>Validates the descriptor. The <code>factory()</code> is NOT called until the first dispatch — registration is cheap.</p>
+
+<h2 id="expose"><code>expose(api)</code> — inside the worker source</h2>
+<pre><code class="language-typescript">// Inside csv-worker.ts
+import { expose } from '@gluezero/worker'
+
+expose({
+  parseCSV: async (
+    fileBuffer: ArrayBuffer,
+    signal: AbortSignal,                 // proxied via Comlink
+    onProgress: (p: ProgressPayload) =&gt; void
+  ) =&gt; {
+    // ...
+    return parsedRows
+  },
+  validateCSV: async (...) =&gt; { /* ... */ },
+})
+
+interface ProgressPayload {
+  value: number          // 0..1 normalized
+  message?: string
+  partialResult?: unknown
+}
+</code></pre>
+
+<h2 id="task-state"><code>TaskState</code></h2>
+<pre><code class="language-typescript">type TaskState =
+  | 'pending'
+  | 'running'
+  | 'completed'
+  | 'failed'
+  | 'cancelled'
+  | 'timed-out'
+</code></pre>
+
+<h2 id="task-tracker"><code>broker.getTaskTracker()</code></h2>
+<pre><code class="language-typescript">interface TaskTracker {
+  list(): TaskInfo[]
+  get(id: string): TaskInfo | undefined
+}
+
+interface TaskInfo {
+  id: string
+  workerId: string
+  taskName: string
+  state: TaskState
+  startedAt: number
+  completedAt?: number
+  durationMs?: number
+  correlationId: string                 // matches BrokerEvent.id
+  topic: string
+}
+</code></pre>
+
+<h2 id="errors">Error codes</h2>
+<table>
+<thead><tr><th>Code</th><th>When</th></tr></thead>
+<tbody>
+<tr><td><code>worker.unknown</code></td><td>Dispatch to unregistered worker id</td></tr>
+<tr><td><code>worker.task.unknown</code></td><td>Task name not in <code>tasks</code> array (fail-fast)</td></tr>
+<tr><td><code>worker.timeout</code></td><td>Timeout policy fired</td></tr>
+<tr><td><code>worker.cancelled</code></td><td>AbortSignal cancellation</td></tr>
+<tr><td><code>worker.serialization.failed</code></td><td>Payload not structuredClone-able (dev mode)</td></tr>
+<tr><td><code>worker.pool.size.exceeded</code></td><td>poolSize > hard cap 8</td></tr>
+</tbody>
+</table>
+
+<h2 id="utilities">Utilities</h2>
+<ul>
+<li><code>assertSerializable(value, opts?)</code> — throws if value can&rsquo;t cross postMessage boundary</li>
+<li><code>extractTransferables(payload, jsonPaths)</code> — collect ArrayBuffer-like objects from payload</li>
+<li><code>deriveTopic(sourceTopic, suffix)</code> — <code>weather.requested</code> + <code>completed</code> → <code>weather.completed</code></li>
+</ul>
+recipes/worker-progress.html">Worker progress</a>
+  <a class="sidebar-link" href="<h1><code>@gluezero/worker</code></h1>
+<p class="lead">Web Worker runtime. Bounded pool, hybrid cancellation, transferable opt-in, dev-mode serialization checks. Built on Comlink under the hood.</p>
+
+<h2 id="createWorkerBroker"><code>createWorkerBroker(config)</code></h2>
+<pre><code class="language-typescript">function createWorkerBroker(config?: WorkerBrokerConfig): WorkerBroker
+
+interface WorkerBrokerConfig extends RealtimeBrokerConfig {
+  workers?: {
+    assertSerializable?: 'always' | 'dev' | 'off'   // default: 'dev'
+    progressThrottleMs?: number                     // default: 100
+    cancelGraceMs?: number                          // default: 2000
+    poolSize?: number                               // default: min(hwc, 4) cap 8
+  }
+}
+</code></pre>
+
+<h2 id="worker-descriptor"><code>WorkerDescriptor</code></h2>
+<pre><code class="language-typescript">interface WorkerDescriptor {
+  id: string
+  factory: () =&gt; Worker                  // lazy: called on first dispatch
+  tasks: readonly string[]               // declared task names (fail-fast on unknown)
+  poolSize?: number                      // override per worker
+  type?: 'module' | 'classic'            // default: 'module' (ESM)
+}
+</code></pre>
+
+<h2 id="register-worker"><code>broker.registerWorker(descriptor)</code></h2>
+<pre><code class="language-typescript">function registerWorker(descriptor: WorkerDescriptor): void
+</code></pre>
+<p>Validates the descriptor. The <code>factory()</code> is NOT called until the first dispatch — registration is cheap.</p>
+
+<h2 id="expose"><code>expose(api)</code> — inside the worker source</h2>
+<pre><code class="language-typescript">// Inside csv-worker.ts
+import { expose } from '@gluezero/worker'
+
+expose({
+  parseCSV: async (
+    fileBuffer: ArrayBuffer,
+    signal: AbortSignal,                 // proxied via Comlink
+    onProgress: (p: ProgressPayload) =&gt; void
+  ) =&gt; {
+    // ...
+    return parsedRows
+  },
+  validateCSV: async (...) =&gt; { /* ... */ },
+})
+
+interface ProgressPayload {
+  value: number          // 0..1 normalized
+  message?: string
+  partialResult?: unknown
+}
+</code></pre>
+
+<h2 id="task-state"><code>TaskState</code></h2>
+<pre><code class="language-typescript">type TaskState =
+  | 'pending'
+  | 'running'
+  | 'completed'
+  | 'failed'
+  | 'cancelled'
+  | 'timed-out'
+</code></pre>
+
+<h2 id="task-tracker"><code>broker.getTaskTracker()</code></h2>
+<pre><code class="language-typescript">interface TaskTracker {
+  list(): TaskInfo[]
+  get(id: string): TaskInfo | undefined
+}
+
+interface TaskInfo {
+  id: string
+  workerId: string
+  taskName: string
+  state: TaskState
+  startedAt: number
+  completedAt?: number
+  durationMs?: number
+  correlationId: string                 // matches BrokerEvent.id
+  topic: string
+}
+</code></pre>
+
+<h2 id="errors">Error codes</h2>
+<table>
+<thead><tr><th>Code</th><th>When</th></tr></thead>
+<tbody>
+<tr><td><code>worker.unknown</code></td><td>Dispatch to unregistered worker id</td></tr>
+<tr><td><code>worker.task.unknown</code></td><td>Task name not in <code>tasks</code> array (fail-fast)</td></tr>
+<tr><td><code>worker.timeout</code></td><td>Timeout policy fired</td></tr>
+<tr><td><code>worker.cancelled</code></td><td>AbortSignal cancellation</td></tr>
+<tr><td><code>worker.serialization.failed</code></td><td>Payload not structuredClone-able (dev mode)</td></tr>
+<tr><td><code>worker.pool.size.exceeded</code></td><td>poolSize > hard cap 8</td></tr>
+</tbody>
+</table>
+
+<h2 id="utilities">Utilities</h2>
+<ul>
+<li><code>assertSerializable(value, opts?)</code> — throws if value can&rsquo;t cross postMessage boundary</li>
+<li><code>extractTransferables(payload, jsonPaths)</code> — collect ArrayBuffer-like objects from payload</li>
+<li><code>deriveTopic(sourceTopic, suffix)</code> — <code>weather.requested</code> + <code>completed</code> → <code>weather.completed</code></li>
+</ul>
+recipes/debug-flow.html">Debug with Inspector</a>
+  <a class="sidebar-link" href="<h1><code>@gluezero/worker</code></h1>
+<p class="lead">Web Worker runtime. Bounded pool, hybrid cancellation, transferable opt-in, dev-mode serialization checks. Built on Comlink under the hood.</p>
+
+<h2 id="createWorkerBroker"><code>createWorkerBroker(config)</code></h2>
+<pre><code class="language-typescript">function createWorkerBroker(config?: WorkerBrokerConfig): WorkerBroker
+
+interface WorkerBrokerConfig extends RealtimeBrokerConfig {
+  workers?: {
+    assertSerializable?: 'always' | 'dev' | 'off'   // default: 'dev'
+    progressThrottleMs?: number                     // default: 100
+    cancelGraceMs?: number                          // default: 2000
+    poolSize?: number                               // default: min(hwc, 4) cap 8
+  }
+}
+</code></pre>
+
+<h2 id="worker-descriptor"><code>WorkerDescriptor</code></h2>
+<pre><code class="language-typescript">interface WorkerDescriptor {
+  id: string
+  factory: () =&gt; Worker                  // lazy: called on first dispatch
+  tasks: readonly string[]               // declared task names (fail-fast on unknown)
+  poolSize?: number                      // override per worker
+  type?: 'module' | 'classic'            // default: 'module' (ESM)
+}
+</code></pre>
+
+<h2 id="register-worker"><code>broker.registerWorker(descriptor)</code></h2>
+<pre><code class="language-typescript">function registerWorker(descriptor: WorkerDescriptor): void
+</code></pre>
+<p>Validates the descriptor. The <code>factory()</code> is NOT called until the first dispatch — registration is cheap.</p>
+
+<h2 id="expose"><code>expose(api)</code> — inside the worker source</h2>
+<pre><code class="language-typescript">// Inside csv-worker.ts
+import { expose } from '@gluezero/worker'
+
+expose({
+  parseCSV: async (
+    fileBuffer: ArrayBuffer,
+    signal: AbortSignal,                 // proxied via Comlink
+    onProgress: (p: ProgressPayload) =&gt; void
+  ) =&gt; {
+    // ...
+    return parsedRows
+  },
+  validateCSV: async (...) =&gt; { /* ... */ },
+})
+
+interface ProgressPayload {
+  value: number          // 0..1 normalized
+  message?: string
+  partialResult?: unknown
+}
+</code></pre>
+
+<h2 id="task-state"><code>TaskState</code></h2>
+<pre><code class="language-typescript">type TaskState =
+  | 'pending'
+  | 'running'
+  | 'completed'
+  | 'failed'
+  | 'cancelled'
+  | 'timed-out'
+</code></pre>
+
+<h2 id="task-tracker"><code>broker.getTaskTracker()</code></h2>
+<pre><code class="language-typescript">interface TaskTracker {
+  list(): TaskInfo[]
+  get(id: string): TaskInfo | undefined
+}
+
+interface TaskInfo {
+  id: string
+  workerId: string
+  taskName: string
+  state: TaskState
+  startedAt: number
+  completedAt?: number
+  durationMs?: number
+  correlationId: string                 // matches BrokerEvent.id
+  topic: string
+}
+</code></pre>
+
+<h2 id="errors">Error codes</h2>
+<table>
+<thead><tr><th>Code</th><th>When</th></tr></thead>
+<tbody>
+<tr><td><code>worker.unknown</code></td><td>Dispatch to unregistered worker id</td></tr>
+<tr><td><code>worker.task.unknown</code></td><td>Task name not in <code>tasks</code> array (fail-fast)</td></tr>
+<tr><td><code>worker.timeout</code></td><td>Timeout policy fired</td></tr>
+<tr><td><code>worker.cancelled</code></td><td>AbortSignal cancellation</td></tr>
+<tr><td><code>worker.serialization.failed</code></td><td>Payload not structuredClone-able (dev mode)</td></tr>
+<tr><td><code>worker.pool.size.exceeded</code></td><td>poolSize > hard cap 8</td></tr>
+</tbody>
+</table>
+
+<h2 id="utilities">Utilities</h2>
+<ul>
+<li><code>assertSerializable(value, opts?)</code> — throws if value can&rsquo;t cross postMessage boundary</li>
+<li><code>extractTransferables(payload, jsonPaths)</code> — collect ArrayBuffer-like objects from payload</li>
+<li><code>deriveTopic(sourceTopic, suffix)</code> — <code>weather.requested</code> + <code>completed</code> → <code>weather.completed</code></li>
+</ul>
+recipes/react-integration.html">React integration</a>
 </div>
 <div class="sidebar-section">
   <div class="sidebar-section-title">Reference</div>
-  <a class="sidebar-link" href="../decisions.html">Architectural decisions</a>
-  <a class="sidebar-link" href="../faq.html">FAQ</a>
+  <a class="sidebar-link" href="<h1><code>@gluezero/worker</code></h1>
+<p class="lead">Web Worker runtime. Bounded pool, hybrid cancellation, transferable opt-in, dev-mode serialization checks. Built on Comlink under the hood.</p>
+
+<h2 id="createWorkerBroker"><code>createWorkerBroker(config)</code></h2>
+<pre><code class="language-typescript">function createWorkerBroker(config?: WorkerBrokerConfig): WorkerBroker
+
+interface WorkerBrokerConfig extends RealtimeBrokerConfig {
+  workers?: {
+    assertSerializable?: 'always' | 'dev' | 'off'   // default: 'dev'
+    progressThrottleMs?: number                     // default: 100
+    cancelGraceMs?: number                          // default: 2000
+    poolSize?: number                               // default: min(hwc, 4) cap 8
+  }
+}
+</code></pre>
+
+<h2 id="worker-descriptor"><code>WorkerDescriptor</code></h2>
+<pre><code class="language-typescript">interface WorkerDescriptor {
+  id: string
+  factory: () =&gt; Worker                  // lazy: called on first dispatch
+  tasks: readonly string[]               // declared task names (fail-fast on unknown)
+  poolSize?: number                      // override per worker
+  type?: 'module' | 'classic'            // default: 'module' (ESM)
+}
+</code></pre>
+
+<h2 id="register-worker"><code>broker.registerWorker(descriptor)</code></h2>
+<pre><code class="language-typescript">function registerWorker(descriptor: WorkerDescriptor): void
+</code></pre>
+<p>Validates the descriptor. The <code>factory()</code> is NOT called until the first dispatch — registration is cheap.</p>
+
+<h2 id="expose"><code>expose(api)</code> — inside the worker source</h2>
+<pre><code class="language-typescript">// Inside csv-worker.ts
+import { expose } from '@gluezero/worker'
+
+expose({
+  parseCSV: async (
+    fileBuffer: ArrayBuffer,
+    signal: AbortSignal,                 // proxied via Comlink
+    onProgress: (p: ProgressPayload) =&gt; void
+  ) =&gt; {
+    // ...
+    return parsedRows
+  },
+  validateCSV: async (...) =&gt; { /* ... */ },
+})
+
+interface ProgressPayload {
+  value: number          // 0..1 normalized
+  message?: string
+  partialResult?: unknown
+}
+</code></pre>
+
+<h2 id="task-state"><code>TaskState</code></h2>
+<pre><code class="language-typescript">type TaskState =
+  | 'pending'
+  | 'running'
+  | 'completed'
+  | 'failed'
+  | 'cancelled'
+  | 'timed-out'
+</code></pre>
+
+<h2 id="task-tracker"><code>broker.getTaskTracker()</code></h2>
+<pre><code class="language-typescript">interface TaskTracker {
+  list(): TaskInfo[]
+  get(id: string): TaskInfo | undefined
+}
+
+interface TaskInfo {
+  id: string
+  workerId: string
+  taskName: string
+  state: TaskState
+  startedAt: number
+  completedAt?: number
+  durationMs?: number
+  correlationId: string                 // matches BrokerEvent.id
+  topic: string
+}
+</code></pre>
+
+<h2 id="errors">Error codes</h2>
+<table>
+<thead><tr><th>Code</th><th>When</th></tr></thead>
+<tbody>
+<tr><td><code>worker.unknown</code></td><td>Dispatch to unregistered worker id</td></tr>
+<tr><td><code>worker.task.unknown</code></td><td>Task name not in <code>tasks</code> array (fail-fast)</td></tr>
+<tr><td><code>worker.timeout</code></td><td>Timeout policy fired</td></tr>
+<tr><td><code>worker.cancelled</code></td><td>AbortSignal cancellation</td></tr>
+<tr><td><code>worker.serialization.failed</code></td><td>Payload not structuredClone-able (dev mode)</td></tr>
+<tr><td><code>worker.pool.size.exceeded</code></td><td>poolSize > hard cap 8</td></tr>
+</tbody>
+</table>
+
+<h2 id="utilities">Utilities</h2>
+<ul>
+<li><code>assertSerializable(value, opts?)</code> — throws if value can&rsquo;t cross postMessage boundary</li>
+<li><code>extractTransferables(payload, jsonPaths)</code> — collect ArrayBuffer-like objects from payload</li>
+<li><code>deriveTopic(sourceTopic, suffix)</code> — <code>weather.requested</code> + <code>completed</code> → <code>weather.completed</code></li>
+</ul>
+decisions.html">Architectural decisions</a>
+  <a class="sidebar-link" href="<h1><code>@gluezero/worker</code></h1>
+<p class="lead">Web Worker runtime. Bounded pool, hybrid cancellation, transferable opt-in, dev-mode serialization checks. Built on Comlink under the hood.</p>
+
+<h2 id="createWorkerBroker"><code>createWorkerBroker(config)</code></h2>
+<pre><code class="language-typescript">function createWorkerBroker(config?: WorkerBrokerConfig): WorkerBroker
+
+interface WorkerBrokerConfig extends RealtimeBrokerConfig {
+  workers?: {
+    assertSerializable?: 'always' | 'dev' | 'off'   // default: 'dev'
+    progressThrottleMs?: number                     // default: 100
+    cancelGraceMs?: number                          // default: 2000
+    poolSize?: number                               // default: min(hwc, 4) cap 8
+  }
+}
+</code></pre>
+
+<h2 id="worker-descriptor"><code>WorkerDescriptor</code></h2>
+<pre><code class="language-typescript">interface WorkerDescriptor {
+  id: string
+  factory: () =&gt; Worker                  // lazy: called on first dispatch
+  tasks: readonly string[]               // declared task names (fail-fast on unknown)
+  poolSize?: number                      // override per worker
+  type?: 'module' | 'classic'            // default: 'module' (ESM)
+}
+</code></pre>
+
+<h2 id="register-worker"><code>broker.registerWorker(descriptor)</code></h2>
+<pre><code class="language-typescript">function registerWorker(descriptor: WorkerDescriptor): void
+</code></pre>
+<p>Validates the descriptor. The <code>factory()</code> is NOT called until the first dispatch — registration is cheap.</p>
+
+<h2 id="expose"><code>expose(api)</code> — inside the worker source</h2>
+<pre><code class="language-typescript">// Inside csv-worker.ts
+import { expose } from '@gluezero/worker'
+
+expose({
+  parseCSV: async (
+    fileBuffer: ArrayBuffer,
+    signal: AbortSignal,                 // proxied via Comlink
+    onProgress: (p: ProgressPayload) =&gt; void
+  ) =&gt; {
+    // ...
+    return parsedRows
+  },
+  validateCSV: async (...) =&gt; { /* ... */ },
+})
+
+interface ProgressPayload {
+  value: number          // 0..1 normalized
+  message?: string
+  partialResult?: unknown
+}
+</code></pre>
+
+<h2 id="task-state"><code>TaskState</code></h2>
+<pre><code class="language-typescript">type TaskState =
+  | 'pending'
+  | 'running'
+  | 'completed'
+  | 'failed'
+  | 'cancelled'
+  | 'timed-out'
+</code></pre>
+
+<h2 id="task-tracker"><code>broker.getTaskTracker()</code></h2>
+<pre><code class="language-typescript">interface TaskTracker {
+  list(): TaskInfo[]
+  get(id: string): TaskInfo | undefined
+}
+
+interface TaskInfo {
+  id: string
+  workerId: string
+  taskName: string
+  state: TaskState
+  startedAt: number
+  completedAt?: number
+  durationMs?: number
+  correlationId: string                 // matches BrokerEvent.id
+  topic: string
+}
+</code></pre>
+
+<h2 id="errors">Error codes</h2>
+<table>
+<thead><tr><th>Code</th><th>When</th></tr></thead>
+<tbody>
+<tr><td><code>worker.unknown</code></td><td>Dispatch to unregistered worker id</td></tr>
+<tr><td><code>worker.task.unknown</code></td><td>Task name not in <code>tasks</code> array (fail-fast)</td></tr>
+<tr><td><code>worker.timeout</code></td><td>Timeout policy fired</td></tr>
+<tr><td><code>worker.cancelled</code></td><td>AbortSignal cancellation</td></tr>
+<tr><td><code>worker.serialization.failed</code></td><td>Payload not structuredClone-able (dev mode)</td></tr>
+<tr><td><code>worker.pool.size.exceeded</code></td><td>poolSize > hard cap 8</td></tr>
+</tbody>
+</table>
+
+<h2 id="utilities">Utilities</h2>
+<ul>
+<li><code>assertSerializable(value, opts?)</code> — throws if value can&rsquo;t cross postMessage boundary</li>
+<li><code>extractTransferables(payload, jsonPaths)</code> — collect ArrayBuffer-like objects from payload</li>
+<li><code>deriveTopic(sourceTopic, suffix)</code> — <code>weather.requested</code> + <code>completed</code> → <code>weather.completed</code></li>
+</ul>
+faq.html">FAQ</a>
 </div>
 </nav>
 <main class="content" role="main">
 <div class="content-inner">
-<nav class="breadcrumb" aria-label="Breadcrumb"><a href="../index.html">Docs</a> / API reference</nav>
-<h1>@gluezero/worker</h1>
-<p class="lead">This page is under construction. Check back shortly for the full content.</p>
-<p><a href="../index.html">← Back to docs home</a></p>
+<nav class="breadcrumb" aria-label="Breadcrumb"><a href="<h1><code>@gluezero/worker</code></h1>
+<p class="lead">Web Worker runtime. Bounded pool, hybrid cancellation, transferable opt-in, dev-mode serialization checks. Built on Comlink under the hood.</p>
+
+<h2 id="createWorkerBroker"><code>createWorkerBroker(config)</code></h2>
+<pre><code class="language-typescript">function createWorkerBroker(config?: WorkerBrokerConfig): WorkerBroker
+
+interface WorkerBrokerConfig extends RealtimeBrokerConfig {
+  workers?: {
+    assertSerializable?: 'always' | 'dev' | 'off'   // default: 'dev'
+    progressThrottleMs?: number                     // default: 100
+    cancelGraceMs?: number                          // default: 2000
+    poolSize?: number                               // default: min(hwc, 4) cap 8
+  }
+}
+</code></pre>
+
+<h2 id="worker-descriptor"><code>WorkerDescriptor</code></h2>
+<pre><code class="language-typescript">interface WorkerDescriptor {
+  id: string
+  factory: () =&gt; Worker                  // lazy: called on first dispatch
+  tasks: readonly string[]               // declared task names (fail-fast on unknown)
+  poolSize?: number                      // override per worker
+  type?: 'module' | 'classic'            // default: 'module' (ESM)
+}
+</code></pre>
+
+<h2 id="register-worker"><code>broker.registerWorker(descriptor)</code></h2>
+<pre><code class="language-typescript">function registerWorker(descriptor: WorkerDescriptor): void
+</code></pre>
+<p>Validates the descriptor. The <code>factory()</code> is NOT called until the first dispatch — registration is cheap.</p>
+
+<h2 id="expose"><code>expose(api)</code> — inside the worker source</h2>
+<pre><code class="language-typescript">// Inside csv-worker.ts
+import { expose } from '@gluezero/worker'
+
+expose({
+  parseCSV: async (
+    fileBuffer: ArrayBuffer,
+    signal: AbortSignal,                 // proxied via Comlink
+    onProgress: (p: ProgressPayload) =&gt; void
+  ) =&gt; {
+    // ...
+    return parsedRows
+  },
+  validateCSV: async (...) =&gt; { /* ... */ },
+})
+
+interface ProgressPayload {
+  value: number          // 0..1 normalized
+  message?: string
+  partialResult?: unknown
+}
+</code></pre>
+
+<h2 id="task-state"><code>TaskState</code></h2>
+<pre><code class="language-typescript">type TaskState =
+  | 'pending'
+  | 'running'
+  | 'completed'
+  | 'failed'
+  | 'cancelled'
+  | 'timed-out'
+</code></pre>
+
+<h2 id="task-tracker"><code>broker.getTaskTracker()</code></h2>
+<pre><code class="language-typescript">interface TaskTracker {
+  list(): TaskInfo[]
+  get(id: string): TaskInfo | undefined
+}
+
+interface TaskInfo {
+  id: string
+  workerId: string
+  taskName: string
+  state: TaskState
+  startedAt: number
+  completedAt?: number
+  durationMs?: number
+  correlationId: string                 // matches BrokerEvent.id
+  topic: string
+}
+</code></pre>
+
+<h2 id="errors">Error codes</h2>
+<table>
+<thead><tr><th>Code</th><th>When</th></tr></thead>
+<tbody>
+<tr><td><code>worker.unknown</code></td><td>Dispatch to unregistered worker id</td></tr>
+<tr><td><code>worker.task.unknown</code></td><td>Task name not in <code>tasks</code> array (fail-fast)</td></tr>
+<tr><td><code>worker.timeout</code></td><td>Timeout policy fired</td></tr>
+<tr><td><code>worker.cancelled</code></td><td>AbortSignal cancellation</td></tr>
+<tr><td><code>worker.serialization.failed</code></td><td>Payload not structuredClone-able (dev mode)</td></tr>
+<tr><td><code>worker.pool.size.exceeded</code></td><td>poolSize > hard cap 8</td></tr>
+</tbody>
+</table>
+
+<h2 id="utilities">Utilities</h2>
+<ul>
+<li><code>assertSerializable(value, opts?)</code> — throws if value can&rsquo;t cross postMessage boundary</li>
+<li><code>extractTransferables(payload, jsonPaths)</code> — collect ArrayBuffer-like objects from payload</li>
+<li><code>deriveTopic(sourceTopic, suffix)</code> — <code>weather.requested</code> + <code>completed</code> → <code>weather.completed</code></li>
+</ul>
+index.html">Docs</a> / API reference</nav>
+../
 <footer class="footer">
   <div>GlueZero v1.0.0 — MIT License</div>
   <div>
@@ -87,6 +3247,108 @@
 </footer>
 </div>
 </main>
-<script src="../assets/docs.js"></script>
+<script src="<h1><code>@gluezero/worker</code></h1>
+<p class="lead">Web Worker runtime. Bounded pool, hybrid cancellation, transferable opt-in, dev-mode serialization checks. Built on Comlink under the hood.</p>
+
+<h2 id="createWorkerBroker"><code>createWorkerBroker(config)</code></h2>
+<pre><code class="language-typescript">function createWorkerBroker(config?: WorkerBrokerConfig): WorkerBroker
+
+interface WorkerBrokerConfig extends RealtimeBrokerConfig {
+  workers?: {
+    assertSerializable?: 'always' | 'dev' | 'off'   // default: 'dev'
+    progressThrottleMs?: number                     // default: 100
+    cancelGraceMs?: number                          // default: 2000
+    poolSize?: number                               // default: min(hwc, 4) cap 8
+  }
+}
+</code></pre>
+
+<h2 id="worker-descriptor"><code>WorkerDescriptor</code></h2>
+<pre><code class="language-typescript">interface WorkerDescriptor {
+  id: string
+  factory: () =&gt; Worker                  // lazy: called on first dispatch
+  tasks: readonly string[]               // declared task names (fail-fast on unknown)
+  poolSize?: number                      // override per worker
+  type?: 'module' | 'classic'            // default: 'module' (ESM)
+}
+</code></pre>
+
+<h2 id="register-worker"><code>broker.registerWorker(descriptor)</code></h2>
+<pre><code class="language-typescript">function registerWorker(descriptor: WorkerDescriptor): void
+</code></pre>
+<p>Validates the descriptor. The <code>factory()</code> is NOT called until the first dispatch — registration is cheap.</p>
+
+<h2 id="expose"><code>expose(api)</code> — inside the worker source</h2>
+<pre><code class="language-typescript">// Inside csv-worker.ts
+import { expose } from '@gluezero/worker'
+
+expose({
+  parseCSV: async (
+    fileBuffer: ArrayBuffer,
+    signal: AbortSignal,                 // proxied via Comlink
+    onProgress: (p: ProgressPayload) =&gt; void
+  ) =&gt; {
+    // ...
+    return parsedRows
+  },
+  validateCSV: async (...) =&gt; { /* ... */ },
+})
+
+interface ProgressPayload {
+  value: number          // 0..1 normalized
+  message?: string
+  partialResult?: unknown
+}
+</code></pre>
+
+<h2 id="task-state"><code>TaskState</code></h2>
+<pre><code class="language-typescript">type TaskState =
+  | 'pending'
+  | 'running'
+  | 'completed'
+  | 'failed'
+  | 'cancelled'
+  | 'timed-out'
+</code></pre>
+
+<h2 id="task-tracker"><code>broker.getTaskTracker()</code></h2>
+<pre><code class="language-typescript">interface TaskTracker {
+  list(): TaskInfo[]
+  get(id: string): TaskInfo | undefined
+}
+
+interface TaskInfo {
+  id: string
+  workerId: string
+  taskName: string
+  state: TaskState
+  startedAt: number
+  completedAt?: number
+  durationMs?: number
+  correlationId: string                 // matches BrokerEvent.id
+  topic: string
+}
+</code></pre>
+
+<h2 id="errors">Error codes</h2>
+<table>
+<thead><tr><th>Code</th><th>When</th></tr></thead>
+<tbody>
+<tr><td><code>worker.unknown</code></td><td>Dispatch to unregistered worker id</td></tr>
+<tr><td><code>worker.task.unknown</code></td><td>Task name not in <code>tasks</code> array (fail-fast)</td></tr>
+<tr><td><code>worker.timeout</code></td><td>Timeout policy fired</td></tr>
+<tr><td><code>worker.cancelled</code></td><td>AbortSignal cancellation</td></tr>
+<tr><td><code>worker.serialization.failed</code></td><td>Payload not structuredClone-able (dev mode)</td></tr>
+<tr><td><code>worker.pool.size.exceeded</code></td><td>poolSize > hard cap 8</td></tr>
+</tbody>
+</table>
+
+<h2 id="utilities">Utilities</h2>
+<ul>
+<li><code>assertSerializable(value, opts?)</code> — throws if value can&rsquo;t cross postMessage boundary</li>
+<li><code>extractTransferables(payload, jsonPaths)</code> — collect ArrayBuffer-like objects from payload</li>
+<li><code>deriveTopic(sourceTopic, suffix)</code> — <code>weather.requested</code> + <code>completed</code> → <code>weather.completed</code></li>
+</ul>
+assets/docs.js"></script>
 </body>
 </html>

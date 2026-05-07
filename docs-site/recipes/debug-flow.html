@@ -5,13 +5,280 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Debug with Inspector — GlueZero docs</title>
 <meta name="description" content="Recipes — GlueZero v1.0.0 documentation">
-<link rel="stylesheet" href="../assets/styles.css">
+<link rel="stylesheet" href="<h1>Recipe: Debug a broken flow with the Inspector</h1>
+<p class="lead">When a value appears wrong in your UI, trace it back through the §28 pipeline. The Inspector shows the full lifecycle of each event.</p>
+
+<h2 id="enable">Enable debug</h2>
+<pre><code class="language-typescript">const broker = createGlueZero({
+  debug: true,                          // dev mode: full payload capture, deep-freeze
+})
+</code></pre>
+<p>In production, debug is off by default (autodetected via <code>NODE_ENV</code>). You can toggle at runtime:</p>
+<pre><code class="language-typescript">broker.enableDebug()
+// reproduce the bug
+broker.disableDebug()
+</code></pre>
+
+<h2 id="capture">Capture the event</h2>
+<pre><code class="language-typescript">// Right after the buggy interaction
+const events = broker.getEventInspector().getSnapshot({ limit: 50 })
+console.table(events.map(e =&gt; ({
+  id: e.id,
+  topic: e.topic,
+  outcome: e.outcome,
+  duration: e.pipelineSteps.reduce((s, st) =&gt; s + st.durationMs, 0),
+})))
+</code></pre>
+
+<h2 id="pipeline">Inspect a single event&rsquo;s pipeline</h2>
+<pre><code class="language-typescript">const target = events.find(e =&gt; e.topic === 'weather.loaded')
+console.log('Steps:', target.pipelineSteps)
+// [
+//   { name: 'event.received', durationMs: 0.1 },
+//   { name: 'event.metadata.enriched', durationMs: 0.05 },
+//   { name: 'event.source.validated', durationMs: 0.3 },
+//   { name: 'event.source.mapped', durationMs: 0.4, mapping: { applied: ['città→location'] } },
+//   { name: 'event.canonical.validated', durationMs: 0.2 },
+//   { name: 'event.dedupe.checked', durationMs: 0.05, deduped: false },
+//   { name: 'route.resolved', durationMs: 0.1, routeId: 'weather-fetch' },
+//   { name: 'http.request', durationMs: 542, url: '/api/weather?location=Roma&amp;date=2026-05-10' },
+//   { name: 'http.response', durationMs: 4, status: 200 },
+//   { name: 'event.consumer.mapped', durationMs: 0.3 },
+//   { name: 'event.consumer.validated', durationMs: 0.2 },
+//   { name: 'event.delivered', durationMs: 0.1, subscribersReached: 2 },
+//   { name: 'event.observed', durationMs: 0 },
+// ]
+</code></pre>
+<p>You can immediately see: where time is spent, what mapping was applied, whether validation failed, which route was selected.</p>
+
+<h2 id="mapping">Diagnose mapping bugs</h2>
+<pre><code class="language-typescript">const mapping = broker.getMappingInspector().getSnapshot({ limit: 20 })
+const wrong = mapping.find(m =&gt; m.errors.length &gt; 0 || m.canonicalPayload.location === undefined)
+
+console.log('Local:', wrong.localPayload)
+console.log('Canonical:', wrong.canonicalPayload)
+console.log('Transforms applied:', wrong.transformsApplied)
+console.log('Errors:', wrong.errors)
+</code></pre>
+<p>Common findings:</p>
+<ul>
+<li>An <code>outputMap</code> mapping refers to a transform that wasn&rsquo;t registered</li>
+<li>A required canonical field is missing because the local field name doesn&rsquo;t match any alias</li>
+<li>A <code>parseDate</code> transform crashed on an unexpected input format</li>
+</ul>
+
+<h2 id="routes">Diagnose routing</h2>
+<pre><code class="language-typescript">const routes = broker.getRouteInspector().getSnapshot({ limit: 20 })
+console.table(routes.map(r =&gt; ({
+  routeId: r.routeId,
+  topic: r.topic,
+  outcome: r.outcome,
+  duration: r.durationMs,
+  retried: r.strategiesExecuted.filter(s =&gt; s.outcome === 'retry').length,
+})))
+</code></pre>
+
+<h2 id="metrics">Watch metrics in real-time</h2>
+<pre><code class="language-typescript">setInterval(() =&gt; {
+  const m = broker.getMetrics()
+  console.log('http duration p99:',
+    m.histograms['gluezero.gateway.http_duration_ms{route="weather-fetch"}']?.p99)
+  console.log('errors:',
+    m.counters['gluezero.gateway.http_errors_total{route="weather-fetch"}'])
+}, 5000)
+</code></pre>
+
+<h2 id="export">Export for analysis</h2>
+<pre><code class="language-typescript">// Capture full diagnostic snapshot (deep-cloned)
+const snapshot = broker.getDebugSnapshot()
+copy(JSON.stringify(snapshot, null, 2))   // Chrome devtools console — copies to clipboard
+</code></pre>
+<p>Send this to a colleague or paste into a bug report. It&rsquo;s self-contained — no live broker reference, safe to share.</p>
+assets/styles.css">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect width='24' height='24' rx='6' fill='%236366F1'/%3E%3Ctext x='12' y='17' text-anchor='middle' fill='white' font-family='sans-serif' font-weight='800' font-size='12'%3EGZ%3C/text%3E%3C/svg%3E">
 </head>
-<body data-base="../">
+<body data-base="<h1>Recipe: Debug a broken flow with the Inspector</h1>
+<p class="lead">When a value appears wrong in your UI, trace it back through the §28 pipeline. The Inspector shows the full lifecycle of each event.</p>
+
+<h2 id="enable">Enable debug</h2>
+<pre><code class="language-typescript">const broker = createGlueZero({
+  debug: true,                          // dev mode: full payload capture, deep-freeze
+})
+</code></pre>
+<p>In production, debug is off by default (autodetected via <code>NODE_ENV</code>). You can toggle at runtime:</p>
+<pre><code class="language-typescript">broker.enableDebug()
+// reproduce the bug
+broker.disableDebug()
+</code></pre>
+
+<h2 id="capture">Capture the event</h2>
+<pre><code class="language-typescript">// Right after the buggy interaction
+const events = broker.getEventInspector().getSnapshot({ limit: 50 })
+console.table(events.map(e =&gt; ({
+  id: e.id,
+  topic: e.topic,
+  outcome: e.outcome,
+  duration: e.pipelineSteps.reduce((s, st) =&gt; s + st.durationMs, 0),
+})))
+</code></pre>
+
+<h2 id="pipeline">Inspect a single event&rsquo;s pipeline</h2>
+<pre><code class="language-typescript">const target = events.find(e =&gt; e.topic === 'weather.loaded')
+console.log('Steps:', target.pipelineSteps)
+// [
+//   { name: 'event.received', durationMs: 0.1 },
+//   { name: 'event.metadata.enriched', durationMs: 0.05 },
+//   { name: 'event.source.validated', durationMs: 0.3 },
+//   { name: 'event.source.mapped', durationMs: 0.4, mapping: { applied: ['città→location'] } },
+//   { name: 'event.canonical.validated', durationMs: 0.2 },
+//   { name: 'event.dedupe.checked', durationMs: 0.05, deduped: false },
+//   { name: 'route.resolved', durationMs: 0.1, routeId: 'weather-fetch' },
+//   { name: 'http.request', durationMs: 542, url: '/api/weather?location=Roma&amp;date=2026-05-10' },
+//   { name: 'http.response', durationMs: 4, status: 200 },
+//   { name: 'event.consumer.mapped', durationMs: 0.3 },
+//   { name: 'event.consumer.validated', durationMs: 0.2 },
+//   { name: 'event.delivered', durationMs: 0.1, subscribersReached: 2 },
+//   { name: 'event.observed', durationMs: 0 },
+// ]
+</code></pre>
+<p>You can immediately see: where time is spent, what mapping was applied, whether validation failed, which route was selected.</p>
+
+<h2 id="mapping">Diagnose mapping bugs</h2>
+<pre><code class="language-typescript">const mapping = broker.getMappingInspector().getSnapshot({ limit: 20 })
+const wrong = mapping.find(m =&gt; m.errors.length &gt; 0 || m.canonicalPayload.location === undefined)
+
+console.log('Local:', wrong.localPayload)
+console.log('Canonical:', wrong.canonicalPayload)
+console.log('Transforms applied:', wrong.transformsApplied)
+console.log('Errors:', wrong.errors)
+</code></pre>
+<p>Common findings:</p>
+<ul>
+<li>An <code>outputMap</code> mapping refers to a transform that wasn&rsquo;t registered</li>
+<li>A required canonical field is missing because the local field name doesn&rsquo;t match any alias</li>
+<li>A <code>parseDate</code> transform crashed on an unexpected input format</li>
+</ul>
+
+<h2 id="routes">Diagnose routing</h2>
+<pre><code class="language-typescript">const routes = broker.getRouteInspector().getSnapshot({ limit: 20 })
+console.table(routes.map(r =&gt; ({
+  routeId: r.routeId,
+  topic: r.topic,
+  outcome: r.outcome,
+  duration: r.durationMs,
+  retried: r.strategiesExecuted.filter(s =&gt; s.outcome === 'retry').length,
+})))
+</code></pre>
+
+<h2 id="metrics">Watch metrics in real-time</h2>
+<pre><code class="language-typescript">setInterval(() =&gt; {
+  const m = broker.getMetrics()
+  console.log('http duration p99:',
+    m.histograms['gluezero.gateway.http_duration_ms{route="weather-fetch"}']?.p99)
+  console.log('errors:',
+    m.counters['gluezero.gateway.http_errors_total{route="weather-fetch"}'])
+}, 5000)
+</code></pre>
+
+<h2 id="export">Export for analysis</h2>
+<pre><code class="language-typescript">// Capture full diagnostic snapshot (deep-cloned)
+const snapshot = broker.getDebugSnapshot()
+copy(JSON.stringify(snapshot, null, 2))   // Chrome devtools console — copies to clipboard
+</code></pre>
+<p>Send this to a colleague or paste into a bug report. It&rsquo;s self-contained — no live broker reference, safe to share.</p>
+">
 <header class="topbar" role="banner">
   <button class="menu-toggle" aria-label="Toggle navigation">☰</button>
-  <a class="topbar-brand" href="../index.html">
+  <a class="topbar-brand" href="<h1>Recipe: Debug a broken flow with the Inspector</h1>
+<p class="lead">When a value appears wrong in your UI, trace it back through the §28 pipeline. The Inspector shows the full lifecycle of each event.</p>
+
+<h2 id="enable">Enable debug</h2>
+<pre><code class="language-typescript">const broker = createGlueZero({
+  debug: true,                          // dev mode: full payload capture, deep-freeze
+})
+</code></pre>
+<p>In production, debug is off by default (autodetected via <code>NODE_ENV</code>). You can toggle at runtime:</p>
+<pre><code class="language-typescript">broker.enableDebug()
+// reproduce the bug
+broker.disableDebug()
+</code></pre>
+
+<h2 id="capture">Capture the event</h2>
+<pre><code class="language-typescript">// Right after the buggy interaction
+const events = broker.getEventInspector().getSnapshot({ limit: 50 })
+console.table(events.map(e =&gt; ({
+  id: e.id,
+  topic: e.topic,
+  outcome: e.outcome,
+  duration: e.pipelineSteps.reduce((s, st) =&gt; s + st.durationMs, 0),
+})))
+</code></pre>
+
+<h2 id="pipeline">Inspect a single event&rsquo;s pipeline</h2>
+<pre><code class="language-typescript">const target = events.find(e =&gt; e.topic === 'weather.loaded')
+console.log('Steps:', target.pipelineSteps)
+// [
+//   { name: 'event.received', durationMs: 0.1 },
+//   { name: 'event.metadata.enriched', durationMs: 0.05 },
+//   { name: 'event.source.validated', durationMs: 0.3 },
+//   { name: 'event.source.mapped', durationMs: 0.4, mapping: { applied: ['città→location'] } },
+//   { name: 'event.canonical.validated', durationMs: 0.2 },
+//   { name: 'event.dedupe.checked', durationMs: 0.05, deduped: false },
+//   { name: 'route.resolved', durationMs: 0.1, routeId: 'weather-fetch' },
+//   { name: 'http.request', durationMs: 542, url: '/api/weather?location=Roma&amp;date=2026-05-10' },
+//   { name: 'http.response', durationMs: 4, status: 200 },
+//   { name: 'event.consumer.mapped', durationMs: 0.3 },
+//   { name: 'event.consumer.validated', durationMs: 0.2 },
+//   { name: 'event.delivered', durationMs: 0.1, subscribersReached: 2 },
+//   { name: 'event.observed', durationMs: 0 },
+// ]
+</code></pre>
+<p>You can immediately see: where time is spent, what mapping was applied, whether validation failed, which route was selected.</p>
+
+<h2 id="mapping">Diagnose mapping bugs</h2>
+<pre><code class="language-typescript">const mapping = broker.getMappingInspector().getSnapshot({ limit: 20 })
+const wrong = mapping.find(m =&gt; m.errors.length &gt; 0 || m.canonicalPayload.location === undefined)
+
+console.log('Local:', wrong.localPayload)
+console.log('Canonical:', wrong.canonicalPayload)
+console.log('Transforms applied:', wrong.transformsApplied)
+console.log('Errors:', wrong.errors)
+</code></pre>
+<p>Common findings:</p>
+<ul>
+<li>An <code>outputMap</code> mapping refers to a transform that wasn&rsquo;t registered</li>
+<li>A required canonical field is missing because the local field name doesn&rsquo;t match any alias</li>
+<li>A <code>parseDate</code> transform crashed on an unexpected input format</li>
+</ul>
+
+<h2 id="routes">Diagnose routing</h2>
+<pre><code class="language-typescript">const routes = broker.getRouteInspector().getSnapshot({ limit: 20 })
+console.table(routes.map(r =&gt; ({
+  routeId: r.routeId,
+  topic: r.topic,
+  outcome: r.outcome,
+  duration: r.durationMs,
+  retried: r.strategiesExecuted.filter(s =&gt; s.outcome === 'retry').length,
+})))
+</code></pre>
+
+<h2 id="metrics">Watch metrics in real-time</h2>
+<pre><code class="language-typescript">setInterval(() =&gt; {
+  const m = broker.getMetrics()
+  console.log('http duration p99:',
+    m.histograms['gluezero.gateway.http_duration_ms{route="weather-fetch"}']?.p99)
+  console.log('errors:',
+    m.counters['gluezero.gateway.http_errors_total{route="weather-fetch"}'])
+}, 5000)
+</code></pre>
+
+<h2 id="export">Export for analysis</h2>
+<pre><code class="language-typescript">// Capture full diagnostic snapshot (deep-cloned)
+const snapshot = broker.getDebugSnapshot()
+copy(JSON.stringify(snapshot, null, 2))   // Chrome devtools console — copies to clipboard
+</code></pre>
+<p>Send this to a colleague or paste into a bug report. It&rsquo;s self-contained — no live broker reference, safe to share.</p>
+index.html">
     <span class="topbar-brand-mark">GZ</span>
     <span>GlueZero</span>
     <span class="topbar-version">v1.0.0</span>
@@ -30,53 +297,2543 @@
 <nav class="sidebar" aria-label="Documentation navigation">
 <div class="sidebar-section">
   <div class="sidebar-section-title">Get started</div>
-  <a class="sidebar-link" href="../index.html">Welcome</a>
-  <a class="sidebar-link" href="../getting-started.html">Getting started</a>
+  <a class="sidebar-link" href="<h1>Recipe: Debug a broken flow with the Inspector</h1>
+<p class="lead">When a value appears wrong in your UI, trace it back through the §28 pipeline. The Inspector shows the full lifecycle of each event.</p>
+
+<h2 id="enable">Enable debug</h2>
+<pre><code class="language-typescript">const broker = createGlueZero({
+  debug: true,                          // dev mode: full payload capture, deep-freeze
+})
+</code></pre>
+<p>In production, debug is off by default (autodetected via <code>NODE_ENV</code>). You can toggle at runtime:</p>
+<pre><code class="language-typescript">broker.enableDebug()
+// reproduce the bug
+broker.disableDebug()
+</code></pre>
+
+<h2 id="capture">Capture the event</h2>
+<pre><code class="language-typescript">// Right after the buggy interaction
+const events = broker.getEventInspector().getSnapshot({ limit: 50 })
+console.table(events.map(e =&gt; ({
+  id: e.id,
+  topic: e.topic,
+  outcome: e.outcome,
+  duration: e.pipelineSteps.reduce((s, st) =&gt; s + st.durationMs, 0),
+})))
+</code></pre>
+
+<h2 id="pipeline">Inspect a single event&rsquo;s pipeline</h2>
+<pre><code class="language-typescript">const target = events.find(e =&gt; e.topic === 'weather.loaded')
+console.log('Steps:', target.pipelineSteps)
+// [
+//   { name: 'event.received', durationMs: 0.1 },
+//   { name: 'event.metadata.enriched', durationMs: 0.05 },
+//   { name: 'event.source.validated', durationMs: 0.3 },
+//   { name: 'event.source.mapped', durationMs: 0.4, mapping: { applied: ['città→location'] } },
+//   { name: 'event.canonical.validated', durationMs: 0.2 },
+//   { name: 'event.dedupe.checked', durationMs: 0.05, deduped: false },
+//   { name: 'route.resolved', durationMs: 0.1, routeId: 'weather-fetch' },
+//   { name: 'http.request', durationMs: 542, url: '/api/weather?location=Roma&amp;date=2026-05-10' },
+//   { name: 'http.response', durationMs: 4, status: 200 },
+//   { name: 'event.consumer.mapped', durationMs: 0.3 },
+//   { name: 'event.consumer.validated', durationMs: 0.2 },
+//   { name: 'event.delivered', durationMs: 0.1, subscribersReached: 2 },
+//   { name: 'event.observed', durationMs: 0 },
+// ]
+</code></pre>
+<p>You can immediately see: where time is spent, what mapping was applied, whether validation failed, which route was selected.</p>
+
+<h2 id="mapping">Diagnose mapping bugs</h2>
+<pre><code class="language-typescript">const mapping = broker.getMappingInspector().getSnapshot({ limit: 20 })
+const wrong = mapping.find(m =&gt; m.errors.length &gt; 0 || m.canonicalPayload.location === undefined)
+
+console.log('Local:', wrong.localPayload)
+console.log('Canonical:', wrong.canonicalPayload)
+console.log('Transforms applied:', wrong.transformsApplied)
+console.log('Errors:', wrong.errors)
+</code></pre>
+<p>Common findings:</p>
+<ul>
+<li>An <code>outputMap</code> mapping refers to a transform that wasn&rsquo;t registered</li>
+<li>A required canonical field is missing because the local field name doesn&rsquo;t match any alias</li>
+<li>A <code>parseDate</code> transform crashed on an unexpected input format</li>
+</ul>
+
+<h2 id="routes">Diagnose routing</h2>
+<pre><code class="language-typescript">const routes = broker.getRouteInspector().getSnapshot({ limit: 20 })
+console.table(routes.map(r =&gt; ({
+  routeId: r.routeId,
+  topic: r.topic,
+  outcome: r.outcome,
+  duration: r.durationMs,
+  retried: r.strategiesExecuted.filter(s =&gt; s.outcome === 'retry').length,
+})))
+</code></pre>
+
+<h2 id="metrics">Watch metrics in real-time</h2>
+<pre><code class="language-typescript">setInterval(() =&gt; {
+  const m = broker.getMetrics()
+  console.log('http duration p99:',
+    m.histograms['gluezero.gateway.http_duration_ms{route="weather-fetch"}']?.p99)
+  console.log('errors:',
+    m.counters['gluezero.gateway.http_errors_total{route="weather-fetch"}'])
+}, 5000)
+</code></pre>
+
+<h2 id="export">Export for analysis</h2>
+<pre><code class="language-typescript">// Capture full diagnostic snapshot (deep-cloned)
+const snapshot = broker.getDebugSnapshot()
+copy(JSON.stringify(snapshot, null, 2))   // Chrome devtools console — copies to clipboard
+</code></pre>
+<p>Send this to a colleague or paste into a bug report. It&rsquo;s self-contained — no live broker reference, safe to share.</p>
+index.html">Welcome</a>
+  <a class="sidebar-link" href="<h1>Recipe: Debug a broken flow with the Inspector</h1>
+<p class="lead">When a value appears wrong in your UI, trace it back through the §28 pipeline. The Inspector shows the full lifecycle of each event.</p>
+
+<h2 id="enable">Enable debug</h2>
+<pre><code class="language-typescript">const broker = createGlueZero({
+  debug: true,                          // dev mode: full payload capture, deep-freeze
+})
+</code></pre>
+<p>In production, debug is off by default (autodetected via <code>NODE_ENV</code>). You can toggle at runtime:</p>
+<pre><code class="language-typescript">broker.enableDebug()
+// reproduce the bug
+broker.disableDebug()
+</code></pre>
+
+<h2 id="capture">Capture the event</h2>
+<pre><code class="language-typescript">// Right after the buggy interaction
+const events = broker.getEventInspector().getSnapshot({ limit: 50 })
+console.table(events.map(e =&gt; ({
+  id: e.id,
+  topic: e.topic,
+  outcome: e.outcome,
+  duration: e.pipelineSteps.reduce((s, st) =&gt; s + st.durationMs, 0),
+})))
+</code></pre>
+
+<h2 id="pipeline">Inspect a single event&rsquo;s pipeline</h2>
+<pre><code class="language-typescript">const target = events.find(e =&gt; e.topic === 'weather.loaded')
+console.log('Steps:', target.pipelineSteps)
+// [
+//   { name: 'event.received', durationMs: 0.1 },
+//   { name: 'event.metadata.enriched', durationMs: 0.05 },
+//   { name: 'event.source.validated', durationMs: 0.3 },
+//   { name: 'event.source.mapped', durationMs: 0.4, mapping: { applied: ['città→location'] } },
+//   { name: 'event.canonical.validated', durationMs: 0.2 },
+//   { name: 'event.dedupe.checked', durationMs: 0.05, deduped: false },
+//   { name: 'route.resolved', durationMs: 0.1, routeId: 'weather-fetch' },
+//   { name: 'http.request', durationMs: 542, url: '/api/weather?location=Roma&amp;date=2026-05-10' },
+//   { name: 'http.response', durationMs: 4, status: 200 },
+//   { name: 'event.consumer.mapped', durationMs: 0.3 },
+//   { name: 'event.consumer.validated', durationMs: 0.2 },
+//   { name: 'event.delivered', durationMs: 0.1, subscribersReached: 2 },
+//   { name: 'event.observed', durationMs: 0 },
+// ]
+</code></pre>
+<p>You can immediately see: where time is spent, what mapping was applied, whether validation failed, which route was selected.</p>
+
+<h2 id="mapping">Diagnose mapping bugs</h2>
+<pre><code class="language-typescript">const mapping = broker.getMappingInspector().getSnapshot({ limit: 20 })
+const wrong = mapping.find(m =&gt; m.errors.length &gt; 0 || m.canonicalPayload.location === undefined)
+
+console.log('Local:', wrong.localPayload)
+console.log('Canonical:', wrong.canonicalPayload)
+console.log('Transforms applied:', wrong.transformsApplied)
+console.log('Errors:', wrong.errors)
+</code></pre>
+<p>Common findings:</p>
+<ul>
+<li>An <code>outputMap</code> mapping refers to a transform that wasn&rsquo;t registered</li>
+<li>A required canonical field is missing because the local field name doesn&rsquo;t match any alias</li>
+<li>A <code>parseDate</code> transform crashed on an unexpected input format</li>
+</ul>
+
+<h2 id="routes">Diagnose routing</h2>
+<pre><code class="language-typescript">const routes = broker.getRouteInspector().getSnapshot({ limit: 20 })
+console.table(routes.map(r =&gt; ({
+  routeId: r.routeId,
+  topic: r.topic,
+  outcome: r.outcome,
+  duration: r.durationMs,
+  retried: r.strategiesExecuted.filter(s =&gt; s.outcome === 'retry').length,
+})))
+</code></pre>
+
+<h2 id="metrics">Watch metrics in real-time</h2>
+<pre><code class="language-typescript">setInterval(() =&gt; {
+  const m = broker.getMetrics()
+  console.log('http duration p99:',
+    m.histograms['gluezero.gateway.http_duration_ms{route="weather-fetch"}']?.p99)
+  console.log('errors:',
+    m.counters['gluezero.gateway.http_errors_total{route="weather-fetch"}'])
+}, 5000)
+</code></pre>
+
+<h2 id="export">Export for analysis</h2>
+<pre><code class="language-typescript">// Capture full diagnostic snapshot (deep-cloned)
+const snapshot = broker.getDebugSnapshot()
+copy(JSON.stringify(snapshot, null, 2))   // Chrome devtools console — copies to clipboard
+</code></pre>
+<p>Send this to a colleague or paste into a bug report. It&rsquo;s self-contained — no live broker reference, safe to share.</p>
+getting-started.html">Getting started</a>
 </div>
 <div class="sidebar-section">
   <div class="sidebar-section-title">Concepts</div>
-  <a class="sidebar-link" href="../concepts/overview.html">Overview</a>
-  <a class="sidebar-link" href="../concepts/broker.html">Broker</a>
-  <a class="sidebar-link" href="../concepts/canonical-model.html">Canonical model</a>
-  <a class="sidebar-link" href="../concepts/routing.html">Routing</a>
-  <a class="sidebar-link" href="../concepts/gateway.html">HTTP gateway</a>
-  <a class="sidebar-link" href="../concepts/realtime.html">Realtime</a>
-  <a class="sidebar-link" href="../concepts/worker.html">Worker</a>
-  <a class="sidebar-link" href="../concepts/cache.html">Cache</a>
-  <a class="sidebar-link" href="../concepts/devtools.html">Devtools</a>
+  <a class="sidebar-link" href="<h1>Recipe: Debug a broken flow with the Inspector</h1>
+<p class="lead">When a value appears wrong in your UI, trace it back through the §28 pipeline. The Inspector shows the full lifecycle of each event.</p>
+
+<h2 id="enable">Enable debug</h2>
+<pre><code class="language-typescript">const broker = createGlueZero({
+  debug: true,                          // dev mode: full payload capture, deep-freeze
+})
+</code></pre>
+<p>In production, debug is off by default (autodetected via <code>NODE_ENV</code>). You can toggle at runtime:</p>
+<pre><code class="language-typescript">broker.enableDebug()
+// reproduce the bug
+broker.disableDebug()
+</code></pre>
+
+<h2 id="capture">Capture the event</h2>
+<pre><code class="language-typescript">// Right after the buggy interaction
+const events = broker.getEventInspector().getSnapshot({ limit: 50 })
+console.table(events.map(e =&gt; ({
+  id: e.id,
+  topic: e.topic,
+  outcome: e.outcome,
+  duration: e.pipelineSteps.reduce((s, st) =&gt; s + st.durationMs, 0),
+})))
+</code></pre>
+
+<h2 id="pipeline">Inspect a single event&rsquo;s pipeline</h2>
+<pre><code class="language-typescript">const target = events.find(e =&gt; e.topic === 'weather.loaded')
+console.log('Steps:', target.pipelineSteps)
+// [
+//   { name: 'event.received', durationMs: 0.1 },
+//   { name: 'event.metadata.enriched', durationMs: 0.05 },
+//   { name: 'event.source.validated', durationMs: 0.3 },
+//   { name: 'event.source.mapped', durationMs: 0.4, mapping: { applied: ['città→location'] } },
+//   { name: 'event.canonical.validated', durationMs: 0.2 },
+//   { name: 'event.dedupe.checked', durationMs: 0.05, deduped: false },
+//   { name: 'route.resolved', durationMs: 0.1, routeId: 'weather-fetch' },
+//   { name: 'http.request', durationMs: 542, url: '/api/weather?location=Roma&amp;date=2026-05-10' },
+//   { name: 'http.response', durationMs: 4, status: 200 },
+//   { name: 'event.consumer.mapped', durationMs: 0.3 },
+//   { name: 'event.consumer.validated', durationMs: 0.2 },
+//   { name: 'event.delivered', durationMs: 0.1, subscribersReached: 2 },
+//   { name: 'event.observed', durationMs: 0 },
+// ]
+</code></pre>
+<p>You can immediately see: where time is spent, what mapping was applied, whether validation failed, which route was selected.</p>
+
+<h2 id="mapping">Diagnose mapping bugs</h2>
+<pre><code class="language-typescript">const mapping = broker.getMappingInspector().getSnapshot({ limit: 20 })
+const wrong = mapping.find(m =&gt; m.errors.length &gt; 0 || m.canonicalPayload.location === undefined)
+
+console.log('Local:', wrong.localPayload)
+console.log('Canonical:', wrong.canonicalPayload)
+console.log('Transforms applied:', wrong.transformsApplied)
+console.log('Errors:', wrong.errors)
+</code></pre>
+<p>Common findings:</p>
+<ul>
+<li>An <code>outputMap</code> mapping refers to a transform that wasn&rsquo;t registered</li>
+<li>A required canonical field is missing because the local field name doesn&rsquo;t match any alias</li>
+<li>A <code>parseDate</code> transform crashed on an unexpected input format</li>
+</ul>
+
+<h2 id="routes">Diagnose routing</h2>
+<pre><code class="language-typescript">const routes = broker.getRouteInspector().getSnapshot({ limit: 20 })
+console.table(routes.map(r =&gt; ({
+  routeId: r.routeId,
+  topic: r.topic,
+  outcome: r.outcome,
+  duration: r.durationMs,
+  retried: r.strategiesExecuted.filter(s =&gt; s.outcome === 'retry').length,
+})))
+</code></pre>
+
+<h2 id="metrics">Watch metrics in real-time</h2>
+<pre><code class="language-typescript">setInterval(() =&gt; {
+  const m = broker.getMetrics()
+  console.log('http duration p99:',
+    m.histograms['gluezero.gateway.http_duration_ms{route="weather-fetch"}']?.p99)
+  console.log('errors:',
+    m.counters['gluezero.gateway.http_errors_total{route="weather-fetch"}'])
+}, 5000)
+</code></pre>
+
+<h2 id="export">Export for analysis</h2>
+<pre><code class="language-typescript">// Capture full diagnostic snapshot (deep-cloned)
+const snapshot = broker.getDebugSnapshot()
+copy(JSON.stringify(snapshot, null, 2))   // Chrome devtools console — copies to clipboard
+</code></pre>
+<p>Send this to a colleague or paste into a bug report. It&rsquo;s self-contained — no live broker reference, safe to share.</p>
+concepts/overview.html">Overview</a>
+  <a class="sidebar-link" href="<h1>Recipe: Debug a broken flow with the Inspector</h1>
+<p class="lead">When a value appears wrong in your UI, trace it back through the §28 pipeline. The Inspector shows the full lifecycle of each event.</p>
+
+<h2 id="enable">Enable debug</h2>
+<pre><code class="language-typescript">const broker = createGlueZero({
+  debug: true,                          // dev mode: full payload capture, deep-freeze
+})
+</code></pre>
+<p>In production, debug is off by default (autodetected via <code>NODE_ENV</code>). You can toggle at runtime:</p>
+<pre><code class="language-typescript">broker.enableDebug()
+// reproduce the bug
+broker.disableDebug()
+</code></pre>
+
+<h2 id="capture">Capture the event</h2>
+<pre><code class="language-typescript">// Right after the buggy interaction
+const events = broker.getEventInspector().getSnapshot({ limit: 50 })
+console.table(events.map(e =&gt; ({
+  id: e.id,
+  topic: e.topic,
+  outcome: e.outcome,
+  duration: e.pipelineSteps.reduce((s, st) =&gt; s + st.durationMs, 0),
+})))
+</code></pre>
+
+<h2 id="pipeline">Inspect a single event&rsquo;s pipeline</h2>
+<pre><code class="language-typescript">const target = events.find(e =&gt; e.topic === 'weather.loaded')
+console.log('Steps:', target.pipelineSteps)
+// [
+//   { name: 'event.received', durationMs: 0.1 },
+//   { name: 'event.metadata.enriched', durationMs: 0.05 },
+//   { name: 'event.source.validated', durationMs: 0.3 },
+//   { name: 'event.source.mapped', durationMs: 0.4, mapping: { applied: ['città→location'] } },
+//   { name: 'event.canonical.validated', durationMs: 0.2 },
+//   { name: 'event.dedupe.checked', durationMs: 0.05, deduped: false },
+//   { name: 'route.resolved', durationMs: 0.1, routeId: 'weather-fetch' },
+//   { name: 'http.request', durationMs: 542, url: '/api/weather?location=Roma&amp;date=2026-05-10' },
+//   { name: 'http.response', durationMs: 4, status: 200 },
+//   { name: 'event.consumer.mapped', durationMs: 0.3 },
+//   { name: 'event.consumer.validated', durationMs: 0.2 },
+//   { name: 'event.delivered', durationMs: 0.1, subscribersReached: 2 },
+//   { name: 'event.observed', durationMs: 0 },
+// ]
+</code></pre>
+<p>You can immediately see: where time is spent, what mapping was applied, whether validation failed, which route was selected.</p>
+
+<h2 id="mapping">Diagnose mapping bugs</h2>
+<pre><code class="language-typescript">const mapping = broker.getMappingInspector().getSnapshot({ limit: 20 })
+const wrong = mapping.find(m =&gt; m.errors.length &gt; 0 || m.canonicalPayload.location === undefined)
+
+console.log('Local:', wrong.localPayload)
+console.log('Canonical:', wrong.canonicalPayload)
+console.log('Transforms applied:', wrong.transformsApplied)
+console.log('Errors:', wrong.errors)
+</code></pre>
+<p>Common findings:</p>
+<ul>
+<li>An <code>outputMap</code> mapping refers to a transform that wasn&rsquo;t registered</li>
+<li>A required canonical field is missing because the local field name doesn&rsquo;t match any alias</li>
+<li>A <code>parseDate</code> transform crashed on an unexpected input format</li>
+</ul>
+
+<h2 id="routes">Diagnose routing</h2>
+<pre><code class="language-typescript">const routes = broker.getRouteInspector().getSnapshot({ limit: 20 })
+console.table(routes.map(r =&gt; ({
+  routeId: r.routeId,
+  topic: r.topic,
+  outcome: r.outcome,
+  duration: r.durationMs,
+  retried: r.strategiesExecuted.filter(s =&gt; s.outcome === 'retry').length,
+})))
+</code></pre>
+
+<h2 id="metrics">Watch metrics in real-time</h2>
+<pre><code class="language-typescript">setInterval(() =&gt; {
+  const m = broker.getMetrics()
+  console.log('http duration p99:',
+    m.histograms['gluezero.gateway.http_duration_ms{route="weather-fetch"}']?.p99)
+  console.log('errors:',
+    m.counters['gluezero.gateway.http_errors_total{route="weather-fetch"}'])
+}, 5000)
+</code></pre>
+
+<h2 id="export">Export for analysis</h2>
+<pre><code class="language-typescript">// Capture full diagnostic snapshot (deep-cloned)
+const snapshot = broker.getDebugSnapshot()
+copy(JSON.stringify(snapshot, null, 2))   // Chrome devtools console — copies to clipboard
+</code></pre>
+<p>Send this to a colleague or paste into a bug report. It&rsquo;s self-contained — no live broker reference, safe to share.</p>
+concepts/broker.html">Broker</a>
+  <a class="sidebar-link" href="<h1>Recipe: Debug a broken flow with the Inspector</h1>
+<p class="lead">When a value appears wrong in your UI, trace it back through the §28 pipeline. The Inspector shows the full lifecycle of each event.</p>
+
+<h2 id="enable">Enable debug</h2>
+<pre><code class="language-typescript">const broker = createGlueZero({
+  debug: true,                          // dev mode: full payload capture, deep-freeze
+})
+</code></pre>
+<p>In production, debug is off by default (autodetected via <code>NODE_ENV</code>). You can toggle at runtime:</p>
+<pre><code class="language-typescript">broker.enableDebug()
+// reproduce the bug
+broker.disableDebug()
+</code></pre>
+
+<h2 id="capture">Capture the event</h2>
+<pre><code class="language-typescript">// Right after the buggy interaction
+const events = broker.getEventInspector().getSnapshot({ limit: 50 })
+console.table(events.map(e =&gt; ({
+  id: e.id,
+  topic: e.topic,
+  outcome: e.outcome,
+  duration: e.pipelineSteps.reduce((s, st) =&gt; s + st.durationMs, 0),
+})))
+</code></pre>
+
+<h2 id="pipeline">Inspect a single event&rsquo;s pipeline</h2>
+<pre><code class="language-typescript">const target = events.find(e =&gt; e.topic === 'weather.loaded')
+console.log('Steps:', target.pipelineSteps)
+// [
+//   { name: 'event.received', durationMs: 0.1 },
+//   { name: 'event.metadata.enriched', durationMs: 0.05 },
+//   { name: 'event.source.validated', durationMs: 0.3 },
+//   { name: 'event.source.mapped', durationMs: 0.4, mapping: { applied: ['città→location'] } },
+//   { name: 'event.canonical.validated', durationMs: 0.2 },
+//   { name: 'event.dedupe.checked', durationMs: 0.05, deduped: false },
+//   { name: 'route.resolved', durationMs: 0.1, routeId: 'weather-fetch' },
+//   { name: 'http.request', durationMs: 542, url: '/api/weather?location=Roma&amp;date=2026-05-10' },
+//   { name: 'http.response', durationMs: 4, status: 200 },
+//   { name: 'event.consumer.mapped', durationMs: 0.3 },
+//   { name: 'event.consumer.validated', durationMs: 0.2 },
+//   { name: 'event.delivered', durationMs: 0.1, subscribersReached: 2 },
+//   { name: 'event.observed', durationMs: 0 },
+// ]
+</code></pre>
+<p>You can immediately see: where time is spent, what mapping was applied, whether validation failed, which route was selected.</p>
+
+<h2 id="mapping">Diagnose mapping bugs</h2>
+<pre><code class="language-typescript">const mapping = broker.getMappingInspector().getSnapshot({ limit: 20 })
+const wrong = mapping.find(m =&gt; m.errors.length &gt; 0 || m.canonicalPayload.location === undefined)
+
+console.log('Local:', wrong.localPayload)
+console.log('Canonical:', wrong.canonicalPayload)
+console.log('Transforms applied:', wrong.transformsApplied)
+console.log('Errors:', wrong.errors)
+</code></pre>
+<p>Common findings:</p>
+<ul>
+<li>An <code>outputMap</code> mapping refers to a transform that wasn&rsquo;t registered</li>
+<li>A required canonical field is missing because the local field name doesn&rsquo;t match any alias</li>
+<li>A <code>parseDate</code> transform crashed on an unexpected input format</li>
+</ul>
+
+<h2 id="routes">Diagnose routing</h2>
+<pre><code class="language-typescript">const routes = broker.getRouteInspector().getSnapshot({ limit: 20 })
+console.table(routes.map(r =&gt; ({
+  routeId: r.routeId,
+  topic: r.topic,
+  outcome: r.outcome,
+  duration: r.durationMs,
+  retried: r.strategiesExecuted.filter(s =&gt; s.outcome === 'retry').length,
+})))
+</code></pre>
+
+<h2 id="metrics">Watch metrics in real-time</h2>
+<pre><code class="language-typescript">setInterval(() =&gt; {
+  const m = broker.getMetrics()
+  console.log('http duration p99:',
+    m.histograms['gluezero.gateway.http_duration_ms{route="weather-fetch"}']?.p99)
+  console.log('errors:',
+    m.counters['gluezero.gateway.http_errors_total{route="weather-fetch"}'])
+}, 5000)
+</code></pre>
+
+<h2 id="export">Export for analysis</h2>
+<pre><code class="language-typescript">// Capture full diagnostic snapshot (deep-cloned)
+const snapshot = broker.getDebugSnapshot()
+copy(JSON.stringify(snapshot, null, 2))   // Chrome devtools console — copies to clipboard
+</code></pre>
+<p>Send this to a colleague or paste into a bug report. It&rsquo;s self-contained — no live broker reference, safe to share.</p>
+concepts/canonical-model.html">Canonical model</a>
+  <a class="sidebar-link" href="<h1>Recipe: Debug a broken flow with the Inspector</h1>
+<p class="lead">When a value appears wrong in your UI, trace it back through the §28 pipeline. The Inspector shows the full lifecycle of each event.</p>
+
+<h2 id="enable">Enable debug</h2>
+<pre><code class="language-typescript">const broker = createGlueZero({
+  debug: true,                          // dev mode: full payload capture, deep-freeze
+})
+</code></pre>
+<p>In production, debug is off by default (autodetected via <code>NODE_ENV</code>). You can toggle at runtime:</p>
+<pre><code class="language-typescript">broker.enableDebug()
+// reproduce the bug
+broker.disableDebug()
+</code></pre>
+
+<h2 id="capture">Capture the event</h2>
+<pre><code class="language-typescript">// Right after the buggy interaction
+const events = broker.getEventInspector().getSnapshot({ limit: 50 })
+console.table(events.map(e =&gt; ({
+  id: e.id,
+  topic: e.topic,
+  outcome: e.outcome,
+  duration: e.pipelineSteps.reduce((s, st) =&gt; s + st.durationMs, 0),
+})))
+</code></pre>
+
+<h2 id="pipeline">Inspect a single event&rsquo;s pipeline</h2>
+<pre><code class="language-typescript">const target = events.find(e =&gt; e.topic === 'weather.loaded')
+console.log('Steps:', target.pipelineSteps)
+// [
+//   { name: 'event.received', durationMs: 0.1 },
+//   { name: 'event.metadata.enriched', durationMs: 0.05 },
+//   { name: 'event.source.validated', durationMs: 0.3 },
+//   { name: 'event.source.mapped', durationMs: 0.4, mapping: { applied: ['città→location'] } },
+//   { name: 'event.canonical.validated', durationMs: 0.2 },
+//   { name: 'event.dedupe.checked', durationMs: 0.05, deduped: false },
+//   { name: 'route.resolved', durationMs: 0.1, routeId: 'weather-fetch' },
+//   { name: 'http.request', durationMs: 542, url: '/api/weather?location=Roma&amp;date=2026-05-10' },
+//   { name: 'http.response', durationMs: 4, status: 200 },
+//   { name: 'event.consumer.mapped', durationMs: 0.3 },
+//   { name: 'event.consumer.validated', durationMs: 0.2 },
+//   { name: 'event.delivered', durationMs: 0.1, subscribersReached: 2 },
+//   { name: 'event.observed', durationMs: 0 },
+// ]
+</code></pre>
+<p>You can immediately see: where time is spent, what mapping was applied, whether validation failed, which route was selected.</p>
+
+<h2 id="mapping">Diagnose mapping bugs</h2>
+<pre><code class="language-typescript">const mapping = broker.getMappingInspector().getSnapshot({ limit: 20 })
+const wrong = mapping.find(m =&gt; m.errors.length &gt; 0 || m.canonicalPayload.location === undefined)
+
+console.log('Local:', wrong.localPayload)
+console.log('Canonical:', wrong.canonicalPayload)
+console.log('Transforms applied:', wrong.transformsApplied)
+console.log('Errors:', wrong.errors)
+</code></pre>
+<p>Common findings:</p>
+<ul>
+<li>An <code>outputMap</code> mapping refers to a transform that wasn&rsquo;t registered</li>
+<li>A required canonical field is missing because the local field name doesn&rsquo;t match any alias</li>
+<li>A <code>parseDate</code> transform crashed on an unexpected input format</li>
+</ul>
+
+<h2 id="routes">Diagnose routing</h2>
+<pre><code class="language-typescript">const routes = broker.getRouteInspector().getSnapshot({ limit: 20 })
+console.table(routes.map(r =&gt; ({
+  routeId: r.routeId,
+  topic: r.topic,
+  outcome: r.outcome,
+  duration: r.durationMs,
+  retried: r.strategiesExecuted.filter(s =&gt; s.outcome === 'retry').length,
+})))
+</code></pre>
+
+<h2 id="metrics">Watch metrics in real-time</h2>
+<pre><code class="language-typescript">setInterval(() =&gt; {
+  const m = broker.getMetrics()
+  console.log('http duration p99:',
+    m.histograms['gluezero.gateway.http_duration_ms{route="weather-fetch"}']?.p99)
+  console.log('errors:',
+    m.counters['gluezero.gateway.http_errors_total{route="weather-fetch"}'])
+}, 5000)
+</code></pre>
+
+<h2 id="export">Export for analysis</h2>
+<pre><code class="language-typescript">// Capture full diagnostic snapshot (deep-cloned)
+const snapshot = broker.getDebugSnapshot()
+copy(JSON.stringify(snapshot, null, 2))   // Chrome devtools console — copies to clipboard
+</code></pre>
+<p>Send this to a colleague or paste into a bug report. It&rsquo;s self-contained — no live broker reference, safe to share.</p>
+concepts/routing.html">Routing</a>
+  <a class="sidebar-link" href="<h1>Recipe: Debug a broken flow with the Inspector</h1>
+<p class="lead">When a value appears wrong in your UI, trace it back through the §28 pipeline. The Inspector shows the full lifecycle of each event.</p>
+
+<h2 id="enable">Enable debug</h2>
+<pre><code class="language-typescript">const broker = createGlueZero({
+  debug: true,                          // dev mode: full payload capture, deep-freeze
+})
+</code></pre>
+<p>In production, debug is off by default (autodetected via <code>NODE_ENV</code>). You can toggle at runtime:</p>
+<pre><code class="language-typescript">broker.enableDebug()
+// reproduce the bug
+broker.disableDebug()
+</code></pre>
+
+<h2 id="capture">Capture the event</h2>
+<pre><code class="language-typescript">// Right after the buggy interaction
+const events = broker.getEventInspector().getSnapshot({ limit: 50 })
+console.table(events.map(e =&gt; ({
+  id: e.id,
+  topic: e.topic,
+  outcome: e.outcome,
+  duration: e.pipelineSteps.reduce((s, st) =&gt; s + st.durationMs, 0),
+})))
+</code></pre>
+
+<h2 id="pipeline">Inspect a single event&rsquo;s pipeline</h2>
+<pre><code class="language-typescript">const target = events.find(e =&gt; e.topic === 'weather.loaded')
+console.log('Steps:', target.pipelineSteps)
+// [
+//   { name: 'event.received', durationMs: 0.1 },
+//   { name: 'event.metadata.enriched', durationMs: 0.05 },
+//   { name: 'event.source.validated', durationMs: 0.3 },
+//   { name: 'event.source.mapped', durationMs: 0.4, mapping: { applied: ['città→location'] } },
+//   { name: 'event.canonical.validated', durationMs: 0.2 },
+//   { name: 'event.dedupe.checked', durationMs: 0.05, deduped: false },
+//   { name: 'route.resolved', durationMs: 0.1, routeId: 'weather-fetch' },
+//   { name: 'http.request', durationMs: 542, url: '/api/weather?location=Roma&amp;date=2026-05-10' },
+//   { name: 'http.response', durationMs: 4, status: 200 },
+//   { name: 'event.consumer.mapped', durationMs: 0.3 },
+//   { name: 'event.consumer.validated', durationMs: 0.2 },
+//   { name: 'event.delivered', durationMs: 0.1, subscribersReached: 2 },
+//   { name: 'event.observed', durationMs: 0 },
+// ]
+</code></pre>
+<p>You can immediately see: where time is spent, what mapping was applied, whether validation failed, which route was selected.</p>
+
+<h2 id="mapping">Diagnose mapping bugs</h2>
+<pre><code class="language-typescript">const mapping = broker.getMappingInspector().getSnapshot({ limit: 20 })
+const wrong = mapping.find(m =&gt; m.errors.length &gt; 0 || m.canonicalPayload.location === undefined)
+
+console.log('Local:', wrong.localPayload)
+console.log('Canonical:', wrong.canonicalPayload)
+console.log('Transforms applied:', wrong.transformsApplied)
+console.log('Errors:', wrong.errors)
+</code></pre>
+<p>Common findings:</p>
+<ul>
+<li>An <code>outputMap</code> mapping refers to a transform that wasn&rsquo;t registered</li>
+<li>A required canonical field is missing because the local field name doesn&rsquo;t match any alias</li>
+<li>A <code>parseDate</code> transform crashed on an unexpected input format</li>
+</ul>
+
+<h2 id="routes">Diagnose routing</h2>
+<pre><code class="language-typescript">const routes = broker.getRouteInspector().getSnapshot({ limit: 20 })
+console.table(routes.map(r =&gt; ({
+  routeId: r.routeId,
+  topic: r.topic,
+  outcome: r.outcome,
+  duration: r.durationMs,
+  retried: r.strategiesExecuted.filter(s =&gt; s.outcome === 'retry').length,
+})))
+</code></pre>
+
+<h2 id="metrics">Watch metrics in real-time</h2>
+<pre><code class="language-typescript">setInterval(() =&gt; {
+  const m = broker.getMetrics()
+  console.log('http duration p99:',
+    m.histograms['gluezero.gateway.http_duration_ms{route="weather-fetch"}']?.p99)
+  console.log('errors:',
+    m.counters['gluezero.gateway.http_errors_total{route="weather-fetch"}'])
+}, 5000)
+</code></pre>
+
+<h2 id="export">Export for analysis</h2>
+<pre><code class="language-typescript">// Capture full diagnostic snapshot (deep-cloned)
+const snapshot = broker.getDebugSnapshot()
+copy(JSON.stringify(snapshot, null, 2))   // Chrome devtools console — copies to clipboard
+</code></pre>
+<p>Send this to a colleague or paste into a bug report. It&rsquo;s self-contained — no live broker reference, safe to share.</p>
+concepts/gateway.html">HTTP gateway</a>
+  <a class="sidebar-link" href="<h1>Recipe: Debug a broken flow with the Inspector</h1>
+<p class="lead">When a value appears wrong in your UI, trace it back through the §28 pipeline. The Inspector shows the full lifecycle of each event.</p>
+
+<h2 id="enable">Enable debug</h2>
+<pre><code class="language-typescript">const broker = createGlueZero({
+  debug: true,                          // dev mode: full payload capture, deep-freeze
+})
+</code></pre>
+<p>In production, debug is off by default (autodetected via <code>NODE_ENV</code>). You can toggle at runtime:</p>
+<pre><code class="language-typescript">broker.enableDebug()
+// reproduce the bug
+broker.disableDebug()
+</code></pre>
+
+<h2 id="capture">Capture the event</h2>
+<pre><code class="language-typescript">// Right after the buggy interaction
+const events = broker.getEventInspector().getSnapshot({ limit: 50 })
+console.table(events.map(e =&gt; ({
+  id: e.id,
+  topic: e.topic,
+  outcome: e.outcome,
+  duration: e.pipelineSteps.reduce((s, st) =&gt; s + st.durationMs, 0),
+})))
+</code></pre>
+
+<h2 id="pipeline">Inspect a single event&rsquo;s pipeline</h2>
+<pre><code class="language-typescript">const target = events.find(e =&gt; e.topic === 'weather.loaded')
+console.log('Steps:', target.pipelineSteps)
+// [
+//   { name: 'event.received', durationMs: 0.1 },
+//   { name: 'event.metadata.enriched', durationMs: 0.05 },
+//   { name: 'event.source.validated', durationMs: 0.3 },
+//   { name: 'event.source.mapped', durationMs: 0.4, mapping: { applied: ['città→location'] } },
+//   { name: 'event.canonical.validated', durationMs: 0.2 },
+//   { name: 'event.dedupe.checked', durationMs: 0.05, deduped: false },
+//   { name: 'route.resolved', durationMs: 0.1, routeId: 'weather-fetch' },
+//   { name: 'http.request', durationMs: 542, url: '/api/weather?location=Roma&amp;date=2026-05-10' },
+//   { name: 'http.response', durationMs: 4, status: 200 },
+//   { name: 'event.consumer.mapped', durationMs: 0.3 },
+//   { name: 'event.consumer.validated', durationMs: 0.2 },
+//   { name: 'event.delivered', durationMs: 0.1, subscribersReached: 2 },
+//   { name: 'event.observed', durationMs: 0 },
+// ]
+</code></pre>
+<p>You can immediately see: where time is spent, what mapping was applied, whether validation failed, which route was selected.</p>
+
+<h2 id="mapping">Diagnose mapping bugs</h2>
+<pre><code class="language-typescript">const mapping = broker.getMappingInspector().getSnapshot({ limit: 20 })
+const wrong = mapping.find(m =&gt; m.errors.length &gt; 0 || m.canonicalPayload.location === undefined)
+
+console.log('Local:', wrong.localPayload)
+console.log('Canonical:', wrong.canonicalPayload)
+console.log('Transforms applied:', wrong.transformsApplied)
+console.log('Errors:', wrong.errors)
+</code></pre>
+<p>Common findings:</p>
+<ul>
+<li>An <code>outputMap</code> mapping refers to a transform that wasn&rsquo;t registered</li>
+<li>A required canonical field is missing because the local field name doesn&rsquo;t match any alias</li>
+<li>A <code>parseDate</code> transform crashed on an unexpected input format</li>
+</ul>
+
+<h2 id="routes">Diagnose routing</h2>
+<pre><code class="language-typescript">const routes = broker.getRouteInspector().getSnapshot({ limit: 20 })
+console.table(routes.map(r =&gt; ({
+  routeId: r.routeId,
+  topic: r.topic,
+  outcome: r.outcome,
+  duration: r.durationMs,
+  retried: r.strategiesExecuted.filter(s =&gt; s.outcome === 'retry').length,
+})))
+</code></pre>
+
+<h2 id="metrics">Watch metrics in real-time</h2>
+<pre><code class="language-typescript">setInterval(() =&gt; {
+  const m = broker.getMetrics()
+  console.log('http duration p99:',
+    m.histograms['gluezero.gateway.http_duration_ms{route="weather-fetch"}']?.p99)
+  console.log('errors:',
+    m.counters['gluezero.gateway.http_errors_total{route="weather-fetch"}'])
+}, 5000)
+</code></pre>
+
+<h2 id="export">Export for analysis</h2>
+<pre><code class="language-typescript">// Capture full diagnostic snapshot (deep-cloned)
+const snapshot = broker.getDebugSnapshot()
+copy(JSON.stringify(snapshot, null, 2))   // Chrome devtools console — copies to clipboard
+</code></pre>
+<p>Send this to a colleague or paste into a bug report. It&rsquo;s self-contained — no live broker reference, safe to share.</p>
+concepts/realtime.html">Realtime</a>
+  <a class="sidebar-link" href="<h1>Recipe: Debug a broken flow with the Inspector</h1>
+<p class="lead">When a value appears wrong in your UI, trace it back through the §28 pipeline. The Inspector shows the full lifecycle of each event.</p>
+
+<h2 id="enable">Enable debug</h2>
+<pre><code class="language-typescript">const broker = createGlueZero({
+  debug: true,                          // dev mode: full payload capture, deep-freeze
+})
+</code></pre>
+<p>In production, debug is off by default (autodetected via <code>NODE_ENV</code>). You can toggle at runtime:</p>
+<pre><code class="language-typescript">broker.enableDebug()
+// reproduce the bug
+broker.disableDebug()
+</code></pre>
+
+<h2 id="capture">Capture the event</h2>
+<pre><code class="language-typescript">// Right after the buggy interaction
+const events = broker.getEventInspector().getSnapshot({ limit: 50 })
+console.table(events.map(e =&gt; ({
+  id: e.id,
+  topic: e.topic,
+  outcome: e.outcome,
+  duration: e.pipelineSteps.reduce((s, st) =&gt; s + st.durationMs, 0),
+})))
+</code></pre>
+
+<h2 id="pipeline">Inspect a single event&rsquo;s pipeline</h2>
+<pre><code class="language-typescript">const target = events.find(e =&gt; e.topic === 'weather.loaded')
+console.log('Steps:', target.pipelineSteps)
+// [
+//   { name: 'event.received', durationMs: 0.1 },
+//   { name: 'event.metadata.enriched', durationMs: 0.05 },
+//   { name: 'event.source.validated', durationMs: 0.3 },
+//   { name: 'event.source.mapped', durationMs: 0.4, mapping: { applied: ['città→location'] } },
+//   { name: 'event.canonical.validated', durationMs: 0.2 },
+//   { name: 'event.dedupe.checked', durationMs: 0.05, deduped: false },
+//   { name: 'route.resolved', durationMs: 0.1, routeId: 'weather-fetch' },
+//   { name: 'http.request', durationMs: 542, url: '/api/weather?location=Roma&amp;date=2026-05-10' },
+//   { name: 'http.response', durationMs: 4, status: 200 },
+//   { name: 'event.consumer.mapped', durationMs: 0.3 },
+//   { name: 'event.consumer.validated', durationMs: 0.2 },
+//   { name: 'event.delivered', durationMs: 0.1, subscribersReached: 2 },
+//   { name: 'event.observed', durationMs: 0 },
+// ]
+</code></pre>
+<p>You can immediately see: where time is spent, what mapping was applied, whether validation failed, which route was selected.</p>
+
+<h2 id="mapping">Diagnose mapping bugs</h2>
+<pre><code class="language-typescript">const mapping = broker.getMappingInspector().getSnapshot({ limit: 20 })
+const wrong = mapping.find(m =&gt; m.errors.length &gt; 0 || m.canonicalPayload.location === undefined)
+
+console.log('Local:', wrong.localPayload)
+console.log('Canonical:', wrong.canonicalPayload)
+console.log('Transforms applied:', wrong.transformsApplied)
+console.log('Errors:', wrong.errors)
+</code></pre>
+<p>Common findings:</p>
+<ul>
+<li>An <code>outputMap</code> mapping refers to a transform that wasn&rsquo;t registered</li>
+<li>A required canonical field is missing because the local field name doesn&rsquo;t match any alias</li>
+<li>A <code>parseDate</code> transform crashed on an unexpected input format</li>
+</ul>
+
+<h2 id="routes">Diagnose routing</h2>
+<pre><code class="language-typescript">const routes = broker.getRouteInspector().getSnapshot({ limit: 20 })
+console.table(routes.map(r =&gt; ({
+  routeId: r.routeId,
+  topic: r.topic,
+  outcome: r.outcome,
+  duration: r.durationMs,
+  retried: r.strategiesExecuted.filter(s =&gt; s.outcome === 'retry').length,
+})))
+</code></pre>
+
+<h2 id="metrics">Watch metrics in real-time</h2>
+<pre><code class="language-typescript">setInterval(() =&gt; {
+  const m = broker.getMetrics()
+  console.log('http duration p99:',
+    m.histograms['gluezero.gateway.http_duration_ms{route="weather-fetch"}']?.p99)
+  console.log('errors:',
+    m.counters['gluezero.gateway.http_errors_total{route="weather-fetch"}'])
+}, 5000)
+</code></pre>
+
+<h2 id="export">Export for analysis</h2>
+<pre><code class="language-typescript">// Capture full diagnostic snapshot (deep-cloned)
+const snapshot = broker.getDebugSnapshot()
+copy(JSON.stringify(snapshot, null, 2))   // Chrome devtools console — copies to clipboard
+</code></pre>
+<p>Send this to a colleague or paste into a bug report. It&rsquo;s self-contained — no live broker reference, safe to share.</p>
+concepts/worker.html">Worker</a>
+  <a class="sidebar-link" href="<h1>Recipe: Debug a broken flow with the Inspector</h1>
+<p class="lead">When a value appears wrong in your UI, trace it back through the §28 pipeline. The Inspector shows the full lifecycle of each event.</p>
+
+<h2 id="enable">Enable debug</h2>
+<pre><code class="language-typescript">const broker = createGlueZero({
+  debug: true,                          // dev mode: full payload capture, deep-freeze
+})
+</code></pre>
+<p>In production, debug is off by default (autodetected via <code>NODE_ENV</code>). You can toggle at runtime:</p>
+<pre><code class="language-typescript">broker.enableDebug()
+// reproduce the bug
+broker.disableDebug()
+</code></pre>
+
+<h2 id="capture">Capture the event</h2>
+<pre><code class="language-typescript">// Right after the buggy interaction
+const events = broker.getEventInspector().getSnapshot({ limit: 50 })
+console.table(events.map(e =&gt; ({
+  id: e.id,
+  topic: e.topic,
+  outcome: e.outcome,
+  duration: e.pipelineSteps.reduce((s, st) =&gt; s + st.durationMs, 0),
+})))
+</code></pre>
+
+<h2 id="pipeline">Inspect a single event&rsquo;s pipeline</h2>
+<pre><code class="language-typescript">const target = events.find(e =&gt; e.topic === 'weather.loaded')
+console.log('Steps:', target.pipelineSteps)
+// [
+//   { name: 'event.received', durationMs: 0.1 },
+//   { name: 'event.metadata.enriched', durationMs: 0.05 },
+//   { name: 'event.source.validated', durationMs: 0.3 },
+//   { name: 'event.source.mapped', durationMs: 0.4, mapping: { applied: ['città→location'] } },
+//   { name: 'event.canonical.validated', durationMs: 0.2 },
+//   { name: 'event.dedupe.checked', durationMs: 0.05, deduped: false },
+//   { name: 'route.resolved', durationMs: 0.1, routeId: 'weather-fetch' },
+//   { name: 'http.request', durationMs: 542, url: '/api/weather?location=Roma&amp;date=2026-05-10' },
+//   { name: 'http.response', durationMs: 4, status: 200 },
+//   { name: 'event.consumer.mapped', durationMs: 0.3 },
+//   { name: 'event.consumer.validated', durationMs: 0.2 },
+//   { name: 'event.delivered', durationMs: 0.1, subscribersReached: 2 },
+//   { name: 'event.observed', durationMs: 0 },
+// ]
+</code></pre>
+<p>You can immediately see: where time is spent, what mapping was applied, whether validation failed, which route was selected.</p>
+
+<h2 id="mapping">Diagnose mapping bugs</h2>
+<pre><code class="language-typescript">const mapping = broker.getMappingInspector().getSnapshot({ limit: 20 })
+const wrong = mapping.find(m =&gt; m.errors.length &gt; 0 || m.canonicalPayload.location === undefined)
+
+console.log('Local:', wrong.localPayload)
+console.log('Canonical:', wrong.canonicalPayload)
+console.log('Transforms applied:', wrong.transformsApplied)
+console.log('Errors:', wrong.errors)
+</code></pre>
+<p>Common findings:</p>
+<ul>
+<li>An <code>outputMap</code> mapping refers to a transform that wasn&rsquo;t registered</li>
+<li>A required canonical field is missing because the local field name doesn&rsquo;t match any alias</li>
+<li>A <code>parseDate</code> transform crashed on an unexpected input format</li>
+</ul>
+
+<h2 id="routes">Diagnose routing</h2>
+<pre><code class="language-typescript">const routes = broker.getRouteInspector().getSnapshot({ limit: 20 })
+console.table(routes.map(r =&gt; ({
+  routeId: r.routeId,
+  topic: r.topic,
+  outcome: r.outcome,
+  duration: r.durationMs,
+  retried: r.strategiesExecuted.filter(s =&gt; s.outcome === 'retry').length,
+})))
+</code></pre>
+
+<h2 id="metrics">Watch metrics in real-time</h2>
+<pre><code class="language-typescript">setInterval(() =&gt; {
+  const m = broker.getMetrics()
+  console.log('http duration p99:',
+    m.histograms['gluezero.gateway.http_duration_ms{route="weather-fetch"}']?.p99)
+  console.log('errors:',
+    m.counters['gluezero.gateway.http_errors_total{route="weather-fetch"}'])
+}, 5000)
+</code></pre>
+
+<h2 id="export">Export for analysis</h2>
+<pre><code class="language-typescript">// Capture full diagnostic snapshot (deep-cloned)
+const snapshot = broker.getDebugSnapshot()
+copy(JSON.stringify(snapshot, null, 2))   // Chrome devtools console — copies to clipboard
+</code></pre>
+<p>Send this to a colleague or paste into a bug report. It&rsquo;s self-contained — no live broker reference, safe to share.</p>
+concepts/cache.html">Cache</a>
+  <a class="sidebar-link" href="<h1>Recipe: Debug a broken flow with the Inspector</h1>
+<p class="lead">When a value appears wrong in your UI, trace it back through the §28 pipeline. The Inspector shows the full lifecycle of each event.</p>
+
+<h2 id="enable">Enable debug</h2>
+<pre><code class="language-typescript">const broker = createGlueZero({
+  debug: true,                          // dev mode: full payload capture, deep-freeze
+})
+</code></pre>
+<p>In production, debug is off by default (autodetected via <code>NODE_ENV</code>). You can toggle at runtime:</p>
+<pre><code class="language-typescript">broker.enableDebug()
+// reproduce the bug
+broker.disableDebug()
+</code></pre>
+
+<h2 id="capture">Capture the event</h2>
+<pre><code class="language-typescript">// Right after the buggy interaction
+const events = broker.getEventInspector().getSnapshot({ limit: 50 })
+console.table(events.map(e =&gt; ({
+  id: e.id,
+  topic: e.topic,
+  outcome: e.outcome,
+  duration: e.pipelineSteps.reduce((s, st) =&gt; s + st.durationMs, 0),
+})))
+</code></pre>
+
+<h2 id="pipeline">Inspect a single event&rsquo;s pipeline</h2>
+<pre><code class="language-typescript">const target = events.find(e =&gt; e.topic === 'weather.loaded')
+console.log('Steps:', target.pipelineSteps)
+// [
+//   { name: 'event.received', durationMs: 0.1 },
+//   { name: 'event.metadata.enriched', durationMs: 0.05 },
+//   { name: 'event.source.validated', durationMs: 0.3 },
+//   { name: 'event.source.mapped', durationMs: 0.4, mapping: { applied: ['città→location'] } },
+//   { name: 'event.canonical.validated', durationMs: 0.2 },
+//   { name: 'event.dedupe.checked', durationMs: 0.05, deduped: false },
+//   { name: 'route.resolved', durationMs: 0.1, routeId: 'weather-fetch' },
+//   { name: 'http.request', durationMs: 542, url: '/api/weather?location=Roma&amp;date=2026-05-10' },
+//   { name: 'http.response', durationMs: 4, status: 200 },
+//   { name: 'event.consumer.mapped', durationMs: 0.3 },
+//   { name: 'event.consumer.validated', durationMs: 0.2 },
+//   { name: 'event.delivered', durationMs: 0.1, subscribersReached: 2 },
+//   { name: 'event.observed', durationMs: 0 },
+// ]
+</code></pre>
+<p>You can immediately see: where time is spent, what mapping was applied, whether validation failed, which route was selected.</p>
+
+<h2 id="mapping">Diagnose mapping bugs</h2>
+<pre><code class="language-typescript">const mapping = broker.getMappingInspector().getSnapshot({ limit: 20 })
+const wrong = mapping.find(m =&gt; m.errors.length &gt; 0 || m.canonicalPayload.location === undefined)
+
+console.log('Local:', wrong.localPayload)
+console.log('Canonical:', wrong.canonicalPayload)
+console.log('Transforms applied:', wrong.transformsApplied)
+console.log('Errors:', wrong.errors)
+</code></pre>
+<p>Common findings:</p>
+<ul>
+<li>An <code>outputMap</code> mapping refers to a transform that wasn&rsquo;t registered</li>
+<li>A required canonical field is missing because the local field name doesn&rsquo;t match any alias</li>
+<li>A <code>parseDate</code> transform crashed on an unexpected input format</li>
+</ul>
+
+<h2 id="routes">Diagnose routing</h2>
+<pre><code class="language-typescript">const routes = broker.getRouteInspector().getSnapshot({ limit: 20 })
+console.table(routes.map(r =&gt; ({
+  routeId: r.routeId,
+  topic: r.topic,
+  outcome: r.outcome,
+  duration: r.durationMs,
+  retried: r.strategiesExecuted.filter(s =&gt; s.outcome === 'retry').length,
+})))
+</code></pre>
+
+<h2 id="metrics">Watch metrics in real-time</h2>
+<pre><code class="language-typescript">setInterval(() =&gt; {
+  const m = broker.getMetrics()
+  console.log('http duration p99:',
+    m.histograms['gluezero.gateway.http_duration_ms{route="weather-fetch"}']?.p99)
+  console.log('errors:',
+    m.counters['gluezero.gateway.http_errors_total{route="weather-fetch"}'])
+}, 5000)
+</code></pre>
+
+<h2 id="export">Export for analysis</h2>
+<pre><code class="language-typescript">// Capture full diagnostic snapshot (deep-cloned)
+const snapshot = broker.getDebugSnapshot()
+copy(JSON.stringify(snapshot, null, 2))   // Chrome devtools console — copies to clipboard
+</code></pre>
+<p>Send this to a colleague or paste into a bug report. It&rsquo;s self-contained — no live broker reference, safe to share.</p>
+concepts/devtools.html">Devtools</a>
 </div>
 <div class="sidebar-section">
   <div class="sidebar-section-title">API reference</div>
-  <a class="sidebar-link" href="../api/gluezero.html">@gluezero/gluezero</a>
-  <a class="sidebar-link" href="../api/core.html">@gluezero/core</a>
-  <a class="sidebar-link" href="../api/mapper.html">@gluezero/mapper</a>
-  <a class="sidebar-link" href="../api/routing.html">@gluezero/routing</a>
-  <a class="sidebar-link" href="../api/gateway.html">@gluezero/gateway</a>
-  <a class="sidebar-link" href="../api/worker.html">@gluezero/worker</a>
-  <a class="sidebar-link" href="../api/cache.html">@gluezero/cache</a>
-  <a class="sidebar-link" href="../api/devtools.html">@gluezero/devtools</a>
+  <a class="sidebar-link" href="<h1>Recipe: Debug a broken flow with the Inspector</h1>
+<p class="lead">When a value appears wrong in your UI, trace it back through the §28 pipeline. The Inspector shows the full lifecycle of each event.</p>
+
+<h2 id="enable">Enable debug</h2>
+<pre><code class="language-typescript">const broker = createGlueZero({
+  debug: true,                          // dev mode: full payload capture, deep-freeze
+})
+</code></pre>
+<p>In production, debug is off by default (autodetected via <code>NODE_ENV</code>). You can toggle at runtime:</p>
+<pre><code class="language-typescript">broker.enableDebug()
+// reproduce the bug
+broker.disableDebug()
+</code></pre>
+
+<h2 id="capture">Capture the event</h2>
+<pre><code class="language-typescript">// Right after the buggy interaction
+const events = broker.getEventInspector().getSnapshot({ limit: 50 })
+console.table(events.map(e =&gt; ({
+  id: e.id,
+  topic: e.topic,
+  outcome: e.outcome,
+  duration: e.pipelineSteps.reduce((s, st) =&gt; s + st.durationMs, 0),
+})))
+</code></pre>
+
+<h2 id="pipeline">Inspect a single event&rsquo;s pipeline</h2>
+<pre><code class="language-typescript">const target = events.find(e =&gt; e.topic === 'weather.loaded')
+console.log('Steps:', target.pipelineSteps)
+// [
+//   { name: 'event.received', durationMs: 0.1 },
+//   { name: 'event.metadata.enriched', durationMs: 0.05 },
+//   { name: 'event.source.validated', durationMs: 0.3 },
+//   { name: 'event.source.mapped', durationMs: 0.4, mapping: { applied: ['città→location'] } },
+//   { name: 'event.canonical.validated', durationMs: 0.2 },
+//   { name: 'event.dedupe.checked', durationMs: 0.05, deduped: false },
+//   { name: 'route.resolved', durationMs: 0.1, routeId: 'weather-fetch' },
+//   { name: 'http.request', durationMs: 542, url: '/api/weather?location=Roma&amp;date=2026-05-10' },
+//   { name: 'http.response', durationMs: 4, status: 200 },
+//   { name: 'event.consumer.mapped', durationMs: 0.3 },
+//   { name: 'event.consumer.validated', durationMs: 0.2 },
+//   { name: 'event.delivered', durationMs: 0.1, subscribersReached: 2 },
+//   { name: 'event.observed', durationMs: 0 },
+// ]
+</code></pre>
+<p>You can immediately see: where time is spent, what mapping was applied, whether validation failed, which route was selected.</p>
+
+<h2 id="mapping">Diagnose mapping bugs</h2>
+<pre><code class="language-typescript">const mapping = broker.getMappingInspector().getSnapshot({ limit: 20 })
+const wrong = mapping.find(m =&gt; m.errors.length &gt; 0 || m.canonicalPayload.location === undefined)
+
+console.log('Local:', wrong.localPayload)
+console.log('Canonical:', wrong.canonicalPayload)
+console.log('Transforms applied:', wrong.transformsApplied)
+console.log('Errors:', wrong.errors)
+</code></pre>
+<p>Common findings:</p>
+<ul>
+<li>An <code>outputMap</code> mapping refers to a transform that wasn&rsquo;t registered</li>
+<li>A required canonical field is missing because the local field name doesn&rsquo;t match any alias</li>
+<li>A <code>parseDate</code> transform crashed on an unexpected input format</li>
+</ul>
+
+<h2 id="routes">Diagnose routing</h2>
+<pre><code class="language-typescript">const routes = broker.getRouteInspector().getSnapshot({ limit: 20 })
+console.table(routes.map(r =&gt; ({
+  routeId: r.routeId,
+  topic: r.topic,
+  outcome: r.outcome,
+  duration: r.durationMs,
+  retried: r.strategiesExecuted.filter(s =&gt; s.outcome === 'retry').length,
+})))
+</code></pre>
+
+<h2 id="metrics">Watch metrics in real-time</h2>
+<pre><code class="language-typescript">setInterval(() =&gt; {
+  const m = broker.getMetrics()
+  console.log('http duration p99:',
+    m.histograms['gluezero.gateway.http_duration_ms{route="weather-fetch"}']?.p99)
+  console.log('errors:',
+    m.counters['gluezero.gateway.http_errors_total{route="weather-fetch"}'])
+}, 5000)
+</code></pre>
+
+<h2 id="export">Export for analysis</h2>
+<pre><code class="language-typescript">// Capture full diagnostic snapshot (deep-cloned)
+const snapshot = broker.getDebugSnapshot()
+copy(JSON.stringify(snapshot, null, 2))   // Chrome devtools console — copies to clipboard
+</code></pre>
+<p>Send this to a colleague or paste into a bug report. It&rsquo;s self-contained — no live broker reference, safe to share.</p>
+api/gluezero.html">@gluezero/gluezero</a>
+  <a class="sidebar-link" href="<h1>Recipe: Debug a broken flow with the Inspector</h1>
+<p class="lead">When a value appears wrong in your UI, trace it back through the §28 pipeline. The Inspector shows the full lifecycle of each event.</p>
+
+<h2 id="enable">Enable debug</h2>
+<pre><code class="language-typescript">const broker = createGlueZero({
+  debug: true,                          // dev mode: full payload capture, deep-freeze
+})
+</code></pre>
+<p>In production, debug is off by default (autodetected via <code>NODE_ENV</code>). You can toggle at runtime:</p>
+<pre><code class="language-typescript">broker.enableDebug()
+// reproduce the bug
+broker.disableDebug()
+</code></pre>
+
+<h2 id="capture">Capture the event</h2>
+<pre><code class="language-typescript">// Right after the buggy interaction
+const events = broker.getEventInspector().getSnapshot({ limit: 50 })
+console.table(events.map(e =&gt; ({
+  id: e.id,
+  topic: e.topic,
+  outcome: e.outcome,
+  duration: e.pipelineSteps.reduce((s, st) =&gt; s + st.durationMs, 0),
+})))
+</code></pre>
+
+<h2 id="pipeline">Inspect a single event&rsquo;s pipeline</h2>
+<pre><code class="language-typescript">const target = events.find(e =&gt; e.topic === 'weather.loaded')
+console.log('Steps:', target.pipelineSteps)
+// [
+//   { name: 'event.received', durationMs: 0.1 },
+//   { name: 'event.metadata.enriched', durationMs: 0.05 },
+//   { name: 'event.source.validated', durationMs: 0.3 },
+//   { name: 'event.source.mapped', durationMs: 0.4, mapping: { applied: ['città→location'] } },
+//   { name: 'event.canonical.validated', durationMs: 0.2 },
+//   { name: 'event.dedupe.checked', durationMs: 0.05, deduped: false },
+//   { name: 'route.resolved', durationMs: 0.1, routeId: 'weather-fetch' },
+//   { name: 'http.request', durationMs: 542, url: '/api/weather?location=Roma&amp;date=2026-05-10' },
+//   { name: 'http.response', durationMs: 4, status: 200 },
+//   { name: 'event.consumer.mapped', durationMs: 0.3 },
+//   { name: 'event.consumer.validated', durationMs: 0.2 },
+//   { name: 'event.delivered', durationMs: 0.1, subscribersReached: 2 },
+//   { name: 'event.observed', durationMs: 0 },
+// ]
+</code></pre>
+<p>You can immediately see: where time is spent, what mapping was applied, whether validation failed, which route was selected.</p>
+
+<h2 id="mapping">Diagnose mapping bugs</h2>
+<pre><code class="language-typescript">const mapping = broker.getMappingInspector().getSnapshot({ limit: 20 })
+const wrong = mapping.find(m =&gt; m.errors.length &gt; 0 || m.canonicalPayload.location === undefined)
+
+console.log('Local:', wrong.localPayload)
+console.log('Canonical:', wrong.canonicalPayload)
+console.log('Transforms applied:', wrong.transformsApplied)
+console.log('Errors:', wrong.errors)
+</code></pre>
+<p>Common findings:</p>
+<ul>
+<li>An <code>outputMap</code> mapping refers to a transform that wasn&rsquo;t registered</li>
+<li>A required canonical field is missing because the local field name doesn&rsquo;t match any alias</li>
+<li>A <code>parseDate</code> transform crashed on an unexpected input format</li>
+</ul>
+
+<h2 id="routes">Diagnose routing</h2>
+<pre><code class="language-typescript">const routes = broker.getRouteInspector().getSnapshot({ limit: 20 })
+console.table(routes.map(r =&gt; ({
+  routeId: r.routeId,
+  topic: r.topic,
+  outcome: r.outcome,
+  duration: r.durationMs,
+  retried: r.strategiesExecuted.filter(s =&gt; s.outcome === 'retry').length,
+})))
+</code></pre>
+
+<h2 id="metrics">Watch metrics in real-time</h2>
+<pre><code class="language-typescript">setInterval(() =&gt; {
+  const m = broker.getMetrics()
+  console.log('http duration p99:',
+    m.histograms['gluezero.gateway.http_duration_ms{route="weather-fetch"}']?.p99)
+  console.log('errors:',
+    m.counters['gluezero.gateway.http_errors_total{route="weather-fetch"}'])
+}, 5000)
+</code></pre>
+
+<h2 id="export">Export for analysis</h2>
+<pre><code class="language-typescript">// Capture full diagnostic snapshot (deep-cloned)
+const snapshot = broker.getDebugSnapshot()
+copy(JSON.stringify(snapshot, null, 2))   // Chrome devtools console — copies to clipboard
+</code></pre>
+<p>Send this to a colleague or paste into a bug report. It&rsquo;s self-contained — no live broker reference, safe to share.</p>
+api/core.html">@gluezero/core</a>
+  <a class="sidebar-link" href="<h1>Recipe: Debug a broken flow with the Inspector</h1>
+<p class="lead">When a value appears wrong in your UI, trace it back through the §28 pipeline. The Inspector shows the full lifecycle of each event.</p>
+
+<h2 id="enable">Enable debug</h2>
+<pre><code class="language-typescript">const broker = createGlueZero({
+  debug: true,                          // dev mode: full payload capture, deep-freeze
+})
+</code></pre>
+<p>In production, debug is off by default (autodetected via <code>NODE_ENV</code>). You can toggle at runtime:</p>
+<pre><code class="language-typescript">broker.enableDebug()
+// reproduce the bug
+broker.disableDebug()
+</code></pre>
+
+<h2 id="capture">Capture the event</h2>
+<pre><code class="language-typescript">// Right after the buggy interaction
+const events = broker.getEventInspector().getSnapshot({ limit: 50 })
+console.table(events.map(e =&gt; ({
+  id: e.id,
+  topic: e.topic,
+  outcome: e.outcome,
+  duration: e.pipelineSteps.reduce((s, st) =&gt; s + st.durationMs, 0),
+})))
+</code></pre>
+
+<h2 id="pipeline">Inspect a single event&rsquo;s pipeline</h2>
+<pre><code class="language-typescript">const target = events.find(e =&gt; e.topic === 'weather.loaded')
+console.log('Steps:', target.pipelineSteps)
+// [
+//   { name: 'event.received', durationMs: 0.1 },
+//   { name: 'event.metadata.enriched', durationMs: 0.05 },
+//   { name: 'event.source.validated', durationMs: 0.3 },
+//   { name: 'event.source.mapped', durationMs: 0.4, mapping: { applied: ['città→location'] } },
+//   { name: 'event.canonical.validated', durationMs: 0.2 },
+//   { name: 'event.dedupe.checked', durationMs: 0.05, deduped: false },
+//   { name: 'route.resolved', durationMs: 0.1, routeId: 'weather-fetch' },
+//   { name: 'http.request', durationMs: 542, url: '/api/weather?location=Roma&amp;date=2026-05-10' },
+//   { name: 'http.response', durationMs: 4, status: 200 },
+//   { name: 'event.consumer.mapped', durationMs: 0.3 },
+//   { name: 'event.consumer.validated', durationMs: 0.2 },
+//   { name: 'event.delivered', durationMs: 0.1, subscribersReached: 2 },
+//   { name: 'event.observed', durationMs: 0 },
+// ]
+</code></pre>
+<p>You can immediately see: where time is spent, what mapping was applied, whether validation failed, which route was selected.</p>
+
+<h2 id="mapping">Diagnose mapping bugs</h2>
+<pre><code class="language-typescript">const mapping = broker.getMappingInspector().getSnapshot({ limit: 20 })
+const wrong = mapping.find(m =&gt; m.errors.length &gt; 0 || m.canonicalPayload.location === undefined)
+
+console.log('Local:', wrong.localPayload)
+console.log('Canonical:', wrong.canonicalPayload)
+console.log('Transforms applied:', wrong.transformsApplied)
+console.log('Errors:', wrong.errors)
+</code></pre>
+<p>Common findings:</p>
+<ul>
+<li>An <code>outputMap</code> mapping refers to a transform that wasn&rsquo;t registered</li>
+<li>A required canonical field is missing because the local field name doesn&rsquo;t match any alias</li>
+<li>A <code>parseDate</code> transform crashed on an unexpected input format</li>
+</ul>
+
+<h2 id="routes">Diagnose routing</h2>
+<pre><code class="language-typescript">const routes = broker.getRouteInspector().getSnapshot({ limit: 20 })
+console.table(routes.map(r =&gt; ({
+  routeId: r.routeId,
+  topic: r.topic,
+  outcome: r.outcome,
+  duration: r.durationMs,
+  retried: r.strategiesExecuted.filter(s =&gt; s.outcome === 'retry').length,
+})))
+</code></pre>
+
+<h2 id="metrics">Watch metrics in real-time</h2>
+<pre><code class="language-typescript">setInterval(() =&gt; {
+  const m = broker.getMetrics()
+  console.log('http duration p99:',
+    m.histograms['gluezero.gateway.http_duration_ms{route="weather-fetch"}']?.p99)
+  console.log('errors:',
+    m.counters['gluezero.gateway.http_errors_total{route="weather-fetch"}'])
+}, 5000)
+</code></pre>
+
+<h2 id="export">Export for analysis</h2>
+<pre><code class="language-typescript">// Capture full diagnostic snapshot (deep-cloned)
+const snapshot = broker.getDebugSnapshot()
+copy(JSON.stringify(snapshot, null, 2))   // Chrome devtools console — copies to clipboard
+</code></pre>
+<p>Send this to a colleague or paste into a bug report. It&rsquo;s self-contained — no live broker reference, safe to share.</p>
+api/mapper.html">@gluezero/mapper</a>
+  <a class="sidebar-link" href="<h1>Recipe: Debug a broken flow with the Inspector</h1>
+<p class="lead">When a value appears wrong in your UI, trace it back through the §28 pipeline. The Inspector shows the full lifecycle of each event.</p>
+
+<h2 id="enable">Enable debug</h2>
+<pre><code class="language-typescript">const broker = createGlueZero({
+  debug: true,                          // dev mode: full payload capture, deep-freeze
+})
+</code></pre>
+<p>In production, debug is off by default (autodetected via <code>NODE_ENV</code>). You can toggle at runtime:</p>
+<pre><code class="language-typescript">broker.enableDebug()
+// reproduce the bug
+broker.disableDebug()
+</code></pre>
+
+<h2 id="capture">Capture the event</h2>
+<pre><code class="language-typescript">// Right after the buggy interaction
+const events = broker.getEventInspector().getSnapshot({ limit: 50 })
+console.table(events.map(e =&gt; ({
+  id: e.id,
+  topic: e.topic,
+  outcome: e.outcome,
+  duration: e.pipelineSteps.reduce((s, st) =&gt; s + st.durationMs, 0),
+})))
+</code></pre>
+
+<h2 id="pipeline">Inspect a single event&rsquo;s pipeline</h2>
+<pre><code class="language-typescript">const target = events.find(e =&gt; e.topic === 'weather.loaded')
+console.log('Steps:', target.pipelineSteps)
+// [
+//   { name: 'event.received', durationMs: 0.1 },
+//   { name: 'event.metadata.enriched', durationMs: 0.05 },
+//   { name: 'event.source.validated', durationMs: 0.3 },
+//   { name: 'event.source.mapped', durationMs: 0.4, mapping: { applied: ['città→location'] } },
+//   { name: 'event.canonical.validated', durationMs: 0.2 },
+//   { name: 'event.dedupe.checked', durationMs: 0.05, deduped: false },
+//   { name: 'route.resolved', durationMs: 0.1, routeId: 'weather-fetch' },
+//   { name: 'http.request', durationMs: 542, url: '/api/weather?location=Roma&amp;date=2026-05-10' },
+//   { name: 'http.response', durationMs: 4, status: 200 },
+//   { name: 'event.consumer.mapped', durationMs: 0.3 },
+//   { name: 'event.consumer.validated', durationMs: 0.2 },
+//   { name: 'event.delivered', durationMs: 0.1, subscribersReached: 2 },
+//   { name: 'event.observed', durationMs: 0 },
+// ]
+</code></pre>
+<p>You can immediately see: where time is spent, what mapping was applied, whether validation failed, which route was selected.</p>
+
+<h2 id="mapping">Diagnose mapping bugs</h2>
+<pre><code class="language-typescript">const mapping = broker.getMappingInspector().getSnapshot({ limit: 20 })
+const wrong = mapping.find(m =&gt; m.errors.length &gt; 0 || m.canonicalPayload.location === undefined)
+
+console.log('Local:', wrong.localPayload)
+console.log('Canonical:', wrong.canonicalPayload)
+console.log('Transforms applied:', wrong.transformsApplied)
+console.log('Errors:', wrong.errors)
+</code></pre>
+<p>Common findings:</p>
+<ul>
+<li>An <code>outputMap</code> mapping refers to a transform that wasn&rsquo;t registered</li>
+<li>A required canonical field is missing because the local field name doesn&rsquo;t match any alias</li>
+<li>A <code>parseDate</code> transform crashed on an unexpected input format</li>
+</ul>
+
+<h2 id="routes">Diagnose routing</h2>
+<pre><code class="language-typescript">const routes = broker.getRouteInspector().getSnapshot({ limit: 20 })
+console.table(routes.map(r =&gt; ({
+  routeId: r.routeId,
+  topic: r.topic,
+  outcome: r.outcome,
+  duration: r.durationMs,
+  retried: r.strategiesExecuted.filter(s =&gt; s.outcome === 'retry').length,
+})))
+</code></pre>
+
+<h2 id="metrics">Watch metrics in real-time</h2>
+<pre><code class="language-typescript">setInterval(() =&gt; {
+  const m = broker.getMetrics()
+  console.log('http duration p99:',
+    m.histograms['gluezero.gateway.http_duration_ms{route="weather-fetch"}']?.p99)
+  console.log('errors:',
+    m.counters['gluezero.gateway.http_errors_total{route="weather-fetch"}'])
+}, 5000)
+</code></pre>
+
+<h2 id="export">Export for analysis</h2>
+<pre><code class="language-typescript">// Capture full diagnostic snapshot (deep-cloned)
+const snapshot = broker.getDebugSnapshot()
+copy(JSON.stringify(snapshot, null, 2))   // Chrome devtools console — copies to clipboard
+</code></pre>
+<p>Send this to a colleague or paste into a bug report. It&rsquo;s self-contained — no live broker reference, safe to share.</p>
+api/routing.html">@gluezero/routing</a>
+  <a class="sidebar-link" href="<h1>Recipe: Debug a broken flow with the Inspector</h1>
+<p class="lead">When a value appears wrong in your UI, trace it back through the §28 pipeline. The Inspector shows the full lifecycle of each event.</p>
+
+<h2 id="enable">Enable debug</h2>
+<pre><code class="language-typescript">const broker = createGlueZero({
+  debug: true,                          // dev mode: full payload capture, deep-freeze
+})
+</code></pre>
+<p>In production, debug is off by default (autodetected via <code>NODE_ENV</code>). You can toggle at runtime:</p>
+<pre><code class="language-typescript">broker.enableDebug()
+// reproduce the bug
+broker.disableDebug()
+</code></pre>
+
+<h2 id="capture">Capture the event</h2>
+<pre><code class="language-typescript">// Right after the buggy interaction
+const events = broker.getEventInspector().getSnapshot({ limit: 50 })
+console.table(events.map(e =&gt; ({
+  id: e.id,
+  topic: e.topic,
+  outcome: e.outcome,
+  duration: e.pipelineSteps.reduce((s, st) =&gt; s + st.durationMs, 0),
+})))
+</code></pre>
+
+<h2 id="pipeline">Inspect a single event&rsquo;s pipeline</h2>
+<pre><code class="language-typescript">const target = events.find(e =&gt; e.topic === 'weather.loaded')
+console.log('Steps:', target.pipelineSteps)
+// [
+//   { name: 'event.received', durationMs: 0.1 },
+//   { name: 'event.metadata.enriched', durationMs: 0.05 },
+//   { name: 'event.source.validated', durationMs: 0.3 },
+//   { name: 'event.source.mapped', durationMs: 0.4, mapping: { applied: ['città→location'] } },
+//   { name: 'event.canonical.validated', durationMs: 0.2 },
+//   { name: 'event.dedupe.checked', durationMs: 0.05, deduped: false },
+//   { name: 'route.resolved', durationMs: 0.1, routeId: 'weather-fetch' },
+//   { name: 'http.request', durationMs: 542, url: '/api/weather?location=Roma&amp;date=2026-05-10' },
+//   { name: 'http.response', durationMs: 4, status: 200 },
+//   { name: 'event.consumer.mapped', durationMs: 0.3 },
+//   { name: 'event.consumer.validated', durationMs: 0.2 },
+//   { name: 'event.delivered', durationMs: 0.1, subscribersReached: 2 },
+//   { name: 'event.observed', durationMs: 0 },
+// ]
+</code></pre>
+<p>You can immediately see: where time is spent, what mapping was applied, whether validation failed, which route was selected.</p>
+
+<h2 id="mapping">Diagnose mapping bugs</h2>
+<pre><code class="language-typescript">const mapping = broker.getMappingInspector().getSnapshot({ limit: 20 })
+const wrong = mapping.find(m =&gt; m.errors.length &gt; 0 || m.canonicalPayload.location === undefined)
+
+console.log('Local:', wrong.localPayload)
+console.log('Canonical:', wrong.canonicalPayload)
+console.log('Transforms applied:', wrong.transformsApplied)
+console.log('Errors:', wrong.errors)
+</code></pre>
+<p>Common findings:</p>
+<ul>
+<li>An <code>outputMap</code> mapping refers to a transform that wasn&rsquo;t registered</li>
+<li>A required canonical field is missing because the local field name doesn&rsquo;t match any alias</li>
+<li>A <code>parseDate</code> transform crashed on an unexpected input format</li>
+</ul>
+
+<h2 id="routes">Diagnose routing</h2>
+<pre><code class="language-typescript">const routes = broker.getRouteInspector().getSnapshot({ limit: 20 })
+console.table(routes.map(r =&gt; ({
+  routeId: r.routeId,
+  topic: r.topic,
+  outcome: r.outcome,
+  duration: r.durationMs,
+  retried: r.strategiesExecuted.filter(s =&gt; s.outcome === 'retry').length,
+})))
+</code></pre>
+
+<h2 id="metrics">Watch metrics in real-time</h2>
+<pre><code class="language-typescript">setInterval(() =&gt; {
+  const m = broker.getMetrics()
+  console.log('http duration p99:',
+    m.histograms['gluezero.gateway.http_duration_ms{route="weather-fetch"}']?.p99)
+  console.log('errors:',
+    m.counters['gluezero.gateway.http_errors_total{route="weather-fetch"}'])
+}, 5000)
+</code></pre>
+
+<h2 id="export">Export for analysis</h2>
+<pre><code class="language-typescript">// Capture full diagnostic snapshot (deep-cloned)
+const snapshot = broker.getDebugSnapshot()
+copy(JSON.stringify(snapshot, null, 2))   // Chrome devtools console — copies to clipboard
+</code></pre>
+<p>Send this to a colleague or paste into a bug report. It&rsquo;s self-contained — no live broker reference, safe to share.</p>
+api/gateway.html">@gluezero/gateway</a>
+  <a class="sidebar-link" href="<h1>Recipe: Debug a broken flow with the Inspector</h1>
+<p class="lead">When a value appears wrong in your UI, trace it back through the §28 pipeline. The Inspector shows the full lifecycle of each event.</p>
+
+<h2 id="enable">Enable debug</h2>
+<pre><code class="language-typescript">const broker = createGlueZero({
+  debug: true,                          // dev mode: full payload capture, deep-freeze
+})
+</code></pre>
+<p>In production, debug is off by default (autodetected via <code>NODE_ENV</code>). You can toggle at runtime:</p>
+<pre><code class="language-typescript">broker.enableDebug()
+// reproduce the bug
+broker.disableDebug()
+</code></pre>
+
+<h2 id="capture">Capture the event</h2>
+<pre><code class="language-typescript">// Right after the buggy interaction
+const events = broker.getEventInspector().getSnapshot({ limit: 50 })
+console.table(events.map(e =&gt; ({
+  id: e.id,
+  topic: e.topic,
+  outcome: e.outcome,
+  duration: e.pipelineSteps.reduce((s, st) =&gt; s + st.durationMs, 0),
+})))
+</code></pre>
+
+<h2 id="pipeline">Inspect a single event&rsquo;s pipeline</h2>
+<pre><code class="language-typescript">const target = events.find(e =&gt; e.topic === 'weather.loaded')
+console.log('Steps:', target.pipelineSteps)
+// [
+//   { name: 'event.received', durationMs: 0.1 },
+//   { name: 'event.metadata.enriched', durationMs: 0.05 },
+//   { name: 'event.source.validated', durationMs: 0.3 },
+//   { name: 'event.source.mapped', durationMs: 0.4, mapping: { applied: ['città→location'] } },
+//   { name: 'event.canonical.validated', durationMs: 0.2 },
+//   { name: 'event.dedupe.checked', durationMs: 0.05, deduped: false },
+//   { name: 'route.resolved', durationMs: 0.1, routeId: 'weather-fetch' },
+//   { name: 'http.request', durationMs: 542, url: '/api/weather?location=Roma&amp;date=2026-05-10' },
+//   { name: 'http.response', durationMs: 4, status: 200 },
+//   { name: 'event.consumer.mapped', durationMs: 0.3 },
+//   { name: 'event.consumer.validated', durationMs: 0.2 },
+//   { name: 'event.delivered', durationMs: 0.1, subscribersReached: 2 },
+//   { name: 'event.observed', durationMs: 0 },
+// ]
+</code></pre>
+<p>You can immediately see: where time is spent, what mapping was applied, whether validation failed, which route was selected.</p>
+
+<h2 id="mapping">Diagnose mapping bugs</h2>
+<pre><code class="language-typescript">const mapping = broker.getMappingInspector().getSnapshot({ limit: 20 })
+const wrong = mapping.find(m =&gt; m.errors.length &gt; 0 || m.canonicalPayload.location === undefined)
+
+console.log('Local:', wrong.localPayload)
+console.log('Canonical:', wrong.canonicalPayload)
+console.log('Transforms applied:', wrong.transformsApplied)
+console.log('Errors:', wrong.errors)
+</code></pre>
+<p>Common findings:</p>
+<ul>
+<li>An <code>outputMap</code> mapping refers to a transform that wasn&rsquo;t registered</li>
+<li>A required canonical field is missing because the local field name doesn&rsquo;t match any alias</li>
+<li>A <code>parseDate</code> transform crashed on an unexpected input format</li>
+</ul>
+
+<h2 id="routes">Diagnose routing</h2>
+<pre><code class="language-typescript">const routes = broker.getRouteInspector().getSnapshot({ limit: 20 })
+console.table(routes.map(r =&gt; ({
+  routeId: r.routeId,
+  topic: r.topic,
+  outcome: r.outcome,
+  duration: r.durationMs,
+  retried: r.strategiesExecuted.filter(s =&gt; s.outcome === 'retry').length,
+})))
+</code></pre>
+
+<h2 id="metrics">Watch metrics in real-time</h2>
+<pre><code class="language-typescript">setInterval(() =&gt; {
+  const m = broker.getMetrics()
+  console.log('http duration p99:',
+    m.histograms['gluezero.gateway.http_duration_ms{route="weather-fetch"}']?.p99)
+  console.log('errors:',
+    m.counters['gluezero.gateway.http_errors_total{route="weather-fetch"}'])
+}, 5000)
+</code></pre>
+
+<h2 id="export">Export for analysis</h2>
+<pre><code class="language-typescript">// Capture full diagnostic snapshot (deep-cloned)
+const snapshot = broker.getDebugSnapshot()
+copy(JSON.stringify(snapshot, null, 2))   // Chrome devtools console — copies to clipboard
+</code></pre>
+<p>Send this to a colleague or paste into a bug report. It&rsquo;s self-contained — no live broker reference, safe to share.</p>
+api/worker.html">@gluezero/worker</a>
+  <a class="sidebar-link" href="<h1>Recipe: Debug a broken flow with the Inspector</h1>
+<p class="lead">When a value appears wrong in your UI, trace it back through the §28 pipeline. The Inspector shows the full lifecycle of each event.</p>
+
+<h2 id="enable">Enable debug</h2>
+<pre><code class="language-typescript">const broker = createGlueZero({
+  debug: true,                          // dev mode: full payload capture, deep-freeze
+})
+</code></pre>
+<p>In production, debug is off by default (autodetected via <code>NODE_ENV</code>). You can toggle at runtime:</p>
+<pre><code class="language-typescript">broker.enableDebug()
+// reproduce the bug
+broker.disableDebug()
+</code></pre>
+
+<h2 id="capture">Capture the event</h2>
+<pre><code class="language-typescript">// Right after the buggy interaction
+const events = broker.getEventInspector().getSnapshot({ limit: 50 })
+console.table(events.map(e =&gt; ({
+  id: e.id,
+  topic: e.topic,
+  outcome: e.outcome,
+  duration: e.pipelineSteps.reduce((s, st) =&gt; s + st.durationMs, 0),
+})))
+</code></pre>
+
+<h2 id="pipeline">Inspect a single event&rsquo;s pipeline</h2>
+<pre><code class="language-typescript">const target = events.find(e =&gt; e.topic === 'weather.loaded')
+console.log('Steps:', target.pipelineSteps)
+// [
+//   { name: 'event.received', durationMs: 0.1 },
+//   { name: 'event.metadata.enriched', durationMs: 0.05 },
+//   { name: 'event.source.validated', durationMs: 0.3 },
+//   { name: 'event.source.mapped', durationMs: 0.4, mapping: { applied: ['città→location'] } },
+//   { name: 'event.canonical.validated', durationMs: 0.2 },
+//   { name: 'event.dedupe.checked', durationMs: 0.05, deduped: false },
+//   { name: 'route.resolved', durationMs: 0.1, routeId: 'weather-fetch' },
+//   { name: 'http.request', durationMs: 542, url: '/api/weather?location=Roma&amp;date=2026-05-10' },
+//   { name: 'http.response', durationMs: 4, status: 200 },
+//   { name: 'event.consumer.mapped', durationMs: 0.3 },
+//   { name: 'event.consumer.validated', durationMs: 0.2 },
+//   { name: 'event.delivered', durationMs: 0.1, subscribersReached: 2 },
+//   { name: 'event.observed', durationMs: 0 },
+// ]
+</code></pre>
+<p>You can immediately see: where time is spent, what mapping was applied, whether validation failed, which route was selected.</p>
+
+<h2 id="mapping">Diagnose mapping bugs</h2>
+<pre><code class="language-typescript">const mapping = broker.getMappingInspector().getSnapshot({ limit: 20 })
+const wrong = mapping.find(m =&gt; m.errors.length &gt; 0 || m.canonicalPayload.location === undefined)
+
+console.log('Local:', wrong.localPayload)
+console.log('Canonical:', wrong.canonicalPayload)
+console.log('Transforms applied:', wrong.transformsApplied)
+console.log('Errors:', wrong.errors)
+</code></pre>
+<p>Common findings:</p>
+<ul>
+<li>An <code>outputMap</code> mapping refers to a transform that wasn&rsquo;t registered</li>
+<li>A required canonical field is missing because the local field name doesn&rsquo;t match any alias</li>
+<li>A <code>parseDate</code> transform crashed on an unexpected input format</li>
+</ul>
+
+<h2 id="routes">Diagnose routing</h2>
+<pre><code class="language-typescript">const routes = broker.getRouteInspector().getSnapshot({ limit: 20 })
+console.table(routes.map(r =&gt; ({
+  routeId: r.routeId,
+  topic: r.topic,
+  outcome: r.outcome,
+  duration: r.durationMs,
+  retried: r.strategiesExecuted.filter(s =&gt; s.outcome === 'retry').length,
+})))
+</code></pre>
+
+<h2 id="metrics">Watch metrics in real-time</h2>
+<pre><code class="language-typescript">setInterval(() =&gt; {
+  const m = broker.getMetrics()
+  console.log('http duration p99:',
+    m.histograms['gluezero.gateway.http_duration_ms{route="weather-fetch"}']?.p99)
+  console.log('errors:',
+    m.counters['gluezero.gateway.http_errors_total{route="weather-fetch"}'])
+}, 5000)
+</code></pre>
+
+<h2 id="export">Export for analysis</h2>
+<pre><code class="language-typescript">// Capture full diagnostic snapshot (deep-cloned)
+const snapshot = broker.getDebugSnapshot()
+copy(JSON.stringify(snapshot, null, 2))   // Chrome devtools console — copies to clipboard
+</code></pre>
+<p>Send this to a colleague or paste into a bug report. It&rsquo;s self-contained — no live broker reference, safe to share.</p>
+api/cache.html">@gluezero/cache</a>
+  <a class="sidebar-link" href="<h1>Recipe: Debug a broken flow with the Inspector</h1>
+<p class="lead">When a value appears wrong in your UI, trace it back through the §28 pipeline. The Inspector shows the full lifecycle of each event.</p>
+
+<h2 id="enable">Enable debug</h2>
+<pre><code class="language-typescript">const broker = createGlueZero({
+  debug: true,                          // dev mode: full payload capture, deep-freeze
+})
+</code></pre>
+<p>In production, debug is off by default (autodetected via <code>NODE_ENV</code>). You can toggle at runtime:</p>
+<pre><code class="language-typescript">broker.enableDebug()
+// reproduce the bug
+broker.disableDebug()
+</code></pre>
+
+<h2 id="capture">Capture the event</h2>
+<pre><code class="language-typescript">// Right after the buggy interaction
+const events = broker.getEventInspector().getSnapshot({ limit: 50 })
+console.table(events.map(e =&gt; ({
+  id: e.id,
+  topic: e.topic,
+  outcome: e.outcome,
+  duration: e.pipelineSteps.reduce((s, st) =&gt; s + st.durationMs, 0),
+})))
+</code></pre>
+
+<h2 id="pipeline">Inspect a single event&rsquo;s pipeline</h2>
+<pre><code class="language-typescript">const target = events.find(e =&gt; e.topic === 'weather.loaded')
+console.log('Steps:', target.pipelineSteps)
+// [
+//   { name: 'event.received', durationMs: 0.1 },
+//   { name: 'event.metadata.enriched', durationMs: 0.05 },
+//   { name: 'event.source.validated', durationMs: 0.3 },
+//   { name: 'event.source.mapped', durationMs: 0.4, mapping: { applied: ['città→location'] } },
+//   { name: 'event.canonical.validated', durationMs: 0.2 },
+//   { name: 'event.dedupe.checked', durationMs: 0.05, deduped: false },
+//   { name: 'route.resolved', durationMs: 0.1, routeId: 'weather-fetch' },
+//   { name: 'http.request', durationMs: 542, url: '/api/weather?location=Roma&amp;date=2026-05-10' },
+//   { name: 'http.response', durationMs: 4, status: 200 },
+//   { name: 'event.consumer.mapped', durationMs: 0.3 },
+//   { name: 'event.consumer.validated', durationMs: 0.2 },
+//   { name: 'event.delivered', durationMs: 0.1, subscribersReached: 2 },
+//   { name: 'event.observed', durationMs: 0 },
+// ]
+</code></pre>
+<p>You can immediately see: where time is spent, what mapping was applied, whether validation failed, which route was selected.</p>
+
+<h2 id="mapping">Diagnose mapping bugs</h2>
+<pre><code class="language-typescript">const mapping = broker.getMappingInspector().getSnapshot({ limit: 20 })
+const wrong = mapping.find(m =&gt; m.errors.length &gt; 0 || m.canonicalPayload.location === undefined)
+
+console.log('Local:', wrong.localPayload)
+console.log('Canonical:', wrong.canonicalPayload)
+console.log('Transforms applied:', wrong.transformsApplied)
+console.log('Errors:', wrong.errors)
+</code></pre>
+<p>Common findings:</p>
+<ul>
+<li>An <code>outputMap</code> mapping refers to a transform that wasn&rsquo;t registered</li>
+<li>A required canonical field is missing because the local field name doesn&rsquo;t match any alias</li>
+<li>A <code>parseDate</code> transform crashed on an unexpected input format</li>
+</ul>
+
+<h2 id="routes">Diagnose routing</h2>
+<pre><code class="language-typescript">const routes = broker.getRouteInspector().getSnapshot({ limit: 20 })
+console.table(routes.map(r =&gt; ({
+  routeId: r.routeId,
+  topic: r.topic,
+  outcome: r.outcome,
+  duration: r.durationMs,
+  retried: r.strategiesExecuted.filter(s =&gt; s.outcome === 'retry').length,
+})))
+</code></pre>
+
+<h2 id="metrics">Watch metrics in real-time</h2>
+<pre><code class="language-typescript">setInterval(() =&gt; {
+  const m = broker.getMetrics()
+  console.log('http duration p99:',
+    m.histograms['gluezero.gateway.http_duration_ms{route="weather-fetch"}']?.p99)
+  console.log('errors:',
+    m.counters['gluezero.gateway.http_errors_total{route="weather-fetch"}'])
+}, 5000)
+</code></pre>
+
+<h2 id="export">Export for analysis</h2>
+<pre><code class="language-typescript">// Capture full diagnostic snapshot (deep-cloned)
+const snapshot = broker.getDebugSnapshot()
+copy(JSON.stringify(snapshot, null, 2))   // Chrome devtools console — copies to clipboard
+</code></pre>
+<p>Send this to a colleague or paste into a bug report. It&rsquo;s self-contained — no live broker reference, safe to share.</p>
+api/devtools.html">@gluezero/devtools</a>
 </div>
 <div class="sidebar-section">
   <div class="sidebar-section-title">Recipes</div>
-  <a class="sidebar-link" href="../recipes/auth-token-refresh.html">Auth + token refresh</a>
-  <a class="sidebar-link" href="../recipes/multi-tenant-cache.html">Multi-tenant cache</a>
-  <a class="sidebar-link" href="../recipes/reconnect-realtime.html">Reconnect SSE→WS</a>
-  <a class="sidebar-link" href="../recipes/worker-progress.html">Worker progress</a>
-  <a class="sidebar-link" href="../recipes/debug-flow.html">Debug with Inspector</a>
-  <a class="sidebar-link" href="../recipes/react-integration.html">React integration</a>
+  <a class="sidebar-link" href="<h1>Recipe: Debug a broken flow with the Inspector</h1>
+<p class="lead">When a value appears wrong in your UI, trace it back through the §28 pipeline. The Inspector shows the full lifecycle of each event.</p>
+
+<h2 id="enable">Enable debug</h2>
+<pre><code class="language-typescript">const broker = createGlueZero({
+  debug: true,                          // dev mode: full payload capture, deep-freeze
+})
+</code></pre>
+<p>In production, debug is off by default (autodetected via <code>NODE_ENV</code>). You can toggle at runtime:</p>
+<pre><code class="language-typescript">broker.enableDebug()
+// reproduce the bug
+broker.disableDebug()
+</code></pre>
+
+<h2 id="capture">Capture the event</h2>
+<pre><code class="language-typescript">// Right after the buggy interaction
+const events = broker.getEventInspector().getSnapshot({ limit: 50 })
+console.table(events.map(e =&gt; ({
+  id: e.id,
+  topic: e.topic,
+  outcome: e.outcome,
+  duration: e.pipelineSteps.reduce((s, st) =&gt; s + st.durationMs, 0),
+})))
+</code></pre>
+
+<h2 id="pipeline">Inspect a single event&rsquo;s pipeline</h2>
+<pre><code class="language-typescript">const target = events.find(e =&gt; e.topic === 'weather.loaded')
+console.log('Steps:', target.pipelineSteps)
+// [
+//   { name: 'event.received', durationMs: 0.1 },
+//   { name: 'event.metadata.enriched', durationMs: 0.05 },
+//   { name: 'event.source.validated', durationMs: 0.3 },
+//   { name: 'event.source.mapped', durationMs: 0.4, mapping: { applied: ['città→location'] } },
+//   { name: 'event.canonical.validated', durationMs: 0.2 },
+//   { name: 'event.dedupe.checked', durationMs: 0.05, deduped: false },
+//   { name: 'route.resolved', durationMs: 0.1, routeId: 'weather-fetch' },
+//   { name: 'http.request', durationMs: 542, url: '/api/weather?location=Roma&amp;date=2026-05-10' },
+//   { name: 'http.response', durationMs: 4, status: 200 },
+//   { name: 'event.consumer.mapped', durationMs: 0.3 },
+//   { name: 'event.consumer.validated', durationMs: 0.2 },
+//   { name: 'event.delivered', durationMs: 0.1, subscribersReached: 2 },
+//   { name: 'event.observed', durationMs: 0 },
+// ]
+</code></pre>
+<p>You can immediately see: where time is spent, what mapping was applied, whether validation failed, which route was selected.</p>
+
+<h2 id="mapping">Diagnose mapping bugs</h2>
+<pre><code class="language-typescript">const mapping = broker.getMappingInspector().getSnapshot({ limit: 20 })
+const wrong = mapping.find(m =&gt; m.errors.length &gt; 0 || m.canonicalPayload.location === undefined)
+
+console.log('Local:', wrong.localPayload)
+console.log('Canonical:', wrong.canonicalPayload)
+console.log('Transforms applied:', wrong.transformsApplied)
+console.log('Errors:', wrong.errors)
+</code></pre>
+<p>Common findings:</p>
+<ul>
+<li>An <code>outputMap</code> mapping refers to a transform that wasn&rsquo;t registered</li>
+<li>A required canonical field is missing because the local field name doesn&rsquo;t match any alias</li>
+<li>A <code>parseDate</code> transform crashed on an unexpected input format</li>
+</ul>
+
+<h2 id="routes">Diagnose routing</h2>
+<pre><code class="language-typescript">const routes = broker.getRouteInspector().getSnapshot({ limit: 20 })
+console.table(routes.map(r =&gt; ({
+  routeId: r.routeId,
+  topic: r.topic,
+  outcome: r.outcome,
+  duration: r.durationMs,
+  retried: r.strategiesExecuted.filter(s =&gt; s.outcome === 'retry').length,
+})))
+</code></pre>
+
+<h2 id="metrics">Watch metrics in real-time</h2>
+<pre><code class="language-typescript">setInterval(() =&gt; {
+  const m = broker.getMetrics()
+  console.log('http duration p99:',
+    m.histograms['gluezero.gateway.http_duration_ms{route="weather-fetch"}']?.p99)
+  console.log('errors:',
+    m.counters['gluezero.gateway.http_errors_total{route="weather-fetch"}'])
+}, 5000)
+</code></pre>
+
+<h2 id="export">Export for analysis</h2>
+<pre><code class="language-typescript">// Capture full diagnostic snapshot (deep-cloned)
+const snapshot = broker.getDebugSnapshot()
+copy(JSON.stringify(snapshot, null, 2))   // Chrome devtools console — copies to clipboard
+</code></pre>
+<p>Send this to a colleague or paste into a bug report. It&rsquo;s self-contained — no live broker reference, safe to share.</p>
+recipes/auth-token-refresh.html">Auth + token refresh</a>
+  <a class="sidebar-link" href="<h1>Recipe: Debug a broken flow with the Inspector</h1>
+<p class="lead">When a value appears wrong in your UI, trace it back through the §28 pipeline. The Inspector shows the full lifecycle of each event.</p>
+
+<h2 id="enable">Enable debug</h2>
+<pre><code class="language-typescript">const broker = createGlueZero({
+  debug: true,                          // dev mode: full payload capture, deep-freeze
+})
+</code></pre>
+<p>In production, debug is off by default (autodetected via <code>NODE_ENV</code>). You can toggle at runtime:</p>
+<pre><code class="language-typescript">broker.enableDebug()
+// reproduce the bug
+broker.disableDebug()
+</code></pre>
+
+<h2 id="capture">Capture the event</h2>
+<pre><code class="language-typescript">// Right after the buggy interaction
+const events = broker.getEventInspector().getSnapshot({ limit: 50 })
+console.table(events.map(e =&gt; ({
+  id: e.id,
+  topic: e.topic,
+  outcome: e.outcome,
+  duration: e.pipelineSteps.reduce((s, st) =&gt; s + st.durationMs, 0),
+})))
+</code></pre>
+
+<h2 id="pipeline">Inspect a single event&rsquo;s pipeline</h2>
+<pre><code class="language-typescript">const target = events.find(e =&gt; e.topic === 'weather.loaded')
+console.log('Steps:', target.pipelineSteps)
+// [
+//   { name: 'event.received', durationMs: 0.1 },
+//   { name: 'event.metadata.enriched', durationMs: 0.05 },
+//   { name: 'event.source.validated', durationMs: 0.3 },
+//   { name: 'event.source.mapped', durationMs: 0.4, mapping: { applied: ['città→location'] } },
+//   { name: 'event.canonical.validated', durationMs: 0.2 },
+//   { name: 'event.dedupe.checked', durationMs: 0.05, deduped: false },
+//   { name: 'route.resolved', durationMs: 0.1, routeId: 'weather-fetch' },
+//   { name: 'http.request', durationMs: 542, url: '/api/weather?location=Roma&amp;date=2026-05-10' },
+//   { name: 'http.response', durationMs: 4, status: 200 },
+//   { name: 'event.consumer.mapped', durationMs: 0.3 },
+//   { name: 'event.consumer.validated', durationMs: 0.2 },
+//   { name: 'event.delivered', durationMs: 0.1, subscribersReached: 2 },
+//   { name: 'event.observed', durationMs: 0 },
+// ]
+</code></pre>
+<p>You can immediately see: where time is spent, what mapping was applied, whether validation failed, which route was selected.</p>
+
+<h2 id="mapping">Diagnose mapping bugs</h2>
+<pre><code class="language-typescript">const mapping = broker.getMappingInspector().getSnapshot({ limit: 20 })
+const wrong = mapping.find(m =&gt; m.errors.length &gt; 0 || m.canonicalPayload.location === undefined)
+
+console.log('Local:', wrong.localPayload)
+console.log('Canonical:', wrong.canonicalPayload)
+console.log('Transforms applied:', wrong.transformsApplied)
+console.log('Errors:', wrong.errors)
+</code></pre>
+<p>Common findings:</p>
+<ul>
+<li>An <code>outputMap</code> mapping refers to a transform that wasn&rsquo;t registered</li>
+<li>A required canonical field is missing because the local field name doesn&rsquo;t match any alias</li>
+<li>A <code>parseDate</code> transform crashed on an unexpected input format</li>
+</ul>
+
+<h2 id="routes">Diagnose routing</h2>
+<pre><code class="language-typescript">const routes = broker.getRouteInspector().getSnapshot({ limit: 20 })
+console.table(routes.map(r =&gt; ({
+  routeId: r.routeId,
+  topic: r.topic,
+  outcome: r.outcome,
+  duration: r.durationMs,
+  retried: r.strategiesExecuted.filter(s =&gt; s.outcome === 'retry').length,
+})))
+</code></pre>
+
+<h2 id="metrics">Watch metrics in real-time</h2>
+<pre><code class="language-typescript">setInterval(() =&gt; {
+  const m = broker.getMetrics()
+  console.log('http duration p99:',
+    m.histograms['gluezero.gateway.http_duration_ms{route="weather-fetch"}']?.p99)
+  console.log('errors:',
+    m.counters['gluezero.gateway.http_errors_total{route="weather-fetch"}'])
+}, 5000)
+</code></pre>
+
+<h2 id="export">Export for analysis</h2>
+<pre><code class="language-typescript">// Capture full diagnostic snapshot (deep-cloned)
+const snapshot = broker.getDebugSnapshot()
+copy(JSON.stringify(snapshot, null, 2))   // Chrome devtools console — copies to clipboard
+</code></pre>
+<p>Send this to a colleague or paste into a bug report. It&rsquo;s self-contained — no live broker reference, safe to share.</p>
+recipes/multi-tenant-cache.html">Multi-tenant cache</a>
+  <a class="sidebar-link" href="<h1>Recipe: Debug a broken flow with the Inspector</h1>
+<p class="lead">When a value appears wrong in your UI, trace it back through the §28 pipeline. The Inspector shows the full lifecycle of each event.</p>
+
+<h2 id="enable">Enable debug</h2>
+<pre><code class="language-typescript">const broker = createGlueZero({
+  debug: true,                          // dev mode: full payload capture, deep-freeze
+})
+</code></pre>
+<p>In production, debug is off by default (autodetected via <code>NODE_ENV</code>). You can toggle at runtime:</p>
+<pre><code class="language-typescript">broker.enableDebug()
+// reproduce the bug
+broker.disableDebug()
+</code></pre>
+
+<h2 id="capture">Capture the event</h2>
+<pre><code class="language-typescript">// Right after the buggy interaction
+const events = broker.getEventInspector().getSnapshot({ limit: 50 })
+console.table(events.map(e =&gt; ({
+  id: e.id,
+  topic: e.topic,
+  outcome: e.outcome,
+  duration: e.pipelineSteps.reduce((s, st) =&gt; s + st.durationMs, 0),
+})))
+</code></pre>
+
+<h2 id="pipeline">Inspect a single event&rsquo;s pipeline</h2>
+<pre><code class="language-typescript">const target = events.find(e =&gt; e.topic === 'weather.loaded')
+console.log('Steps:', target.pipelineSteps)
+// [
+//   { name: 'event.received', durationMs: 0.1 },
+//   { name: 'event.metadata.enriched', durationMs: 0.05 },
+//   { name: 'event.source.validated', durationMs: 0.3 },
+//   { name: 'event.source.mapped', durationMs: 0.4, mapping: { applied: ['città→location'] } },
+//   { name: 'event.canonical.validated', durationMs: 0.2 },
+//   { name: 'event.dedupe.checked', durationMs: 0.05, deduped: false },
+//   { name: 'route.resolved', durationMs: 0.1, routeId: 'weather-fetch' },
+//   { name: 'http.request', durationMs: 542, url: '/api/weather?location=Roma&amp;date=2026-05-10' },
+//   { name: 'http.response', durationMs: 4, status: 200 },
+//   { name: 'event.consumer.mapped', durationMs: 0.3 },
+//   { name: 'event.consumer.validated', durationMs: 0.2 },
+//   { name: 'event.delivered', durationMs: 0.1, subscribersReached: 2 },
+//   { name: 'event.observed', durationMs: 0 },
+// ]
+</code></pre>
+<p>You can immediately see: where time is spent, what mapping was applied, whether validation failed, which route was selected.</p>
+
+<h2 id="mapping">Diagnose mapping bugs</h2>
+<pre><code class="language-typescript">const mapping = broker.getMappingInspector().getSnapshot({ limit: 20 })
+const wrong = mapping.find(m =&gt; m.errors.length &gt; 0 || m.canonicalPayload.location === undefined)
+
+console.log('Local:', wrong.localPayload)
+console.log('Canonical:', wrong.canonicalPayload)
+console.log('Transforms applied:', wrong.transformsApplied)
+console.log('Errors:', wrong.errors)
+</code></pre>
+<p>Common findings:</p>
+<ul>
+<li>An <code>outputMap</code> mapping refers to a transform that wasn&rsquo;t registered</li>
+<li>A required canonical field is missing because the local field name doesn&rsquo;t match any alias</li>
+<li>A <code>parseDate</code> transform crashed on an unexpected input format</li>
+</ul>
+
+<h2 id="routes">Diagnose routing</h2>
+<pre><code class="language-typescript">const routes = broker.getRouteInspector().getSnapshot({ limit: 20 })
+console.table(routes.map(r =&gt; ({
+  routeId: r.routeId,
+  topic: r.topic,
+  outcome: r.outcome,
+  duration: r.durationMs,
+  retried: r.strategiesExecuted.filter(s =&gt; s.outcome === 'retry').length,
+})))
+</code></pre>
+
+<h2 id="metrics">Watch metrics in real-time</h2>
+<pre><code class="language-typescript">setInterval(() =&gt; {
+  const m = broker.getMetrics()
+  console.log('http duration p99:',
+    m.histograms['gluezero.gateway.http_duration_ms{route="weather-fetch"}']?.p99)
+  console.log('errors:',
+    m.counters['gluezero.gateway.http_errors_total{route="weather-fetch"}'])
+}, 5000)
+</code></pre>
+
+<h2 id="export">Export for analysis</h2>
+<pre><code class="language-typescript">// Capture full diagnostic snapshot (deep-cloned)
+const snapshot = broker.getDebugSnapshot()
+copy(JSON.stringify(snapshot, null, 2))   // Chrome devtools console — copies to clipboard
+</code></pre>
+<p>Send this to a colleague or paste into a bug report. It&rsquo;s self-contained — no live broker reference, safe to share.</p>
+recipes/reconnect-realtime.html">Reconnect SSE→WS</a>
+  <a class="sidebar-link" href="<h1>Recipe: Debug a broken flow with the Inspector</h1>
+<p class="lead">When a value appears wrong in your UI, trace it back through the §28 pipeline. The Inspector shows the full lifecycle of each event.</p>
+
+<h2 id="enable">Enable debug</h2>
+<pre><code class="language-typescript">const broker = createGlueZero({
+  debug: true,                          // dev mode: full payload capture, deep-freeze
+})
+</code></pre>
+<p>In production, debug is off by default (autodetected via <code>NODE_ENV</code>). You can toggle at runtime:</p>
+<pre><code class="language-typescript">broker.enableDebug()
+// reproduce the bug
+broker.disableDebug()
+</code></pre>
+
+<h2 id="capture">Capture the event</h2>
+<pre><code class="language-typescript">// Right after the buggy interaction
+const events = broker.getEventInspector().getSnapshot({ limit: 50 })
+console.table(events.map(e =&gt; ({
+  id: e.id,
+  topic: e.topic,
+  outcome: e.outcome,
+  duration: e.pipelineSteps.reduce((s, st) =&gt; s + st.durationMs, 0),
+})))
+</code></pre>
+
+<h2 id="pipeline">Inspect a single event&rsquo;s pipeline</h2>
+<pre><code class="language-typescript">const target = events.find(e =&gt; e.topic === 'weather.loaded')
+console.log('Steps:', target.pipelineSteps)
+// [
+//   { name: 'event.received', durationMs: 0.1 },
+//   { name: 'event.metadata.enriched', durationMs: 0.05 },
+//   { name: 'event.source.validated', durationMs: 0.3 },
+//   { name: 'event.source.mapped', durationMs: 0.4, mapping: { applied: ['città→location'] } },
+//   { name: 'event.canonical.validated', durationMs: 0.2 },
+//   { name: 'event.dedupe.checked', durationMs: 0.05, deduped: false },
+//   { name: 'route.resolved', durationMs: 0.1, routeId: 'weather-fetch' },
+//   { name: 'http.request', durationMs: 542, url: '/api/weather?location=Roma&amp;date=2026-05-10' },
+//   { name: 'http.response', durationMs: 4, status: 200 },
+//   { name: 'event.consumer.mapped', durationMs: 0.3 },
+//   { name: 'event.consumer.validated', durationMs: 0.2 },
+//   { name: 'event.delivered', durationMs: 0.1, subscribersReached: 2 },
+//   { name: 'event.observed', durationMs: 0 },
+// ]
+</code></pre>
+<p>You can immediately see: where time is spent, what mapping was applied, whether validation failed, which route was selected.</p>
+
+<h2 id="mapping">Diagnose mapping bugs</h2>
+<pre><code class="language-typescript">const mapping = broker.getMappingInspector().getSnapshot({ limit: 20 })
+const wrong = mapping.find(m =&gt; m.errors.length &gt; 0 || m.canonicalPayload.location === undefined)
+
+console.log('Local:', wrong.localPayload)
+console.log('Canonical:', wrong.canonicalPayload)
+console.log('Transforms applied:', wrong.transformsApplied)
+console.log('Errors:', wrong.errors)
+</code></pre>
+<p>Common findings:</p>
+<ul>
+<li>An <code>outputMap</code> mapping refers to a transform that wasn&rsquo;t registered</li>
+<li>A required canonical field is missing because the local field name doesn&rsquo;t match any alias</li>
+<li>A <code>parseDate</code> transform crashed on an unexpected input format</li>
+</ul>
+
+<h2 id="routes">Diagnose routing</h2>
+<pre><code class="language-typescript">const routes = broker.getRouteInspector().getSnapshot({ limit: 20 })
+console.table(routes.map(r =&gt; ({
+  routeId: r.routeId,
+  topic: r.topic,
+  outcome: r.outcome,
+  duration: r.durationMs,
+  retried: r.strategiesExecuted.filter(s =&gt; s.outcome === 'retry').length,
+})))
+</code></pre>
+
+<h2 id="metrics">Watch metrics in real-time</h2>
+<pre><code class="language-typescript">setInterval(() =&gt; {
+  const m = broker.getMetrics()
+  console.log('http duration p99:',
+    m.histograms['gluezero.gateway.http_duration_ms{route="weather-fetch"}']?.p99)
+  console.log('errors:',
+    m.counters['gluezero.gateway.http_errors_total{route="weather-fetch"}'])
+}, 5000)
+</code></pre>
+
+<h2 id="export">Export for analysis</h2>
+<pre><code class="language-typescript">// Capture full diagnostic snapshot (deep-cloned)
+const snapshot = broker.getDebugSnapshot()
+copy(JSON.stringify(snapshot, null, 2))   // Chrome devtools console — copies to clipboard
+</code></pre>
+<p>Send this to a colleague or paste into a bug report. It&rsquo;s self-contained — no live broker reference, safe to share.</p>
+recipes/worker-progress.html">Worker progress</a>
+  <a class="sidebar-link" href="<h1>Recipe: Debug a broken flow with the Inspector</h1>
+<p class="lead">When a value appears wrong in your UI, trace it back through the §28 pipeline. The Inspector shows the full lifecycle of each event.</p>
+
+<h2 id="enable">Enable debug</h2>
+<pre><code class="language-typescript">const broker = createGlueZero({
+  debug: true,                          // dev mode: full payload capture, deep-freeze
+})
+</code></pre>
+<p>In production, debug is off by default (autodetected via <code>NODE_ENV</code>). You can toggle at runtime:</p>
+<pre><code class="language-typescript">broker.enableDebug()
+// reproduce the bug
+broker.disableDebug()
+</code></pre>
+
+<h2 id="capture">Capture the event</h2>
+<pre><code class="language-typescript">// Right after the buggy interaction
+const events = broker.getEventInspector().getSnapshot({ limit: 50 })
+console.table(events.map(e =&gt; ({
+  id: e.id,
+  topic: e.topic,
+  outcome: e.outcome,
+  duration: e.pipelineSteps.reduce((s, st) =&gt; s + st.durationMs, 0),
+})))
+</code></pre>
+
+<h2 id="pipeline">Inspect a single event&rsquo;s pipeline</h2>
+<pre><code class="language-typescript">const target = events.find(e =&gt; e.topic === 'weather.loaded')
+console.log('Steps:', target.pipelineSteps)
+// [
+//   { name: 'event.received', durationMs: 0.1 },
+//   { name: 'event.metadata.enriched', durationMs: 0.05 },
+//   { name: 'event.source.validated', durationMs: 0.3 },
+//   { name: 'event.source.mapped', durationMs: 0.4, mapping: { applied: ['città→location'] } },
+//   { name: 'event.canonical.validated', durationMs: 0.2 },
+//   { name: 'event.dedupe.checked', durationMs: 0.05, deduped: false },
+//   { name: 'route.resolved', durationMs: 0.1, routeId: 'weather-fetch' },
+//   { name: 'http.request', durationMs: 542, url: '/api/weather?location=Roma&amp;date=2026-05-10' },
+//   { name: 'http.response', durationMs: 4, status: 200 },
+//   { name: 'event.consumer.mapped', durationMs: 0.3 },
+//   { name: 'event.consumer.validated', durationMs: 0.2 },
+//   { name: 'event.delivered', durationMs: 0.1, subscribersReached: 2 },
+//   { name: 'event.observed', durationMs: 0 },
+// ]
+</code></pre>
+<p>You can immediately see: where time is spent, what mapping was applied, whether validation failed, which route was selected.</p>
+
+<h2 id="mapping">Diagnose mapping bugs</h2>
+<pre><code class="language-typescript">const mapping = broker.getMappingInspector().getSnapshot({ limit: 20 })
+const wrong = mapping.find(m =&gt; m.errors.length &gt; 0 || m.canonicalPayload.location === undefined)
+
+console.log('Local:', wrong.localPayload)
+console.log('Canonical:', wrong.canonicalPayload)
+console.log('Transforms applied:', wrong.transformsApplied)
+console.log('Errors:', wrong.errors)
+</code></pre>
+<p>Common findings:</p>
+<ul>
+<li>An <code>outputMap</code> mapping refers to a transform that wasn&rsquo;t registered</li>
+<li>A required canonical field is missing because the local field name doesn&rsquo;t match any alias</li>
+<li>A <code>parseDate</code> transform crashed on an unexpected input format</li>
+</ul>
+
+<h2 id="routes">Diagnose routing</h2>
+<pre><code class="language-typescript">const routes = broker.getRouteInspector().getSnapshot({ limit: 20 })
+console.table(routes.map(r =&gt; ({
+  routeId: r.routeId,
+  topic: r.topic,
+  outcome: r.outcome,
+  duration: r.durationMs,
+  retried: r.strategiesExecuted.filter(s =&gt; s.outcome === 'retry').length,
+})))
+</code></pre>
+
+<h2 id="metrics">Watch metrics in real-time</h2>
+<pre><code class="language-typescript">setInterval(() =&gt; {
+  const m = broker.getMetrics()
+  console.log('http duration p99:',
+    m.histograms['gluezero.gateway.http_duration_ms{route="weather-fetch"}']?.p99)
+  console.log('errors:',
+    m.counters['gluezero.gateway.http_errors_total{route="weather-fetch"}'])
+}, 5000)
+</code></pre>
+
+<h2 id="export">Export for analysis</h2>
+<pre><code class="language-typescript">// Capture full diagnostic snapshot (deep-cloned)
+const snapshot = broker.getDebugSnapshot()
+copy(JSON.stringify(snapshot, null, 2))   // Chrome devtools console — copies to clipboard
+</code></pre>
+<p>Send this to a colleague or paste into a bug report. It&rsquo;s self-contained — no live broker reference, safe to share.</p>
+recipes/debug-flow.html">Debug with Inspector</a>
+  <a class="sidebar-link" href="<h1>Recipe: Debug a broken flow with the Inspector</h1>
+<p class="lead">When a value appears wrong in your UI, trace it back through the §28 pipeline. The Inspector shows the full lifecycle of each event.</p>
+
+<h2 id="enable">Enable debug</h2>
+<pre><code class="language-typescript">const broker = createGlueZero({
+  debug: true,                          // dev mode: full payload capture, deep-freeze
+})
+</code></pre>
+<p>In production, debug is off by default (autodetected via <code>NODE_ENV</code>). You can toggle at runtime:</p>
+<pre><code class="language-typescript">broker.enableDebug()
+// reproduce the bug
+broker.disableDebug()
+</code></pre>
+
+<h2 id="capture">Capture the event</h2>
+<pre><code class="language-typescript">// Right after the buggy interaction
+const events = broker.getEventInspector().getSnapshot({ limit: 50 })
+console.table(events.map(e =&gt; ({
+  id: e.id,
+  topic: e.topic,
+  outcome: e.outcome,
+  duration: e.pipelineSteps.reduce((s, st) =&gt; s + st.durationMs, 0),
+})))
+</code></pre>
+
+<h2 id="pipeline">Inspect a single event&rsquo;s pipeline</h2>
+<pre><code class="language-typescript">const target = events.find(e =&gt; e.topic === 'weather.loaded')
+console.log('Steps:', target.pipelineSteps)
+// [
+//   { name: 'event.received', durationMs: 0.1 },
+//   { name: 'event.metadata.enriched', durationMs: 0.05 },
+//   { name: 'event.source.validated', durationMs: 0.3 },
+//   { name: 'event.source.mapped', durationMs: 0.4, mapping: { applied: ['città→location'] } },
+//   { name: 'event.canonical.validated', durationMs: 0.2 },
+//   { name: 'event.dedupe.checked', durationMs: 0.05, deduped: false },
+//   { name: 'route.resolved', durationMs: 0.1, routeId: 'weather-fetch' },
+//   { name: 'http.request', durationMs: 542, url: '/api/weather?location=Roma&amp;date=2026-05-10' },
+//   { name: 'http.response', durationMs: 4, status: 200 },
+//   { name: 'event.consumer.mapped', durationMs: 0.3 },
+//   { name: 'event.consumer.validated', durationMs: 0.2 },
+//   { name: 'event.delivered', durationMs: 0.1, subscribersReached: 2 },
+//   { name: 'event.observed', durationMs: 0 },
+// ]
+</code></pre>
+<p>You can immediately see: where time is spent, what mapping was applied, whether validation failed, which route was selected.</p>
+
+<h2 id="mapping">Diagnose mapping bugs</h2>
+<pre><code class="language-typescript">const mapping = broker.getMappingInspector().getSnapshot({ limit: 20 })
+const wrong = mapping.find(m =&gt; m.errors.length &gt; 0 || m.canonicalPayload.location === undefined)
+
+console.log('Local:', wrong.localPayload)
+console.log('Canonical:', wrong.canonicalPayload)
+console.log('Transforms applied:', wrong.transformsApplied)
+console.log('Errors:', wrong.errors)
+</code></pre>
+<p>Common findings:</p>
+<ul>
+<li>An <code>outputMap</code> mapping refers to a transform that wasn&rsquo;t registered</li>
+<li>A required canonical field is missing because the local field name doesn&rsquo;t match any alias</li>
+<li>A <code>parseDate</code> transform crashed on an unexpected input format</li>
+</ul>
+
+<h2 id="routes">Diagnose routing</h2>
+<pre><code class="language-typescript">const routes = broker.getRouteInspector().getSnapshot({ limit: 20 })
+console.table(routes.map(r =&gt; ({
+  routeId: r.routeId,
+  topic: r.topic,
+  outcome: r.outcome,
+  duration: r.durationMs,
+  retried: r.strategiesExecuted.filter(s =&gt; s.outcome === 'retry').length,
+})))
+</code></pre>
+
+<h2 id="metrics">Watch metrics in real-time</h2>
+<pre><code class="language-typescript">setInterval(() =&gt; {
+  const m = broker.getMetrics()
+  console.log('http duration p99:',
+    m.histograms['gluezero.gateway.http_duration_ms{route="weather-fetch"}']?.p99)
+  console.log('errors:',
+    m.counters['gluezero.gateway.http_errors_total{route="weather-fetch"}'])
+}, 5000)
+</code></pre>
+
+<h2 id="export">Export for analysis</h2>
+<pre><code class="language-typescript">// Capture full diagnostic snapshot (deep-cloned)
+const snapshot = broker.getDebugSnapshot()
+copy(JSON.stringify(snapshot, null, 2))   // Chrome devtools console — copies to clipboard
+</code></pre>
+<p>Send this to a colleague or paste into a bug report. It&rsquo;s self-contained — no live broker reference, safe to share.</p>
+recipes/react-integration.html">React integration</a>
 </div>
 <div class="sidebar-section">
   <div class="sidebar-section-title">Reference</div>
-  <a class="sidebar-link" href="../decisions.html">Architectural decisions</a>
-  <a class="sidebar-link" href="../faq.html">FAQ</a>
+  <a class="sidebar-link" href="<h1>Recipe: Debug a broken flow with the Inspector</h1>
+<p class="lead">When a value appears wrong in your UI, trace it back through the §28 pipeline. The Inspector shows the full lifecycle of each event.</p>
+
+<h2 id="enable">Enable debug</h2>
+<pre><code class="language-typescript">const broker = createGlueZero({
+  debug: true,                          // dev mode: full payload capture, deep-freeze
+})
+</code></pre>
+<p>In production, debug is off by default (autodetected via <code>NODE_ENV</code>). You can toggle at runtime:</p>
+<pre><code class="language-typescript">broker.enableDebug()
+// reproduce the bug
+broker.disableDebug()
+</code></pre>
+
+<h2 id="capture">Capture the event</h2>
+<pre><code class="language-typescript">// Right after the buggy interaction
+const events = broker.getEventInspector().getSnapshot({ limit: 50 })
+console.table(events.map(e =&gt; ({
+  id: e.id,
+  topic: e.topic,
+  outcome: e.outcome,
+  duration: e.pipelineSteps.reduce((s, st) =&gt; s + st.durationMs, 0),
+})))
+</code></pre>
+
+<h2 id="pipeline">Inspect a single event&rsquo;s pipeline</h2>
+<pre><code class="language-typescript">const target = events.find(e =&gt; e.topic === 'weather.loaded')
+console.log('Steps:', target.pipelineSteps)
+// [
+//   { name: 'event.received', durationMs: 0.1 },
+//   { name: 'event.metadata.enriched', durationMs: 0.05 },
+//   { name: 'event.source.validated', durationMs: 0.3 },
+//   { name: 'event.source.mapped', durationMs: 0.4, mapping: { applied: ['città→location'] } },
+//   { name: 'event.canonical.validated', durationMs: 0.2 },
+//   { name: 'event.dedupe.checked', durationMs: 0.05, deduped: false },
+//   { name: 'route.resolved', durationMs: 0.1, routeId: 'weather-fetch' },
+//   { name: 'http.request', durationMs: 542, url: '/api/weather?location=Roma&amp;date=2026-05-10' },
+//   { name: 'http.response', durationMs: 4, status: 200 },
+//   { name: 'event.consumer.mapped', durationMs: 0.3 },
+//   { name: 'event.consumer.validated', durationMs: 0.2 },
+//   { name: 'event.delivered', durationMs: 0.1, subscribersReached: 2 },
+//   { name: 'event.observed', durationMs: 0 },
+// ]
+</code></pre>
+<p>You can immediately see: where time is spent, what mapping was applied, whether validation failed, which route was selected.</p>
+
+<h2 id="mapping">Diagnose mapping bugs</h2>
+<pre><code class="language-typescript">const mapping = broker.getMappingInspector().getSnapshot({ limit: 20 })
+const wrong = mapping.find(m =&gt; m.errors.length &gt; 0 || m.canonicalPayload.location === undefined)
+
+console.log('Local:', wrong.localPayload)
+console.log('Canonical:', wrong.canonicalPayload)
+console.log('Transforms applied:', wrong.transformsApplied)
+console.log('Errors:', wrong.errors)
+</code></pre>
+<p>Common findings:</p>
+<ul>
+<li>An <code>outputMap</code> mapping refers to a transform that wasn&rsquo;t registered</li>
+<li>A required canonical field is missing because the local field name doesn&rsquo;t match any alias</li>
+<li>A <code>parseDate</code> transform crashed on an unexpected input format</li>
+</ul>
+
+<h2 id="routes">Diagnose routing</h2>
+<pre><code class="language-typescript">const routes = broker.getRouteInspector().getSnapshot({ limit: 20 })
+console.table(routes.map(r =&gt; ({
+  routeId: r.routeId,
+  topic: r.topic,
+  outcome: r.outcome,
+  duration: r.durationMs,
+  retried: r.strategiesExecuted.filter(s =&gt; s.outcome === 'retry').length,
+})))
+</code></pre>
+
+<h2 id="metrics">Watch metrics in real-time</h2>
+<pre><code class="language-typescript">setInterval(() =&gt; {
+  const m = broker.getMetrics()
+  console.log('http duration p99:',
+    m.histograms['gluezero.gateway.http_duration_ms{route="weather-fetch"}']?.p99)
+  console.log('errors:',
+    m.counters['gluezero.gateway.http_errors_total{route="weather-fetch"}'])
+}, 5000)
+</code></pre>
+
+<h2 id="export">Export for analysis</h2>
+<pre><code class="language-typescript">// Capture full diagnostic snapshot (deep-cloned)
+const snapshot = broker.getDebugSnapshot()
+copy(JSON.stringify(snapshot, null, 2))   // Chrome devtools console — copies to clipboard
+</code></pre>
+<p>Send this to a colleague or paste into a bug report. It&rsquo;s self-contained — no live broker reference, safe to share.</p>
+decisions.html">Architectural decisions</a>
+  <a class="sidebar-link" href="<h1>Recipe: Debug a broken flow with the Inspector</h1>
+<p class="lead">When a value appears wrong in your UI, trace it back through the §28 pipeline. The Inspector shows the full lifecycle of each event.</p>
+
+<h2 id="enable">Enable debug</h2>
+<pre><code class="language-typescript">const broker = createGlueZero({
+  debug: true,                          // dev mode: full payload capture, deep-freeze
+})
+</code></pre>
+<p>In production, debug is off by default (autodetected via <code>NODE_ENV</code>). You can toggle at runtime:</p>
+<pre><code class="language-typescript">broker.enableDebug()
+// reproduce the bug
+broker.disableDebug()
+</code></pre>
+
+<h2 id="capture">Capture the event</h2>
+<pre><code class="language-typescript">// Right after the buggy interaction
+const events = broker.getEventInspector().getSnapshot({ limit: 50 })
+console.table(events.map(e =&gt; ({
+  id: e.id,
+  topic: e.topic,
+  outcome: e.outcome,
+  duration: e.pipelineSteps.reduce((s, st) =&gt; s + st.durationMs, 0),
+})))
+</code></pre>
+
+<h2 id="pipeline">Inspect a single event&rsquo;s pipeline</h2>
+<pre><code class="language-typescript">const target = events.find(e =&gt; e.topic === 'weather.loaded')
+console.log('Steps:', target.pipelineSteps)
+// [
+//   { name: 'event.received', durationMs: 0.1 },
+//   { name: 'event.metadata.enriched', durationMs: 0.05 },
+//   { name: 'event.source.validated', durationMs: 0.3 },
+//   { name: 'event.source.mapped', durationMs: 0.4, mapping: { applied: ['città→location'] } },
+//   { name: 'event.canonical.validated', durationMs: 0.2 },
+//   { name: 'event.dedupe.checked', durationMs: 0.05, deduped: false },
+//   { name: 'route.resolved', durationMs: 0.1, routeId: 'weather-fetch' },
+//   { name: 'http.request', durationMs: 542, url: '/api/weather?location=Roma&amp;date=2026-05-10' },
+//   { name: 'http.response', durationMs: 4, status: 200 },
+//   { name: 'event.consumer.mapped', durationMs: 0.3 },
+//   { name: 'event.consumer.validated', durationMs: 0.2 },
+//   { name: 'event.delivered', durationMs: 0.1, subscribersReached: 2 },
+//   { name: 'event.observed', durationMs: 0 },
+// ]
+</code></pre>
+<p>You can immediately see: where time is spent, what mapping was applied, whether validation failed, which route was selected.</p>
+
+<h2 id="mapping">Diagnose mapping bugs</h2>
+<pre><code class="language-typescript">const mapping = broker.getMappingInspector().getSnapshot({ limit: 20 })
+const wrong = mapping.find(m =&gt; m.errors.length &gt; 0 || m.canonicalPayload.location === undefined)
+
+console.log('Local:', wrong.localPayload)
+console.log('Canonical:', wrong.canonicalPayload)
+console.log('Transforms applied:', wrong.transformsApplied)
+console.log('Errors:', wrong.errors)
+</code></pre>
+<p>Common findings:</p>
+<ul>
+<li>An <code>outputMap</code> mapping refers to a transform that wasn&rsquo;t registered</li>
+<li>A required canonical field is missing because the local field name doesn&rsquo;t match any alias</li>
+<li>A <code>parseDate</code> transform crashed on an unexpected input format</li>
+</ul>
+
+<h2 id="routes">Diagnose routing</h2>
+<pre><code class="language-typescript">const routes = broker.getRouteInspector().getSnapshot({ limit: 20 })
+console.table(routes.map(r =&gt; ({
+  routeId: r.routeId,
+  topic: r.topic,
+  outcome: r.outcome,
+  duration: r.durationMs,
+  retried: r.strategiesExecuted.filter(s =&gt; s.outcome === 'retry').length,
+})))
+</code></pre>
+
+<h2 id="metrics">Watch metrics in real-time</h2>
+<pre><code class="language-typescript">setInterval(() =&gt; {
+  const m = broker.getMetrics()
+  console.log('http duration p99:',
+    m.histograms['gluezero.gateway.http_duration_ms{route="weather-fetch"}']?.p99)
+  console.log('errors:',
+    m.counters['gluezero.gateway.http_errors_total{route="weather-fetch"}'])
+}, 5000)
+</code></pre>
+
+<h2 id="export">Export for analysis</h2>
+<pre><code class="language-typescript">// Capture full diagnostic snapshot (deep-cloned)
+const snapshot = broker.getDebugSnapshot()
+copy(JSON.stringify(snapshot, null, 2))   // Chrome devtools console — copies to clipboard
+</code></pre>
+<p>Send this to a colleague or paste into a bug report. It&rsquo;s self-contained — no live broker reference, safe to share.</p>
+faq.html">FAQ</a>
 </div>
 </nav>
 <main class="content" role="main">
 <div class="content-inner">
-<nav class="breadcrumb" aria-label="Breadcrumb"><a href="../index.html">Docs</a> / Recipes</nav>
-<h1>Debug with Inspector</h1>
-<p class="lead">This page is under construction. Check back shortly for the full content.</p>
-<p><a href="../index.html">← Back to docs home</a></p>
+<nav class="breadcrumb" aria-label="Breadcrumb"><a href="<h1>Recipe: Debug a broken flow with the Inspector</h1>
+<p class="lead">When a value appears wrong in your UI, trace it back through the §28 pipeline. The Inspector shows the full lifecycle of each event.</p>
+
+<h2 id="enable">Enable debug</h2>
+<pre><code class="language-typescript">const broker = createGlueZero({
+  debug: true,                          // dev mode: full payload capture, deep-freeze
+})
+</code></pre>
+<p>In production, debug is off by default (autodetected via <code>NODE_ENV</code>). You can toggle at runtime:</p>
+<pre><code class="language-typescript">broker.enableDebug()
+// reproduce the bug
+broker.disableDebug()
+</code></pre>
+
+<h2 id="capture">Capture the event</h2>
+<pre><code class="language-typescript">// Right after the buggy interaction
+const events = broker.getEventInspector().getSnapshot({ limit: 50 })
+console.table(events.map(e =&gt; ({
+  id: e.id,
+  topic: e.topic,
+  outcome: e.outcome,
+  duration: e.pipelineSteps.reduce((s, st) =&gt; s + st.durationMs, 0),
+})))
+</code></pre>
+
+<h2 id="pipeline">Inspect a single event&rsquo;s pipeline</h2>
+<pre><code class="language-typescript">const target = events.find(e =&gt; e.topic === 'weather.loaded')
+console.log('Steps:', target.pipelineSteps)
+// [
+//   { name: 'event.received', durationMs: 0.1 },
+//   { name: 'event.metadata.enriched', durationMs: 0.05 },
+//   { name: 'event.source.validated', durationMs: 0.3 },
+//   { name: 'event.source.mapped', durationMs: 0.4, mapping: { applied: ['città→location'] } },
+//   { name: 'event.canonical.validated', durationMs: 0.2 },
+//   { name: 'event.dedupe.checked', durationMs: 0.05, deduped: false },
+//   { name: 'route.resolved', durationMs: 0.1, routeId: 'weather-fetch' },
+//   { name: 'http.request', durationMs: 542, url: '/api/weather?location=Roma&amp;date=2026-05-10' },
+//   { name: 'http.response', durationMs: 4, status: 200 },
+//   { name: 'event.consumer.mapped', durationMs: 0.3 },
+//   { name: 'event.consumer.validated', durationMs: 0.2 },
+//   { name: 'event.delivered', durationMs: 0.1, subscribersReached: 2 },
+//   { name: 'event.observed', durationMs: 0 },
+// ]
+</code></pre>
+<p>You can immediately see: where time is spent, what mapping was applied, whether validation failed, which route was selected.</p>
+
+<h2 id="mapping">Diagnose mapping bugs</h2>
+<pre><code class="language-typescript">const mapping = broker.getMappingInspector().getSnapshot({ limit: 20 })
+const wrong = mapping.find(m =&gt; m.errors.length &gt; 0 || m.canonicalPayload.location === undefined)
+
+console.log('Local:', wrong.localPayload)
+console.log('Canonical:', wrong.canonicalPayload)
+console.log('Transforms applied:', wrong.transformsApplied)
+console.log('Errors:', wrong.errors)
+</code></pre>
+<p>Common findings:</p>
+<ul>
+<li>An <code>outputMap</code> mapping refers to a transform that wasn&rsquo;t registered</li>
+<li>A required canonical field is missing because the local field name doesn&rsquo;t match any alias</li>
+<li>A <code>parseDate</code> transform crashed on an unexpected input format</li>
+</ul>
+
+<h2 id="routes">Diagnose routing</h2>
+<pre><code class="language-typescript">const routes = broker.getRouteInspector().getSnapshot({ limit: 20 })
+console.table(routes.map(r =&gt; ({
+  routeId: r.routeId,
+  topic: r.topic,
+  outcome: r.outcome,
+  duration: r.durationMs,
+  retried: r.strategiesExecuted.filter(s =&gt; s.outcome === 'retry').length,
+})))
+</code></pre>
+
+<h2 id="metrics">Watch metrics in real-time</h2>
+<pre><code class="language-typescript">setInterval(() =&gt; {
+  const m = broker.getMetrics()
+  console.log('http duration p99:',
+    m.histograms['gluezero.gateway.http_duration_ms{route="weather-fetch"}']?.p99)
+  console.log('errors:',
+    m.counters['gluezero.gateway.http_errors_total{route="weather-fetch"}'])
+}, 5000)
+</code></pre>
+
+<h2 id="export">Export for analysis</h2>
+<pre><code class="language-typescript">// Capture full diagnostic snapshot (deep-cloned)
+const snapshot = broker.getDebugSnapshot()
+copy(JSON.stringify(snapshot, null, 2))   // Chrome devtools console — copies to clipboard
+</code></pre>
+<p>Send this to a colleague or paste into a bug report. It&rsquo;s self-contained — no live broker reference, safe to share.</p>
+index.html">Docs</a> / Recipes</nav>
+../
 <footer class="footer">
   <div>GlueZero v1.0.0 — MIT License</div>
   <div>
@@ -87,6 +2844,95 @@
 </footer>
 </div>
 </main>
-<script src="../assets/docs.js"></script>
+<script src="<h1>Recipe: Debug a broken flow with the Inspector</h1>
+<p class="lead">When a value appears wrong in your UI, trace it back through the §28 pipeline. The Inspector shows the full lifecycle of each event.</p>
+
+<h2 id="enable">Enable debug</h2>
+<pre><code class="language-typescript">const broker = createGlueZero({
+  debug: true,                          // dev mode: full payload capture, deep-freeze
+})
+</code></pre>
+<p>In production, debug is off by default (autodetected via <code>NODE_ENV</code>). You can toggle at runtime:</p>
+<pre><code class="language-typescript">broker.enableDebug()
+// reproduce the bug
+broker.disableDebug()
+</code></pre>
+
+<h2 id="capture">Capture the event</h2>
+<pre><code class="language-typescript">// Right after the buggy interaction
+const events = broker.getEventInspector().getSnapshot({ limit: 50 })
+console.table(events.map(e =&gt; ({
+  id: e.id,
+  topic: e.topic,
+  outcome: e.outcome,
+  duration: e.pipelineSteps.reduce((s, st) =&gt; s + st.durationMs, 0),
+})))
+</code></pre>
+
+<h2 id="pipeline">Inspect a single event&rsquo;s pipeline</h2>
+<pre><code class="language-typescript">const target = events.find(e =&gt; e.topic === 'weather.loaded')
+console.log('Steps:', target.pipelineSteps)
+// [
+//   { name: 'event.received', durationMs: 0.1 },
+//   { name: 'event.metadata.enriched', durationMs: 0.05 },
+//   { name: 'event.source.validated', durationMs: 0.3 },
+//   { name: 'event.source.mapped', durationMs: 0.4, mapping: { applied: ['città→location'] } },
+//   { name: 'event.canonical.validated', durationMs: 0.2 },
+//   { name: 'event.dedupe.checked', durationMs: 0.05, deduped: false },
+//   { name: 'route.resolved', durationMs: 0.1, routeId: 'weather-fetch' },
+//   { name: 'http.request', durationMs: 542, url: '/api/weather?location=Roma&amp;date=2026-05-10' },
+//   { name: 'http.response', durationMs: 4, status: 200 },
+//   { name: 'event.consumer.mapped', durationMs: 0.3 },
+//   { name: 'event.consumer.validated', durationMs: 0.2 },
+//   { name: 'event.delivered', durationMs: 0.1, subscribersReached: 2 },
+//   { name: 'event.observed', durationMs: 0 },
+// ]
+</code></pre>
+<p>You can immediately see: where time is spent, what mapping was applied, whether validation failed, which route was selected.</p>
+
+<h2 id="mapping">Diagnose mapping bugs</h2>
+<pre><code class="language-typescript">const mapping = broker.getMappingInspector().getSnapshot({ limit: 20 })
+const wrong = mapping.find(m =&gt; m.errors.length &gt; 0 || m.canonicalPayload.location === undefined)
+
+console.log('Local:', wrong.localPayload)
+console.log('Canonical:', wrong.canonicalPayload)
+console.log('Transforms applied:', wrong.transformsApplied)
+console.log('Errors:', wrong.errors)
+</code></pre>
+<p>Common findings:</p>
+<ul>
+<li>An <code>outputMap</code> mapping refers to a transform that wasn&rsquo;t registered</li>
+<li>A required canonical field is missing because the local field name doesn&rsquo;t match any alias</li>
+<li>A <code>parseDate</code> transform crashed on an unexpected input format</li>
+</ul>
+
+<h2 id="routes">Diagnose routing</h2>
+<pre><code class="language-typescript">const routes = broker.getRouteInspector().getSnapshot({ limit: 20 })
+console.table(routes.map(r =&gt; ({
+  routeId: r.routeId,
+  topic: r.topic,
+  outcome: r.outcome,
+  duration: r.durationMs,
+  retried: r.strategiesExecuted.filter(s =&gt; s.outcome === 'retry').length,
+})))
+</code></pre>
+
+<h2 id="metrics">Watch metrics in real-time</h2>
+<pre><code class="language-typescript">setInterval(() =&gt; {
+  const m = broker.getMetrics()
+  console.log('http duration p99:',
+    m.histograms['gluezero.gateway.http_duration_ms{route="weather-fetch"}']?.p99)
+  console.log('errors:',
+    m.counters['gluezero.gateway.http_errors_total{route="weather-fetch"}'])
+}, 5000)
+</code></pre>
+
+<h2 id="export">Export for analysis</h2>
+<pre><code class="language-typescript">// Capture full diagnostic snapshot (deep-cloned)
+const snapshot = broker.getDebugSnapshot()
+copy(JSON.stringify(snapshot, null, 2))   // Chrome devtools console — copies to clipboard
+</code></pre>
+<p>Send this to a colleague or paste into a bug report. It&rsquo;s self-contained — no live broker reference, safe to share.</p>
+assets/docs.js"></script>
 </body>
 </html>

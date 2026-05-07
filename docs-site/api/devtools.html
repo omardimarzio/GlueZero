@@ -5,13 +5,289 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>@gluezero/devtools — GlueZero docs</title>
 <meta name="description" content="API reference — GlueZero v1.0.0 documentation">
-<link rel="stylesheet" href="../assets/styles.css">
+<link rel="stylesheet" href="<h1><code>@gluezero/devtools</code></h1>
+<p class="lead">Inspector + MetricsCollector + PauseController. The observability layer that exposes the event flow for debugging and measurement.</p>
+
+<h2 id="createDevtoolsBroker"><code>createDevtoolsBroker(config)</code></h2>
+<pre><code class="language-typescript">function createDevtoolsBroker(config?: DevtoolsBrokerConfig): DevtoolsBroker
+
+interface DevtoolsBrokerConfig extends CacheBrokerConfig {
+  devtools?: {
+    inspectorBufferSize?: number       // default: 500
+    metricsCardinalityCap?: number     // default: 100 per metric
+    metricsReservoirSize?: number      // default: 1024 samples per histogram
+    pauseQueueMaxSize?: number         // default: 1000
+  }
+}
+</code></pre>
+
+<h2 id="event-inspector"><code>broker.getEventInspector()</code></h2>
+<pre><code class="language-typescript">interface EventInspector {
+  getSnapshot(opts?: { limit?: number; topic?: string }): EventInspectorEntry[]
+  clear(): void
+}
+
+interface EventInspectorEntry {
+  id: string
+  topic: string
+  timestamp: number
+  source: { type: string; id?: string; name?: string }
+  payload: unknown                                 // deep-cloned
+  deliveryMode: 'async' | 'sync'
+  priority: 'critical' | 'high' | 'normal' | 'low'
+  pipelineSteps: PipelineStepRecord[]              // 14 steps for dev
+  outcome: 'delivered' | 'failed' | 'dedup-skipped' | 'paused-queued'
+  subscribersReached: number
+  errors?: BrokerError[]
+}
+</code></pre>
+
+<h2 id="metrics"><code>broker.getMetrics()</code> / <code>getMetricsDelta(prev)</code></h2>
+<pre><code class="language-typescript">interface MetricsSnapshot {
+  counters: Record&lt;string, number&gt;
+  gauges: Record&lt;string, number&gt;
+  histograms: Record&lt;string, HistogramSummary&gt;
+  capturedAt: number
+}
+
+interface HistogramSummary {
+  count: number
+  sum: number
+  p50: number
+  p90: number
+  p99: number
+  // optional p25 / p75 also present
+}
+
+function getMetrics(): MetricsSnapshot
+function getMetricsDelta(prev: MetricsSnapshot): MetricsSnapshot
+</code></pre>
+
+<h2 id="pause"><code>broker.pauseTopic / resumeTopic / flushQueue</code></h2>
+<pre><code class="language-typescript">function pauseTopic(topic: string): void                 // queue events instead of delivering
+function resumeTopic(topic: string): void                // flush queue to subscribers
+function flushQueue(topic?: string): { droppedCount: number; droppedEventIds: string[] }
+</code></pre>
+<p>Critical-priority events bypass pause (still delivered).</p>
+
+<h2 id="taps"><code>EventTap</code> + <code>MultiplexTap</code></h2>
+<pre><code class="language-typescript">interface EventTap {
+  onEventPublished?(event: BrokerEvent): void
+  onEventDelivered?(event: BrokerEvent, subscribersReached: number): void
+  onEventFailed?(event: BrokerEvent, error: BrokerError): void
+  onPipelineStep?(eventId: string, step: PipelineStepRecord): void
+  onMetricsTick?(metrics: MetricsSnapshot): void
+  onRouteResolved?(routeId: string, eventId: string, durationMs: number): void
+}
+
+function createMultiplexTap(taps: EventTap[]): EventTap   // chain with error isolation
+</code></pre>
+<p>Each tap runs in its own try/catch — a failing tap doesn&rsquo;t affect the others (decision <code>D-159</code>).</p>
+
+<h2 id="debug-mode"><code>enableDebug / disableDebug</code></h2>
+<pre><code class="language-typescript">function enableDebug(): void
+function disableDebug(): void
+function getDebugSnapshot(): DebugSnapshot
+
+interface DebugSnapshot {
+  recentEvents: EventInspectorEntry[]
+  recentRoutes: RouteEntry[]
+  currentMetrics: MetricsSnapshot
+  pausedTopics: string[]
+  enabled: boolean
+}
+</code></pre>
+assets/styles.css">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect width='24' height='24' rx='6' fill='%236366F1'/%3E%3Ctext x='12' y='17' text-anchor='middle' fill='white' font-family='sans-serif' font-weight='800' font-size='12'%3EGZ%3C/text%3E%3C/svg%3E">
 </head>
-<body data-base="../">
+<body data-base="<h1><code>@gluezero/devtools</code></h1>
+<p class="lead">Inspector + MetricsCollector + PauseController. The observability layer that exposes the event flow for debugging and measurement.</p>
+
+<h2 id="createDevtoolsBroker"><code>createDevtoolsBroker(config)</code></h2>
+<pre><code class="language-typescript">function createDevtoolsBroker(config?: DevtoolsBrokerConfig): DevtoolsBroker
+
+interface DevtoolsBrokerConfig extends CacheBrokerConfig {
+  devtools?: {
+    inspectorBufferSize?: number       // default: 500
+    metricsCardinalityCap?: number     // default: 100 per metric
+    metricsReservoirSize?: number      // default: 1024 samples per histogram
+    pauseQueueMaxSize?: number         // default: 1000
+  }
+}
+</code></pre>
+
+<h2 id="event-inspector"><code>broker.getEventInspector()</code></h2>
+<pre><code class="language-typescript">interface EventInspector {
+  getSnapshot(opts?: { limit?: number; topic?: string }): EventInspectorEntry[]
+  clear(): void
+}
+
+interface EventInspectorEntry {
+  id: string
+  topic: string
+  timestamp: number
+  source: { type: string; id?: string; name?: string }
+  payload: unknown                                 // deep-cloned
+  deliveryMode: 'async' | 'sync'
+  priority: 'critical' | 'high' | 'normal' | 'low'
+  pipelineSteps: PipelineStepRecord[]              // 14 steps for dev
+  outcome: 'delivered' | 'failed' | 'dedup-skipped' | 'paused-queued'
+  subscribersReached: number
+  errors?: BrokerError[]
+}
+</code></pre>
+
+<h2 id="metrics"><code>broker.getMetrics()</code> / <code>getMetricsDelta(prev)</code></h2>
+<pre><code class="language-typescript">interface MetricsSnapshot {
+  counters: Record&lt;string, number&gt;
+  gauges: Record&lt;string, number&gt;
+  histograms: Record&lt;string, HistogramSummary&gt;
+  capturedAt: number
+}
+
+interface HistogramSummary {
+  count: number
+  sum: number
+  p50: number
+  p90: number
+  p99: number
+  // optional p25 / p75 also present
+}
+
+function getMetrics(): MetricsSnapshot
+function getMetricsDelta(prev: MetricsSnapshot): MetricsSnapshot
+</code></pre>
+
+<h2 id="pause"><code>broker.pauseTopic / resumeTopic / flushQueue</code></h2>
+<pre><code class="language-typescript">function pauseTopic(topic: string): void                 // queue events instead of delivering
+function resumeTopic(topic: string): void                // flush queue to subscribers
+function flushQueue(topic?: string): { droppedCount: number; droppedEventIds: string[] }
+</code></pre>
+<p>Critical-priority events bypass pause (still delivered).</p>
+
+<h2 id="taps"><code>EventTap</code> + <code>MultiplexTap</code></h2>
+<pre><code class="language-typescript">interface EventTap {
+  onEventPublished?(event: BrokerEvent): void
+  onEventDelivered?(event: BrokerEvent, subscribersReached: number): void
+  onEventFailed?(event: BrokerEvent, error: BrokerError): void
+  onPipelineStep?(eventId: string, step: PipelineStepRecord): void
+  onMetricsTick?(metrics: MetricsSnapshot): void
+  onRouteResolved?(routeId: string, eventId: string, durationMs: number): void
+}
+
+function createMultiplexTap(taps: EventTap[]): EventTap   // chain with error isolation
+</code></pre>
+<p>Each tap runs in its own try/catch — a failing tap doesn&rsquo;t affect the others (decision <code>D-159</code>).</p>
+
+<h2 id="debug-mode"><code>enableDebug / disableDebug</code></h2>
+<pre><code class="language-typescript">function enableDebug(): void
+function disableDebug(): void
+function getDebugSnapshot(): DebugSnapshot
+
+interface DebugSnapshot {
+  recentEvents: EventInspectorEntry[]
+  recentRoutes: RouteEntry[]
+  currentMetrics: MetricsSnapshot
+  pausedTopics: string[]
+  enabled: boolean
+}
+</code></pre>
+">
 <header class="topbar" role="banner">
   <button class="menu-toggle" aria-label="Toggle navigation">☰</button>
-  <a class="topbar-brand" href="../index.html">
+  <a class="topbar-brand" href="<h1><code>@gluezero/devtools</code></h1>
+<p class="lead">Inspector + MetricsCollector + PauseController. The observability layer that exposes the event flow for debugging and measurement.</p>
+
+<h2 id="createDevtoolsBroker"><code>createDevtoolsBroker(config)</code></h2>
+<pre><code class="language-typescript">function createDevtoolsBroker(config?: DevtoolsBrokerConfig): DevtoolsBroker
+
+interface DevtoolsBrokerConfig extends CacheBrokerConfig {
+  devtools?: {
+    inspectorBufferSize?: number       // default: 500
+    metricsCardinalityCap?: number     // default: 100 per metric
+    metricsReservoirSize?: number      // default: 1024 samples per histogram
+    pauseQueueMaxSize?: number         // default: 1000
+  }
+}
+</code></pre>
+
+<h2 id="event-inspector"><code>broker.getEventInspector()</code></h2>
+<pre><code class="language-typescript">interface EventInspector {
+  getSnapshot(opts?: { limit?: number; topic?: string }): EventInspectorEntry[]
+  clear(): void
+}
+
+interface EventInspectorEntry {
+  id: string
+  topic: string
+  timestamp: number
+  source: { type: string; id?: string; name?: string }
+  payload: unknown                                 // deep-cloned
+  deliveryMode: 'async' | 'sync'
+  priority: 'critical' | 'high' | 'normal' | 'low'
+  pipelineSteps: PipelineStepRecord[]              // 14 steps for dev
+  outcome: 'delivered' | 'failed' | 'dedup-skipped' | 'paused-queued'
+  subscribersReached: number
+  errors?: BrokerError[]
+}
+</code></pre>
+
+<h2 id="metrics"><code>broker.getMetrics()</code> / <code>getMetricsDelta(prev)</code></h2>
+<pre><code class="language-typescript">interface MetricsSnapshot {
+  counters: Record&lt;string, number&gt;
+  gauges: Record&lt;string, number&gt;
+  histograms: Record&lt;string, HistogramSummary&gt;
+  capturedAt: number
+}
+
+interface HistogramSummary {
+  count: number
+  sum: number
+  p50: number
+  p90: number
+  p99: number
+  // optional p25 / p75 also present
+}
+
+function getMetrics(): MetricsSnapshot
+function getMetricsDelta(prev: MetricsSnapshot): MetricsSnapshot
+</code></pre>
+
+<h2 id="pause"><code>broker.pauseTopic / resumeTopic / flushQueue</code></h2>
+<pre><code class="language-typescript">function pauseTopic(topic: string): void                 // queue events instead of delivering
+function resumeTopic(topic: string): void                // flush queue to subscribers
+function flushQueue(topic?: string): { droppedCount: number; droppedEventIds: string[] }
+</code></pre>
+<p>Critical-priority events bypass pause (still delivered).</p>
+
+<h2 id="taps"><code>EventTap</code> + <code>MultiplexTap</code></h2>
+<pre><code class="language-typescript">interface EventTap {
+  onEventPublished?(event: BrokerEvent): void
+  onEventDelivered?(event: BrokerEvent, subscribersReached: number): void
+  onEventFailed?(event: BrokerEvent, error: BrokerError): void
+  onPipelineStep?(eventId: string, step: PipelineStepRecord): void
+  onMetricsTick?(metrics: MetricsSnapshot): void
+  onRouteResolved?(routeId: string, eventId: string, durationMs: number): void
+}
+
+function createMultiplexTap(taps: EventTap[]): EventTap   // chain with error isolation
+</code></pre>
+<p>Each tap runs in its own try/catch — a failing tap doesn&rsquo;t affect the others (decision <code>D-159</code>).</p>
+
+<h2 id="debug-mode"><code>enableDebug / disableDebug</code></h2>
+<pre><code class="language-typescript">function enableDebug(): void
+function disableDebug(): void
+function getDebugSnapshot(): DebugSnapshot
+
+interface DebugSnapshot {
+  recentEvents: EventInspectorEntry[]
+  recentRoutes: RouteEntry[]
+  currentMetrics: MetricsSnapshot
+  pausedTopics: string[]
+  enabled: boolean
+}
+</code></pre>
+index.html">
     <span class="topbar-brand-mark">GZ</span>
     <span>GlueZero</span>
     <span class="topbar-version">v1.0.0</span>
@@ -30,53 +306,2627 @@
 <nav class="sidebar" aria-label="Documentation navigation">
 <div class="sidebar-section">
   <div class="sidebar-section-title">Get started</div>
-  <a class="sidebar-link" href="../index.html">Welcome</a>
-  <a class="sidebar-link" href="../getting-started.html">Getting started</a>
+  <a class="sidebar-link" href="<h1><code>@gluezero/devtools</code></h1>
+<p class="lead">Inspector + MetricsCollector + PauseController. The observability layer that exposes the event flow for debugging and measurement.</p>
+
+<h2 id="createDevtoolsBroker"><code>createDevtoolsBroker(config)</code></h2>
+<pre><code class="language-typescript">function createDevtoolsBroker(config?: DevtoolsBrokerConfig): DevtoolsBroker
+
+interface DevtoolsBrokerConfig extends CacheBrokerConfig {
+  devtools?: {
+    inspectorBufferSize?: number       // default: 500
+    metricsCardinalityCap?: number     // default: 100 per metric
+    metricsReservoirSize?: number      // default: 1024 samples per histogram
+    pauseQueueMaxSize?: number         // default: 1000
+  }
+}
+</code></pre>
+
+<h2 id="event-inspector"><code>broker.getEventInspector()</code></h2>
+<pre><code class="language-typescript">interface EventInspector {
+  getSnapshot(opts?: { limit?: number; topic?: string }): EventInspectorEntry[]
+  clear(): void
+}
+
+interface EventInspectorEntry {
+  id: string
+  topic: string
+  timestamp: number
+  source: { type: string; id?: string; name?: string }
+  payload: unknown                                 // deep-cloned
+  deliveryMode: 'async' | 'sync'
+  priority: 'critical' | 'high' | 'normal' | 'low'
+  pipelineSteps: PipelineStepRecord[]              // 14 steps for dev
+  outcome: 'delivered' | 'failed' | 'dedup-skipped' | 'paused-queued'
+  subscribersReached: number
+  errors?: BrokerError[]
+}
+</code></pre>
+
+<h2 id="metrics"><code>broker.getMetrics()</code> / <code>getMetricsDelta(prev)</code></h2>
+<pre><code class="language-typescript">interface MetricsSnapshot {
+  counters: Record&lt;string, number&gt;
+  gauges: Record&lt;string, number&gt;
+  histograms: Record&lt;string, HistogramSummary&gt;
+  capturedAt: number
+}
+
+interface HistogramSummary {
+  count: number
+  sum: number
+  p50: number
+  p90: number
+  p99: number
+  // optional p25 / p75 also present
+}
+
+function getMetrics(): MetricsSnapshot
+function getMetricsDelta(prev: MetricsSnapshot): MetricsSnapshot
+</code></pre>
+
+<h2 id="pause"><code>broker.pauseTopic / resumeTopic / flushQueue</code></h2>
+<pre><code class="language-typescript">function pauseTopic(topic: string): void                 // queue events instead of delivering
+function resumeTopic(topic: string): void                // flush queue to subscribers
+function flushQueue(topic?: string): { droppedCount: number; droppedEventIds: string[] }
+</code></pre>
+<p>Critical-priority events bypass pause (still delivered).</p>
+
+<h2 id="taps"><code>EventTap</code> + <code>MultiplexTap</code></h2>
+<pre><code class="language-typescript">interface EventTap {
+  onEventPublished?(event: BrokerEvent): void
+  onEventDelivered?(event: BrokerEvent, subscribersReached: number): void
+  onEventFailed?(event: BrokerEvent, error: BrokerError): void
+  onPipelineStep?(eventId: string, step: PipelineStepRecord): void
+  onMetricsTick?(metrics: MetricsSnapshot): void
+  onRouteResolved?(routeId: string, eventId: string, durationMs: number): void
+}
+
+function createMultiplexTap(taps: EventTap[]): EventTap   // chain with error isolation
+</code></pre>
+<p>Each tap runs in its own try/catch — a failing tap doesn&rsquo;t affect the others (decision <code>D-159</code>).</p>
+
+<h2 id="debug-mode"><code>enableDebug / disableDebug</code></h2>
+<pre><code class="language-typescript">function enableDebug(): void
+function disableDebug(): void
+function getDebugSnapshot(): DebugSnapshot
+
+interface DebugSnapshot {
+  recentEvents: EventInspectorEntry[]
+  recentRoutes: RouteEntry[]
+  currentMetrics: MetricsSnapshot
+  pausedTopics: string[]
+  enabled: boolean
+}
+</code></pre>
+index.html">Welcome</a>
+  <a class="sidebar-link" href="<h1><code>@gluezero/devtools</code></h1>
+<p class="lead">Inspector + MetricsCollector + PauseController. The observability layer that exposes the event flow for debugging and measurement.</p>
+
+<h2 id="createDevtoolsBroker"><code>createDevtoolsBroker(config)</code></h2>
+<pre><code class="language-typescript">function createDevtoolsBroker(config?: DevtoolsBrokerConfig): DevtoolsBroker
+
+interface DevtoolsBrokerConfig extends CacheBrokerConfig {
+  devtools?: {
+    inspectorBufferSize?: number       // default: 500
+    metricsCardinalityCap?: number     // default: 100 per metric
+    metricsReservoirSize?: number      // default: 1024 samples per histogram
+    pauseQueueMaxSize?: number         // default: 1000
+  }
+}
+</code></pre>
+
+<h2 id="event-inspector"><code>broker.getEventInspector()</code></h2>
+<pre><code class="language-typescript">interface EventInspector {
+  getSnapshot(opts?: { limit?: number; topic?: string }): EventInspectorEntry[]
+  clear(): void
+}
+
+interface EventInspectorEntry {
+  id: string
+  topic: string
+  timestamp: number
+  source: { type: string; id?: string; name?: string }
+  payload: unknown                                 // deep-cloned
+  deliveryMode: 'async' | 'sync'
+  priority: 'critical' | 'high' | 'normal' | 'low'
+  pipelineSteps: PipelineStepRecord[]              // 14 steps for dev
+  outcome: 'delivered' | 'failed' | 'dedup-skipped' | 'paused-queued'
+  subscribersReached: number
+  errors?: BrokerError[]
+}
+</code></pre>
+
+<h2 id="metrics"><code>broker.getMetrics()</code> / <code>getMetricsDelta(prev)</code></h2>
+<pre><code class="language-typescript">interface MetricsSnapshot {
+  counters: Record&lt;string, number&gt;
+  gauges: Record&lt;string, number&gt;
+  histograms: Record&lt;string, HistogramSummary&gt;
+  capturedAt: number
+}
+
+interface HistogramSummary {
+  count: number
+  sum: number
+  p50: number
+  p90: number
+  p99: number
+  // optional p25 / p75 also present
+}
+
+function getMetrics(): MetricsSnapshot
+function getMetricsDelta(prev: MetricsSnapshot): MetricsSnapshot
+</code></pre>
+
+<h2 id="pause"><code>broker.pauseTopic / resumeTopic / flushQueue</code></h2>
+<pre><code class="language-typescript">function pauseTopic(topic: string): void                 // queue events instead of delivering
+function resumeTopic(topic: string): void                // flush queue to subscribers
+function flushQueue(topic?: string): { droppedCount: number; droppedEventIds: string[] }
+</code></pre>
+<p>Critical-priority events bypass pause (still delivered).</p>
+
+<h2 id="taps"><code>EventTap</code> + <code>MultiplexTap</code></h2>
+<pre><code class="language-typescript">interface EventTap {
+  onEventPublished?(event: BrokerEvent): void
+  onEventDelivered?(event: BrokerEvent, subscribersReached: number): void
+  onEventFailed?(event: BrokerEvent, error: BrokerError): void
+  onPipelineStep?(eventId: string, step: PipelineStepRecord): void
+  onMetricsTick?(metrics: MetricsSnapshot): void
+  onRouteResolved?(routeId: string, eventId: string, durationMs: number): void
+}
+
+function createMultiplexTap(taps: EventTap[]): EventTap   // chain with error isolation
+</code></pre>
+<p>Each tap runs in its own try/catch — a failing tap doesn&rsquo;t affect the others (decision <code>D-159</code>).</p>
+
+<h2 id="debug-mode"><code>enableDebug / disableDebug</code></h2>
+<pre><code class="language-typescript">function enableDebug(): void
+function disableDebug(): void
+function getDebugSnapshot(): DebugSnapshot
+
+interface DebugSnapshot {
+  recentEvents: EventInspectorEntry[]
+  recentRoutes: RouteEntry[]
+  currentMetrics: MetricsSnapshot
+  pausedTopics: string[]
+  enabled: boolean
+}
+</code></pre>
+getting-started.html">Getting started</a>
 </div>
 <div class="sidebar-section">
   <div class="sidebar-section-title">Concepts</div>
-  <a class="sidebar-link" href="../concepts/overview.html">Overview</a>
-  <a class="sidebar-link" href="../concepts/broker.html">Broker</a>
-  <a class="sidebar-link" href="../concepts/canonical-model.html">Canonical model</a>
-  <a class="sidebar-link" href="../concepts/routing.html">Routing</a>
-  <a class="sidebar-link" href="../concepts/gateway.html">HTTP gateway</a>
-  <a class="sidebar-link" href="../concepts/realtime.html">Realtime</a>
-  <a class="sidebar-link" href="../concepts/worker.html">Worker</a>
-  <a class="sidebar-link" href="../concepts/cache.html">Cache</a>
-  <a class="sidebar-link" href="../concepts/devtools.html">Devtools</a>
+  <a class="sidebar-link" href="<h1><code>@gluezero/devtools</code></h1>
+<p class="lead">Inspector + MetricsCollector + PauseController. The observability layer that exposes the event flow for debugging and measurement.</p>
+
+<h2 id="createDevtoolsBroker"><code>createDevtoolsBroker(config)</code></h2>
+<pre><code class="language-typescript">function createDevtoolsBroker(config?: DevtoolsBrokerConfig): DevtoolsBroker
+
+interface DevtoolsBrokerConfig extends CacheBrokerConfig {
+  devtools?: {
+    inspectorBufferSize?: number       // default: 500
+    metricsCardinalityCap?: number     // default: 100 per metric
+    metricsReservoirSize?: number      // default: 1024 samples per histogram
+    pauseQueueMaxSize?: number         // default: 1000
+  }
+}
+</code></pre>
+
+<h2 id="event-inspector"><code>broker.getEventInspector()</code></h2>
+<pre><code class="language-typescript">interface EventInspector {
+  getSnapshot(opts?: { limit?: number; topic?: string }): EventInspectorEntry[]
+  clear(): void
+}
+
+interface EventInspectorEntry {
+  id: string
+  topic: string
+  timestamp: number
+  source: { type: string; id?: string; name?: string }
+  payload: unknown                                 // deep-cloned
+  deliveryMode: 'async' | 'sync'
+  priority: 'critical' | 'high' | 'normal' | 'low'
+  pipelineSteps: PipelineStepRecord[]              // 14 steps for dev
+  outcome: 'delivered' | 'failed' | 'dedup-skipped' | 'paused-queued'
+  subscribersReached: number
+  errors?: BrokerError[]
+}
+</code></pre>
+
+<h2 id="metrics"><code>broker.getMetrics()</code> / <code>getMetricsDelta(prev)</code></h2>
+<pre><code class="language-typescript">interface MetricsSnapshot {
+  counters: Record&lt;string, number&gt;
+  gauges: Record&lt;string, number&gt;
+  histograms: Record&lt;string, HistogramSummary&gt;
+  capturedAt: number
+}
+
+interface HistogramSummary {
+  count: number
+  sum: number
+  p50: number
+  p90: number
+  p99: number
+  // optional p25 / p75 also present
+}
+
+function getMetrics(): MetricsSnapshot
+function getMetricsDelta(prev: MetricsSnapshot): MetricsSnapshot
+</code></pre>
+
+<h2 id="pause"><code>broker.pauseTopic / resumeTopic / flushQueue</code></h2>
+<pre><code class="language-typescript">function pauseTopic(topic: string): void                 // queue events instead of delivering
+function resumeTopic(topic: string): void                // flush queue to subscribers
+function flushQueue(topic?: string): { droppedCount: number; droppedEventIds: string[] }
+</code></pre>
+<p>Critical-priority events bypass pause (still delivered).</p>
+
+<h2 id="taps"><code>EventTap</code> + <code>MultiplexTap</code></h2>
+<pre><code class="language-typescript">interface EventTap {
+  onEventPublished?(event: BrokerEvent): void
+  onEventDelivered?(event: BrokerEvent, subscribersReached: number): void
+  onEventFailed?(event: BrokerEvent, error: BrokerError): void
+  onPipelineStep?(eventId: string, step: PipelineStepRecord): void
+  onMetricsTick?(metrics: MetricsSnapshot): void
+  onRouteResolved?(routeId: string, eventId: string, durationMs: number): void
+}
+
+function createMultiplexTap(taps: EventTap[]): EventTap   // chain with error isolation
+</code></pre>
+<p>Each tap runs in its own try/catch — a failing tap doesn&rsquo;t affect the others (decision <code>D-159</code>).</p>
+
+<h2 id="debug-mode"><code>enableDebug / disableDebug</code></h2>
+<pre><code class="language-typescript">function enableDebug(): void
+function disableDebug(): void
+function getDebugSnapshot(): DebugSnapshot
+
+interface DebugSnapshot {
+  recentEvents: EventInspectorEntry[]
+  recentRoutes: RouteEntry[]
+  currentMetrics: MetricsSnapshot
+  pausedTopics: string[]
+  enabled: boolean
+}
+</code></pre>
+concepts/overview.html">Overview</a>
+  <a class="sidebar-link" href="<h1><code>@gluezero/devtools</code></h1>
+<p class="lead">Inspector + MetricsCollector + PauseController. The observability layer that exposes the event flow for debugging and measurement.</p>
+
+<h2 id="createDevtoolsBroker"><code>createDevtoolsBroker(config)</code></h2>
+<pre><code class="language-typescript">function createDevtoolsBroker(config?: DevtoolsBrokerConfig): DevtoolsBroker
+
+interface DevtoolsBrokerConfig extends CacheBrokerConfig {
+  devtools?: {
+    inspectorBufferSize?: number       // default: 500
+    metricsCardinalityCap?: number     // default: 100 per metric
+    metricsReservoirSize?: number      // default: 1024 samples per histogram
+    pauseQueueMaxSize?: number         // default: 1000
+  }
+}
+</code></pre>
+
+<h2 id="event-inspector"><code>broker.getEventInspector()</code></h2>
+<pre><code class="language-typescript">interface EventInspector {
+  getSnapshot(opts?: { limit?: number; topic?: string }): EventInspectorEntry[]
+  clear(): void
+}
+
+interface EventInspectorEntry {
+  id: string
+  topic: string
+  timestamp: number
+  source: { type: string; id?: string; name?: string }
+  payload: unknown                                 // deep-cloned
+  deliveryMode: 'async' | 'sync'
+  priority: 'critical' | 'high' | 'normal' | 'low'
+  pipelineSteps: PipelineStepRecord[]              // 14 steps for dev
+  outcome: 'delivered' | 'failed' | 'dedup-skipped' | 'paused-queued'
+  subscribersReached: number
+  errors?: BrokerError[]
+}
+</code></pre>
+
+<h2 id="metrics"><code>broker.getMetrics()</code> / <code>getMetricsDelta(prev)</code></h2>
+<pre><code class="language-typescript">interface MetricsSnapshot {
+  counters: Record&lt;string, number&gt;
+  gauges: Record&lt;string, number&gt;
+  histograms: Record&lt;string, HistogramSummary&gt;
+  capturedAt: number
+}
+
+interface HistogramSummary {
+  count: number
+  sum: number
+  p50: number
+  p90: number
+  p99: number
+  // optional p25 / p75 also present
+}
+
+function getMetrics(): MetricsSnapshot
+function getMetricsDelta(prev: MetricsSnapshot): MetricsSnapshot
+</code></pre>
+
+<h2 id="pause"><code>broker.pauseTopic / resumeTopic / flushQueue</code></h2>
+<pre><code class="language-typescript">function pauseTopic(topic: string): void                 // queue events instead of delivering
+function resumeTopic(topic: string): void                // flush queue to subscribers
+function flushQueue(topic?: string): { droppedCount: number; droppedEventIds: string[] }
+</code></pre>
+<p>Critical-priority events bypass pause (still delivered).</p>
+
+<h2 id="taps"><code>EventTap</code> + <code>MultiplexTap</code></h2>
+<pre><code class="language-typescript">interface EventTap {
+  onEventPublished?(event: BrokerEvent): void
+  onEventDelivered?(event: BrokerEvent, subscribersReached: number): void
+  onEventFailed?(event: BrokerEvent, error: BrokerError): void
+  onPipelineStep?(eventId: string, step: PipelineStepRecord): void
+  onMetricsTick?(metrics: MetricsSnapshot): void
+  onRouteResolved?(routeId: string, eventId: string, durationMs: number): void
+}
+
+function createMultiplexTap(taps: EventTap[]): EventTap   // chain with error isolation
+</code></pre>
+<p>Each tap runs in its own try/catch — a failing tap doesn&rsquo;t affect the others (decision <code>D-159</code>).</p>
+
+<h2 id="debug-mode"><code>enableDebug / disableDebug</code></h2>
+<pre><code class="language-typescript">function enableDebug(): void
+function disableDebug(): void
+function getDebugSnapshot(): DebugSnapshot
+
+interface DebugSnapshot {
+  recentEvents: EventInspectorEntry[]
+  recentRoutes: RouteEntry[]
+  currentMetrics: MetricsSnapshot
+  pausedTopics: string[]
+  enabled: boolean
+}
+</code></pre>
+concepts/broker.html">Broker</a>
+  <a class="sidebar-link" href="<h1><code>@gluezero/devtools</code></h1>
+<p class="lead">Inspector + MetricsCollector + PauseController. The observability layer that exposes the event flow for debugging and measurement.</p>
+
+<h2 id="createDevtoolsBroker"><code>createDevtoolsBroker(config)</code></h2>
+<pre><code class="language-typescript">function createDevtoolsBroker(config?: DevtoolsBrokerConfig): DevtoolsBroker
+
+interface DevtoolsBrokerConfig extends CacheBrokerConfig {
+  devtools?: {
+    inspectorBufferSize?: number       // default: 500
+    metricsCardinalityCap?: number     // default: 100 per metric
+    metricsReservoirSize?: number      // default: 1024 samples per histogram
+    pauseQueueMaxSize?: number         // default: 1000
+  }
+}
+</code></pre>
+
+<h2 id="event-inspector"><code>broker.getEventInspector()</code></h2>
+<pre><code class="language-typescript">interface EventInspector {
+  getSnapshot(opts?: { limit?: number; topic?: string }): EventInspectorEntry[]
+  clear(): void
+}
+
+interface EventInspectorEntry {
+  id: string
+  topic: string
+  timestamp: number
+  source: { type: string; id?: string; name?: string }
+  payload: unknown                                 // deep-cloned
+  deliveryMode: 'async' | 'sync'
+  priority: 'critical' | 'high' | 'normal' | 'low'
+  pipelineSteps: PipelineStepRecord[]              // 14 steps for dev
+  outcome: 'delivered' | 'failed' | 'dedup-skipped' | 'paused-queued'
+  subscribersReached: number
+  errors?: BrokerError[]
+}
+</code></pre>
+
+<h2 id="metrics"><code>broker.getMetrics()</code> / <code>getMetricsDelta(prev)</code></h2>
+<pre><code class="language-typescript">interface MetricsSnapshot {
+  counters: Record&lt;string, number&gt;
+  gauges: Record&lt;string, number&gt;
+  histograms: Record&lt;string, HistogramSummary&gt;
+  capturedAt: number
+}
+
+interface HistogramSummary {
+  count: number
+  sum: number
+  p50: number
+  p90: number
+  p99: number
+  // optional p25 / p75 also present
+}
+
+function getMetrics(): MetricsSnapshot
+function getMetricsDelta(prev: MetricsSnapshot): MetricsSnapshot
+</code></pre>
+
+<h2 id="pause"><code>broker.pauseTopic / resumeTopic / flushQueue</code></h2>
+<pre><code class="language-typescript">function pauseTopic(topic: string): void                 // queue events instead of delivering
+function resumeTopic(topic: string): void                // flush queue to subscribers
+function flushQueue(topic?: string): { droppedCount: number; droppedEventIds: string[] }
+</code></pre>
+<p>Critical-priority events bypass pause (still delivered).</p>
+
+<h2 id="taps"><code>EventTap</code> + <code>MultiplexTap</code></h2>
+<pre><code class="language-typescript">interface EventTap {
+  onEventPublished?(event: BrokerEvent): void
+  onEventDelivered?(event: BrokerEvent, subscribersReached: number): void
+  onEventFailed?(event: BrokerEvent, error: BrokerError): void
+  onPipelineStep?(eventId: string, step: PipelineStepRecord): void
+  onMetricsTick?(metrics: MetricsSnapshot): void
+  onRouteResolved?(routeId: string, eventId: string, durationMs: number): void
+}
+
+function createMultiplexTap(taps: EventTap[]): EventTap   // chain with error isolation
+</code></pre>
+<p>Each tap runs in its own try/catch — a failing tap doesn&rsquo;t affect the others (decision <code>D-159</code>).</p>
+
+<h2 id="debug-mode"><code>enableDebug / disableDebug</code></h2>
+<pre><code class="language-typescript">function enableDebug(): void
+function disableDebug(): void
+function getDebugSnapshot(): DebugSnapshot
+
+interface DebugSnapshot {
+  recentEvents: EventInspectorEntry[]
+  recentRoutes: RouteEntry[]
+  currentMetrics: MetricsSnapshot
+  pausedTopics: string[]
+  enabled: boolean
+}
+</code></pre>
+concepts/canonical-model.html">Canonical model</a>
+  <a class="sidebar-link" href="<h1><code>@gluezero/devtools</code></h1>
+<p class="lead">Inspector + MetricsCollector + PauseController. The observability layer that exposes the event flow for debugging and measurement.</p>
+
+<h2 id="createDevtoolsBroker"><code>createDevtoolsBroker(config)</code></h2>
+<pre><code class="language-typescript">function createDevtoolsBroker(config?: DevtoolsBrokerConfig): DevtoolsBroker
+
+interface DevtoolsBrokerConfig extends CacheBrokerConfig {
+  devtools?: {
+    inspectorBufferSize?: number       // default: 500
+    metricsCardinalityCap?: number     // default: 100 per metric
+    metricsReservoirSize?: number      // default: 1024 samples per histogram
+    pauseQueueMaxSize?: number         // default: 1000
+  }
+}
+</code></pre>
+
+<h2 id="event-inspector"><code>broker.getEventInspector()</code></h2>
+<pre><code class="language-typescript">interface EventInspector {
+  getSnapshot(opts?: { limit?: number; topic?: string }): EventInspectorEntry[]
+  clear(): void
+}
+
+interface EventInspectorEntry {
+  id: string
+  topic: string
+  timestamp: number
+  source: { type: string; id?: string; name?: string }
+  payload: unknown                                 // deep-cloned
+  deliveryMode: 'async' | 'sync'
+  priority: 'critical' | 'high' | 'normal' | 'low'
+  pipelineSteps: PipelineStepRecord[]              // 14 steps for dev
+  outcome: 'delivered' | 'failed' | 'dedup-skipped' | 'paused-queued'
+  subscribersReached: number
+  errors?: BrokerError[]
+}
+</code></pre>
+
+<h2 id="metrics"><code>broker.getMetrics()</code> / <code>getMetricsDelta(prev)</code></h2>
+<pre><code class="language-typescript">interface MetricsSnapshot {
+  counters: Record&lt;string, number&gt;
+  gauges: Record&lt;string, number&gt;
+  histograms: Record&lt;string, HistogramSummary&gt;
+  capturedAt: number
+}
+
+interface HistogramSummary {
+  count: number
+  sum: number
+  p50: number
+  p90: number
+  p99: number
+  // optional p25 / p75 also present
+}
+
+function getMetrics(): MetricsSnapshot
+function getMetricsDelta(prev: MetricsSnapshot): MetricsSnapshot
+</code></pre>
+
+<h2 id="pause"><code>broker.pauseTopic / resumeTopic / flushQueue</code></h2>
+<pre><code class="language-typescript">function pauseTopic(topic: string): void                 // queue events instead of delivering
+function resumeTopic(topic: string): void                // flush queue to subscribers
+function flushQueue(topic?: string): { droppedCount: number; droppedEventIds: string[] }
+</code></pre>
+<p>Critical-priority events bypass pause (still delivered).</p>
+
+<h2 id="taps"><code>EventTap</code> + <code>MultiplexTap</code></h2>
+<pre><code class="language-typescript">interface EventTap {
+  onEventPublished?(event: BrokerEvent): void
+  onEventDelivered?(event: BrokerEvent, subscribersReached: number): void
+  onEventFailed?(event: BrokerEvent, error: BrokerError): void
+  onPipelineStep?(eventId: string, step: PipelineStepRecord): void
+  onMetricsTick?(metrics: MetricsSnapshot): void
+  onRouteResolved?(routeId: string, eventId: string, durationMs: number): void
+}
+
+function createMultiplexTap(taps: EventTap[]): EventTap   // chain with error isolation
+</code></pre>
+<p>Each tap runs in its own try/catch — a failing tap doesn&rsquo;t affect the others (decision <code>D-159</code>).</p>
+
+<h2 id="debug-mode"><code>enableDebug / disableDebug</code></h2>
+<pre><code class="language-typescript">function enableDebug(): void
+function disableDebug(): void
+function getDebugSnapshot(): DebugSnapshot
+
+interface DebugSnapshot {
+  recentEvents: EventInspectorEntry[]
+  recentRoutes: RouteEntry[]
+  currentMetrics: MetricsSnapshot
+  pausedTopics: string[]
+  enabled: boolean
+}
+</code></pre>
+concepts/routing.html">Routing</a>
+  <a class="sidebar-link" href="<h1><code>@gluezero/devtools</code></h1>
+<p class="lead">Inspector + MetricsCollector + PauseController. The observability layer that exposes the event flow for debugging and measurement.</p>
+
+<h2 id="createDevtoolsBroker"><code>createDevtoolsBroker(config)</code></h2>
+<pre><code class="language-typescript">function createDevtoolsBroker(config?: DevtoolsBrokerConfig): DevtoolsBroker
+
+interface DevtoolsBrokerConfig extends CacheBrokerConfig {
+  devtools?: {
+    inspectorBufferSize?: number       // default: 500
+    metricsCardinalityCap?: number     // default: 100 per metric
+    metricsReservoirSize?: number      // default: 1024 samples per histogram
+    pauseQueueMaxSize?: number         // default: 1000
+  }
+}
+</code></pre>
+
+<h2 id="event-inspector"><code>broker.getEventInspector()</code></h2>
+<pre><code class="language-typescript">interface EventInspector {
+  getSnapshot(opts?: { limit?: number; topic?: string }): EventInspectorEntry[]
+  clear(): void
+}
+
+interface EventInspectorEntry {
+  id: string
+  topic: string
+  timestamp: number
+  source: { type: string; id?: string; name?: string }
+  payload: unknown                                 // deep-cloned
+  deliveryMode: 'async' | 'sync'
+  priority: 'critical' | 'high' | 'normal' | 'low'
+  pipelineSteps: PipelineStepRecord[]              // 14 steps for dev
+  outcome: 'delivered' | 'failed' | 'dedup-skipped' | 'paused-queued'
+  subscribersReached: number
+  errors?: BrokerError[]
+}
+</code></pre>
+
+<h2 id="metrics"><code>broker.getMetrics()</code> / <code>getMetricsDelta(prev)</code></h2>
+<pre><code class="language-typescript">interface MetricsSnapshot {
+  counters: Record&lt;string, number&gt;
+  gauges: Record&lt;string, number&gt;
+  histograms: Record&lt;string, HistogramSummary&gt;
+  capturedAt: number
+}
+
+interface HistogramSummary {
+  count: number
+  sum: number
+  p50: number
+  p90: number
+  p99: number
+  // optional p25 / p75 also present
+}
+
+function getMetrics(): MetricsSnapshot
+function getMetricsDelta(prev: MetricsSnapshot): MetricsSnapshot
+</code></pre>
+
+<h2 id="pause"><code>broker.pauseTopic / resumeTopic / flushQueue</code></h2>
+<pre><code class="language-typescript">function pauseTopic(topic: string): void                 // queue events instead of delivering
+function resumeTopic(topic: string): void                // flush queue to subscribers
+function flushQueue(topic?: string): { droppedCount: number; droppedEventIds: string[] }
+</code></pre>
+<p>Critical-priority events bypass pause (still delivered).</p>
+
+<h2 id="taps"><code>EventTap</code> + <code>MultiplexTap</code></h2>
+<pre><code class="language-typescript">interface EventTap {
+  onEventPublished?(event: BrokerEvent): void
+  onEventDelivered?(event: BrokerEvent, subscribersReached: number): void
+  onEventFailed?(event: BrokerEvent, error: BrokerError): void
+  onPipelineStep?(eventId: string, step: PipelineStepRecord): void
+  onMetricsTick?(metrics: MetricsSnapshot): void
+  onRouteResolved?(routeId: string, eventId: string, durationMs: number): void
+}
+
+function createMultiplexTap(taps: EventTap[]): EventTap   // chain with error isolation
+</code></pre>
+<p>Each tap runs in its own try/catch — a failing tap doesn&rsquo;t affect the others (decision <code>D-159</code>).</p>
+
+<h2 id="debug-mode"><code>enableDebug / disableDebug</code></h2>
+<pre><code class="language-typescript">function enableDebug(): void
+function disableDebug(): void
+function getDebugSnapshot(): DebugSnapshot
+
+interface DebugSnapshot {
+  recentEvents: EventInspectorEntry[]
+  recentRoutes: RouteEntry[]
+  currentMetrics: MetricsSnapshot
+  pausedTopics: string[]
+  enabled: boolean
+}
+</code></pre>
+concepts/gateway.html">HTTP gateway</a>
+  <a class="sidebar-link" href="<h1><code>@gluezero/devtools</code></h1>
+<p class="lead">Inspector + MetricsCollector + PauseController. The observability layer that exposes the event flow for debugging and measurement.</p>
+
+<h2 id="createDevtoolsBroker"><code>createDevtoolsBroker(config)</code></h2>
+<pre><code class="language-typescript">function createDevtoolsBroker(config?: DevtoolsBrokerConfig): DevtoolsBroker
+
+interface DevtoolsBrokerConfig extends CacheBrokerConfig {
+  devtools?: {
+    inspectorBufferSize?: number       // default: 500
+    metricsCardinalityCap?: number     // default: 100 per metric
+    metricsReservoirSize?: number      // default: 1024 samples per histogram
+    pauseQueueMaxSize?: number         // default: 1000
+  }
+}
+</code></pre>
+
+<h2 id="event-inspector"><code>broker.getEventInspector()</code></h2>
+<pre><code class="language-typescript">interface EventInspector {
+  getSnapshot(opts?: { limit?: number; topic?: string }): EventInspectorEntry[]
+  clear(): void
+}
+
+interface EventInspectorEntry {
+  id: string
+  topic: string
+  timestamp: number
+  source: { type: string; id?: string; name?: string }
+  payload: unknown                                 // deep-cloned
+  deliveryMode: 'async' | 'sync'
+  priority: 'critical' | 'high' | 'normal' | 'low'
+  pipelineSteps: PipelineStepRecord[]              // 14 steps for dev
+  outcome: 'delivered' | 'failed' | 'dedup-skipped' | 'paused-queued'
+  subscribersReached: number
+  errors?: BrokerError[]
+}
+</code></pre>
+
+<h2 id="metrics"><code>broker.getMetrics()</code> / <code>getMetricsDelta(prev)</code></h2>
+<pre><code class="language-typescript">interface MetricsSnapshot {
+  counters: Record&lt;string, number&gt;
+  gauges: Record&lt;string, number&gt;
+  histograms: Record&lt;string, HistogramSummary&gt;
+  capturedAt: number
+}
+
+interface HistogramSummary {
+  count: number
+  sum: number
+  p50: number
+  p90: number
+  p99: number
+  // optional p25 / p75 also present
+}
+
+function getMetrics(): MetricsSnapshot
+function getMetricsDelta(prev: MetricsSnapshot): MetricsSnapshot
+</code></pre>
+
+<h2 id="pause"><code>broker.pauseTopic / resumeTopic / flushQueue</code></h2>
+<pre><code class="language-typescript">function pauseTopic(topic: string): void                 // queue events instead of delivering
+function resumeTopic(topic: string): void                // flush queue to subscribers
+function flushQueue(topic?: string): { droppedCount: number; droppedEventIds: string[] }
+</code></pre>
+<p>Critical-priority events bypass pause (still delivered).</p>
+
+<h2 id="taps"><code>EventTap</code> + <code>MultiplexTap</code></h2>
+<pre><code class="language-typescript">interface EventTap {
+  onEventPublished?(event: BrokerEvent): void
+  onEventDelivered?(event: BrokerEvent, subscribersReached: number): void
+  onEventFailed?(event: BrokerEvent, error: BrokerError): void
+  onPipelineStep?(eventId: string, step: PipelineStepRecord): void
+  onMetricsTick?(metrics: MetricsSnapshot): void
+  onRouteResolved?(routeId: string, eventId: string, durationMs: number): void
+}
+
+function createMultiplexTap(taps: EventTap[]): EventTap   // chain with error isolation
+</code></pre>
+<p>Each tap runs in its own try/catch — a failing tap doesn&rsquo;t affect the others (decision <code>D-159</code>).</p>
+
+<h2 id="debug-mode"><code>enableDebug / disableDebug</code></h2>
+<pre><code class="language-typescript">function enableDebug(): void
+function disableDebug(): void
+function getDebugSnapshot(): DebugSnapshot
+
+interface DebugSnapshot {
+  recentEvents: EventInspectorEntry[]
+  recentRoutes: RouteEntry[]
+  currentMetrics: MetricsSnapshot
+  pausedTopics: string[]
+  enabled: boolean
+}
+</code></pre>
+concepts/realtime.html">Realtime</a>
+  <a class="sidebar-link" href="<h1><code>@gluezero/devtools</code></h1>
+<p class="lead">Inspector + MetricsCollector + PauseController. The observability layer that exposes the event flow for debugging and measurement.</p>
+
+<h2 id="createDevtoolsBroker"><code>createDevtoolsBroker(config)</code></h2>
+<pre><code class="language-typescript">function createDevtoolsBroker(config?: DevtoolsBrokerConfig): DevtoolsBroker
+
+interface DevtoolsBrokerConfig extends CacheBrokerConfig {
+  devtools?: {
+    inspectorBufferSize?: number       // default: 500
+    metricsCardinalityCap?: number     // default: 100 per metric
+    metricsReservoirSize?: number      // default: 1024 samples per histogram
+    pauseQueueMaxSize?: number         // default: 1000
+  }
+}
+</code></pre>
+
+<h2 id="event-inspector"><code>broker.getEventInspector()</code></h2>
+<pre><code class="language-typescript">interface EventInspector {
+  getSnapshot(opts?: { limit?: number; topic?: string }): EventInspectorEntry[]
+  clear(): void
+}
+
+interface EventInspectorEntry {
+  id: string
+  topic: string
+  timestamp: number
+  source: { type: string; id?: string; name?: string }
+  payload: unknown                                 // deep-cloned
+  deliveryMode: 'async' | 'sync'
+  priority: 'critical' | 'high' | 'normal' | 'low'
+  pipelineSteps: PipelineStepRecord[]              // 14 steps for dev
+  outcome: 'delivered' | 'failed' | 'dedup-skipped' | 'paused-queued'
+  subscribersReached: number
+  errors?: BrokerError[]
+}
+</code></pre>
+
+<h2 id="metrics"><code>broker.getMetrics()</code> / <code>getMetricsDelta(prev)</code></h2>
+<pre><code class="language-typescript">interface MetricsSnapshot {
+  counters: Record&lt;string, number&gt;
+  gauges: Record&lt;string, number&gt;
+  histograms: Record&lt;string, HistogramSummary&gt;
+  capturedAt: number
+}
+
+interface HistogramSummary {
+  count: number
+  sum: number
+  p50: number
+  p90: number
+  p99: number
+  // optional p25 / p75 also present
+}
+
+function getMetrics(): MetricsSnapshot
+function getMetricsDelta(prev: MetricsSnapshot): MetricsSnapshot
+</code></pre>
+
+<h2 id="pause"><code>broker.pauseTopic / resumeTopic / flushQueue</code></h2>
+<pre><code class="language-typescript">function pauseTopic(topic: string): void                 // queue events instead of delivering
+function resumeTopic(topic: string): void                // flush queue to subscribers
+function flushQueue(topic?: string): { droppedCount: number; droppedEventIds: string[] }
+</code></pre>
+<p>Critical-priority events bypass pause (still delivered).</p>
+
+<h2 id="taps"><code>EventTap</code> + <code>MultiplexTap</code></h2>
+<pre><code class="language-typescript">interface EventTap {
+  onEventPublished?(event: BrokerEvent): void
+  onEventDelivered?(event: BrokerEvent, subscribersReached: number): void
+  onEventFailed?(event: BrokerEvent, error: BrokerError): void
+  onPipelineStep?(eventId: string, step: PipelineStepRecord): void
+  onMetricsTick?(metrics: MetricsSnapshot): void
+  onRouteResolved?(routeId: string, eventId: string, durationMs: number): void
+}
+
+function createMultiplexTap(taps: EventTap[]): EventTap   // chain with error isolation
+</code></pre>
+<p>Each tap runs in its own try/catch — a failing tap doesn&rsquo;t affect the others (decision <code>D-159</code>).</p>
+
+<h2 id="debug-mode"><code>enableDebug / disableDebug</code></h2>
+<pre><code class="language-typescript">function enableDebug(): void
+function disableDebug(): void
+function getDebugSnapshot(): DebugSnapshot
+
+interface DebugSnapshot {
+  recentEvents: EventInspectorEntry[]
+  recentRoutes: RouteEntry[]
+  currentMetrics: MetricsSnapshot
+  pausedTopics: string[]
+  enabled: boolean
+}
+</code></pre>
+concepts/worker.html">Worker</a>
+  <a class="sidebar-link" href="<h1><code>@gluezero/devtools</code></h1>
+<p class="lead">Inspector + MetricsCollector + PauseController. The observability layer that exposes the event flow for debugging and measurement.</p>
+
+<h2 id="createDevtoolsBroker"><code>createDevtoolsBroker(config)</code></h2>
+<pre><code class="language-typescript">function createDevtoolsBroker(config?: DevtoolsBrokerConfig): DevtoolsBroker
+
+interface DevtoolsBrokerConfig extends CacheBrokerConfig {
+  devtools?: {
+    inspectorBufferSize?: number       // default: 500
+    metricsCardinalityCap?: number     // default: 100 per metric
+    metricsReservoirSize?: number      // default: 1024 samples per histogram
+    pauseQueueMaxSize?: number         // default: 1000
+  }
+}
+</code></pre>
+
+<h2 id="event-inspector"><code>broker.getEventInspector()</code></h2>
+<pre><code class="language-typescript">interface EventInspector {
+  getSnapshot(opts?: { limit?: number; topic?: string }): EventInspectorEntry[]
+  clear(): void
+}
+
+interface EventInspectorEntry {
+  id: string
+  topic: string
+  timestamp: number
+  source: { type: string; id?: string; name?: string }
+  payload: unknown                                 // deep-cloned
+  deliveryMode: 'async' | 'sync'
+  priority: 'critical' | 'high' | 'normal' | 'low'
+  pipelineSteps: PipelineStepRecord[]              // 14 steps for dev
+  outcome: 'delivered' | 'failed' | 'dedup-skipped' | 'paused-queued'
+  subscribersReached: number
+  errors?: BrokerError[]
+}
+</code></pre>
+
+<h2 id="metrics"><code>broker.getMetrics()</code> / <code>getMetricsDelta(prev)</code></h2>
+<pre><code class="language-typescript">interface MetricsSnapshot {
+  counters: Record&lt;string, number&gt;
+  gauges: Record&lt;string, number&gt;
+  histograms: Record&lt;string, HistogramSummary&gt;
+  capturedAt: number
+}
+
+interface HistogramSummary {
+  count: number
+  sum: number
+  p50: number
+  p90: number
+  p99: number
+  // optional p25 / p75 also present
+}
+
+function getMetrics(): MetricsSnapshot
+function getMetricsDelta(prev: MetricsSnapshot): MetricsSnapshot
+</code></pre>
+
+<h2 id="pause"><code>broker.pauseTopic / resumeTopic / flushQueue</code></h2>
+<pre><code class="language-typescript">function pauseTopic(topic: string): void                 // queue events instead of delivering
+function resumeTopic(topic: string): void                // flush queue to subscribers
+function flushQueue(topic?: string): { droppedCount: number; droppedEventIds: string[] }
+</code></pre>
+<p>Critical-priority events bypass pause (still delivered).</p>
+
+<h2 id="taps"><code>EventTap</code> + <code>MultiplexTap</code></h2>
+<pre><code class="language-typescript">interface EventTap {
+  onEventPublished?(event: BrokerEvent): void
+  onEventDelivered?(event: BrokerEvent, subscribersReached: number): void
+  onEventFailed?(event: BrokerEvent, error: BrokerError): void
+  onPipelineStep?(eventId: string, step: PipelineStepRecord): void
+  onMetricsTick?(metrics: MetricsSnapshot): void
+  onRouteResolved?(routeId: string, eventId: string, durationMs: number): void
+}
+
+function createMultiplexTap(taps: EventTap[]): EventTap   // chain with error isolation
+</code></pre>
+<p>Each tap runs in its own try/catch — a failing tap doesn&rsquo;t affect the others (decision <code>D-159</code>).</p>
+
+<h2 id="debug-mode"><code>enableDebug / disableDebug</code></h2>
+<pre><code class="language-typescript">function enableDebug(): void
+function disableDebug(): void
+function getDebugSnapshot(): DebugSnapshot
+
+interface DebugSnapshot {
+  recentEvents: EventInspectorEntry[]
+  recentRoutes: RouteEntry[]
+  currentMetrics: MetricsSnapshot
+  pausedTopics: string[]
+  enabled: boolean
+}
+</code></pre>
+concepts/cache.html">Cache</a>
+  <a class="sidebar-link" href="<h1><code>@gluezero/devtools</code></h1>
+<p class="lead">Inspector + MetricsCollector + PauseController. The observability layer that exposes the event flow for debugging and measurement.</p>
+
+<h2 id="createDevtoolsBroker"><code>createDevtoolsBroker(config)</code></h2>
+<pre><code class="language-typescript">function createDevtoolsBroker(config?: DevtoolsBrokerConfig): DevtoolsBroker
+
+interface DevtoolsBrokerConfig extends CacheBrokerConfig {
+  devtools?: {
+    inspectorBufferSize?: number       // default: 500
+    metricsCardinalityCap?: number     // default: 100 per metric
+    metricsReservoirSize?: number      // default: 1024 samples per histogram
+    pauseQueueMaxSize?: number         // default: 1000
+  }
+}
+</code></pre>
+
+<h2 id="event-inspector"><code>broker.getEventInspector()</code></h2>
+<pre><code class="language-typescript">interface EventInspector {
+  getSnapshot(opts?: { limit?: number; topic?: string }): EventInspectorEntry[]
+  clear(): void
+}
+
+interface EventInspectorEntry {
+  id: string
+  topic: string
+  timestamp: number
+  source: { type: string; id?: string; name?: string }
+  payload: unknown                                 // deep-cloned
+  deliveryMode: 'async' | 'sync'
+  priority: 'critical' | 'high' | 'normal' | 'low'
+  pipelineSteps: PipelineStepRecord[]              // 14 steps for dev
+  outcome: 'delivered' | 'failed' | 'dedup-skipped' | 'paused-queued'
+  subscribersReached: number
+  errors?: BrokerError[]
+}
+</code></pre>
+
+<h2 id="metrics"><code>broker.getMetrics()</code> / <code>getMetricsDelta(prev)</code></h2>
+<pre><code class="language-typescript">interface MetricsSnapshot {
+  counters: Record&lt;string, number&gt;
+  gauges: Record&lt;string, number&gt;
+  histograms: Record&lt;string, HistogramSummary&gt;
+  capturedAt: number
+}
+
+interface HistogramSummary {
+  count: number
+  sum: number
+  p50: number
+  p90: number
+  p99: number
+  // optional p25 / p75 also present
+}
+
+function getMetrics(): MetricsSnapshot
+function getMetricsDelta(prev: MetricsSnapshot): MetricsSnapshot
+</code></pre>
+
+<h2 id="pause"><code>broker.pauseTopic / resumeTopic / flushQueue</code></h2>
+<pre><code class="language-typescript">function pauseTopic(topic: string): void                 // queue events instead of delivering
+function resumeTopic(topic: string): void                // flush queue to subscribers
+function flushQueue(topic?: string): { droppedCount: number; droppedEventIds: string[] }
+</code></pre>
+<p>Critical-priority events bypass pause (still delivered).</p>
+
+<h2 id="taps"><code>EventTap</code> + <code>MultiplexTap</code></h2>
+<pre><code class="language-typescript">interface EventTap {
+  onEventPublished?(event: BrokerEvent): void
+  onEventDelivered?(event: BrokerEvent, subscribersReached: number): void
+  onEventFailed?(event: BrokerEvent, error: BrokerError): void
+  onPipelineStep?(eventId: string, step: PipelineStepRecord): void
+  onMetricsTick?(metrics: MetricsSnapshot): void
+  onRouteResolved?(routeId: string, eventId: string, durationMs: number): void
+}
+
+function createMultiplexTap(taps: EventTap[]): EventTap   // chain with error isolation
+</code></pre>
+<p>Each tap runs in its own try/catch — a failing tap doesn&rsquo;t affect the others (decision <code>D-159</code>).</p>
+
+<h2 id="debug-mode"><code>enableDebug / disableDebug</code></h2>
+<pre><code class="language-typescript">function enableDebug(): void
+function disableDebug(): void
+function getDebugSnapshot(): DebugSnapshot
+
+interface DebugSnapshot {
+  recentEvents: EventInspectorEntry[]
+  recentRoutes: RouteEntry[]
+  currentMetrics: MetricsSnapshot
+  pausedTopics: string[]
+  enabled: boolean
+}
+</code></pre>
+concepts/devtools.html">Devtools</a>
 </div>
 <div class="sidebar-section">
   <div class="sidebar-section-title">API reference</div>
-  <a class="sidebar-link" href="../api/gluezero.html">@gluezero/gluezero</a>
-  <a class="sidebar-link" href="../api/core.html">@gluezero/core</a>
-  <a class="sidebar-link" href="../api/mapper.html">@gluezero/mapper</a>
-  <a class="sidebar-link" href="../api/routing.html">@gluezero/routing</a>
-  <a class="sidebar-link" href="../api/gateway.html">@gluezero/gateway</a>
-  <a class="sidebar-link" href="../api/worker.html">@gluezero/worker</a>
-  <a class="sidebar-link" href="../api/cache.html">@gluezero/cache</a>
-  <a class="sidebar-link" href="../api/devtools.html">@gluezero/devtools</a>
+  <a class="sidebar-link" href="<h1><code>@gluezero/devtools</code></h1>
+<p class="lead">Inspector + MetricsCollector + PauseController. The observability layer that exposes the event flow for debugging and measurement.</p>
+
+<h2 id="createDevtoolsBroker"><code>createDevtoolsBroker(config)</code></h2>
+<pre><code class="language-typescript">function createDevtoolsBroker(config?: DevtoolsBrokerConfig): DevtoolsBroker
+
+interface DevtoolsBrokerConfig extends CacheBrokerConfig {
+  devtools?: {
+    inspectorBufferSize?: number       // default: 500
+    metricsCardinalityCap?: number     // default: 100 per metric
+    metricsReservoirSize?: number      // default: 1024 samples per histogram
+    pauseQueueMaxSize?: number         // default: 1000
+  }
+}
+</code></pre>
+
+<h2 id="event-inspector"><code>broker.getEventInspector()</code></h2>
+<pre><code class="language-typescript">interface EventInspector {
+  getSnapshot(opts?: { limit?: number; topic?: string }): EventInspectorEntry[]
+  clear(): void
+}
+
+interface EventInspectorEntry {
+  id: string
+  topic: string
+  timestamp: number
+  source: { type: string; id?: string; name?: string }
+  payload: unknown                                 // deep-cloned
+  deliveryMode: 'async' | 'sync'
+  priority: 'critical' | 'high' | 'normal' | 'low'
+  pipelineSteps: PipelineStepRecord[]              // 14 steps for dev
+  outcome: 'delivered' | 'failed' | 'dedup-skipped' | 'paused-queued'
+  subscribersReached: number
+  errors?: BrokerError[]
+}
+</code></pre>
+
+<h2 id="metrics"><code>broker.getMetrics()</code> / <code>getMetricsDelta(prev)</code></h2>
+<pre><code class="language-typescript">interface MetricsSnapshot {
+  counters: Record&lt;string, number&gt;
+  gauges: Record&lt;string, number&gt;
+  histograms: Record&lt;string, HistogramSummary&gt;
+  capturedAt: number
+}
+
+interface HistogramSummary {
+  count: number
+  sum: number
+  p50: number
+  p90: number
+  p99: number
+  // optional p25 / p75 also present
+}
+
+function getMetrics(): MetricsSnapshot
+function getMetricsDelta(prev: MetricsSnapshot): MetricsSnapshot
+</code></pre>
+
+<h2 id="pause"><code>broker.pauseTopic / resumeTopic / flushQueue</code></h2>
+<pre><code class="language-typescript">function pauseTopic(topic: string): void                 // queue events instead of delivering
+function resumeTopic(topic: string): void                // flush queue to subscribers
+function flushQueue(topic?: string): { droppedCount: number; droppedEventIds: string[] }
+</code></pre>
+<p>Critical-priority events bypass pause (still delivered).</p>
+
+<h2 id="taps"><code>EventTap</code> + <code>MultiplexTap</code></h2>
+<pre><code class="language-typescript">interface EventTap {
+  onEventPublished?(event: BrokerEvent): void
+  onEventDelivered?(event: BrokerEvent, subscribersReached: number): void
+  onEventFailed?(event: BrokerEvent, error: BrokerError): void
+  onPipelineStep?(eventId: string, step: PipelineStepRecord): void
+  onMetricsTick?(metrics: MetricsSnapshot): void
+  onRouteResolved?(routeId: string, eventId: string, durationMs: number): void
+}
+
+function createMultiplexTap(taps: EventTap[]): EventTap   // chain with error isolation
+</code></pre>
+<p>Each tap runs in its own try/catch — a failing tap doesn&rsquo;t affect the others (decision <code>D-159</code>).</p>
+
+<h2 id="debug-mode"><code>enableDebug / disableDebug</code></h2>
+<pre><code class="language-typescript">function enableDebug(): void
+function disableDebug(): void
+function getDebugSnapshot(): DebugSnapshot
+
+interface DebugSnapshot {
+  recentEvents: EventInspectorEntry[]
+  recentRoutes: RouteEntry[]
+  currentMetrics: MetricsSnapshot
+  pausedTopics: string[]
+  enabled: boolean
+}
+</code></pre>
+api/gluezero.html">@gluezero/gluezero</a>
+  <a class="sidebar-link" href="<h1><code>@gluezero/devtools</code></h1>
+<p class="lead">Inspector + MetricsCollector + PauseController. The observability layer that exposes the event flow for debugging and measurement.</p>
+
+<h2 id="createDevtoolsBroker"><code>createDevtoolsBroker(config)</code></h2>
+<pre><code class="language-typescript">function createDevtoolsBroker(config?: DevtoolsBrokerConfig): DevtoolsBroker
+
+interface DevtoolsBrokerConfig extends CacheBrokerConfig {
+  devtools?: {
+    inspectorBufferSize?: number       // default: 500
+    metricsCardinalityCap?: number     // default: 100 per metric
+    metricsReservoirSize?: number      // default: 1024 samples per histogram
+    pauseQueueMaxSize?: number         // default: 1000
+  }
+}
+</code></pre>
+
+<h2 id="event-inspector"><code>broker.getEventInspector()</code></h2>
+<pre><code class="language-typescript">interface EventInspector {
+  getSnapshot(opts?: { limit?: number; topic?: string }): EventInspectorEntry[]
+  clear(): void
+}
+
+interface EventInspectorEntry {
+  id: string
+  topic: string
+  timestamp: number
+  source: { type: string; id?: string; name?: string }
+  payload: unknown                                 // deep-cloned
+  deliveryMode: 'async' | 'sync'
+  priority: 'critical' | 'high' | 'normal' | 'low'
+  pipelineSteps: PipelineStepRecord[]              // 14 steps for dev
+  outcome: 'delivered' | 'failed' | 'dedup-skipped' | 'paused-queued'
+  subscribersReached: number
+  errors?: BrokerError[]
+}
+</code></pre>
+
+<h2 id="metrics"><code>broker.getMetrics()</code> / <code>getMetricsDelta(prev)</code></h2>
+<pre><code class="language-typescript">interface MetricsSnapshot {
+  counters: Record&lt;string, number&gt;
+  gauges: Record&lt;string, number&gt;
+  histograms: Record&lt;string, HistogramSummary&gt;
+  capturedAt: number
+}
+
+interface HistogramSummary {
+  count: number
+  sum: number
+  p50: number
+  p90: number
+  p99: number
+  // optional p25 / p75 also present
+}
+
+function getMetrics(): MetricsSnapshot
+function getMetricsDelta(prev: MetricsSnapshot): MetricsSnapshot
+</code></pre>
+
+<h2 id="pause"><code>broker.pauseTopic / resumeTopic / flushQueue</code></h2>
+<pre><code class="language-typescript">function pauseTopic(topic: string): void                 // queue events instead of delivering
+function resumeTopic(topic: string): void                // flush queue to subscribers
+function flushQueue(topic?: string): { droppedCount: number; droppedEventIds: string[] }
+</code></pre>
+<p>Critical-priority events bypass pause (still delivered).</p>
+
+<h2 id="taps"><code>EventTap</code> + <code>MultiplexTap</code></h2>
+<pre><code class="language-typescript">interface EventTap {
+  onEventPublished?(event: BrokerEvent): void
+  onEventDelivered?(event: BrokerEvent, subscribersReached: number): void
+  onEventFailed?(event: BrokerEvent, error: BrokerError): void
+  onPipelineStep?(eventId: string, step: PipelineStepRecord): void
+  onMetricsTick?(metrics: MetricsSnapshot): void
+  onRouteResolved?(routeId: string, eventId: string, durationMs: number): void
+}
+
+function createMultiplexTap(taps: EventTap[]): EventTap   // chain with error isolation
+</code></pre>
+<p>Each tap runs in its own try/catch — a failing tap doesn&rsquo;t affect the others (decision <code>D-159</code>).</p>
+
+<h2 id="debug-mode"><code>enableDebug / disableDebug</code></h2>
+<pre><code class="language-typescript">function enableDebug(): void
+function disableDebug(): void
+function getDebugSnapshot(): DebugSnapshot
+
+interface DebugSnapshot {
+  recentEvents: EventInspectorEntry[]
+  recentRoutes: RouteEntry[]
+  currentMetrics: MetricsSnapshot
+  pausedTopics: string[]
+  enabled: boolean
+}
+</code></pre>
+api/core.html">@gluezero/core</a>
+  <a class="sidebar-link" href="<h1><code>@gluezero/devtools</code></h1>
+<p class="lead">Inspector + MetricsCollector + PauseController. The observability layer that exposes the event flow for debugging and measurement.</p>
+
+<h2 id="createDevtoolsBroker"><code>createDevtoolsBroker(config)</code></h2>
+<pre><code class="language-typescript">function createDevtoolsBroker(config?: DevtoolsBrokerConfig): DevtoolsBroker
+
+interface DevtoolsBrokerConfig extends CacheBrokerConfig {
+  devtools?: {
+    inspectorBufferSize?: number       // default: 500
+    metricsCardinalityCap?: number     // default: 100 per metric
+    metricsReservoirSize?: number      // default: 1024 samples per histogram
+    pauseQueueMaxSize?: number         // default: 1000
+  }
+}
+</code></pre>
+
+<h2 id="event-inspector"><code>broker.getEventInspector()</code></h2>
+<pre><code class="language-typescript">interface EventInspector {
+  getSnapshot(opts?: { limit?: number; topic?: string }): EventInspectorEntry[]
+  clear(): void
+}
+
+interface EventInspectorEntry {
+  id: string
+  topic: string
+  timestamp: number
+  source: { type: string; id?: string; name?: string }
+  payload: unknown                                 // deep-cloned
+  deliveryMode: 'async' | 'sync'
+  priority: 'critical' | 'high' | 'normal' | 'low'
+  pipelineSteps: PipelineStepRecord[]              // 14 steps for dev
+  outcome: 'delivered' | 'failed' | 'dedup-skipped' | 'paused-queued'
+  subscribersReached: number
+  errors?: BrokerError[]
+}
+</code></pre>
+
+<h2 id="metrics"><code>broker.getMetrics()</code> / <code>getMetricsDelta(prev)</code></h2>
+<pre><code class="language-typescript">interface MetricsSnapshot {
+  counters: Record&lt;string, number&gt;
+  gauges: Record&lt;string, number&gt;
+  histograms: Record&lt;string, HistogramSummary&gt;
+  capturedAt: number
+}
+
+interface HistogramSummary {
+  count: number
+  sum: number
+  p50: number
+  p90: number
+  p99: number
+  // optional p25 / p75 also present
+}
+
+function getMetrics(): MetricsSnapshot
+function getMetricsDelta(prev: MetricsSnapshot): MetricsSnapshot
+</code></pre>
+
+<h2 id="pause"><code>broker.pauseTopic / resumeTopic / flushQueue</code></h2>
+<pre><code class="language-typescript">function pauseTopic(topic: string): void                 // queue events instead of delivering
+function resumeTopic(topic: string): void                // flush queue to subscribers
+function flushQueue(topic?: string): { droppedCount: number; droppedEventIds: string[] }
+</code></pre>
+<p>Critical-priority events bypass pause (still delivered).</p>
+
+<h2 id="taps"><code>EventTap</code> + <code>MultiplexTap</code></h2>
+<pre><code class="language-typescript">interface EventTap {
+  onEventPublished?(event: BrokerEvent): void
+  onEventDelivered?(event: BrokerEvent, subscribersReached: number): void
+  onEventFailed?(event: BrokerEvent, error: BrokerError): void
+  onPipelineStep?(eventId: string, step: PipelineStepRecord): void
+  onMetricsTick?(metrics: MetricsSnapshot): void
+  onRouteResolved?(routeId: string, eventId: string, durationMs: number): void
+}
+
+function createMultiplexTap(taps: EventTap[]): EventTap   // chain with error isolation
+</code></pre>
+<p>Each tap runs in its own try/catch — a failing tap doesn&rsquo;t affect the others (decision <code>D-159</code>).</p>
+
+<h2 id="debug-mode"><code>enableDebug / disableDebug</code></h2>
+<pre><code class="language-typescript">function enableDebug(): void
+function disableDebug(): void
+function getDebugSnapshot(): DebugSnapshot
+
+interface DebugSnapshot {
+  recentEvents: EventInspectorEntry[]
+  recentRoutes: RouteEntry[]
+  currentMetrics: MetricsSnapshot
+  pausedTopics: string[]
+  enabled: boolean
+}
+</code></pre>
+api/mapper.html">@gluezero/mapper</a>
+  <a class="sidebar-link" href="<h1><code>@gluezero/devtools</code></h1>
+<p class="lead">Inspector + MetricsCollector + PauseController. The observability layer that exposes the event flow for debugging and measurement.</p>
+
+<h2 id="createDevtoolsBroker"><code>createDevtoolsBroker(config)</code></h2>
+<pre><code class="language-typescript">function createDevtoolsBroker(config?: DevtoolsBrokerConfig): DevtoolsBroker
+
+interface DevtoolsBrokerConfig extends CacheBrokerConfig {
+  devtools?: {
+    inspectorBufferSize?: number       // default: 500
+    metricsCardinalityCap?: number     // default: 100 per metric
+    metricsReservoirSize?: number      // default: 1024 samples per histogram
+    pauseQueueMaxSize?: number         // default: 1000
+  }
+}
+</code></pre>
+
+<h2 id="event-inspector"><code>broker.getEventInspector()</code></h2>
+<pre><code class="language-typescript">interface EventInspector {
+  getSnapshot(opts?: { limit?: number; topic?: string }): EventInspectorEntry[]
+  clear(): void
+}
+
+interface EventInspectorEntry {
+  id: string
+  topic: string
+  timestamp: number
+  source: { type: string; id?: string; name?: string }
+  payload: unknown                                 // deep-cloned
+  deliveryMode: 'async' | 'sync'
+  priority: 'critical' | 'high' | 'normal' | 'low'
+  pipelineSteps: PipelineStepRecord[]              // 14 steps for dev
+  outcome: 'delivered' | 'failed' | 'dedup-skipped' | 'paused-queued'
+  subscribersReached: number
+  errors?: BrokerError[]
+}
+</code></pre>
+
+<h2 id="metrics"><code>broker.getMetrics()</code> / <code>getMetricsDelta(prev)</code></h2>
+<pre><code class="language-typescript">interface MetricsSnapshot {
+  counters: Record&lt;string, number&gt;
+  gauges: Record&lt;string, number&gt;
+  histograms: Record&lt;string, HistogramSummary&gt;
+  capturedAt: number
+}
+
+interface HistogramSummary {
+  count: number
+  sum: number
+  p50: number
+  p90: number
+  p99: number
+  // optional p25 / p75 also present
+}
+
+function getMetrics(): MetricsSnapshot
+function getMetricsDelta(prev: MetricsSnapshot): MetricsSnapshot
+</code></pre>
+
+<h2 id="pause"><code>broker.pauseTopic / resumeTopic / flushQueue</code></h2>
+<pre><code class="language-typescript">function pauseTopic(topic: string): void                 // queue events instead of delivering
+function resumeTopic(topic: string): void                // flush queue to subscribers
+function flushQueue(topic?: string): { droppedCount: number; droppedEventIds: string[] }
+</code></pre>
+<p>Critical-priority events bypass pause (still delivered).</p>
+
+<h2 id="taps"><code>EventTap</code> + <code>MultiplexTap</code></h2>
+<pre><code class="language-typescript">interface EventTap {
+  onEventPublished?(event: BrokerEvent): void
+  onEventDelivered?(event: BrokerEvent, subscribersReached: number): void
+  onEventFailed?(event: BrokerEvent, error: BrokerError): void
+  onPipelineStep?(eventId: string, step: PipelineStepRecord): void
+  onMetricsTick?(metrics: MetricsSnapshot): void
+  onRouteResolved?(routeId: string, eventId: string, durationMs: number): void
+}
+
+function createMultiplexTap(taps: EventTap[]): EventTap   // chain with error isolation
+</code></pre>
+<p>Each tap runs in its own try/catch — a failing tap doesn&rsquo;t affect the others (decision <code>D-159</code>).</p>
+
+<h2 id="debug-mode"><code>enableDebug / disableDebug</code></h2>
+<pre><code class="language-typescript">function enableDebug(): void
+function disableDebug(): void
+function getDebugSnapshot(): DebugSnapshot
+
+interface DebugSnapshot {
+  recentEvents: EventInspectorEntry[]
+  recentRoutes: RouteEntry[]
+  currentMetrics: MetricsSnapshot
+  pausedTopics: string[]
+  enabled: boolean
+}
+</code></pre>
+api/routing.html">@gluezero/routing</a>
+  <a class="sidebar-link" href="<h1><code>@gluezero/devtools</code></h1>
+<p class="lead">Inspector + MetricsCollector + PauseController. The observability layer that exposes the event flow for debugging and measurement.</p>
+
+<h2 id="createDevtoolsBroker"><code>createDevtoolsBroker(config)</code></h2>
+<pre><code class="language-typescript">function createDevtoolsBroker(config?: DevtoolsBrokerConfig): DevtoolsBroker
+
+interface DevtoolsBrokerConfig extends CacheBrokerConfig {
+  devtools?: {
+    inspectorBufferSize?: number       // default: 500
+    metricsCardinalityCap?: number     // default: 100 per metric
+    metricsReservoirSize?: number      // default: 1024 samples per histogram
+    pauseQueueMaxSize?: number         // default: 1000
+  }
+}
+</code></pre>
+
+<h2 id="event-inspector"><code>broker.getEventInspector()</code></h2>
+<pre><code class="language-typescript">interface EventInspector {
+  getSnapshot(opts?: { limit?: number; topic?: string }): EventInspectorEntry[]
+  clear(): void
+}
+
+interface EventInspectorEntry {
+  id: string
+  topic: string
+  timestamp: number
+  source: { type: string; id?: string; name?: string }
+  payload: unknown                                 // deep-cloned
+  deliveryMode: 'async' | 'sync'
+  priority: 'critical' | 'high' | 'normal' | 'low'
+  pipelineSteps: PipelineStepRecord[]              // 14 steps for dev
+  outcome: 'delivered' | 'failed' | 'dedup-skipped' | 'paused-queued'
+  subscribersReached: number
+  errors?: BrokerError[]
+}
+</code></pre>
+
+<h2 id="metrics"><code>broker.getMetrics()</code> / <code>getMetricsDelta(prev)</code></h2>
+<pre><code class="language-typescript">interface MetricsSnapshot {
+  counters: Record&lt;string, number&gt;
+  gauges: Record&lt;string, number&gt;
+  histograms: Record&lt;string, HistogramSummary&gt;
+  capturedAt: number
+}
+
+interface HistogramSummary {
+  count: number
+  sum: number
+  p50: number
+  p90: number
+  p99: number
+  // optional p25 / p75 also present
+}
+
+function getMetrics(): MetricsSnapshot
+function getMetricsDelta(prev: MetricsSnapshot): MetricsSnapshot
+</code></pre>
+
+<h2 id="pause"><code>broker.pauseTopic / resumeTopic / flushQueue</code></h2>
+<pre><code class="language-typescript">function pauseTopic(topic: string): void                 // queue events instead of delivering
+function resumeTopic(topic: string): void                // flush queue to subscribers
+function flushQueue(topic?: string): { droppedCount: number; droppedEventIds: string[] }
+</code></pre>
+<p>Critical-priority events bypass pause (still delivered).</p>
+
+<h2 id="taps"><code>EventTap</code> + <code>MultiplexTap</code></h2>
+<pre><code class="language-typescript">interface EventTap {
+  onEventPublished?(event: BrokerEvent): void
+  onEventDelivered?(event: BrokerEvent, subscribersReached: number): void
+  onEventFailed?(event: BrokerEvent, error: BrokerError): void
+  onPipelineStep?(eventId: string, step: PipelineStepRecord): void
+  onMetricsTick?(metrics: MetricsSnapshot): void
+  onRouteResolved?(routeId: string, eventId: string, durationMs: number): void
+}
+
+function createMultiplexTap(taps: EventTap[]): EventTap   // chain with error isolation
+</code></pre>
+<p>Each tap runs in its own try/catch — a failing tap doesn&rsquo;t affect the others (decision <code>D-159</code>).</p>
+
+<h2 id="debug-mode"><code>enableDebug / disableDebug</code></h2>
+<pre><code class="language-typescript">function enableDebug(): void
+function disableDebug(): void
+function getDebugSnapshot(): DebugSnapshot
+
+interface DebugSnapshot {
+  recentEvents: EventInspectorEntry[]
+  recentRoutes: RouteEntry[]
+  currentMetrics: MetricsSnapshot
+  pausedTopics: string[]
+  enabled: boolean
+}
+</code></pre>
+api/gateway.html">@gluezero/gateway</a>
+  <a class="sidebar-link" href="<h1><code>@gluezero/devtools</code></h1>
+<p class="lead">Inspector + MetricsCollector + PauseController. The observability layer that exposes the event flow for debugging and measurement.</p>
+
+<h2 id="createDevtoolsBroker"><code>createDevtoolsBroker(config)</code></h2>
+<pre><code class="language-typescript">function createDevtoolsBroker(config?: DevtoolsBrokerConfig): DevtoolsBroker
+
+interface DevtoolsBrokerConfig extends CacheBrokerConfig {
+  devtools?: {
+    inspectorBufferSize?: number       // default: 500
+    metricsCardinalityCap?: number     // default: 100 per metric
+    metricsReservoirSize?: number      // default: 1024 samples per histogram
+    pauseQueueMaxSize?: number         // default: 1000
+  }
+}
+</code></pre>
+
+<h2 id="event-inspector"><code>broker.getEventInspector()</code></h2>
+<pre><code class="language-typescript">interface EventInspector {
+  getSnapshot(opts?: { limit?: number; topic?: string }): EventInspectorEntry[]
+  clear(): void
+}
+
+interface EventInspectorEntry {
+  id: string
+  topic: string
+  timestamp: number
+  source: { type: string; id?: string; name?: string }
+  payload: unknown                                 // deep-cloned
+  deliveryMode: 'async' | 'sync'
+  priority: 'critical' | 'high' | 'normal' | 'low'
+  pipelineSteps: PipelineStepRecord[]              // 14 steps for dev
+  outcome: 'delivered' | 'failed' | 'dedup-skipped' | 'paused-queued'
+  subscribersReached: number
+  errors?: BrokerError[]
+}
+</code></pre>
+
+<h2 id="metrics"><code>broker.getMetrics()</code> / <code>getMetricsDelta(prev)</code></h2>
+<pre><code class="language-typescript">interface MetricsSnapshot {
+  counters: Record&lt;string, number&gt;
+  gauges: Record&lt;string, number&gt;
+  histograms: Record&lt;string, HistogramSummary&gt;
+  capturedAt: number
+}
+
+interface HistogramSummary {
+  count: number
+  sum: number
+  p50: number
+  p90: number
+  p99: number
+  // optional p25 / p75 also present
+}
+
+function getMetrics(): MetricsSnapshot
+function getMetricsDelta(prev: MetricsSnapshot): MetricsSnapshot
+</code></pre>
+
+<h2 id="pause"><code>broker.pauseTopic / resumeTopic / flushQueue</code></h2>
+<pre><code class="language-typescript">function pauseTopic(topic: string): void                 // queue events instead of delivering
+function resumeTopic(topic: string): void                // flush queue to subscribers
+function flushQueue(topic?: string): { droppedCount: number; droppedEventIds: string[] }
+</code></pre>
+<p>Critical-priority events bypass pause (still delivered).</p>
+
+<h2 id="taps"><code>EventTap</code> + <code>MultiplexTap</code></h2>
+<pre><code class="language-typescript">interface EventTap {
+  onEventPublished?(event: BrokerEvent): void
+  onEventDelivered?(event: BrokerEvent, subscribersReached: number): void
+  onEventFailed?(event: BrokerEvent, error: BrokerError): void
+  onPipelineStep?(eventId: string, step: PipelineStepRecord): void
+  onMetricsTick?(metrics: MetricsSnapshot): void
+  onRouteResolved?(routeId: string, eventId: string, durationMs: number): void
+}
+
+function createMultiplexTap(taps: EventTap[]): EventTap   // chain with error isolation
+</code></pre>
+<p>Each tap runs in its own try/catch — a failing tap doesn&rsquo;t affect the others (decision <code>D-159</code>).</p>
+
+<h2 id="debug-mode"><code>enableDebug / disableDebug</code></h2>
+<pre><code class="language-typescript">function enableDebug(): void
+function disableDebug(): void
+function getDebugSnapshot(): DebugSnapshot
+
+interface DebugSnapshot {
+  recentEvents: EventInspectorEntry[]
+  recentRoutes: RouteEntry[]
+  currentMetrics: MetricsSnapshot
+  pausedTopics: string[]
+  enabled: boolean
+}
+</code></pre>
+api/worker.html">@gluezero/worker</a>
+  <a class="sidebar-link" href="<h1><code>@gluezero/devtools</code></h1>
+<p class="lead">Inspector + MetricsCollector + PauseController. The observability layer that exposes the event flow for debugging and measurement.</p>
+
+<h2 id="createDevtoolsBroker"><code>createDevtoolsBroker(config)</code></h2>
+<pre><code class="language-typescript">function createDevtoolsBroker(config?: DevtoolsBrokerConfig): DevtoolsBroker
+
+interface DevtoolsBrokerConfig extends CacheBrokerConfig {
+  devtools?: {
+    inspectorBufferSize?: number       // default: 500
+    metricsCardinalityCap?: number     // default: 100 per metric
+    metricsReservoirSize?: number      // default: 1024 samples per histogram
+    pauseQueueMaxSize?: number         // default: 1000
+  }
+}
+</code></pre>
+
+<h2 id="event-inspector"><code>broker.getEventInspector()</code></h2>
+<pre><code class="language-typescript">interface EventInspector {
+  getSnapshot(opts?: { limit?: number; topic?: string }): EventInspectorEntry[]
+  clear(): void
+}
+
+interface EventInspectorEntry {
+  id: string
+  topic: string
+  timestamp: number
+  source: { type: string; id?: string; name?: string }
+  payload: unknown                                 // deep-cloned
+  deliveryMode: 'async' | 'sync'
+  priority: 'critical' | 'high' | 'normal' | 'low'
+  pipelineSteps: PipelineStepRecord[]              // 14 steps for dev
+  outcome: 'delivered' | 'failed' | 'dedup-skipped' | 'paused-queued'
+  subscribersReached: number
+  errors?: BrokerError[]
+}
+</code></pre>
+
+<h2 id="metrics"><code>broker.getMetrics()</code> / <code>getMetricsDelta(prev)</code></h2>
+<pre><code class="language-typescript">interface MetricsSnapshot {
+  counters: Record&lt;string, number&gt;
+  gauges: Record&lt;string, number&gt;
+  histograms: Record&lt;string, HistogramSummary&gt;
+  capturedAt: number
+}
+
+interface HistogramSummary {
+  count: number
+  sum: number
+  p50: number
+  p90: number
+  p99: number
+  // optional p25 / p75 also present
+}
+
+function getMetrics(): MetricsSnapshot
+function getMetricsDelta(prev: MetricsSnapshot): MetricsSnapshot
+</code></pre>
+
+<h2 id="pause"><code>broker.pauseTopic / resumeTopic / flushQueue</code></h2>
+<pre><code class="language-typescript">function pauseTopic(topic: string): void                 // queue events instead of delivering
+function resumeTopic(topic: string): void                // flush queue to subscribers
+function flushQueue(topic?: string): { droppedCount: number; droppedEventIds: string[] }
+</code></pre>
+<p>Critical-priority events bypass pause (still delivered).</p>
+
+<h2 id="taps"><code>EventTap</code> + <code>MultiplexTap</code></h2>
+<pre><code class="language-typescript">interface EventTap {
+  onEventPublished?(event: BrokerEvent): void
+  onEventDelivered?(event: BrokerEvent, subscribersReached: number): void
+  onEventFailed?(event: BrokerEvent, error: BrokerError): void
+  onPipelineStep?(eventId: string, step: PipelineStepRecord): void
+  onMetricsTick?(metrics: MetricsSnapshot): void
+  onRouteResolved?(routeId: string, eventId: string, durationMs: number): void
+}
+
+function createMultiplexTap(taps: EventTap[]): EventTap   // chain with error isolation
+</code></pre>
+<p>Each tap runs in its own try/catch — a failing tap doesn&rsquo;t affect the others (decision <code>D-159</code>).</p>
+
+<h2 id="debug-mode"><code>enableDebug / disableDebug</code></h2>
+<pre><code class="language-typescript">function enableDebug(): void
+function disableDebug(): void
+function getDebugSnapshot(): DebugSnapshot
+
+interface DebugSnapshot {
+  recentEvents: EventInspectorEntry[]
+  recentRoutes: RouteEntry[]
+  currentMetrics: MetricsSnapshot
+  pausedTopics: string[]
+  enabled: boolean
+}
+</code></pre>
+api/cache.html">@gluezero/cache</a>
+  <a class="sidebar-link" href="<h1><code>@gluezero/devtools</code></h1>
+<p class="lead">Inspector + MetricsCollector + PauseController. The observability layer that exposes the event flow for debugging and measurement.</p>
+
+<h2 id="createDevtoolsBroker"><code>createDevtoolsBroker(config)</code></h2>
+<pre><code class="language-typescript">function createDevtoolsBroker(config?: DevtoolsBrokerConfig): DevtoolsBroker
+
+interface DevtoolsBrokerConfig extends CacheBrokerConfig {
+  devtools?: {
+    inspectorBufferSize?: number       // default: 500
+    metricsCardinalityCap?: number     // default: 100 per metric
+    metricsReservoirSize?: number      // default: 1024 samples per histogram
+    pauseQueueMaxSize?: number         // default: 1000
+  }
+}
+</code></pre>
+
+<h2 id="event-inspector"><code>broker.getEventInspector()</code></h2>
+<pre><code class="language-typescript">interface EventInspector {
+  getSnapshot(opts?: { limit?: number; topic?: string }): EventInspectorEntry[]
+  clear(): void
+}
+
+interface EventInspectorEntry {
+  id: string
+  topic: string
+  timestamp: number
+  source: { type: string; id?: string; name?: string }
+  payload: unknown                                 // deep-cloned
+  deliveryMode: 'async' | 'sync'
+  priority: 'critical' | 'high' | 'normal' | 'low'
+  pipelineSteps: PipelineStepRecord[]              // 14 steps for dev
+  outcome: 'delivered' | 'failed' | 'dedup-skipped' | 'paused-queued'
+  subscribersReached: number
+  errors?: BrokerError[]
+}
+</code></pre>
+
+<h2 id="metrics"><code>broker.getMetrics()</code> / <code>getMetricsDelta(prev)</code></h2>
+<pre><code class="language-typescript">interface MetricsSnapshot {
+  counters: Record&lt;string, number&gt;
+  gauges: Record&lt;string, number&gt;
+  histograms: Record&lt;string, HistogramSummary&gt;
+  capturedAt: number
+}
+
+interface HistogramSummary {
+  count: number
+  sum: number
+  p50: number
+  p90: number
+  p99: number
+  // optional p25 / p75 also present
+}
+
+function getMetrics(): MetricsSnapshot
+function getMetricsDelta(prev: MetricsSnapshot): MetricsSnapshot
+</code></pre>
+
+<h2 id="pause"><code>broker.pauseTopic / resumeTopic / flushQueue</code></h2>
+<pre><code class="language-typescript">function pauseTopic(topic: string): void                 // queue events instead of delivering
+function resumeTopic(topic: string): void                // flush queue to subscribers
+function flushQueue(topic?: string): { droppedCount: number; droppedEventIds: string[] }
+</code></pre>
+<p>Critical-priority events bypass pause (still delivered).</p>
+
+<h2 id="taps"><code>EventTap</code> + <code>MultiplexTap</code></h2>
+<pre><code class="language-typescript">interface EventTap {
+  onEventPublished?(event: BrokerEvent): void
+  onEventDelivered?(event: BrokerEvent, subscribersReached: number): void
+  onEventFailed?(event: BrokerEvent, error: BrokerError): void
+  onPipelineStep?(eventId: string, step: PipelineStepRecord): void
+  onMetricsTick?(metrics: MetricsSnapshot): void
+  onRouteResolved?(routeId: string, eventId: string, durationMs: number): void
+}
+
+function createMultiplexTap(taps: EventTap[]): EventTap   // chain with error isolation
+</code></pre>
+<p>Each tap runs in its own try/catch — a failing tap doesn&rsquo;t affect the others (decision <code>D-159</code>).</p>
+
+<h2 id="debug-mode"><code>enableDebug / disableDebug</code></h2>
+<pre><code class="language-typescript">function enableDebug(): void
+function disableDebug(): void
+function getDebugSnapshot(): DebugSnapshot
+
+interface DebugSnapshot {
+  recentEvents: EventInspectorEntry[]
+  recentRoutes: RouteEntry[]
+  currentMetrics: MetricsSnapshot
+  pausedTopics: string[]
+  enabled: boolean
+}
+</code></pre>
+api/devtools.html">@gluezero/devtools</a>
 </div>
 <div class="sidebar-section">
   <div class="sidebar-section-title">Recipes</div>
-  <a class="sidebar-link" href="../recipes/auth-token-refresh.html">Auth + token refresh</a>
-  <a class="sidebar-link" href="../recipes/multi-tenant-cache.html">Multi-tenant cache</a>
-  <a class="sidebar-link" href="../recipes/reconnect-realtime.html">Reconnect SSE→WS</a>
-  <a class="sidebar-link" href="../recipes/worker-progress.html">Worker progress</a>
-  <a class="sidebar-link" href="../recipes/debug-flow.html">Debug with Inspector</a>
-  <a class="sidebar-link" href="../recipes/react-integration.html">React integration</a>
+  <a class="sidebar-link" href="<h1><code>@gluezero/devtools</code></h1>
+<p class="lead">Inspector + MetricsCollector + PauseController. The observability layer that exposes the event flow for debugging and measurement.</p>
+
+<h2 id="createDevtoolsBroker"><code>createDevtoolsBroker(config)</code></h2>
+<pre><code class="language-typescript">function createDevtoolsBroker(config?: DevtoolsBrokerConfig): DevtoolsBroker
+
+interface DevtoolsBrokerConfig extends CacheBrokerConfig {
+  devtools?: {
+    inspectorBufferSize?: number       // default: 500
+    metricsCardinalityCap?: number     // default: 100 per metric
+    metricsReservoirSize?: number      // default: 1024 samples per histogram
+    pauseQueueMaxSize?: number         // default: 1000
+  }
+}
+</code></pre>
+
+<h2 id="event-inspector"><code>broker.getEventInspector()</code></h2>
+<pre><code class="language-typescript">interface EventInspector {
+  getSnapshot(opts?: { limit?: number; topic?: string }): EventInspectorEntry[]
+  clear(): void
+}
+
+interface EventInspectorEntry {
+  id: string
+  topic: string
+  timestamp: number
+  source: { type: string; id?: string; name?: string }
+  payload: unknown                                 // deep-cloned
+  deliveryMode: 'async' | 'sync'
+  priority: 'critical' | 'high' | 'normal' | 'low'
+  pipelineSteps: PipelineStepRecord[]              // 14 steps for dev
+  outcome: 'delivered' | 'failed' | 'dedup-skipped' | 'paused-queued'
+  subscribersReached: number
+  errors?: BrokerError[]
+}
+</code></pre>
+
+<h2 id="metrics"><code>broker.getMetrics()</code> / <code>getMetricsDelta(prev)</code></h2>
+<pre><code class="language-typescript">interface MetricsSnapshot {
+  counters: Record&lt;string, number&gt;
+  gauges: Record&lt;string, number&gt;
+  histograms: Record&lt;string, HistogramSummary&gt;
+  capturedAt: number
+}
+
+interface HistogramSummary {
+  count: number
+  sum: number
+  p50: number
+  p90: number
+  p99: number
+  // optional p25 / p75 also present
+}
+
+function getMetrics(): MetricsSnapshot
+function getMetricsDelta(prev: MetricsSnapshot): MetricsSnapshot
+</code></pre>
+
+<h2 id="pause"><code>broker.pauseTopic / resumeTopic / flushQueue</code></h2>
+<pre><code class="language-typescript">function pauseTopic(topic: string): void                 // queue events instead of delivering
+function resumeTopic(topic: string): void                // flush queue to subscribers
+function flushQueue(topic?: string): { droppedCount: number; droppedEventIds: string[] }
+</code></pre>
+<p>Critical-priority events bypass pause (still delivered).</p>
+
+<h2 id="taps"><code>EventTap</code> + <code>MultiplexTap</code></h2>
+<pre><code class="language-typescript">interface EventTap {
+  onEventPublished?(event: BrokerEvent): void
+  onEventDelivered?(event: BrokerEvent, subscribersReached: number): void
+  onEventFailed?(event: BrokerEvent, error: BrokerError): void
+  onPipelineStep?(eventId: string, step: PipelineStepRecord): void
+  onMetricsTick?(metrics: MetricsSnapshot): void
+  onRouteResolved?(routeId: string, eventId: string, durationMs: number): void
+}
+
+function createMultiplexTap(taps: EventTap[]): EventTap   // chain with error isolation
+</code></pre>
+<p>Each tap runs in its own try/catch — a failing tap doesn&rsquo;t affect the others (decision <code>D-159</code>).</p>
+
+<h2 id="debug-mode"><code>enableDebug / disableDebug</code></h2>
+<pre><code class="language-typescript">function enableDebug(): void
+function disableDebug(): void
+function getDebugSnapshot(): DebugSnapshot
+
+interface DebugSnapshot {
+  recentEvents: EventInspectorEntry[]
+  recentRoutes: RouteEntry[]
+  currentMetrics: MetricsSnapshot
+  pausedTopics: string[]
+  enabled: boolean
+}
+</code></pre>
+recipes/auth-token-refresh.html">Auth + token refresh</a>
+  <a class="sidebar-link" href="<h1><code>@gluezero/devtools</code></h1>
+<p class="lead">Inspector + MetricsCollector + PauseController. The observability layer that exposes the event flow for debugging and measurement.</p>
+
+<h2 id="createDevtoolsBroker"><code>createDevtoolsBroker(config)</code></h2>
+<pre><code class="language-typescript">function createDevtoolsBroker(config?: DevtoolsBrokerConfig): DevtoolsBroker
+
+interface DevtoolsBrokerConfig extends CacheBrokerConfig {
+  devtools?: {
+    inspectorBufferSize?: number       // default: 500
+    metricsCardinalityCap?: number     // default: 100 per metric
+    metricsReservoirSize?: number      // default: 1024 samples per histogram
+    pauseQueueMaxSize?: number         // default: 1000
+  }
+}
+</code></pre>
+
+<h2 id="event-inspector"><code>broker.getEventInspector()</code></h2>
+<pre><code class="language-typescript">interface EventInspector {
+  getSnapshot(opts?: { limit?: number; topic?: string }): EventInspectorEntry[]
+  clear(): void
+}
+
+interface EventInspectorEntry {
+  id: string
+  topic: string
+  timestamp: number
+  source: { type: string; id?: string; name?: string }
+  payload: unknown                                 // deep-cloned
+  deliveryMode: 'async' | 'sync'
+  priority: 'critical' | 'high' | 'normal' | 'low'
+  pipelineSteps: PipelineStepRecord[]              // 14 steps for dev
+  outcome: 'delivered' | 'failed' | 'dedup-skipped' | 'paused-queued'
+  subscribersReached: number
+  errors?: BrokerError[]
+}
+</code></pre>
+
+<h2 id="metrics"><code>broker.getMetrics()</code> / <code>getMetricsDelta(prev)</code></h2>
+<pre><code class="language-typescript">interface MetricsSnapshot {
+  counters: Record&lt;string, number&gt;
+  gauges: Record&lt;string, number&gt;
+  histograms: Record&lt;string, HistogramSummary&gt;
+  capturedAt: number
+}
+
+interface HistogramSummary {
+  count: number
+  sum: number
+  p50: number
+  p90: number
+  p99: number
+  // optional p25 / p75 also present
+}
+
+function getMetrics(): MetricsSnapshot
+function getMetricsDelta(prev: MetricsSnapshot): MetricsSnapshot
+</code></pre>
+
+<h2 id="pause"><code>broker.pauseTopic / resumeTopic / flushQueue</code></h2>
+<pre><code class="language-typescript">function pauseTopic(topic: string): void                 // queue events instead of delivering
+function resumeTopic(topic: string): void                // flush queue to subscribers
+function flushQueue(topic?: string): { droppedCount: number; droppedEventIds: string[] }
+</code></pre>
+<p>Critical-priority events bypass pause (still delivered).</p>
+
+<h2 id="taps"><code>EventTap</code> + <code>MultiplexTap</code></h2>
+<pre><code class="language-typescript">interface EventTap {
+  onEventPublished?(event: BrokerEvent): void
+  onEventDelivered?(event: BrokerEvent, subscribersReached: number): void
+  onEventFailed?(event: BrokerEvent, error: BrokerError): void
+  onPipelineStep?(eventId: string, step: PipelineStepRecord): void
+  onMetricsTick?(metrics: MetricsSnapshot): void
+  onRouteResolved?(routeId: string, eventId: string, durationMs: number): void
+}
+
+function createMultiplexTap(taps: EventTap[]): EventTap   // chain with error isolation
+</code></pre>
+<p>Each tap runs in its own try/catch — a failing tap doesn&rsquo;t affect the others (decision <code>D-159</code>).</p>
+
+<h2 id="debug-mode"><code>enableDebug / disableDebug</code></h2>
+<pre><code class="language-typescript">function enableDebug(): void
+function disableDebug(): void
+function getDebugSnapshot(): DebugSnapshot
+
+interface DebugSnapshot {
+  recentEvents: EventInspectorEntry[]
+  recentRoutes: RouteEntry[]
+  currentMetrics: MetricsSnapshot
+  pausedTopics: string[]
+  enabled: boolean
+}
+</code></pre>
+recipes/multi-tenant-cache.html">Multi-tenant cache</a>
+  <a class="sidebar-link" href="<h1><code>@gluezero/devtools</code></h1>
+<p class="lead">Inspector + MetricsCollector + PauseController. The observability layer that exposes the event flow for debugging and measurement.</p>
+
+<h2 id="createDevtoolsBroker"><code>createDevtoolsBroker(config)</code></h2>
+<pre><code class="language-typescript">function createDevtoolsBroker(config?: DevtoolsBrokerConfig): DevtoolsBroker
+
+interface DevtoolsBrokerConfig extends CacheBrokerConfig {
+  devtools?: {
+    inspectorBufferSize?: number       // default: 500
+    metricsCardinalityCap?: number     // default: 100 per metric
+    metricsReservoirSize?: number      // default: 1024 samples per histogram
+    pauseQueueMaxSize?: number         // default: 1000
+  }
+}
+</code></pre>
+
+<h2 id="event-inspector"><code>broker.getEventInspector()</code></h2>
+<pre><code class="language-typescript">interface EventInspector {
+  getSnapshot(opts?: { limit?: number; topic?: string }): EventInspectorEntry[]
+  clear(): void
+}
+
+interface EventInspectorEntry {
+  id: string
+  topic: string
+  timestamp: number
+  source: { type: string; id?: string; name?: string }
+  payload: unknown                                 // deep-cloned
+  deliveryMode: 'async' | 'sync'
+  priority: 'critical' | 'high' | 'normal' | 'low'
+  pipelineSteps: PipelineStepRecord[]              // 14 steps for dev
+  outcome: 'delivered' | 'failed' | 'dedup-skipped' | 'paused-queued'
+  subscribersReached: number
+  errors?: BrokerError[]
+}
+</code></pre>
+
+<h2 id="metrics"><code>broker.getMetrics()</code> / <code>getMetricsDelta(prev)</code></h2>
+<pre><code class="language-typescript">interface MetricsSnapshot {
+  counters: Record&lt;string, number&gt;
+  gauges: Record&lt;string, number&gt;
+  histograms: Record&lt;string, HistogramSummary&gt;
+  capturedAt: number
+}
+
+interface HistogramSummary {
+  count: number
+  sum: number
+  p50: number
+  p90: number
+  p99: number
+  // optional p25 / p75 also present
+}
+
+function getMetrics(): MetricsSnapshot
+function getMetricsDelta(prev: MetricsSnapshot): MetricsSnapshot
+</code></pre>
+
+<h2 id="pause"><code>broker.pauseTopic / resumeTopic / flushQueue</code></h2>
+<pre><code class="language-typescript">function pauseTopic(topic: string): void                 // queue events instead of delivering
+function resumeTopic(topic: string): void                // flush queue to subscribers
+function flushQueue(topic?: string): { droppedCount: number; droppedEventIds: string[] }
+</code></pre>
+<p>Critical-priority events bypass pause (still delivered).</p>
+
+<h2 id="taps"><code>EventTap</code> + <code>MultiplexTap</code></h2>
+<pre><code class="language-typescript">interface EventTap {
+  onEventPublished?(event: BrokerEvent): void
+  onEventDelivered?(event: BrokerEvent, subscribersReached: number): void
+  onEventFailed?(event: BrokerEvent, error: BrokerError): void
+  onPipelineStep?(eventId: string, step: PipelineStepRecord): void
+  onMetricsTick?(metrics: MetricsSnapshot): void
+  onRouteResolved?(routeId: string, eventId: string, durationMs: number): void
+}
+
+function createMultiplexTap(taps: EventTap[]): EventTap   // chain with error isolation
+</code></pre>
+<p>Each tap runs in its own try/catch — a failing tap doesn&rsquo;t affect the others (decision <code>D-159</code>).</p>
+
+<h2 id="debug-mode"><code>enableDebug / disableDebug</code></h2>
+<pre><code class="language-typescript">function enableDebug(): void
+function disableDebug(): void
+function getDebugSnapshot(): DebugSnapshot
+
+interface DebugSnapshot {
+  recentEvents: EventInspectorEntry[]
+  recentRoutes: RouteEntry[]
+  currentMetrics: MetricsSnapshot
+  pausedTopics: string[]
+  enabled: boolean
+}
+</code></pre>
+recipes/reconnect-realtime.html">Reconnect SSE→WS</a>
+  <a class="sidebar-link" href="<h1><code>@gluezero/devtools</code></h1>
+<p class="lead">Inspector + MetricsCollector + PauseController. The observability layer that exposes the event flow for debugging and measurement.</p>
+
+<h2 id="createDevtoolsBroker"><code>createDevtoolsBroker(config)</code></h2>
+<pre><code class="language-typescript">function createDevtoolsBroker(config?: DevtoolsBrokerConfig): DevtoolsBroker
+
+interface DevtoolsBrokerConfig extends CacheBrokerConfig {
+  devtools?: {
+    inspectorBufferSize?: number       // default: 500
+    metricsCardinalityCap?: number     // default: 100 per metric
+    metricsReservoirSize?: number      // default: 1024 samples per histogram
+    pauseQueueMaxSize?: number         // default: 1000
+  }
+}
+</code></pre>
+
+<h2 id="event-inspector"><code>broker.getEventInspector()</code></h2>
+<pre><code class="language-typescript">interface EventInspector {
+  getSnapshot(opts?: { limit?: number; topic?: string }): EventInspectorEntry[]
+  clear(): void
+}
+
+interface EventInspectorEntry {
+  id: string
+  topic: string
+  timestamp: number
+  source: { type: string; id?: string; name?: string }
+  payload: unknown                                 // deep-cloned
+  deliveryMode: 'async' | 'sync'
+  priority: 'critical' | 'high' | 'normal' | 'low'
+  pipelineSteps: PipelineStepRecord[]              // 14 steps for dev
+  outcome: 'delivered' | 'failed' | 'dedup-skipped' | 'paused-queued'
+  subscribersReached: number
+  errors?: BrokerError[]
+}
+</code></pre>
+
+<h2 id="metrics"><code>broker.getMetrics()</code> / <code>getMetricsDelta(prev)</code></h2>
+<pre><code class="language-typescript">interface MetricsSnapshot {
+  counters: Record&lt;string, number&gt;
+  gauges: Record&lt;string, number&gt;
+  histograms: Record&lt;string, HistogramSummary&gt;
+  capturedAt: number
+}
+
+interface HistogramSummary {
+  count: number
+  sum: number
+  p50: number
+  p90: number
+  p99: number
+  // optional p25 / p75 also present
+}
+
+function getMetrics(): MetricsSnapshot
+function getMetricsDelta(prev: MetricsSnapshot): MetricsSnapshot
+</code></pre>
+
+<h2 id="pause"><code>broker.pauseTopic / resumeTopic / flushQueue</code></h2>
+<pre><code class="language-typescript">function pauseTopic(topic: string): void                 // queue events instead of delivering
+function resumeTopic(topic: string): void                // flush queue to subscribers
+function flushQueue(topic?: string): { droppedCount: number; droppedEventIds: string[] }
+</code></pre>
+<p>Critical-priority events bypass pause (still delivered).</p>
+
+<h2 id="taps"><code>EventTap</code> + <code>MultiplexTap</code></h2>
+<pre><code class="language-typescript">interface EventTap {
+  onEventPublished?(event: BrokerEvent): void
+  onEventDelivered?(event: BrokerEvent, subscribersReached: number): void
+  onEventFailed?(event: BrokerEvent, error: BrokerError): void
+  onPipelineStep?(eventId: string, step: PipelineStepRecord): void
+  onMetricsTick?(metrics: MetricsSnapshot): void
+  onRouteResolved?(routeId: string, eventId: string, durationMs: number): void
+}
+
+function createMultiplexTap(taps: EventTap[]): EventTap   // chain with error isolation
+</code></pre>
+<p>Each tap runs in its own try/catch — a failing tap doesn&rsquo;t affect the others (decision <code>D-159</code>).</p>
+
+<h2 id="debug-mode"><code>enableDebug / disableDebug</code></h2>
+<pre><code class="language-typescript">function enableDebug(): void
+function disableDebug(): void
+function getDebugSnapshot(): DebugSnapshot
+
+interface DebugSnapshot {
+  recentEvents: EventInspectorEntry[]
+  recentRoutes: RouteEntry[]
+  currentMetrics: MetricsSnapshot
+  pausedTopics: string[]
+  enabled: boolean
+}
+</code></pre>
+recipes/worker-progress.html">Worker progress</a>
+  <a class="sidebar-link" href="<h1><code>@gluezero/devtools</code></h1>
+<p class="lead">Inspector + MetricsCollector + PauseController. The observability layer that exposes the event flow for debugging and measurement.</p>
+
+<h2 id="createDevtoolsBroker"><code>createDevtoolsBroker(config)</code></h2>
+<pre><code class="language-typescript">function createDevtoolsBroker(config?: DevtoolsBrokerConfig): DevtoolsBroker
+
+interface DevtoolsBrokerConfig extends CacheBrokerConfig {
+  devtools?: {
+    inspectorBufferSize?: number       // default: 500
+    metricsCardinalityCap?: number     // default: 100 per metric
+    metricsReservoirSize?: number      // default: 1024 samples per histogram
+    pauseQueueMaxSize?: number         // default: 1000
+  }
+}
+</code></pre>
+
+<h2 id="event-inspector"><code>broker.getEventInspector()</code></h2>
+<pre><code class="language-typescript">interface EventInspector {
+  getSnapshot(opts?: { limit?: number; topic?: string }): EventInspectorEntry[]
+  clear(): void
+}
+
+interface EventInspectorEntry {
+  id: string
+  topic: string
+  timestamp: number
+  source: { type: string; id?: string; name?: string }
+  payload: unknown                                 // deep-cloned
+  deliveryMode: 'async' | 'sync'
+  priority: 'critical' | 'high' | 'normal' | 'low'
+  pipelineSteps: PipelineStepRecord[]              // 14 steps for dev
+  outcome: 'delivered' | 'failed' | 'dedup-skipped' | 'paused-queued'
+  subscribersReached: number
+  errors?: BrokerError[]
+}
+</code></pre>
+
+<h2 id="metrics"><code>broker.getMetrics()</code> / <code>getMetricsDelta(prev)</code></h2>
+<pre><code class="language-typescript">interface MetricsSnapshot {
+  counters: Record&lt;string, number&gt;
+  gauges: Record&lt;string, number&gt;
+  histograms: Record&lt;string, HistogramSummary&gt;
+  capturedAt: number
+}
+
+interface HistogramSummary {
+  count: number
+  sum: number
+  p50: number
+  p90: number
+  p99: number
+  // optional p25 / p75 also present
+}
+
+function getMetrics(): MetricsSnapshot
+function getMetricsDelta(prev: MetricsSnapshot): MetricsSnapshot
+</code></pre>
+
+<h2 id="pause"><code>broker.pauseTopic / resumeTopic / flushQueue</code></h2>
+<pre><code class="language-typescript">function pauseTopic(topic: string): void                 // queue events instead of delivering
+function resumeTopic(topic: string): void                // flush queue to subscribers
+function flushQueue(topic?: string): { droppedCount: number; droppedEventIds: string[] }
+</code></pre>
+<p>Critical-priority events bypass pause (still delivered).</p>
+
+<h2 id="taps"><code>EventTap</code> + <code>MultiplexTap</code></h2>
+<pre><code class="language-typescript">interface EventTap {
+  onEventPublished?(event: BrokerEvent): void
+  onEventDelivered?(event: BrokerEvent, subscribersReached: number): void
+  onEventFailed?(event: BrokerEvent, error: BrokerError): void
+  onPipelineStep?(eventId: string, step: PipelineStepRecord): void
+  onMetricsTick?(metrics: MetricsSnapshot): void
+  onRouteResolved?(routeId: string, eventId: string, durationMs: number): void
+}
+
+function createMultiplexTap(taps: EventTap[]): EventTap   // chain with error isolation
+</code></pre>
+<p>Each tap runs in its own try/catch — a failing tap doesn&rsquo;t affect the others (decision <code>D-159</code>).</p>
+
+<h2 id="debug-mode"><code>enableDebug / disableDebug</code></h2>
+<pre><code class="language-typescript">function enableDebug(): void
+function disableDebug(): void
+function getDebugSnapshot(): DebugSnapshot
+
+interface DebugSnapshot {
+  recentEvents: EventInspectorEntry[]
+  recentRoutes: RouteEntry[]
+  currentMetrics: MetricsSnapshot
+  pausedTopics: string[]
+  enabled: boolean
+}
+</code></pre>
+recipes/debug-flow.html">Debug with Inspector</a>
+  <a class="sidebar-link" href="<h1><code>@gluezero/devtools</code></h1>
+<p class="lead">Inspector + MetricsCollector + PauseController. The observability layer that exposes the event flow for debugging and measurement.</p>
+
+<h2 id="createDevtoolsBroker"><code>createDevtoolsBroker(config)</code></h2>
+<pre><code class="language-typescript">function createDevtoolsBroker(config?: DevtoolsBrokerConfig): DevtoolsBroker
+
+interface DevtoolsBrokerConfig extends CacheBrokerConfig {
+  devtools?: {
+    inspectorBufferSize?: number       // default: 500
+    metricsCardinalityCap?: number     // default: 100 per metric
+    metricsReservoirSize?: number      // default: 1024 samples per histogram
+    pauseQueueMaxSize?: number         // default: 1000
+  }
+}
+</code></pre>
+
+<h2 id="event-inspector"><code>broker.getEventInspector()</code></h2>
+<pre><code class="language-typescript">interface EventInspector {
+  getSnapshot(opts?: { limit?: number; topic?: string }): EventInspectorEntry[]
+  clear(): void
+}
+
+interface EventInspectorEntry {
+  id: string
+  topic: string
+  timestamp: number
+  source: { type: string; id?: string; name?: string }
+  payload: unknown                                 // deep-cloned
+  deliveryMode: 'async' | 'sync'
+  priority: 'critical' | 'high' | 'normal' | 'low'
+  pipelineSteps: PipelineStepRecord[]              // 14 steps for dev
+  outcome: 'delivered' | 'failed' | 'dedup-skipped' | 'paused-queued'
+  subscribersReached: number
+  errors?: BrokerError[]
+}
+</code></pre>
+
+<h2 id="metrics"><code>broker.getMetrics()</code> / <code>getMetricsDelta(prev)</code></h2>
+<pre><code class="language-typescript">interface MetricsSnapshot {
+  counters: Record&lt;string, number&gt;
+  gauges: Record&lt;string, number&gt;
+  histograms: Record&lt;string, HistogramSummary&gt;
+  capturedAt: number
+}
+
+interface HistogramSummary {
+  count: number
+  sum: number
+  p50: number
+  p90: number
+  p99: number
+  // optional p25 / p75 also present
+}
+
+function getMetrics(): MetricsSnapshot
+function getMetricsDelta(prev: MetricsSnapshot): MetricsSnapshot
+</code></pre>
+
+<h2 id="pause"><code>broker.pauseTopic / resumeTopic / flushQueue</code></h2>
+<pre><code class="language-typescript">function pauseTopic(topic: string): void                 // queue events instead of delivering
+function resumeTopic(topic: string): void                // flush queue to subscribers
+function flushQueue(topic?: string): { droppedCount: number; droppedEventIds: string[] }
+</code></pre>
+<p>Critical-priority events bypass pause (still delivered).</p>
+
+<h2 id="taps"><code>EventTap</code> + <code>MultiplexTap</code></h2>
+<pre><code class="language-typescript">interface EventTap {
+  onEventPublished?(event: BrokerEvent): void
+  onEventDelivered?(event: BrokerEvent, subscribersReached: number): void
+  onEventFailed?(event: BrokerEvent, error: BrokerError): void
+  onPipelineStep?(eventId: string, step: PipelineStepRecord): void
+  onMetricsTick?(metrics: MetricsSnapshot): void
+  onRouteResolved?(routeId: string, eventId: string, durationMs: number): void
+}
+
+function createMultiplexTap(taps: EventTap[]): EventTap   // chain with error isolation
+</code></pre>
+<p>Each tap runs in its own try/catch — a failing tap doesn&rsquo;t affect the others (decision <code>D-159</code>).</p>
+
+<h2 id="debug-mode"><code>enableDebug / disableDebug</code></h2>
+<pre><code class="language-typescript">function enableDebug(): void
+function disableDebug(): void
+function getDebugSnapshot(): DebugSnapshot
+
+interface DebugSnapshot {
+  recentEvents: EventInspectorEntry[]
+  recentRoutes: RouteEntry[]
+  currentMetrics: MetricsSnapshot
+  pausedTopics: string[]
+  enabled: boolean
+}
+</code></pre>
+recipes/react-integration.html">React integration</a>
 </div>
 <div class="sidebar-section">
   <div class="sidebar-section-title">Reference</div>
-  <a class="sidebar-link" href="../decisions.html">Architectural decisions</a>
-  <a class="sidebar-link" href="../faq.html">FAQ</a>
+  <a class="sidebar-link" href="<h1><code>@gluezero/devtools</code></h1>
+<p class="lead">Inspector + MetricsCollector + PauseController. The observability layer that exposes the event flow for debugging and measurement.</p>
+
+<h2 id="createDevtoolsBroker"><code>createDevtoolsBroker(config)</code></h2>
+<pre><code class="language-typescript">function createDevtoolsBroker(config?: DevtoolsBrokerConfig): DevtoolsBroker
+
+interface DevtoolsBrokerConfig extends CacheBrokerConfig {
+  devtools?: {
+    inspectorBufferSize?: number       // default: 500
+    metricsCardinalityCap?: number     // default: 100 per metric
+    metricsReservoirSize?: number      // default: 1024 samples per histogram
+    pauseQueueMaxSize?: number         // default: 1000
+  }
+}
+</code></pre>
+
+<h2 id="event-inspector"><code>broker.getEventInspector()</code></h2>
+<pre><code class="language-typescript">interface EventInspector {
+  getSnapshot(opts?: { limit?: number; topic?: string }): EventInspectorEntry[]
+  clear(): void
+}
+
+interface EventInspectorEntry {
+  id: string
+  topic: string
+  timestamp: number
+  source: { type: string; id?: string; name?: string }
+  payload: unknown                                 // deep-cloned
+  deliveryMode: 'async' | 'sync'
+  priority: 'critical' | 'high' | 'normal' | 'low'
+  pipelineSteps: PipelineStepRecord[]              // 14 steps for dev
+  outcome: 'delivered' | 'failed' | 'dedup-skipped' | 'paused-queued'
+  subscribersReached: number
+  errors?: BrokerError[]
+}
+</code></pre>
+
+<h2 id="metrics"><code>broker.getMetrics()</code> / <code>getMetricsDelta(prev)</code></h2>
+<pre><code class="language-typescript">interface MetricsSnapshot {
+  counters: Record&lt;string, number&gt;
+  gauges: Record&lt;string, number&gt;
+  histograms: Record&lt;string, HistogramSummary&gt;
+  capturedAt: number
+}
+
+interface HistogramSummary {
+  count: number
+  sum: number
+  p50: number
+  p90: number
+  p99: number
+  // optional p25 / p75 also present
+}
+
+function getMetrics(): MetricsSnapshot
+function getMetricsDelta(prev: MetricsSnapshot): MetricsSnapshot
+</code></pre>
+
+<h2 id="pause"><code>broker.pauseTopic / resumeTopic / flushQueue</code></h2>
+<pre><code class="language-typescript">function pauseTopic(topic: string): void                 // queue events instead of delivering
+function resumeTopic(topic: string): void                // flush queue to subscribers
+function flushQueue(topic?: string): { droppedCount: number; droppedEventIds: string[] }
+</code></pre>
+<p>Critical-priority events bypass pause (still delivered).</p>
+
+<h2 id="taps"><code>EventTap</code> + <code>MultiplexTap</code></h2>
+<pre><code class="language-typescript">interface EventTap {
+  onEventPublished?(event: BrokerEvent): void
+  onEventDelivered?(event: BrokerEvent, subscribersReached: number): void
+  onEventFailed?(event: BrokerEvent, error: BrokerError): void
+  onPipelineStep?(eventId: string, step: PipelineStepRecord): void
+  onMetricsTick?(metrics: MetricsSnapshot): void
+  onRouteResolved?(routeId: string, eventId: string, durationMs: number): void
+}
+
+function createMultiplexTap(taps: EventTap[]): EventTap   // chain with error isolation
+</code></pre>
+<p>Each tap runs in its own try/catch — a failing tap doesn&rsquo;t affect the others (decision <code>D-159</code>).</p>
+
+<h2 id="debug-mode"><code>enableDebug / disableDebug</code></h2>
+<pre><code class="language-typescript">function enableDebug(): void
+function disableDebug(): void
+function getDebugSnapshot(): DebugSnapshot
+
+interface DebugSnapshot {
+  recentEvents: EventInspectorEntry[]
+  recentRoutes: RouteEntry[]
+  currentMetrics: MetricsSnapshot
+  pausedTopics: string[]
+  enabled: boolean
+}
+</code></pre>
+decisions.html">Architectural decisions</a>
+  <a class="sidebar-link" href="<h1><code>@gluezero/devtools</code></h1>
+<p class="lead">Inspector + MetricsCollector + PauseController. The observability layer that exposes the event flow for debugging and measurement.</p>
+
+<h2 id="createDevtoolsBroker"><code>createDevtoolsBroker(config)</code></h2>
+<pre><code class="language-typescript">function createDevtoolsBroker(config?: DevtoolsBrokerConfig): DevtoolsBroker
+
+interface DevtoolsBrokerConfig extends CacheBrokerConfig {
+  devtools?: {
+    inspectorBufferSize?: number       // default: 500
+    metricsCardinalityCap?: number     // default: 100 per metric
+    metricsReservoirSize?: number      // default: 1024 samples per histogram
+    pauseQueueMaxSize?: number         // default: 1000
+  }
+}
+</code></pre>
+
+<h2 id="event-inspector"><code>broker.getEventInspector()</code></h2>
+<pre><code class="language-typescript">interface EventInspector {
+  getSnapshot(opts?: { limit?: number; topic?: string }): EventInspectorEntry[]
+  clear(): void
+}
+
+interface EventInspectorEntry {
+  id: string
+  topic: string
+  timestamp: number
+  source: { type: string; id?: string; name?: string }
+  payload: unknown                                 // deep-cloned
+  deliveryMode: 'async' | 'sync'
+  priority: 'critical' | 'high' | 'normal' | 'low'
+  pipelineSteps: PipelineStepRecord[]              // 14 steps for dev
+  outcome: 'delivered' | 'failed' | 'dedup-skipped' | 'paused-queued'
+  subscribersReached: number
+  errors?: BrokerError[]
+}
+</code></pre>
+
+<h2 id="metrics"><code>broker.getMetrics()</code> / <code>getMetricsDelta(prev)</code></h2>
+<pre><code class="language-typescript">interface MetricsSnapshot {
+  counters: Record&lt;string, number&gt;
+  gauges: Record&lt;string, number&gt;
+  histograms: Record&lt;string, HistogramSummary&gt;
+  capturedAt: number
+}
+
+interface HistogramSummary {
+  count: number
+  sum: number
+  p50: number
+  p90: number
+  p99: number
+  // optional p25 / p75 also present
+}
+
+function getMetrics(): MetricsSnapshot
+function getMetricsDelta(prev: MetricsSnapshot): MetricsSnapshot
+</code></pre>
+
+<h2 id="pause"><code>broker.pauseTopic / resumeTopic / flushQueue</code></h2>
+<pre><code class="language-typescript">function pauseTopic(topic: string): void                 // queue events instead of delivering
+function resumeTopic(topic: string): void                // flush queue to subscribers
+function flushQueue(topic?: string): { droppedCount: number; droppedEventIds: string[] }
+</code></pre>
+<p>Critical-priority events bypass pause (still delivered).</p>
+
+<h2 id="taps"><code>EventTap</code> + <code>MultiplexTap</code></h2>
+<pre><code class="language-typescript">interface EventTap {
+  onEventPublished?(event: BrokerEvent): void
+  onEventDelivered?(event: BrokerEvent, subscribersReached: number): void
+  onEventFailed?(event: BrokerEvent, error: BrokerError): void
+  onPipelineStep?(eventId: string, step: PipelineStepRecord): void
+  onMetricsTick?(metrics: MetricsSnapshot): void
+  onRouteResolved?(routeId: string, eventId: string, durationMs: number): void
+}
+
+function createMultiplexTap(taps: EventTap[]): EventTap   // chain with error isolation
+</code></pre>
+<p>Each tap runs in its own try/catch — a failing tap doesn&rsquo;t affect the others (decision <code>D-159</code>).</p>
+
+<h2 id="debug-mode"><code>enableDebug / disableDebug</code></h2>
+<pre><code class="language-typescript">function enableDebug(): void
+function disableDebug(): void
+function getDebugSnapshot(): DebugSnapshot
+
+interface DebugSnapshot {
+  recentEvents: EventInspectorEntry[]
+  recentRoutes: RouteEntry[]
+  currentMetrics: MetricsSnapshot
+  pausedTopics: string[]
+  enabled: boolean
+}
+</code></pre>
+faq.html">FAQ</a>
 </div>
 </nav>
 <main class="content" role="main">
 <div class="content-inner">
-<nav class="breadcrumb" aria-label="Breadcrumb"><a href="../index.html">Docs</a> / API reference</nav>
-<h1>@gluezero/devtools</h1>
-<p class="lead">This page is under construction. Check back shortly for the full content.</p>
-<p><a href="../index.html">← Back to docs home</a></p>
+<nav class="breadcrumb" aria-label="Breadcrumb"><a href="<h1><code>@gluezero/devtools</code></h1>
+<p class="lead">Inspector + MetricsCollector + PauseController. The observability layer that exposes the event flow for debugging and measurement.</p>
+
+<h2 id="createDevtoolsBroker"><code>createDevtoolsBroker(config)</code></h2>
+<pre><code class="language-typescript">function createDevtoolsBroker(config?: DevtoolsBrokerConfig): DevtoolsBroker
+
+interface DevtoolsBrokerConfig extends CacheBrokerConfig {
+  devtools?: {
+    inspectorBufferSize?: number       // default: 500
+    metricsCardinalityCap?: number     // default: 100 per metric
+    metricsReservoirSize?: number      // default: 1024 samples per histogram
+    pauseQueueMaxSize?: number         // default: 1000
+  }
+}
+</code></pre>
+
+<h2 id="event-inspector"><code>broker.getEventInspector()</code></h2>
+<pre><code class="language-typescript">interface EventInspector {
+  getSnapshot(opts?: { limit?: number; topic?: string }): EventInspectorEntry[]
+  clear(): void
+}
+
+interface EventInspectorEntry {
+  id: string
+  topic: string
+  timestamp: number
+  source: { type: string; id?: string; name?: string }
+  payload: unknown                                 // deep-cloned
+  deliveryMode: 'async' | 'sync'
+  priority: 'critical' | 'high' | 'normal' | 'low'
+  pipelineSteps: PipelineStepRecord[]              // 14 steps for dev
+  outcome: 'delivered' | 'failed' | 'dedup-skipped' | 'paused-queued'
+  subscribersReached: number
+  errors?: BrokerError[]
+}
+</code></pre>
+
+<h2 id="metrics"><code>broker.getMetrics()</code> / <code>getMetricsDelta(prev)</code></h2>
+<pre><code class="language-typescript">interface MetricsSnapshot {
+  counters: Record&lt;string, number&gt;
+  gauges: Record&lt;string, number&gt;
+  histograms: Record&lt;string, HistogramSummary&gt;
+  capturedAt: number
+}
+
+interface HistogramSummary {
+  count: number
+  sum: number
+  p50: number
+  p90: number
+  p99: number
+  // optional p25 / p75 also present
+}
+
+function getMetrics(): MetricsSnapshot
+function getMetricsDelta(prev: MetricsSnapshot): MetricsSnapshot
+</code></pre>
+
+<h2 id="pause"><code>broker.pauseTopic / resumeTopic / flushQueue</code></h2>
+<pre><code class="language-typescript">function pauseTopic(topic: string): void                 // queue events instead of delivering
+function resumeTopic(topic: string): void                // flush queue to subscribers
+function flushQueue(topic?: string): { droppedCount: number; droppedEventIds: string[] }
+</code></pre>
+<p>Critical-priority events bypass pause (still delivered).</p>
+
+<h2 id="taps"><code>EventTap</code> + <code>MultiplexTap</code></h2>
+<pre><code class="language-typescript">interface EventTap {
+  onEventPublished?(event: BrokerEvent): void
+  onEventDelivered?(event: BrokerEvent, subscribersReached: number): void
+  onEventFailed?(event: BrokerEvent, error: BrokerError): void
+  onPipelineStep?(eventId: string, step: PipelineStepRecord): void
+  onMetricsTick?(metrics: MetricsSnapshot): void
+  onRouteResolved?(routeId: string, eventId: string, durationMs: number): void
+}
+
+function createMultiplexTap(taps: EventTap[]): EventTap   // chain with error isolation
+</code></pre>
+<p>Each tap runs in its own try/catch — a failing tap doesn&rsquo;t affect the others (decision <code>D-159</code>).</p>
+
+<h2 id="debug-mode"><code>enableDebug / disableDebug</code></h2>
+<pre><code class="language-typescript">function enableDebug(): void
+function disableDebug(): void
+function getDebugSnapshot(): DebugSnapshot
+
+interface DebugSnapshot {
+  recentEvents: EventInspectorEntry[]
+  recentRoutes: RouteEntry[]
+  currentMetrics: MetricsSnapshot
+  pausedTopics: string[]
+  enabled: boolean
+}
+</code></pre>
+index.html">Docs</a> / API reference</nav>
+../
 <footer class="footer">
   <div>GlueZero v1.0.0 — MIT License</div>
   <div>
@@ -87,6 +2937,98 @@
 </footer>
 </div>
 </main>
-<script src="../assets/docs.js"></script>
+<script src="<h1><code>@gluezero/devtools</code></h1>
+<p class="lead">Inspector + MetricsCollector + PauseController. The observability layer that exposes the event flow for debugging and measurement.</p>
+
+<h2 id="createDevtoolsBroker"><code>createDevtoolsBroker(config)</code></h2>
+<pre><code class="language-typescript">function createDevtoolsBroker(config?: DevtoolsBrokerConfig): DevtoolsBroker
+
+interface DevtoolsBrokerConfig extends CacheBrokerConfig {
+  devtools?: {
+    inspectorBufferSize?: number       // default: 500
+    metricsCardinalityCap?: number     // default: 100 per metric
+    metricsReservoirSize?: number      // default: 1024 samples per histogram
+    pauseQueueMaxSize?: number         // default: 1000
+  }
+}
+</code></pre>
+
+<h2 id="event-inspector"><code>broker.getEventInspector()</code></h2>
+<pre><code class="language-typescript">interface EventInspector {
+  getSnapshot(opts?: { limit?: number; topic?: string }): EventInspectorEntry[]
+  clear(): void
+}
+
+interface EventInspectorEntry {
+  id: string
+  topic: string
+  timestamp: number
+  source: { type: string; id?: string; name?: string }
+  payload: unknown                                 // deep-cloned
+  deliveryMode: 'async' | 'sync'
+  priority: 'critical' | 'high' | 'normal' | 'low'
+  pipelineSteps: PipelineStepRecord[]              // 14 steps for dev
+  outcome: 'delivered' | 'failed' | 'dedup-skipped' | 'paused-queued'
+  subscribersReached: number
+  errors?: BrokerError[]
+}
+</code></pre>
+
+<h2 id="metrics"><code>broker.getMetrics()</code> / <code>getMetricsDelta(prev)</code></h2>
+<pre><code class="language-typescript">interface MetricsSnapshot {
+  counters: Record&lt;string, number&gt;
+  gauges: Record&lt;string, number&gt;
+  histograms: Record&lt;string, HistogramSummary&gt;
+  capturedAt: number
+}
+
+interface HistogramSummary {
+  count: number
+  sum: number
+  p50: number
+  p90: number
+  p99: number
+  // optional p25 / p75 also present
+}
+
+function getMetrics(): MetricsSnapshot
+function getMetricsDelta(prev: MetricsSnapshot): MetricsSnapshot
+</code></pre>
+
+<h2 id="pause"><code>broker.pauseTopic / resumeTopic / flushQueue</code></h2>
+<pre><code class="language-typescript">function pauseTopic(topic: string): void                 // queue events instead of delivering
+function resumeTopic(topic: string): void                // flush queue to subscribers
+function flushQueue(topic?: string): { droppedCount: number; droppedEventIds: string[] }
+</code></pre>
+<p>Critical-priority events bypass pause (still delivered).</p>
+
+<h2 id="taps"><code>EventTap</code> + <code>MultiplexTap</code></h2>
+<pre><code class="language-typescript">interface EventTap {
+  onEventPublished?(event: BrokerEvent): void
+  onEventDelivered?(event: BrokerEvent, subscribersReached: number): void
+  onEventFailed?(event: BrokerEvent, error: BrokerError): void
+  onPipelineStep?(eventId: string, step: PipelineStepRecord): void
+  onMetricsTick?(metrics: MetricsSnapshot): void
+  onRouteResolved?(routeId: string, eventId: string, durationMs: number): void
+}
+
+function createMultiplexTap(taps: EventTap[]): EventTap   // chain with error isolation
+</code></pre>
+<p>Each tap runs in its own try/catch — a failing tap doesn&rsquo;t affect the others (decision <code>D-159</code>).</p>
+
+<h2 id="debug-mode"><code>enableDebug / disableDebug</code></h2>
+<pre><code class="language-typescript">function enableDebug(): void
+function disableDebug(): void
+function getDebugSnapshot(): DebugSnapshot
+
+interface DebugSnapshot {
+  recentEvents: EventInspectorEntry[]
+  recentRoutes: RouteEntry[]
+  currentMetrics: MetricsSnapshot
+  pausedTopics: string[]
+  enabled: boolean
+}
+</code></pre>
+assets/docs.js"></script>
 </body>
 </html>

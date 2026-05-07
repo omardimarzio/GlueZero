@@ -68,97 +68,97 @@
   {
     "title": "@gluezero/gluezero",
     "section": "API reference",
-    "keywords": "api gluezero aggregate createGlueZero factory chain",
+    "keywords": "createGlueZero aggregate factory chain composition F1 F2 F3 F4 F5 F6 features opt-out",
     "url": "api/gluezero.html"
   },
   {
     "title": "@gluezero/core",
     "section": "API reference",
-    "keywords": "api core broker subscribe publish createBroker",
+    "keywords": "createBroker BrokerEvent PluginDescriptor subscribe publish unsubscribe registerPlugin unregisterPlugin TopicTrie",
     "url": "api/core.html"
   },
   {
     "title": "@gluezero/mapper",
     "section": "API reference",
-    "keywords": "api mapper canonical alias transform",
+    "keywords": "createMapperBroker canonical schema alias transform inputMap outputMap MapperEngine MappingInspector",
     "url": "api/mapper.html"
   },
   {
     "title": "@gluezero/routing",
     "section": "API reference",
-    "keywords": "api routing route registerRoute resolver",
+    "keywords": "createRouterBroker registerRoute RouteDefinition RouteResolver TopicTrie policy",
     "url": "api/routing.html"
   },
   {
     "title": "@gluezero/gateway",
     "section": "API reference",
-    "keywords": "api gateway http sse websocket strategy",
+    "keywords": "createRealtimeBroker HttpGateway SseAdapter WebSocketAdapter AuthStrategy RetryStrategy strategies",
     "url": "api/gateway.html"
   },
   {
     "title": "@gluezero/worker",
     "section": "API reference",
-    "keywords": "api worker registerWorker pool bridge",
+    "keywords": "createWorkerBroker registerWorker WorkerDescriptor expose Comlink WorkerPool WorkerBridge",
     "url": "api/worker.html"
   },
   {
     "title": "@gluezero/cache",
     "section": "API reference",
-    "keywords": "api cache adapter lru memory strategies",
+    "keywords": "createCacheBroker CacheAdapter MemoryCacheAdapter strategies invalidate TTL scope",
     "url": "api/cache.html"
   },
   {
     "title": "@gluezero/devtools",
     "section": "API reference",
-    "keywords": "api devtools inspector metrics pause",
+    "keywords": "createDevtoolsBroker EventInspector RouteInspector MetricsCollector PauseController MultiplexTap",
     "url": "api/devtools.html"
   },
   {
     "title": "Auth + token refresh",
     "section": "Recipes",
-    "keywords": "recipe auth bearer token refresh single-flight",
+    "keywords": "recipe auth bearer token refresh single-flight 401 expire",
     "url": "recipes/auth-token-refresh.html"
   },
   {
     "title": "Multi-tenant cache",
     "section": "Recipes",
-    "keywords": "recipe cache scope multi-tenant fail-secure",
+    "keywords": "recipe cache scope multi-tenant fail-secure user-isolation per-user",
     "url": "recipes/multi-tenant-cache.html"
   },
   {
     "title": "Reconnect SSE\u2192WS",
     "section": "Recipes",
-    "keywords": "recipe realtime reconnect auto-fallback",
+    "keywords": "recipe realtime reconnect auto-fallback sse websocket cycle-cap",
     "url": "recipes/reconnect-realtime.html"
   },
   {
     "title": "Worker progress",
     "section": "Recipes",
-    "keywords": "recipe worker progress events background job",
+    "keywords": "recipe worker progress events background csv parser progress-bar",
     "url": "recipes/worker-progress.html"
   },
   {
     "title": "Debug with Inspector",
     "section": "Recipes",
-    "keywords": "recipe debug inspector flow event lifecycle",
+    "keywords": "recipe debug inspector flow event lifecycle 14-step pipeline trace",
     "url": "recipes/debug-flow.html"
   },
   {
     "title": "React integration",
     "section": "Recipes",
-    "keywords": "recipe react hook useBroker integration",
+    "keywords": "recipe react hook useBroker useGlueZeroEvent integration component",
     "url": "recipes/react-integration.html"
   },
   {
     "title": "Architectural decisions",
     "section": "Reference",
-    "keywords": "decisions architectural design rationale 170 indexed",
+    "keywords": "decisions architectural design rationale 170 indexed phases REQ-IDs PRD",
     "url": "decisions.html"
   },
   {
     "title": "FAQ",
     "section": "Reference",
-    "keywords": "faq questions answers comparison redux rxjs",
+    "keywords": "faq questions answers comparison redux rxjs react-query when not when use sse-pulled",
     "url": "faq.html"
   }
 ]

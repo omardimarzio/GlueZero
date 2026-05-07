@@ -5,13 +5,388 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>@gluezero/mapper — GlueZero docs</title>
 <meta name="description" content="API reference — GlueZero v1.0.0 documentation">
-<link rel="stylesheet" href="../assets/styles.css">
+<link rel="stylesheet" href="<h1><code>@gluezero/mapper</code></h1>
+<p class="lead">Canonical model + bidirectional mapper. <code>createMapperBroker(config)</code>, plus declaration merging that adds <code>inputMap</code> / <code>outputMap</code> to <code>PluginDescriptor</code>.</p>
+
+<h2 id="createMapperBroker"><code>createMapperBroker(config)</code></h2>
+<pre><code class="language-typescript">function createMapperBroker(config?: MapperBrokerConfig): MapperBroker
+
+interface MapperBrokerConfig extends BrokerConfig {
+  canonicalModel?: { schemas: CanonicalSchema[] }
+  aliasRegistry?: {
+    global?: Record&lt;string, string&gt;
+    scoped?: Record&lt;string, Record&lt;string, string&gt;&gt;
+  }
+  transforms?: Record&lt;string, TransformFn&gt;
+  validator?: ValidatorAdapter
+}
+</code></pre>
+
+<h2 id="canonicalschema"><code>CanonicalSchema</code></h2>
+<pre><code class="language-typescript">interface CanonicalSchema {
+  id: CanonicalSchemaId           // branded type
+  topic?: string                  // optional topic association
+  fields: Record&lt;string, FieldDescriptor&gt;
+  requires?: string[]             // dependent schema ids
+  requiresRoute?: boolean         // strict: throw if topic has no route
+}
+
+interface FieldDescriptor {
+  type: 'string' | 'number' | 'boolean' | 'object' | 'array' | 'date'
+  required?: boolean
+  default?: unknown               // applied when source field is missing
+  validate?: (v: unknown) =&gt; boolean | string  // custom validator
+}
+</code></pre>
+
+<h2 id="inputmap-outputmap">InputMap / OutputMap</h2>
+<p>Declared on <code>PluginDescriptor</code> via TypeScript declaration merging — automatic when you import <code>@gluezero/mapper</code>:</p>
+<pre><code class="language-typescript">interface OutputMap {
+  [localField: string]: {
+    to: string                    // canonical field name
+    transform?: string            // registered transform name
+  } | string                      // shortcut: just the canonical name
+}
+
+interface InputMap {
+  [localField: string]: string   // canonical → local field rename
+}
+</code></pre>
+
+<h2 id="register-canonical"><code>broker.registerCanonicalSchema(schema)</code></h2>
+<pre><code class="language-typescript">function registerCanonicalSchema(schema: CanonicalSchema): void
+</code></pre>
+<p>Idempotent. Throws on duplicate id with different shape (decision <code>D-36</code>).</p>
+
+<h2 id="register-alias"><code>broker.registerAlias(local, canonical, opts?)</code></h2>
+<pre><code class="language-typescript">function registerAlias(
+  local: string,
+  canonical: string,
+  opts?: { scope?: 'global' | string; warn?: boolean }
+): void
+</code></pre>
+
+<h2 id="register-transform"><code>broker.registerTransform(name, fn)</code></h2>
+<pre><code class="language-typescript">function registerTransform(
+  name: string,
+  fn: (value: unknown, ctx: TransformContext) =&gt; unknown
+): void
+
+interface TransformContext {
+  pluginId: string
+  fieldName: string
+  direction: 'input' | 'output'
+  payload: unknown                // full payload (for derived transforms)
+}
+</code></pre>
+
+<h2 id="validator"><code>ValidatorAdapter</code></h2>
+<p>Pluggable validator (decision <code>D-38</code>). Default: Valibot. Adapters for Zod and Ajv can be implemented without modifying the engine.</p>
+<pre><code class="language-typescript">interface ValidatorAdapter {
+  validate&lt;T&gt;(schema: unknown, payload: unknown):
+    | { ok: true; value: T }
+    | { ok: false; issues: ValidationIssue[] }
+}
+
+interface ValidationIssue {
+  path: string[]
+  message: string
+  expected?: string
+  received?: unknown
+}
+</code></pre>
+
+<h2 id="inspector"><code>broker.getMappingInspector()</code></h2>
+<pre><code class="language-typescript">function getMappingInspector(): MappingInspector
+
+interface MappingInspector {
+  getSnapshot(opts?: { limit?: number; topic?: string }): MappingEntry[]
+  clearErrors(): void
+  lastErrors(): MappingError[]
+}
+
+interface MappingEntry {
+  pluginId: string
+  topic: string
+  direction: 'input' | 'output'
+  localPayload: unknown
+  canonicalPayload: unknown
+  transformsApplied: string[]
+  errors: MappingError[]
+  durationMs: number
+}
+</code></pre>
+
+<h2 id="errors">Error codes</h2>
+<table>
+<thead><tr><th>Code</th><th>When</th></tr></thead>
+<tbody>
+<tr><td><code>mapping.cycle.detected</code></td><td>Cycle in inputMap/outputMap chain (compile-time)</td></tr>
+<tr><td><code>mapping.transform.failed</code></td><td>Registered transform threw an error</td></tr>
+<tr><td><code>mapping.field.missing</code></td><td>Required canonical field has no source value</td></tr>
+<tr><td><code>mapping.canonical.validation.failed</code></td><td>Canonical payload failed schema validation</td></tr>
+<tr><td><code>mapping.consumer.validation.failed</code></td><td>Consumer-side payload failed validation after inputMap</td></tr>
+<tr><td><code>alias.global.conflict</code></td><td>Conflicting global aliases for same local name</td></tr>
+<tr><td><code>alias.scoped.conflict</code></td><td>Conflicting scoped aliases within same plugin</td></tr>
+</tbody>
+</table>
+assets/styles.css">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect width='24' height='24' rx='6' fill='%236366F1'/%3E%3Ctext x='12' y='17' text-anchor='middle' fill='white' font-family='sans-serif' font-weight='800' font-size='12'%3EGZ%3C/text%3E%3C/svg%3E">
 </head>
-<body data-base="../">
+<body data-base="<h1><code>@gluezero/mapper</code></h1>
+<p class="lead">Canonical model + bidirectional mapper. <code>createMapperBroker(config)</code>, plus declaration merging that adds <code>inputMap</code> / <code>outputMap</code> to <code>PluginDescriptor</code>.</p>
+
+<h2 id="createMapperBroker"><code>createMapperBroker(config)</code></h2>
+<pre><code class="language-typescript">function createMapperBroker(config?: MapperBrokerConfig): MapperBroker
+
+interface MapperBrokerConfig extends BrokerConfig {
+  canonicalModel?: { schemas: CanonicalSchema[] }
+  aliasRegistry?: {
+    global?: Record&lt;string, string&gt;
+    scoped?: Record&lt;string, Record&lt;string, string&gt;&gt;
+  }
+  transforms?: Record&lt;string, TransformFn&gt;
+  validator?: ValidatorAdapter
+}
+</code></pre>
+
+<h2 id="canonicalschema"><code>CanonicalSchema</code></h2>
+<pre><code class="language-typescript">interface CanonicalSchema {
+  id: CanonicalSchemaId           // branded type
+  topic?: string                  // optional topic association
+  fields: Record&lt;string, FieldDescriptor&gt;
+  requires?: string[]             // dependent schema ids
+  requiresRoute?: boolean         // strict: throw if topic has no route
+}
+
+interface FieldDescriptor {
+  type: 'string' | 'number' | 'boolean' | 'object' | 'array' | 'date'
+  required?: boolean
+  default?: unknown               // applied when source field is missing
+  validate?: (v: unknown) =&gt; boolean | string  // custom validator
+}
+</code></pre>
+
+<h2 id="inputmap-outputmap">InputMap / OutputMap</h2>
+<p>Declared on <code>PluginDescriptor</code> via TypeScript declaration merging — automatic when you import <code>@gluezero/mapper</code>:</p>
+<pre><code class="language-typescript">interface OutputMap {
+  [localField: string]: {
+    to: string                    // canonical field name
+    transform?: string            // registered transform name
+  } | string                      // shortcut: just the canonical name
+}
+
+interface InputMap {
+  [localField: string]: string   // canonical → local field rename
+}
+</code></pre>
+
+<h2 id="register-canonical"><code>broker.registerCanonicalSchema(schema)</code></h2>
+<pre><code class="language-typescript">function registerCanonicalSchema(schema: CanonicalSchema): void
+</code></pre>
+<p>Idempotent. Throws on duplicate id with different shape (decision <code>D-36</code>).</p>
+
+<h2 id="register-alias"><code>broker.registerAlias(local, canonical, opts?)</code></h2>
+<pre><code class="language-typescript">function registerAlias(
+  local: string,
+  canonical: string,
+  opts?: { scope?: 'global' | string; warn?: boolean }
+): void
+</code></pre>
+
+<h2 id="register-transform"><code>broker.registerTransform(name, fn)</code></h2>
+<pre><code class="language-typescript">function registerTransform(
+  name: string,
+  fn: (value: unknown, ctx: TransformContext) =&gt; unknown
+): void
+
+interface TransformContext {
+  pluginId: string
+  fieldName: string
+  direction: 'input' | 'output'
+  payload: unknown                // full payload (for derived transforms)
+}
+</code></pre>
+
+<h2 id="validator"><code>ValidatorAdapter</code></h2>
+<p>Pluggable validator (decision <code>D-38</code>). Default: Valibot. Adapters for Zod and Ajv can be implemented without modifying the engine.</p>
+<pre><code class="language-typescript">interface ValidatorAdapter {
+  validate&lt;T&gt;(schema: unknown, payload: unknown):
+    | { ok: true; value: T }
+    | { ok: false; issues: ValidationIssue[] }
+}
+
+interface ValidationIssue {
+  path: string[]
+  message: string
+  expected?: string
+  received?: unknown
+}
+</code></pre>
+
+<h2 id="inspector"><code>broker.getMappingInspector()</code></h2>
+<pre><code class="language-typescript">function getMappingInspector(): MappingInspector
+
+interface MappingInspector {
+  getSnapshot(opts?: { limit?: number; topic?: string }): MappingEntry[]
+  clearErrors(): void
+  lastErrors(): MappingError[]
+}
+
+interface MappingEntry {
+  pluginId: string
+  topic: string
+  direction: 'input' | 'output'
+  localPayload: unknown
+  canonicalPayload: unknown
+  transformsApplied: string[]
+  errors: MappingError[]
+  durationMs: number
+}
+</code></pre>
+
+<h2 id="errors">Error codes</h2>
+<table>
+<thead><tr><th>Code</th><th>When</th></tr></thead>
+<tbody>
+<tr><td><code>mapping.cycle.detected</code></td><td>Cycle in inputMap/outputMap chain (compile-time)</td></tr>
+<tr><td><code>mapping.transform.failed</code></td><td>Registered transform threw an error</td></tr>
+<tr><td><code>mapping.field.missing</code></td><td>Required canonical field has no source value</td></tr>
+<tr><td><code>mapping.canonical.validation.failed</code></td><td>Canonical payload failed schema validation</td></tr>
+<tr><td><code>mapping.consumer.validation.failed</code></td><td>Consumer-side payload failed validation after inputMap</td></tr>
+<tr><td><code>alias.global.conflict</code></td><td>Conflicting global aliases for same local name</td></tr>
+<tr><td><code>alias.scoped.conflict</code></td><td>Conflicting scoped aliases within same plugin</td></tr>
+</tbody>
+</table>
+">
 <header class="topbar" role="banner">
   <button class="menu-toggle" aria-label="Toggle navigation">☰</button>
-  <a class="topbar-brand" href="../index.html">
+  <a class="topbar-brand" href="<h1><code>@gluezero/mapper</code></h1>
+<p class="lead">Canonical model + bidirectional mapper. <code>createMapperBroker(config)</code>, plus declaration merging that adds <code>inputMap</code> / <code>outputMap</code> to <code>PluginDescriptor</code>.</p>
+
+<h2 id="createMapperBroker"><code>createMapperBroker(config)</code></h2>
+<pre><code class="language-typescript">function createMapperBroker(config?: MapperBrokerConfig): MapperBroker
+
+interface MapperBrokerConfig extends BrokerConfig {
+  canonicalModel?: { schemas: CanonicalSchema[] }
+  aliasRegistry?: {
+    global?: Record&lt;string, string&gt;
+    scoped?: Record&lt;string, Record&lt;string, string&gt;&gt;
+  }
+  transforms?: Record&lt;string, TransformFn&gt;
+  validator?: ValidatorAdapter
+}
+</code></pre>
+
+<h2 id="canonicalschema"><code>CanonicalSchema</code></h2>
+<pre><code class="language-typescript">interface CanonicalSchema {
+  id: CanonicalSchemaId           // branded type
+  topic?: string                  // optional topic association
+  fields: Record&lt;string, FieldDescriptor&gt;
+  requires?: string[]             // dependent schema ids
+  requiresRoute?: boolean         // strict: throw if topic has no route
+}
+
+interface FieldDescriptor {
+  type: 'string' | 'number' | 'boolean' | 'object' | 'array' | 'date'
+  required?: boolean
+  default?: unknown               // applied when source field is missing
+  validate?: (v: unknown) =&gt; boolean | string  // custom validator
+}
+</code></pre>
+
+<h2 id="inputmap-outputmap">InputMap / OutputMap</h2>
+<p>Declared on <code>PluginDescriptor</code> via TypeScript declaration merging — automatic when you import <code>@gluezero/mapper</code>:</p>
+<pre><code class="language-typescript">interface OutputMap {
+  [localField: string]: {
+    to: string                    // canonical field name
+    transform?: string            // registered transform name
+  } | string                      // shortcut: just the canonical name
+}
+
+interface InputMap {
+  [localField: string]: string   // canonical → local field rename
+}
+</code></pre>
+
+<h2 id="register-canonical"><code>broker.registerCanonicalSchema(schema)</code></h2>
+<pre><code class="language-typescript">function registerCanonicalSchema(schema: CanonicalSchema): void
+</code></pre>
+<p>Idempotent. Throws on duplicate id with different shape (decision <code>D-36</code>).</p>
+
+<h2 id="register-alias"><code>broker.registerAlias(local, canonical, opts?)</code></h2>
+<pre><code class="language-typescript">function registerAlias(
+  local: string,
+  canonical: string,
+  opts?: { scope?: 'global' | string; warn?: boolean }
+): void
+</code></pre>
+
+<h2 id="register-transform"><code>broker.registerTransform(name, fn)</code></h2>
+<pre><code class="language-typescript">function registerTransform(
+  name: string,
+  fn: (value: unknown, ctx: TransformContext) =&gt; unknown
+): void
+
+interface TransformContext {
+  pluginId: string
+  fieldName: string
+  direction: 'input' | 'output'
+  payload: unknown                // full payload (for derived transforms)
+}
+</code></pre>
+
+<h2 id="validator"><code>ValidatorAdapter</code></h2>
+<p>Pluggable validator (decision <code>D-38</code>). Default: Valibot. Adapters for Zod and Ajv can be implemented without modifying the engine.</p>
+<pre><code class="language-typescript">interface ValidatorAdapter {
+  validate&lt;T&gt;(schema: unknown, payload: unknown):
+    | { ok: true; value: T }
+    | { ok: false; issues: ValidationIssue[] }
+}
+
+interface ValidationIssue {
+  path: string[]
+  message: string
+  expected?: string
+  received?: unknown
+}
+</code></pre>
+
+<h2 id="inspector"><code>broker.getMappingInspector()</code></h2>
+<pre><code class="language-typescript">function getMappingInspector(): MappingInspector
+
+interface MappingInspector {
+  getSnapshot(opts?: { limit?: number; topic?: string }): MappingEntry[]
+  clearErrors(): void
+  lastErrors(): MappingError[]
+}
+
+interface MappingEntry {
+  pluginId: string
+  topic: string
+  direction: 'input' | 'output'
+  localPayload: unknown
+  canonicalPayload: unknown
+  transformsApplied: string[]
+  errors: MappingError[]
+  durationMs: number
+}
+</code></pre>
+
+<h2 id="errors">Error codes</h2>
+<table>
+<thead><tr><th>Code</th><th>When</th></tr></thead>
+<tbody>
+<tr><td><code>mapping.cycle.detected</code></td><td>Cycle in inputMap/outputMap chain (compile-time)</td></tr>
+<tr><td><code>mapping.transform.failed</code></td><td>Registered transform threw an error</td></tr>
+<tr><td><code>mapping.field.missing</code></td><td>Required canonical field has no source value</td></tr>
+<tr><td><code>mapping.canonical.validation.failed</code></td><td>Canonical payload failed schema validation</td></tr>
+<tr><td><code>mapping.consumer.validation.failed</code></td><td>Consumer-side payload failed validation after inputMap</td></tr>
+<tr><td><code>alias.global.conflict</code></td><td>Conflicting global aliases for same local name</td></tr>
+<tr><td><code>alias.scoped.conflict</code></td><td>Conflicting scoped aliases within same plugin</td></tr>
+</tbody>
+</table>
+index.html">
     <span class="topbar-brand-mark">GZ</span>
     <span>GlueZero</span>
     <span class="topbar-version">v1.0.0</span>
@@ -30,53 +405,3551 @@
 <nav class="sidebar" aria-label="Documentation navigation">
 <div class="sidebar-section">
   <div class="sidebar-section-title">Get started</div>
-  <a class="sidebar-link" href="../index.html">Welcome</a>
-  <a class="sidebar-link" href="../getting-started.html">Getting started</a>
+  <a class="sidebar-link" href="<h1><code>@gluezero/mapper</code></h1>
+<p class="lead">Canonical model + bidirectional mapper. <code>createMapperBroker(config)</code>, plus declaration merging that adds <code>inputMap</code> / <code>outputMap</code> to <code>PluginDescriptor</code>.</p>
+
+<h2 id="createMapperBroker"><code>createMapperBroker(config)</code></h2>
+<pre><code class="language-typescript">function createMapperBroker(config?: MapperBrokerConfig): MapperBroker
+
+interface MapperBrokerConfig extends BrokerConfig {
+  canonicalModel?: { schemas: CanonicalSchema[] }
+  aliasRegistry?: {
+    global?: Record&lt;string, string&gt;
+    scoped?: Record&lt;string, Record&lt;string, string&gt;&gt;
+  }
+  transforms?: Record&lt;string, TransformFn&gt;
+  validator?: ValidatorAdapter
+}
+</code></pre>
+
+<h2 id="canonicalschema"><code>CanonicalSchema</code></h2>
+<pre><code class="language-typescript">interface CanonicalSchema {
+  id: CanonicalSchemaId           // branded type
+  topic?: string                  // optional topic association
+  fields: Record&lt;string, FieldDescriptor&gt;
+  requires?: string[]             // dependent schema ids
+  requiresRoute?: boolean         // strict: throw if topic has no route
+}
+
+interface FieldDescriptor {
+  type: 'string' | 'number' | 'boolean' | 'object' | 'array' | 'date'
+  required?: boolean
+  default?: unknown               // applied when source field is missing
+  validate?: (v: unknown) =&gt; boolean | string  // custom validator
+}
+</code></pre>
+
+<h2 id="inputmap-outputmap">InputMap / OutputMap</h2>
+<p>Declared on <code>PluginDescriptor</code> via TypeScript declaration merging — automatic when you import <code>@gluezero/mapper</code>:</p>
+<pre><code class="language-typescript">interface OutputMap {
+  [localField: string]: {
+    to: string                    // canonical field name
+    transform?: string            // registered transform name
+  } | string                      // shortcut: just the canonical name
+}
+
+interface InputMap {
+  [localField: string]: string   // canonical → local field rename
+}
+</code></pre>
+
+<h2 id="register-canonical"><code>broker.registerCanonicalSchema(schema)</code></h2>
+<pre><code class="language-typescript">function registerCanonicalSchema(schema: CanonicalSchema): void
+</code></pre>
+<p>Idempotent. Throws on duplicate id with different shape (decision <code>D-36</code>).</p>
+
+<h2 id="register-alias"><code>broker.registerAlias(local, canonical, opts?)</code></h2>
+<pre><code class="language-typescript">function registerAlias(
+  local: string,
+  canonical: string,
+  opts?: { scope?: 'global' | string; warn?: boolean }
+): void
+</code></pre>
+
+<h2 id="register-transform"><code>broker.registerTransform(name, fn)</code></h2>
+<pre><code class="language-typescript">function registerTransform(
+  name: string,
+  fn: (value: unknown, ctx: TransformContext) =&gt; unknown
+): void
+
+interface TransformContext {
+  pluginId: string
+  fieldName: string
+  direction: 'input' | 'output'
+  payload: unknown                // full payload (for derived transforms)
+}
+</code></pre>
+
+<h2 id="validator"><code>ValidatorAdapter</code></h2>
+<p>Pluggable validator (decision <code>D-38</code>). Default: Valibot. Adapters for Zod and Ajv can be implemented without modifying the engine.</p>
+<pre><code class="language-typescript">interface ValidatorAdapter {
+  validate&lt;T&gt;(schema: unknown, payload: unknown):
+    | { ok: true; value: T }
+    | { ok: false; issues: ValidationIssue[] }
+}
+
+interface ValidationIssue {
+  path: string[]
+  message: string
+  expected?: string
+  received?: unknown
+}
+</code></pre>
+
+<h2 id="inspector"><code>broker.getMappingInspector()</code></h2>
+<pre><code class="language-typescript">function getMappingInspector(): MappingInspector
+
+interface MappingInspector {
+  getSnapshot(opts?: { limit?: number; topic?: string }): MappingEntry[]
+  clearErrors(): void
+  lastErrors(): MappingError[]
+}
+
+interface MappingEntry {
+  pluginId: string
+  topic: string
+  direction: 'input' | 'output'
+  localPayload: unknown
+  canonicalPayload: unknown
+  transformsApplied: string[]
+  errors: MappingError[]
+  durationMs: number
+}
+</code></pre>
+
+<h2 id="errors">Error codes</h2>
+<table>
+<thead><tr><th>Code</th><th>When</th></tr></thead>
+<tbody>
+<tr><td><code>mapping.cycle.detected</code></td><td>Cycle in inputMap/outputMap chain (compile-time)</td></tr>
+<tr><td><code>mapping.transform.failed</code></td><td>Registered transform threw an error</td></tr>
+<tr><td><code>mapping.field.missing</code></td><td>Required canonical field has no source value</td></tr>
+<tr><td><code>mapping.canonical.validation.failed</code></td><td>Canonical payload failed schema validation</td></tr>
+<tr><td><code>mapping.consumer.validation.failed</code></td><td>Consumer-side payload failed validation after inputMap</td></tr>
+<tr><td><code>alias.global.conflict</code></td><td>Conflicting global aliases for same local name</td></tr>
+<tr><td><code>alias.scoped.conflict</code></td><td>Conflicting scoped aliases within same plugin</td></tr>
+</tbody>
+</table>
+index.html">Welcome</a>
+  <a class="sidebar-link" href="<h1><code>@gluezero/mapper</code></h1>
+<p class="lead">Canonical model + bidirectional mapper. <code>createMapperBroker(config)</code>, plus declaration merging that adds <code>inputMap</code> / <code>outputMap</code> to <code>PluginDescriptor</code>.</p>
+
+<h2 id="createMapperBroker"><code>createMapperBroker(config)</code></h2>
+<pre><code class="language-typescript">function createMapperBroker(config?: MapperBrokerConfig): MapperBroker
+
+interface MapperBrokerConfig extends BrokerConfig {
+  canonicalModel?: { schemas: CanonicalSchema[] }
+  aliasRegistry?: {
+    global?: Record&lt;string, string&gt;
+    scoped?: Record&lt;string, Record&lt;string, string&gt;&gt;
+  }
+  transforms?: Record&lt;string, TransformFn&gt;
+  validator?: ValidatorAdapter
+}
+</code></pre>
+
+<h2 id="canonicalschema"><code>CanonicalSchema</code></h2>
+<pre><code class="language-typescript">interface CanonicalSchema {
+  id: CanonicalSchemaId           // branded type
+  topic?: string                  // optional topic association
+  fields: Record&lt;string, FieldDescriptor&gt;
+  requires?: string[]             // dependent schema ids
+  requiresRoute?: boolean         // strict: throw if topic has no route
+}
+
+interface FieldDescriptor {
+  type: 'string' | 'number' | 'boolean' | 'object' | 'array' | 'date'
+  required?: boolean
+  default?: unknown               // applied when source field is missing
+  validate?: (v: unknown) =&gt; boolean | string  // custom validator
+}
+</code></pre>
+
+<h2 id="inputmap-outputmap">InputMap / OutputMap</h2>
+<p>Declared on <code>PluginDescriptor</code> via TypeScript declaration merging — automatic when you import <code>@gluezero/mapper</code>:</p>
+<pre><code class="language-typescript">interface OutputMap {
+  [localField: string]: {
+    to: string                    // canonical field name
+    transform?: string            // registered transform name
+  } | string                      // shortcut: just the canonical name
+}
+
+interface InputMap {
+  [localField: string]: string   // canonical → local field rename
+}
+</code></pre>
+
+<h2 id="register-canonical"><code>broker.registerCanonicalSchema(schema)</code></h2>
+<pre><code class="language-typescript">function registerCanonicalSchema(schema: CanonicalSchema): void
+</code></pre>
+<p>Idempotent. Throws on duplicate id with different shape (decision <code>D-36</code>).</p>
+
+<h2 id="register-alias"><code>broker.registerAlias(local, canonical, opts?)</code></h2>
+<pre><code class="language-typescript">function registerAlias(
+  local: string,
+  canonical: string,
+  opts?: { scope?: 'global' | string; warn?: boolean }
+): void
+</code></pre>
+
+<h2 id="register-transform"><code>broker.registerTransform(name, fn)</code></h2>
+<pre><code class="language-typescript">function registerTransform(
+  name: string,
+  fn: (value: unknown, ctx: TransformContext) =&gt; unknown
+): void
+
+interface TransformContext {
+  pluginId: string
+  fieldName: string
+  direction: 'input' | 'output'
+  payload: unknown                // full payload (for derived transforms)
+}
+</code></pre>
+
+<h2 id="validator"><code>ValidatorAdapter</code></h2>
+<p>Pluggable validator (decision <code>D-38</code>). Default: Valibot. Adapters for Zod and Ajv can be implemented without modifying the engine.</p>
+<pre><code class="language-typescript">interface ValidatorAdapter {
+  validate&lt;T&gt;(schema: unknown, payload: unknown):
+    | { ok: true; value: T }
+    | { ok: false; issues: ValidationIssue[] }
+}
+
+interface ValidationIssue {
+  path: string[]
+  message: string
+  expected?: string
+  received?: unknown
+}
+</code></pre>
+
+<h2 id="inspector"><code>broker.getMappingInspector()</code></h2>
+<pre><code class="language-typescript">function getMappingInspector(): MappingInspector
+
+interface MappingInspector {
+  getSnapshot(opts?: { limit?: number; topic?: string }): MappingEntry[]
+  clearErrors(): void
+  lastErrors(): MappingError[]
+}
+
+interface MappingEntry {
+  pluginId: string
+  topic: string
+  direction: 'input' | 'output'
+  localPayload: unknown
+  canonicalPayload: unknown
+  transformsApplied: string[]
+  errors: MappingError[]
+  durationMs: number
+}
+</code></pre>
+
+<h2 id="errors">Error codes</h2>
+<table>
+<thead><tr><th>Code</th><th>When</th></tr></thead>
+<tbody>
+<tr><td><code>mapping.cycle.detected</code></td><td>Cycle in inputMap/outputMap chain (compile-time)</td></tr>
+<tr><td><code>mapping.transform.failed</code></td><td>Registered transform threw an error</td></tr>
+<tr><td><code>mapping.field.missing</code></td><td>Required canonical field has no source value</td></tr>
+<tr><td><code>mapping.canonical.validation.failed</code></td><td>Canonical payload failed schema validation</td></tr>
+<tr><td><code>mapping.consumer.validation.failed</code></td><td>Consumer-side payload failed validation after inputMap</td></tr>
+<tr><td><code>alias.global.conflict</code></td><td>Conflicting global aliases for same local name</td></tr>
+<tr><td><code>alias.scoped.conflict</code></td><td>Conflicting scoped aliases within same plugin</td></tr>
+</tbody>
+</table>
+getting-started.html">Getting started</a>
 </div>
 <div class="sidebar-section">
   <div class="sidebar-section-title">Concepts</div>
-  <a class="sidebar-link" href="../concepts/overview.html">Overview</a>
-  <a class="sidebar-link" href="../concepts/broker.html">Broker</a>
-  <a class="sidebar-link" href="../concepts/canonical-model.html">Canonical model</a>
-  <a class="sidebar-link" href="../concepts/routing.html">Routing</a>
-  <a class="sidebar-link" href="../concepts/gateway.html">HTTP gateway</a>
-  <a class="sidebar-link" href="../concepts/realtime.html">Realtime</a>
-  <a class="sidebar-link" href="../concepts/worker.html">Worker</a>
-  <a class="sidebar-link" href="../concepts/cache.html">Cache</a>
-  <a class="sidebar-link" href="../concepts/devtools.html">Devtools</a>
+  <a class="sidebar-link" href="<h1><code>@gluezero/mapper</code></h1>
+<p class="lead">Canonical model + bidirectional mapper. <code>createMapperBroker(config)</code>, plus declaration merging that adds <code>inputMap</code> / <code>outputMap</code> to <code>PluginDescriptor</code>.</p>
+
+<h2 id="createMapperBroker"><code>createMapperBroker(config)</code></h2>
+<pre><code class="language-typescript">function createMapperBroker(config?: MapperBrokerConfig): MapperBroker
+
+interface MapperBrokerConfig extends BrokerConfig {
+  canonicalModel?: { schemas: CanonicalSchema[] }
+  aliasRegistry?: {
+    global?: Record&lt;string, string&gt;
+    scoped?: Record&lt;string, Record&lt;string, string&gt;&gt;
+  }
+  transforms?: Record&lt;string, TransformFn&gt;
+  validator?: ValidatorAdapter
+}
+</code></pre>
+
+<h2 id="canonicalschema"><code>CanonicalSchema</code></h2>
+<pre><code class="language-typescript">interface CanonicalSchema {
+  id: CanonicalSchemaId           // branded type
+  topic?: string                  // optional topic association
+  fields: Record&lt;string, FieldDescriptor&gt;
+  requires?: string[]             // dependent schema ids
+  requiresRoute?: boolean         // strict: throw if topic has no route
+}
+
+interface FieldDescriptor {
+  type: 'string' | 'number' | 'boolean' | 'object' | 'array' | 'date'
+  required?: boolean
+  default?: unknown               // applied when source field is missing
+  validate?: (v: unknown) =&gt; boolean | string  // custom validator
+}
+</code></pre>
+
+<h2 id="inputmap-outputmap">InputMap / OutputMap</h2>
+<p>Declared on <code>PluginDescriptor</code> via TypeScript declaration merging — automatic when you import <code>@gluezero/mapper</code>:</p>
+<pre><code class="language-typescript">interface OutputMap {
+  [localField: string]: {
+    to: string                    // canonical field name
+    transform?: string            // registered transform name
+  } | string                      // shortcut: just the canonical name
+}
+
+interface InputMap {
+  [localField: string]: string   // canonical → local field rename
+}
+</code></pre>
+
+<h2 id="register-canonical"><code>broker.registerCanonicalSchema(schema)</code></h2>
+<pre><code class="language-typescript">function registerCanonicalSchema(schema: CanonicalSchema): void
+</code></pre>
+<p>Idempotent. Throws on duplicate id with different shape (decision <code>D-36</code>).</p>
+
+<h2 id="register-alias"><code>broker.registerAlias(local, canonical, opts?)</code></h2>
+<pre><code class="language-typescript">function registerAlias(
+  local: string,
+  canonical: string,
+  opts?: { scope?: 'global' | string; warn?: boolean }
+): void
+</code></pre>
+
+<h2 id="register-transform"><code>broker.registerTransform(name, fn)</code></h2>
+<pre><code class="language-typescript">function registerTransform(
+  name: string,
+  fn: (value: unknown, ctx: TransformContext) =&gt; unknown
+): void
+
+interface TransformContext {
+  pluginId: string
+  fieldName: string
+  direction: 'input' | 'output'
+  payload: unknown                // full payload (for derived transforms)
+}
+</code></pre>
+
+<h2 id="validator"><code>ValidatorAdapter</code></h2>
+<p>Pluggable validator (decision <code>D-38</code>). Default: Valibot. Adapters for Zod and Ajv can be implemented without modifying the engine.</p>
+<pre><code class="language-typescript">interface ValidatorAdapter {
+  validate&lt;T&gt;(schema: unknown, payload: unknown):
+    | { ok: true; value: T }
+    | { ok: false; issues: ValidationIssue[] }
+}
+
+interface ValidationIssue {
+  path: string[]
+  message: string
+  expected?: string
+  received?: unknown
+}
+</code></pre>
+
+<h2 id="inspector"><code>broker.getMappingInspector()</code></h2>
+<pre><code class="language-typescript">function getMappingInspector(): MappingInspector
+
+interface MappingInspector {
+  getSnapshot(opts?: { limit?: number; topic?: string }): MappingEntry[]
+  clearErrors(): void
+  lastErrors(): MappingError[]
+}
+
+interface MappingEntry {
+  pluginId: string
+  topic: string
+  direction: 'input' | 'output'
+  localPayload: unknown
+  canonicalPayload: unknown
+  transformsApplied: string[]
+  errors: MappingError[]
+  durationMs: number
+}
+</code></pre>
+
+<h2 id="errors">Error codes</h2>
+<table>
+<thead><tr><th>Code</th><th>When</th></tr></thead>
+<tbody>
+<tr><td><code>mapping.cycle.detected</code></td><td>Cycle in inputMap/outputMap chain (compile-time)</td></tr>
+<tr><td><code>mapping.transform.failed</code></td><td>Registered transform threw an error</td></tr>
+<tr><td><code>mapping.field.missing</code></td><td>Required canonical field has no source value</td></tr>
+<tr><td><code>mapping.canonical.validation.failed</code></td><td>Canonical payload failed schema validation</td></tr>
+<tr><td><code>mapping.consumer.validation.failed</code></td><td>Consumer-side payload failed validation after inputMap</td></tr>
+<tr><td><code>alias.global.conflict</code></td><td>Conflicting global aliases for same local name</td></tr>
+<tr><td><code>alias.scoped.conflict</code></td><td>Conflicting scoped aliases within same plugin</td></tr>
+</tbody>
+</table>
+concepts/overview.html">Overview</a>
+  <a class="sidebar-link" href="<h1><code>@gluezero/mapper</code></h1>
+<p class="lead">Canonical model + bidirectional mapper. <code>createMapperBroker(config)</code>, plus declaration merging that adds <code>inputMap</code> / <code>outputMap</code> to <code>PluginDescriptor</code>.</p>
+
+<h2 id="createMapperBroker"><code>createMapperBroker(config)</code></h2>
+<pre><code class="language-typescript">function createMapperBroker(config?: MapperBrokerConfig): MapperBroker
+
+interface MapperBrokerConfig extends BrokerConfig {
+  canonicalModel?: { schemas: CanonicalSchema[] }
+  aliasRegistry?: {
+    global?: Record&lt;string, string&gt;
+    scoped?: Record&lt;string, Record&lt;string, string&gt;&gt;
+  }
+  transforms?: Record&lt;string, TransformFn&gt;
+  validator?: ValidatorAdapter
+}
+</code></pre>
+
+<h2 id="canonicalschema"><code>CanonicalSchema</code></h2>
+<pre><code class="language-typescript">interface CanonicalSchema {
+  id: CanonicalSchemaId           // branded type
+  topic?: string                  // optional topic association
+  fields: Record&lt;string, FieldDescriptor&gt;
+  requires?: string[]             // dependent schema ids
+  requiresRoute?: boolean         // strict: throw if topic has no route
+}
+
+interface FieldDescriptor {
+  type: 'string' | 'number' | 'boolean' | 'object' | 'array' | 'date'
+  required?: boolean
+  default?: unknown               // applied when source field is missing
+  validate?: (v: unknown) =&gt; boolean | string  // custom validator
+}
+</code></pre>
+
+<h2 id="inputmap-outputmap">InputMap / OutputMap</h2>
+<p>Declared on <code>PluginDescriptor</code> via TypeScript declaration merging — automatic when you import <code>@gluezero/mapper</code>:</p>
+<pre><code class="language-typescript">interface OutputMap {
+  [localField: string]: {
+    to: string                    // canonical field name
+    transform?: string            // registered transform name
+  } | string                      // shortcut: just the canonical name
+}
+
+interface InputMap {
+  [localField: string]: string   // canonical → local field rename
+}
+</code></pre>
+
+<h2 id="register-canonical"><code>broker.registerCanonicalSchema(schema)</code></h2>
+<pre><code class="language-typescript">function registerCanonicalSchema(schema: CanonicalSchema): void
+</code></pre>
+<p>Idempotent. Throws on duplicate id with different shape (decision <code>D-36</code>).</p>
+
+<h2 id="register-alias"><code>broker.registerAlias(local, canonical, opts?)</code></h2>
+<pre><code class="language-typescript">function registerAlias(
+  local: string,
+  canonical: string,
+  opts?: { scope?: 'global' | string; warn?: boolean }
+): void
+</code></pre>
+
+<h2 id="register-transform"><code>broker.registerTransform(name, fn)</code></h2>
+<pre><code class="language-typescript">function registerTransform(
+  name: string,
+  fn: (value: unknown, ctx: TransformContext) =&gt; unknown
+): void
+
+interface TransformContext {
+  pluginId: string
+  fieldName: string
+  direction: 'input' | 'output'
+  payload: unknown                // full payload (for derived transforms)
+}
+</code></pre>
+
+<h2 id="validator"><code>ValidatorAdapter</code></h2>
+<p>Pluggable validator (decision <code>D-38</code>). Default: Valibot. Adapters for Zod and Ajv can be implemented without modifying the engine.</p>
+<pre><code class="language-typescript">interface ValidatorAdapter {
+  validate&lt;T&gt;(schema: unknown, payload: unknown):
+    | { ok: true; value: T }
+    | { ok: false; issues: ValidationIssue[] }
+}
+
+interface ValidationIssue {
+  path: string[]
+  message: string
+  expected?: string
+  received?: unknown
+}
+</code></pre>
+
+<h2 id="inspector"><code>broker.getMappingInspector()</code></h2>
+<pre><code class="language-typescript">function getMappingInspector(): MappingInspector
+
+interface MappingInspector {
+  getSnapshot(opts?: { limit?: number; topic?: string }): MappingEntry[]
+  clearErrors(): void
+  lastErrors(): MappingError[]
+}
+
+interface MappingEntry {
+  pluginId: string
+  topic: string
+  direction: 'input' | 'output'
+  localPayload: unknown
+  canonicalPayload: unknown
+  transformsApplied: string[]
+  errors: MappingError[]
+  durationMs: number
+}
+</code></pre>
+
+<h2 id="errors">Error codes</h2>
+<table>
+<thead><tr><th>Code</th><th>When</th></tr></thead>
+<tbody>
+<tr><td><code>mapping.cycle.detected</code></td><td>Cycle in inputMap/outputMap chain (compile-time)</td></tr>
+<tr><td><code>mapping.transform.failed</code></td><td>Registered transform threw an error</td></tr>
+<tr><td><code>mapping.field.missing</code></td><td>Required canonical field has no source value</td></tr>
+<tr><td><code>mapping.canonical.validation.failed</code></td><td>Canonical payload failed schema validation</td></tr>
+<tr><td><code>mapping.consumer.validation.failed</code></td><td>Consumer-side payload failed validation after inputMap</td></tr>
+<tr><td><code>alias.global.conflict</code></td><td>Conflicting global aliases for same local name</td></tr>
+<tr><td><code>alias.scoped.conflict</code></td><td>Conflicting scoped aliases within same plugin</td></tr>
+</tbody>
+</table>
+concepts/broker.html">Broker</a>
+  <a class="sidebar-link" href="<h1><code>@gluezero/mapper</code></h1>
+<p class="lead">Canonical model + bidirectional mapper. <code>createMapperBroker(config)</code>, plus declaration merging that adds <code>inputMap</code> / <code>outputMap</code> to <code>PluginDescriptor</code>.</p>
+
+<h2 id="createMapperBroker"><code>createMapperBroker(config)</code></h2>
+<pre><code class="language-typescript">function createMapperBroker(config?: MapperBrokerConfig): MapperBroker
+
+interface MapperBrokerConfig extends BrokerConfig {
+  canonicalModel?: { schemas: CanonicalSchema[] }
+  aliasRegistry?: {
+    global?: Record&lt;string, string&gt;
+    scoped?: Record&lt;string, Record&lt;string, string&gt;&gt;
+  }
+  transforms?: Record&lt;string, TransformFn&gt;
+  validator?: ValidatorAdapter
+}
+</code></pre>
+
+<h2 id="canonicalschema"><code>CanonicalSchema</code></h2>
+<pre><code class="language-typescript">interface CanonicalSchema {
+  id: CanonicalSchemaId           // branded type
+  topic?: string                  // optional topic association
+  fields: Record&lt;string, FieldDescriptor&gt;
+  requires?: string[]             // dependent schema ids
+  requiresRoute?: boolean         // strict: throw if topic has no route
+}
+
+interface FieldDescriptor {
+  type: 'string' | 'number' | 'boolean' | 'object' | 'array' | 'date'
+  required?: boolean
+  default?: unknown               // applied when source field is missing
+  validate?: (v: unknown) =&gt; boolean | string  // custom validator
+}
+</code></pre>
+
+<h2 id="inputmap-outputmap">InputMap / OutputMap</h2>
+<p>Declared on <code>PluginDescriptor</code> via TypeScript declaration merging — automatic when you import <code>@gluezero/mapper</code>:</p>
+<pre><code class="language-typescript">interface OutputMap {
+  [localField: string]: {
+    to: string                    // canonical field name
+    transform?: string            // registered transform name
+  } | string                      // shortcut: just the canonical name
+}
+
+interface InputMap {
+  [localField: string]: string   // canonical → local field rename
+}
+</code></pre>
+
+<h2 id="register-canonical"><code>broker.registerCanonicalSchema(schema)</code></h2>
+<pre><code class="language-typescript">function registerCanonicalSchema(schema: CanonicalSchema): void
+</code></pre>
+<p>Idempotent. Throws on duplicate id with different shape (decision <code>D-36</code>).</p>
+
+<h2 id="register-alias"><code>broker.registerAlias(local, canonical, opts?)</code></h2>
+<pre><code class="language-typescript">function registerAlias(
+  local: string,
+  canonical: string,
+  opts?: { scope?: 'global' | string; warn?: boolean }
+): void
+</code></pre>
+
+<h2 id="register-transform"><code>broker.registerTransform(name, fn)</code></h2>
+<pre><code class="language-typescript">function registerTransform(
+  name: string,
+  fn: (value: unknown, ctx: TransformContext) =&gt; unknown
+): void
+
+interface TransformContext {
+  pluginId: string
+  fieldName: string
+  direction: 'input' | 'output'
+  payload: unknown                // full payload (for derived transforms)
+}
+</code></pre>
+
+<h2 id="validator"><code>ValidatorAdapter</code></h2>
+<p>Pluggable validator (decision <code>D-38</code>). Default: Valibot. Adapters for Zod and Ajv can be implemented without modifying the engine.</p>
+<pre><code class="language-typescript">interface ValidatorAdapter {
+  validate&lt;T&gt;(schema: unknown, payload: unknown):
+    | { ok: true; value: T }
+    | { ok: false; issues: ValidationIssue[] }
+}
+
+interface ValidationIssue {
+  path: string[]
+  message: string
+  expected?: string
+  received?: unknown
+}
+</code></pre>
+
+<h2 id="inspector"><code>broker.getMappingInspector()</code></h2>
+<pre><code class="language-typescript">function getMappingInspector(): MappingInspector
+
+interface MappingInspector {
+  getSnapshot(opts?: { limit?: number; topic?: string }): MappingEntry[]
+  clearErrors(): void
+  lastErrors(): MappingError[]
+}
+
+interface MappingEntry {
+  pluginId: string
+  topic: string
+  direction: 'input' | 'output'
+  localPayload: unknown
+  canonicalPayload: unknown
+  transformsApplied: string[]
+  errors: MappingError[]
+  durationMs: number
+}
+</code></pre>
+
+<h2 id="errors">Error codes</h2>
+<table>
+<thead><tr><th>Code</th><th>When</th></tr></thead>
+<tbody>
+<tr><td><code>mapping.cycle.detected</code></td><td>Cycle in inputMap/outputMap chain (compile-time)</td></tr>
+<tr><td><code>mapping.transform.failed</code></td><td>Registered transform threw an error</td></tr>
+<tr><td><code>mapping.field.missing</code></td><td>Required canonical field has no source value</td></tr>
+<tr><td><code>mapping.canonical.validation.failed</code></td><td>Canonical payload failed schema validation</td></tr>
+<tr><td><code>mapping.consumer.validation.failed</code></td><td>Consumer-side payload failed validation after inputMap</td></tr>
+<tr><td><code>alias.global.conflict</code></td><td>Conflicting global aliases for same local name</td></tr>
+<tr><td><code>alias.scoped.conflict</code></td><td>Conflicting scoped aliases within same plugin</td></tr>
+</tbody>
+</table>
+concepts/canonical-model.html">Canonical model</a>
+  <a class="sidebar-link" href="<h1><code>@gluezero/mapper</code></h1>
+<p class="lead">Canonical model + bidirectional mapper. <code>createMapperBroker(config)</code>, plus declaration merging that adds <code>inputMap</code> / <code>outputMap</code> to <code>PluginDescriptor</code>.</p>
+
+<h2 id="createMapperBroker"><code>createMapperBroker(config)</code></h2>
+<pre><code class="language-typescript">function createMapperBroker(config?: MapperBrokerConfig): MapperBroker
+
+interface MapperBrokerConfig extends BrokerConfig {
+  canonicalModel?: { schemas: CanonicalSchema[] }
+  aliasRegistry?: {
+    global?: Record&lt;string, string&gt;
+    scoped?: Record&lt;string, Record&lt;string, string&gt;&gt;
+  }
+  transforms?: Record&lt;string, TransformFn&gt;
+  validator?: ValidatorAdapter
+}
+</code></pre>
+
+<h2 id="canonicalschema"><code>CanonicalSchema</code></h2>
+<pre><code class="language-typescript">interface CanonicalSchema {
+  id: CanonicalSchemaId           // branded type
+  topic?: string                  // optional topic association
+  fields: Record&lt;string, FieldDescriptor&gt;
+  requires?: string[]             // dependent schema ids
+  requiresRoute?: boolean         // strict: throw if topic has no route
+}
+
+interface FieldDescriptor {
+  type: 'string' | 'number' | 'boolean' | 'object' | 'array' | 'date'
+  required?: boolean
+  default?: unknown               // applied when source field is missing
+  validate?: (v: unknown) =&gt; boolean | string  // custom validator
+}
+</code></pre>
+
+<h2 id="inputmap-outputmap">InputMap / OutputMap</h2>
+<p>Declared on <code>PluginDescriptor</code> via TypeScript declaration merging — automatic when you import <code>@gluezero/mapper</code>:</p>
+<pre><code class="language-typescript">interface OutputMap {
+  [localField: string]: {
+    to: string                    // canonical field name
+    transform?: string            // registered transform name
+  } | string                      // shortcut: just the canonical name
+}
+
+interface InputMap {
+  [localField: string]: string   // canonical → local field rename
+}
+</code></pre>
+
+<h2 id="register-canonical"><code>broker.registerCanonicalSchema(schema)</code></h2>
+<pre><code class="language-typescript">function registerCanonicalSchema(schema: CanonicalSchema): void
+</code></pre>
+<p>Idempotent. Throws on duplicate id with different shape (decision <code>D-36</code>).</p>
+
+<h2 id="register-alias"><code>broker.registerAlias(local, canonical, opts?)</code></h2>
+<pre><code class="language-typescript">function registerAlias(
+  local: string,
+  canonical: string,
+  opts?: { scope?: 'global' | string; warn?: boolean }
+): void
+</code></pre>
+
+<h2 id="register-transform"><code>broker.registerTransform(name, fn)</code></h2>
+<pre><code class="language-typescript">function registerTransform(
+  name: string,
+  fn: (value: unknown, ctx: TransformContext) =&gt; unknown
+): void
+
+interface TransformContext {
+  pluginId: string
+  fieldName: string
+  direction: 'input' | 'output'
+  payload: unknown                // full payload (for derived transforms)
+}
+</code></pre>
+
+<h2 id="validator"><code>ValidatorAdapter</code></h2>
+<p>Pluggable validator (decision <code>D-38</code>). Default: Valibot. Adapters for Zod and Ajv can be implemented without modifying the engine.</p>
+<pre><code class="language-typescript">interface ValidatorAdapter {
+  validate&lt;T&gt;(schema: unknown, payload: unknown):
+    | { ok: true; value: T }
+    | { ok: false; issues: ValidationIssue[] }
+}
+
+interface ValidationIssue {
+  path: string[]
+  message: string
+  expected?: string
+  received?: unknown
+}
+</code></pre>
+
+<h2 id="inspector"><code>broker.getMappingInspector()</code></h2>
+<pre><code class="language-typescript">function getMappingInspector(): MappingInspector
+
+interface MappingInspector {
+  getSnapshot(opts?: { limit?: number; topic?: string }): MappingEntry[]
+  clearErrors(): void
+  lastErrors(): MappingError[]
+}
+
+interface MappingEntry {
+  pluginId: string
+  topic: string
+  direction: 'input' | 'output'
+  localPayload: unknown
+  canonicalPayload: unknown
+  transformsApplied: string[]
+  errors: MappingError[]
+  durationMs: number
+}
+</code></pre>
+
+<h2 id="errors">Error codes</h2>
+<table>
+<thead><tr><th>Code</th><th>When</th></tr></thead>
+<tbody>
+<tr><td><code>mapping.cycle.detected</code></td><td>Cycle in inputMap/outputMap chain (compile-time)</td></tr>
+<tr><td><code>mapping.transform.failed</code></td><td>Registered transform threw an error</td></tr>
+<tr><td><code>mapping.field.missing</code></td><td>Required canonical field has no source value</td></tr>
+<tr><td><code>mapping.canonical.validation.failed</code></td><td>Canonical payload failed schema validation</td></tr>
+<tr><td><code>mapping.consumer.validation.failed</code></td><td>Consumer-side payload failed validation after inputMap</td></tr>
+<tr><td><code>alias.global.conflict</code></td><td>Conflicting global aliases for same local name</td></tr>
+<tr><td><code>alias.scoped.conflict</code></td><td>Conflicting scoped aliases within same plugin</td></tr>
+</tbody>
+</table>
+concepts/routing.html">Routing</a>
+  <a class="sidebar-link" href="<h1><code>@gluezero/mapper</code></h1>
+<p class="lead">Canonical model + bidirectional mapper. <code>createMapperBroker(config)</code>, plus declaration merging that adds <code>inputMap</code> / <code>outputMap</code> to <code>PluginDescriptor</code>.</p>
+
+<h2 id="createMapperBroker"><code>createMapperBroker(config)</code></h2>
+<pre><code class="language-typescript">function createMapperBroker(config?: MapperBrokerConfig): MapperBroker
+
+interface MapperBrokerConfig extends BrokerConfig {
+  canonicalModel?: { schemas: CanonicalSchema[] }
+  aliasRegistry?: {
+    global?: Record&lt;string, string&gt;
+    scoped?: Record&lt;string, Record&lt;string, string&gt;&gt;
+  }
+  transforms?: Record&lt;string, TransformFn&gt;
+  validator?: ValidatorAdapter
+}
+</code></pre>
+
+<h2 id="canonicalschema"><code>CanonicalSchema</code></h2>
+<pre><code class="language-typescript">interface CanonicalSchema {
+  id: CanonicalSchemaId           // branded type
+  topic?: string                  // optional topic association
+  fields: Record&lt;string, FieldDescriptor&gt;
+  requires?: string[]             // dependent schema ids
+  requiresRoute?: boolean         // strict: throw if topic has no route
+}
+
+interface FieldDescriptor {
+  type: 'string' | 'number' | 'boolean' | 'object' | 'array' | 'date'
+  required?: boolean
+  default?: unknown               // applied when source field is missing
+  validate?: (v: unknown) =&gt; boolean | string  // custom validator
+}
+</code></pre>
+
+<h2 id="inputmap-outputmap">InputMap / OutputMap</h2>
+<p>Declared on <code>PluginDescriptor</code> via TypeScript declaration merging — automatic when you import <code>@gluezero/mapper</code>:</p>
+<pre><code class="language-typescript">interface OutputMap {
+  [localField: string]: {
+    to: string                    // canonical field name
+    transform?: string            // registered transform name
+  } | string                      // shortcut: just the canonical name
+}
+
+interface InputMap {
+  [localField: string]: string   // canonical → local field rename
+}
+</code></pre>
+
+<h2 id="register-canonical"><code>broker.registerCanonicalSchema(schema)</code></h2>
+<pre><code class="language-typescript">function registerCanonicalSchema(schema: CanonicalSchema): void
+</code></pre>
+<p>Idempotent. Throws on duplicate id with different shape (decision <code>D-36</code>).</p>
+
+<h2 id="register-alias"><code>broker.registerAlias(local, canonical, opts?)</code></h2>
+<pre><code class="language-typescript">function registerAlias(
+  local: string,
+  canonical: string,
+  opts?: { scope?: 'global' | string; warn?: boolean }
+): void
+</code></pre>
+
+<h2 id="register-transform"><code>broker.registerTransform(name, fn)</code></h2>
+<pre><code class="language-typescript">function registerTransform(
+  name: string,
+  fn: (value: unknown, ctx: TransformContext) =&gt; unknown
+): void
+
+interface TransformContext {
+  pluginId: string
+  fieldName: string
+  direction: 'input' | 'output'
+  payload: unknown                // full payload (for derived transforms)
+}
+</code></pre>
+
+<h2 id="validator"><code>ValidatorAdapter</code></h2>
+<p>Pluggable validator (decision <code>D-38</code>). Default: Valibot. Adapters for Zod and Ajv can be implemented without modifying the engine.</p>
+<pre><code class="language-typescript">interface ValidatorAdapter {
+  validate&lt;T&gt;(schema: unknown, payload: unknown):
+    | { ok: true; value: T }
+    | { ok: false; issues: ValidationIssue[] }
+}
+
+interface ValidationIssue {
+  path: string[]
+  message: string
+  expected?: string
+  received?: unknown
+}
+</code></pre>
+
+<h2 id="inspector"><code>broker.getMappingInspector()</code></h2>
+<pre><code class="language-typescript">function getMappingInspector(): MappingInspector
+
+interface MappingInspector {
+  getSnapshot(opts?: { limit?: number; topic?: string }): MappingEntry[]
+  clearErrors(): void
+  lastErrors(): MappingError[]
+}
+
+interface MappingEntry {
+  pluginId: string
+  topic: string
+  direction: 'input' | 'output'
+  localPayload: unknown
+  canonicalPayload: unknown
+  transformsApplied: string[]
+  errors: MappingError[]
+  durationMs: number
+}
+</code></pre>
+
+<h2 id="errors">Error codes</h2>
+<table>
+<thead><tr><th>Code</th><th>When</th></tr></thead>
+<tbody>
+<tr><td><code>mapping.cycle.detected</code></td><td>Cycle in inputMap/outputMap chain (compile-time)</td></tr>
+<tr><td><code>mapping.transform.failed</code></td><td>Registered transform threw an error</td></tr>
+<tr><td><code>mapping.field.missing</code></td><td>Required canonical field has no source value</td></tr>
+<tr><td><code>mapping.canonical.validation.failed</code></td><td>Canonical payload failed schema validation</td></tr>
+<tr><td><code>mapping.consumer.validation.failed</code></td><td>Consumer-side payload failed validation after inputMap</td></tr>
+<tr><td><code>alias.global.conflict</code></td><td>Conflicting global aliases for same local name</td></tr>
+<tr><td><code>alias.scoped.conflict</code></td><td>Conflicting scoped aliases within same plugin</td></tr>
+</tbody>
+</table>
+concepts/gateway.html">HTTP gateway</a>
+  <a class="sidebar-link" href="<h1><code>@gluezero/mapper</code></h1>
+<p class="lead">Canonical model + bidirectional mapper. <code>createMapperBroker(config)</code>, plus declaration merging that adds <code>inputMap</code> / <code>outputMap</code> to <code>PluginDescriptor</code>.</p>
+
+<h2 id="createMapperBroker"><code>createMapperBroker(config)</code></h2>
+<pre><code class="language-typescript">function createMapperBroker(config?: MapperBrokerConfig): MapperBroker
+
+interface MapperBrokerConfig extends BrokerConfig {
+  canonicalModel?: { schemas: CanonicalSchema[] }
+  aliasRegistry?: {
+    global?: Record&lt;string, string&gt;
+    scoped?: Record&lt;string, Record&lt;string, string&gt;&gt;
+  }
+  transforms?: Record&lt;string, TransformFn&gt;
+  validator?: ValidatorAdapter
+}
+</code></pre>
+
+<h2 id="canonicalschema"><code>CanonicalSchema</code></h2>
+<pre><code class="language-typescript">interface CanonicalSchema {
+  id: CanonicalSchemaId           // branded type
+  topic?: string                  // optional topic association
+  fields: Record&lt;string, FieldDescriptor&gt;
+  requires?: string[]             // dependent schema ids
+  requiresRoute?: boolean         // strict: throw if topic has no route
+}
+
+interface FieldDescriptor {
+  type: 'string' | 'number' | 'boolean' | 'object' | 'array' | 'date'
+  required?: boolean
+  default?: unknown               // applied when source field is missing
+  validate?: (v: unknown) =&gt; boolean | string  // custom validator
+}
+</code></pre>
+
+<h2 id="inputmap-outputmap">InputMap / OutputMap</h2>
+<p>Declared on <code>PluginDescriptor</code> via TypeScript declaration merging — automatic when you import <code>@gluezero/mapper</code>:</p>
+<pre><code class="language-typescript">interface OutputMap {
+  [localField: string]: {
+    to: string                    // canonical field name
+    transform?: string            // registered transform name
+  } | string                      // shortcut: just the canonical name
+}
+
+interface InputMap {
+  [localField: string]: string   // canonical → local field rename
+}
+</code></pre>
+
+<h2 id="register-canonical"><code>broker.registerCanonicalSchema(schema)</code></h2>
+<pre><code class="language-typescript">function registerCanonicalSchema(schema: CanonicalSchema): void
+</code></pre>
+<p>Idempotent. Throws on duplicate id with different shape (decision <code>D-36</code>).</p>
+
+<h2 id="register-alias"><code>broker.registerAlias(local, canonical, opts?)</code></h2>
+<pre><code class="language-typescript">function registerAlias(
+  local: string,
+  canonical: string,
+  opts?: { scope?: 'global' | string; warn?: boolean }
+): void
+</code></pre>
+
+<h2 id="register-transform"><code>broker.registerTransform(name, fn)</code></h2>
+<pre><code class="language-typescript">function registerTransform(
+  name: string,
+  fn: (value: unknown, ctx: TransformContext) =&gt; unknown
+): void
+
+interface TransformContext {
+  pluginId: string
+  fieldName: string
+  direction: 'input' | 'output'
+  payload: unknown                // full payload (for derived transforms)
+}
+</code></pre>
+
+<h2 id="validator"><code>ValidatorAdapter</code></h2>
+<p>Pluggable validator (decision <code>D-38</code>). Default: Valibot. Adapters for Zod and Ajv can be implemented without modifying the engine.</p>
+<pre><code class="language-typescript">interface ValidatorAdapter {
+  validate&lt;T&gt;(schema: unknown, payload: unknown):
+    | { ok: true; value: T }
+    | { ok: false; issues: ValidationIssue[] }
+}
+
+interface ValidationIssue {
+  path: string[]
+  message: string
+  expected?: string
+  received?: unknown
+}
+</code></pre>
+
+<h2 id="inspector"><code>broker.getMappingInspector()</code></h2>
+<pre><code class="language-typescript">function getMappingInspector(): MappingInspector
+
+interface MappingInspector {
+  getSnapshot(opts?: { limit?: number; topic?: string }): MappingEntry[]
+  clearErrors(): void
+  lastErrors(): MappingError[]
+}
+
+interface MappingEntry {
+  pluginId: string
+  topic: string
+  direction: 'input' | 'output'
+  localPayload: unknown
+  canonicalPayload: unknown
+  transformsApplied: string[]
+  errors: MappingError[]
+  durationMs: number
+}
+</code></pre>
+
+<h2 id="errors">Error codes</h2>
+<table>
+<thead><tr><th>Code</th><th>When</th></tr></thead>
+<tbody>
+<tr><td><code>mapping.cycle.detected</code></td><td>Cycle in inputMap/outputMap chain (compile-time)</td></tr>
+<tr><td><code>mapping.transform.failed</code></td><td>Registered transform threw an error</td></tr>
+<tr><td><code>mapping.field.missing</code></td><td>Required canonical field has no source value</td></tr>
+<tr><td><code>mapping.canonical.validation.failed</code></td><td>Canonical payload failed schema validation</td></tr>
+<tr><td><code>mapping.consumer.validation.failed</code></td><td>Consumer-side payload failed validation after inputMap</td></tr>
+<tr><td><code>alias.global.conflict</code></td><td>Conflicting global aliases for same local name</td></tr>
+<tr><td><code>alias.scoped.conflict</code></td><td>Conflicting scoped aliases within same plugin</td></tr>
+</tbody>
+</table>
+concepts/realtime.html">Realtime</a>
+  <a class="sidebar-link" href="<h1><code>@gluezero/mapper</code></h1>
+<p class="lead">Canonical model + bidirectional mapper. <code>createMapperBroker(config)</code>, plus declaration merging that adds <code>inputMap</code> / <code>outputMap</code> to <code>PluginDescriptor</code>.</p>
+
+<h2 id="createMapperBroker"><code>createMapperBroker(config)</code></h2>
+<pre><code class="language-typescript">function createMapperBroker(config?: MapperBrokerConfig): MapperBroker
+
+interface MapperBrokerConfig extends BrokerConfig {
+  canonicalModel?: { schemas: CanonicalSchema[] }
+  aliasRegistry?: {
+    global?: Record&lt;string, string&gt;
+    scoped?: Record&lt;string, Record&lt;string, string&gt;&gt;
+  }
+  transforms?: Record&lt;string, TransformFn&gt;
+  validator?: ValidatorAdapter
+}
+</code></pre>
+
+<h2 id="canonicalschema"><code>CanonicalSchema</code></h2>
+<pre><code class="language-typescript">interface CanonicalSchema {
+  id: CanonicalSchemaId           // branded type
+  topic?: string                  // optional topic association
+  fields: Record&lt;string, FieldDescriptor&gt;
+  requires?: string[]             // dependent schema ids
+  requiresRoute?: boolean         // strict: throw if topic has no route
+}
+
+interface FieldDescriptor {
+  type: 'string' | 'number' | 'boolean' | 'object' | 'array' | 'date'
+  required?: boolean
+  default?: unknown               // applied when source field is missing
+  validate?: (v: unknown) =&gt; boolean | string  // custom validator
+}
+</code></pre>
+
+<h2 id="inputmap-outputmap">InputMap / OutputMap</h2>
+<p>Declared on <code>PluginDescriptor</code> via TypeScript declaration merging — automatic when you import <code>@gluezero/mapper</code>:</p>
+<pre><code class="language-typescript">interface OutputMap {
+  [localField: string]: {
+    to: string                    // canonical field name
+    transform?: string            // registered transform name
+  } | string                      // shortcut: just the canonical name
+}
+
+interface InputMap {
+  [localField: string]: string   // canonical → local field rename
+}
+</code></pre>
+
+<h2 id="register-canonical"><code>broker.registerCanonicalSchema(schema)</code></h2>
+<pre><code class="language-typescript">function registerCanonicalSchema(schema: CanonicalSchema): void
+</code></pre>
+<p>Idempotent. Throws on duplicate id with different shape (decision <code>D-36</code>).</p>
+
+<h2 id="register-alias"><code>broker.registerAlias(local, canonical, opts?)</code></h2>
+<pre><code class="language-typescript">function registerAlias(
+  local: string,
+  canonical: string,
+  opts?: { scope?: 'global' | string; warn?: boolean }
+): void
+</code></pre>
+
+<h2 id="register-transform"><code>broker.registerTransform(name, fn)</code></h2>
+<pre><code class="language-typescript">function registerTransform(
+  name: string,
+  fn: (value: unknown, ctx: TransformContext) =&gt; unknown
+): void
+
+interface TransformContext {
+  pluginId: string
+  fieldName: string
+  direction: 'input' | 'output'
+  payload: unknown                // full payload (for derived transforms)
+}
+</code></pre>
+
+<h2 id="validator"><code>ValidatorAdapter</code></h2>
+<p>Pluggable validator (decision <code>D-38</code>). Default: Valibot. Adapters for Zod and Ajv can be implemented without modifying the engine.</p>
+<pre><code class="language-typescript">interface ValidatorAdapter {
+  validate&lt;T&gt;(schema: unknown, payload: unknown):
+    | { ok: true; value: T }
+    | { ok: false; issues: ValidationIssue[] }
+}
+
+interface ValidationIssue {
+  path: string[]
+  message: string
+  expected?: string
+  received?: unknown
+}
+</code></pre>
+
+<h2 id="inspector"><code>broker.getMappingInspector()</code></h2>
+<pre><code class="language-typescript">function getMappingInspector(): MappingInspector
+
+interface MappingInspector {
+  getSnapshot(opts?: { limit?: number; topic?: string }): MappingEntry[]
+  clearErrors(): void
+  lastErrors(): MappingError[]
+}
+
+interface MappingEntry {
+  pluginId: string
+  topic: string
+  direction: 'input' | 'output'
+  localPayload: unknown
+  canonicalPayload: unknown
+  transformsApplied: string[]
+  errors: MappingError[]
+  durationMs: number
+}
+</code></pre>
+
+<h2 id="errors">Error codes</h2>
+<table>
+<thead><tr><th>Code</th><th>When</th></tr></thead>
+<tbody>
+<tr><td><code>mapping.cycle.detected</code></td><td>Cycle in inputMap/outputMap chain (compile-time)</td></tr>
+<tr><td><code>mapping.transform.failed</code></td><td>Registered transform threw an error</td></tr>
+<tr><td><code>mapping.field.missing</code></td><td>Required canonical field has no source value</td></tr>
+<tr><td><code>mapping.canonical.validation.failed</code></td><td>Canonical payload failed schema validation</td></tr>
+<tr><td><code>mapping.consumer.validation.failed</code></td><td>Consumer-side payload failed validation after inputMap</td></tr>
+<tr><td><code>alias.global.conflict</code></td><td>Conflicting global aliases for same local name</td></tr>
+<tr><td><code>alias.scoped.conflict</code></td><td>Conflicting scoped aliases within same plugin</td></tr>
+</tbody>
+</table>
+concepts/worker.html">Worker</a>
+  <a class="sidebar-link" href="<h1><code>@gluezero/mapper</code></h1>
+<p class="lead">Canonical model + bidirectional mapper. <code>createMapperBroker(config)</code>, plus declaration merging that adds <code>inputMap</code> / <code>outputMap</code> to <code>PluginDescriptor</code>.</p>
+
+<h2 id="createMapperBroker"><code>createMapperBroker(config)</code></h2>
+<pre><code class="language-typescript">function createMapperBroker(config?: MapperBrokerConfig): MapperBroker
+
+interface MapperBrokerConfig extends BrokerConfig {
+  canonicalModel?: { schemas: CanonicalSchema[] }
+  aliasRegistry?: {
+    global?: Record&lt;string, string&gt;
+    scoped?: Record&lt;string, Record&lt;string, string&gt;&gt;
+  }
+  transforms?: Record&lt;string, TransformFn&gt;
+  validator?: ValidatorAdapter
+}
+</code></pre>
+
+<h2 id="canonicalschema"><code>CanonicalSchema</code></h2>
+<pre><code class="language-typescript">interface CanonicalSchema {
+  id: CanonicalSchemaId           // branded type
+  topic?: string                  // optional topic association
+  fields: Record&lt;string, FieldDescriptor&gt;
+  requires?: string[]             // dependent schema ids
+  requiresRoute?: boolean         // strict: throw if topic has no route
+}
+
+interface FieldDescriptor {
+  type: 'string' | 'number' | 'boolean' | 'object' | 'array' | 'date'
+  required?: boolean
+  default?: unknown               // applied when source field is missing
+  validate?: (v: unknown) =&gt; boolean | string  // custom validator
+}
+</code></pre>
+
+<h2 id="inputmap-outputmap">InputMap / OutputMap</h2>
+<p>Declared on <code>PluginDescriptor</code> via TypeScript declaration merging — automatic when you import <code>@gluezero/mapper</code>:</p>
+<pre><code class="language-typescript">interface OutputMap {
+  [localField: string]: {
+    to: string                    // canonical field name
+    transform?: string            // registered transform name
+  } | string                      // shortcut: just the canonical name
+}
+
+interface InputMap {
+  [localField: string]: string   // canonical → local field rename
+}
+</code></pre>
+
+<h2 id="register-canonical"><code>broker.registerCanonicalSchema(schema)</code></h2>
+<pre><code class="language-typescript">function registerCanonicalSchema(schema: CanonicalSchema): void
+</code></pre>
+<p>Idempotent. Throws on duplicate id with different shape (decision <code>D-36</code>).</p>
+
+<h2 id="register-alias"><code>broker.registerAlias(local, canonical, opts?)</code></h2>
+<pre><code class="language-typescript">function registerAlias(
+  local: string,
+  canonical: string,
+  opts?: { scope?: 'global' | string; warn?: boolean }
+): void
+</code></pre>
+
+<h2 id="register-transform"><code>broker.registerTransform(name, fn)</code></h2>
+<pre><code class="language-typescript">function registerTransform(
+  name: string,
+  fn: (value: unknown, ctx: TransformContext) =&gt; unknown
+): void
+
+interface TransformContext {
+  pluginId: string
+  fieldName: string
+  direction: 'input' | 'output'
+  payload: unknown                // full payload (for derived transforms)
+}
+</code></pre>
+
+<h2 id="validator"><code>ValidatorAdapter</code></h2>
+<p>Pluggable validator (decision <code>D-38</code>). Default: Valibot. Adapters for Zod and Ajv can be implemented without modifying the engine.</p>
+<pre><code class="language-typescript">interface ValidatorAdapter {
+  validate&lt;T&gt;(schema: unknown, payload: unknown):
+    | { ok: true; value: T }
+    | { ok: false; issues: ValidationIssue[] }
+}
+
+interface ValidationIssue {
+  path: string[]
+  message: string
+  expected?: string
+  received?: unknown
+}
+</code></pre>
+
+<h2 id="inspector"><code>broker.getMappingInspector()</code></h2>
+<pre><code class="language-typescript">function getMappingInspector(): MappingInspector
+
+interface MappingInspector {
+  getSnapshot(opts?: { limit?: number; topic?: string }): MappingEntry[]
+  clearErrors(): void
+  lastErrors(): MappingError[]
+}
+
+interface MappingEntry {
+  pluginId: string
+  topic: string
+  direction: 'input' | 'output'
+  localPayload: unknown
+  canonicalPayload: unknown
+  transformsApplied: string[]
+  errors: MappingError[]
+  durationMs: number
+}
+</code></pre>
+
+<h2 id="errors">Error codes</h2>
+<table>
+<thead><tr><th>Code</th><th>When</th></tr></thead>
+<tbody>
+<tr><td><code>mapping.cycle.detected</code></td><td>Cycle in inputMap/outputMap chain (compile-time)</td></tr>
+<tr><td><code>mapping.transform.failed</code></td><td>Registered transform threw an error</td></tr>
+<tr><td><code>mapping.field.missing</code></td><td>Required canonical field has no source value</td></tr>
+<tr><td><code>mapping.canonical.validation.failed</code></td><td>Canonical payload failed schema validation</td></tr>
+<tr><td><code>mapping.consumer.validation.failed</code></td><td>Consumer-side payload failed validation after inputMap</td></tr>
+<tr><td><code>alias.global.conflict</code></td><td>Conflicting global aliases for same local name</td></tr>
+<tr><td><code>alias.scoped.conflict</code></td><td>Conflicting scoped aliases within same plugin</td></tr>
+</tbody>
+</table>
+concepts/cache.html">Cache</a>
+  <a class="sidebar-link" href="<h1><code>@gluezero/mapper</code></h1>
+<p class="lead">Canonical model + bidirectional mapper. <code>createMapperBroker(config)</code>, plus declaration merging that adds <code>inputMap</code> / <code>outputMap</code> to <code>PluginDescriptor</code>.</p>
+
+<h2 id="createMapperBroker"><code>createMapperBroker(config)</code></h2>
+<pre><code class="language-typescript">function createMapperBroker(config?: MapperBrokerConfig): MapperBroker
+
+interface MapperBrokerConfig extends BrokerConfig {
+  canonicalModel?: { schemas: CanonicalSchema[] }
+  aliasRegistry?: {
+    global?: Record&lt;string, string&gt;
+    scoped?: Record&lt;string, Record&lt;string, string&gt;&gt;
+  }
+  transforms?: Record&lt;string, TransformFn&gt;
+  validator?: ValidatorAdapter
+}
+</code></pre>
+
+<h2 id="canonicalschema"><code>CanonicalSchema</code></h2>
+<pre><code class="language-typescript">interface CanonicalSchema {
+  id: CanonicalSchemaId           // branded type
+  topic?: string                  // optional topic association
+  fields: Record&lt;string, FieldDescriptor&gt;
+  requires?: string[]             // dependent schema ids
+  requiresRoute?: boolean         // strict: throw if topic has no route
+}
+
+interface FieldDescriptor {
+  type: 'string' | 'number' | 'boolean' | 'object' | 'array' | 'date'
+  required?: boolean
+  default?: unknown               // applied when source field is missing
+  validate?: (v: unknown) =&gt; boolean | string  // custom validator
+}
+</code></pre>
+
+<h2 id="inputmap-outputmap">InputMap / OutputMap</h2>
+<p>Declared on <code>PluginDescriptor</code> via TypeScript declaration merging — automatic when you import <code>@gluezero/mapper</code>:</p>
+<pre><code class="language-typescript">interface OutputMap {
+  [localField: string]: {
+    to: string                    // canonical field name
+    transform?: string            // registered transform name
+  } | string                      // shortcut: just the canonical name
+}
+
+interface InputMap {
+  [localField: string]: string   // canonical → local field rename
+}
+</code></pre>
+
+<h2 id="register-canonical"><code>broker.registerCanonicalSchema(schema)</code></h2>
+<pre><code class="language-typescript">function registerCanonicalSchema(schema: CanonicalSchema): void
+</code></pre>
+<p>Idempotent. Throws on duplicate id with different shape (decision <code>D-36</code>).</p>
+
+<h2 id="register-alias"><code>broker.registerAlias(local, canonical, opts?)</code></h2>
+<pre><code class="language-typescript">function registerAlias(
+  local: string,
+  canonical: string,
+  opts?: { scope?: 'global' | string; warn?: boolean }
+): void
+</code></pre>
+
+<h2 id="register-transform"><code>broker.registerTransform(name, fn)</code></h2>
+<pre><code class="language-typescript">function registerTransform(
+  name: string,
+  fn: (value: unknown, ctx: TransformContext) =&gt; unknown
+): void
+
+interface TransformContext {
+  pluginId: string
+  fieldName: string
+  direction: 'input' | 'output'
+  payload: unknown                // full payload (for derived transforms)
+}
+</code></pre>
+
+<h2 id="validator"><code>ValidatorAdapter</code></h2>
+<p>Pluggable validator (decision <code>D-38</code>). Default: Valibot. Adapters for Zod and Ajv can be implemented without modifying the engine.</p>
+<pre><code class="language-typescript">interface ValidatorAdapter {
+  validate&lt;T&gt;(schema: unknown, payload: unknown):
+    | { ok: true; value: T }
+    | { ok: false; issues: ValidationIssue[] }
+}
+
+interface ValidationIssue {
+  path: string[]
+  message: string
+  expected?: string
+  received?: unknown
+}
+</code></pre>
+
+<h2 id="inspector"><code>broker.getMappingInspector()</code></h2>
+<pre><code class="language-typescript">function getMappingInspector(): MappingInspector
+
+interface MappingInspector {
+  getSnapshot(opts?: { limit?: number; topic?: string }): MappingEntry[]
+  clearErrors(): void
+  lastErrors(): MappingError[]
+}
+
+interface MappingEntry {
+  pluginId: string
+  topic: string
+  direction: 'input' | 'output'
+  localPayload: unknown
+  canonicalPayload: unknown
+  transformsApplied: string[]
+  errors: MappingError[]
+  durationMs: number
+}
+</code></pre>
+
+<h2 id="errors">Error codes</h2>
+<table>
+<thead><tr><th>Code</th><th>When</th></tr></thead>
+<tbody>
+<tr><td><code>mapping.cycle.detected</code></td><td>Cycle in inputMap/outputMap chain (compile-time)</td></tr>
+<tr><td><code>mapping.transform.failed</code></td><td>Registered transform threw an error</td></tr>
+<tr><td><code>mapping.field.missing</code></td><td>Required canonical field has no source value</td></tr>
+<tr><td><code>mapping.canonical.validation.failed</code></td><td>Canonical payload failed schema validation</td></tr>
+<tr><td><code>mapping.consumer.validation.failed</code></td><td>Consumer-side payload failed validation after inputMap</td></tr>
+<tr><td><code>alias.global.conflict</code></td><td>Conflicting global aliases for same local name</td></tr>
+<tr><td><code>alias.scoped.conflict</code></td><td>Conflicting scoped aliases within same plugin</td></tr>
+</tbody>
+</table>
+concepts/devtools.html">Devtools</a>
 </div>
 <div class="sidebar-section">
   <div class="sidebar-section-title">API reference</div>
-  <a class="sidebar-link" href="../api/gluezero.html">@gluezero/gluezero</a>
-  <a class="sidebar-link" href="../api/core.html">@gluezero/core</a>
-  <a class="sidebar-link" href="../api/mapper.html">@gluezero/mapper</a>
-  <a class="sidebar-link" href="../api/routing.html">@gluezero/routing</a>
-  <a class="sidebar-link" href="../api/gateway.html">@gluezero/gateway</a>
-  <a class="sidebar-link" href="../api/worker.html">@gluezero/worker</a>
-  <a class="sidebar-link" href="../api/cache.html">@gluezero/cache</a>
-  <a class="sidebar-link" href="../api/devtools.html">@gluezero/devtools</a>
+  <a class="sidebar-link" href="<h1><code>@gluezero/mapper</code></h1>
+<p class="lead">Canonical model + bidirectional mapper. <code>createMapperBroker(config)</code>, plus declaration merging that adds <code>inputMap</code> / <code>outputMap</code> to <code>PluginDescriptor</code>.</p>
+
+<h2 id="createMapperBroker"><code>createMapperBroker(config)</code></h2>
+<pre><code class="language-typescript">function createMapperBroker(config?: MapperBrokerConfig): MapperBroker
+
+interface MapperBrokerConfig extends BrokerConfig {
+  canonicalModel?: { schemas: CanonicalSchema[] }
+  aliasRegistry?: {
+    global?: Record&lt;string, string&gt;
+    scoped?: Record&lt;string, Record&lt;string, string&gt;&gt;
+  }
+  transforms?: Record&lt;string, TransformFn&gt;
+  validator?: ValidatorAdapter
+}
+</code></pre>
+
+<h2 id="canonicalschema"><code>CanonicalSchema</code></h2>
+<pre><code class="language-typescript">interface CanonicalSchema {
+  id: CanonicalSchemaId           // branded type
+  topic?: string                  // optional topic association
+  fields: Record&lt;string, FieldDescriptor&gt;
+  requires?: string[]             // dependent schema ids
+  requiresRoute?: boolean         // strict: throw if topic has no route
+}
+
+interface FieldDescriptor {
+  type: 'string' | 'number' | 'boolean' | 'object' | 'array' | 'date'
+  required?: boolean
+  default?: unknown               // applied when source field is missing
+  validate?: (v: unknown) =&gt; boolean | string  // custom validator
+}
+</code></pre>
+
+<h2 id="inputmap-outputmap">InputMap / OutputMap</h2>
+<p>Declared on <code>PluginDescriptor</code> via TypeScript declaration merging — automatic when you import <code>@gluezero/mapper</code>:</p>
+<pre><code class="language-typescript">interface OutputMap {
+  [localField: string]: {
+    to: string                    // canonical field name
+    transform?: string            // registered transform name
+  } | string                      // shortcut: just the canonical name
+}
+
+interface InputMap {
+  [localField: string]: string   // canonical → local field rename
+}
+</code></pre>
+
+<h2 id="register-canonical"><code>broker.registerCanonicalSchema(schema)</code></h2>
+<pre><code class="language-typescript">function registerCanonicalSchema(schema: CanonicalSchema): void
+</code></pre>
+<p>Idempotent. Throws on duplicate id with different shape (decision <code>D-36</code>).</p>
+
+<h2 id="register-alias"><code>broker.registerAlias(local, canonical, opts?)</code></h2>
+<pre><code class="language-typescript">function registerAlias(
+  local: string,
+  canonical: string,
+  opts?: { scope?: 'global' | string; warn?: boolean }
+): void
+</code></pre>
+
+<h2 id="register-transform"><code>broker.registerTransform(name, fn)</code></h2>
+<pre><code class="language-typescript">function registerTransform(
+  name: string,
+  fn: (value: unknown, ctx: TransformContext) =&gt; unknown
+): void
+
+interface TransformContext {
+  pluginId: string
+  fieldName: string
+  direction: 'input' | 'output'
+  payload: unknown                // full payload (for derived transforms)
+}
+</code></pre>
+
+<h2 id="validator"><code>ValidatorAdapter</code></h2>
+<p>Pluggable validator (decision <code>D-38</code>). Default: Valibot. Adapters for Zod and Ajv can be implemented without modifying the engine.</p>
+<pre><code class="language-typescript">interface ValidatorAdapter {
+  validate&lt;T&gt;(schema: unknown, payload: unknown):
+    | { ok: true; value: T }
+    | { ok: false; issues: ValidationIssue[] }
+}
+
+interface ValidationIssue {
+  path: string[]
+  message: string
+  expected?: string
+  received?: unknown
+}
+</code></pre>
+
+<h2 id="inspector"><code>broker.getMappingInspector()</code></h2>
+<pre><code class="language-typescript">function getMappingInspector(): MappingInspector
+
+interface MappingInspector {
+  getSnapshot(opts?: { limit?: number; topic?: string }): MappingEntry[]
+  clearErrors(): void
+  lastErrors(): MappingError[]
+}
+
+interface MappingEntry {
+  pluginId: string
+  topic: string
+  direction: 'input' | 'output'
+  localPayload: unknown
+  canonicalPayload: unknown
+  transformsApplied: string[]
+  errors: MappingError[]
+  durationMs: number
+}
+</code></pre>
+
+<h2 id="errors">Error codes</h2>
+<table>
+<thead><tr><th>Code</th><th>When</th></tr></thead>
+<tbody>
+<tr><td><code>mapping.cycle.detected</code></td><td>Cycle in inputMap/outputMap chain (compile-time)</td></tr>
+<tr><td><code>mapping.transform.failed</code></td><td>Registered transform threw an error</td></tr>
+<tr><td><code>mapping.field.missing</code></td><td>Required canonical field has no source value</td></tr>
+<tr><td><code>mapping.canonical.validation.failed</code></td><td>Canonical payload failed schema validation</td></tr>
+<tr><td><code>mapping.consumer.validation.failed</code></td><td>Consumer-side payload failed validation after inputMap</td></tr>
+<tr><td><code>alias.global.conflict</code></td><td>Conflicting global aliases for same local name</td></tr>
+<tr><td><code>alias.scoped.conflict</code></td><td>Conflicting scoped aliases within same plugin</td></tr>
+</tbody>
+</table>
+api/gluezero.html">@gluezero/gluezero</a>
+  <a class="sidebar-link" href="<h1><code>@gluezero/mapper</code></h1>
+<p class="lead">Canonical model + bidirectional mapper. <code>createMapperBroker(config)</code>, plus declaration merging that adds <code>inputMap</code> / <code>outputMap</code> to <code>PluginDescriptor</code>.</p>
+
+<h2 id="createMapperBroker"><code>createMapperBroker(config)</code></h2>
+<pre><code class="language-typescript">function createMapperBroker(config?: MapperBrokerConfig): MapperBroker
+
+interface MapperBrokerConfig extends BrokerConfig {
+  canonicalModel?: { schemas: CanonicalSchema[] }
+  aliasRegistry?: {
+    global?: Record&lt;string, string&gt;
+    scoped?: Record&lt;string, Record&lt;string, string&gt;&gt;
+  }
+  transforms?: Record&lt;string, TransformFn&gt;
+  validator?: ValidatorAdapter
+}
+</code></pre>
+
+<h2 id="canonicalschema"><code>CanonicalSchema</code></h2>
+<pre><code class="language-typescript">interface CanonicalSchema {
+  id: CanonicalSchemaId           // branded type
+  topic?: string                  // optional topic association
+  fields: Record&lt;string, FieldDescriptor&gt;
+  requires?: string[]             // dependent schema ids
+  requiresRoute?: boolean         // strict: throw if topic has no route
+}
+
+interface FieldDescriptor {
+  type: 'string' | 'number' | 'boolean' | 'object' | 'array' | 'date'
+  required?: boolean
+  default?: unknown               // applied when source field is missing
+  validate?: (v: unknown) =&gt; boolean | string  // custom validator
+}
+</code></pre>
+
+<h2 id="inputmap-outputmap">InputMap / OutputMap</h2>
+<p>Declared on <code>PluginDescriptor</code> via TypeScript declaration merging — automatic when you import <code>@gluezero/mapper</code>:</p>
+<pre><code class="language-typescript">interface OutputMap {
+  [localField: string]: {
+    to: string                    // canonical field name
+    transform?: string            // registered transform name
+  } | string                      // shortcut: just the canonical name
+}
+
+interface InputMap {
+  [localField: string]: string   // canonical → local field rename
+}
+</code></pre>
+
+<h2 id="register-canonical"><code>broker.registerCanonicalSchema(schema)</code></h2>
+<pre><code class="language-typescript">function registerCanonicalSchema(schema: CanonicalSchema): void
+</code></pre>
+<p>Idempotent. Throws on duplicate id with different shape (decision <code>D-36</code>).</p>
+
+<h2 id="register-alias"><code>broker.registerAlias(local, canonical, opts?)</code></h2>
+<pre><code class="language-typescript">function registerAlias(
+  local: string,
+  canonical: string,
+  opts?: { scope?: 'global' | string; warn?: boolean }
+): void
+</code></pre>
+
+<h2 id="register-transform"><code>broker.registerTransform(name, fn)</code></h2>
+<pre><code class="language-typescript">function registerTransform(
+  name: string,
+  fn: (value: unknown, ctx: TransformContext) =&gt; unknown
+): void
+
+interface TransformContext {
+  pluginId: string
+  fieldName: string
+  direction: 'input' | 'output'
+  payload: unknown                // full payload (for derived transforms)
+}
+</code></pre>
+
+<h2 id="validator"><code>ValidatorAdapter</code></h2>
+<p>Pluggable validator (decision <code>D-38</code>). Default: Valibot. Adapters for Zod and Ajv can be implemented without modifying the engine.</p>
+<pre><code class="language-typescript">interface ValidatorAdapter {
+  validate&lt;T&gt;(schema: unknown, payload: unknown):
+    | { ok: true; value: T }
+    | { ok: false; issues: ValidationIssue[] }
+}
+
+interface ValidationIssue {
+  path: string[]
+  message: string
+  expected?: string
+  received?: unknown
+}
+</code></pre>
+
+<h2 id="inspector"><code>broker.getMappingInspector()</code></h2>
+<pre><code class="language-typescript">function getMappingInspector(): MappingInspector
+
+interface MappingInspector {
+  getSnapshot(opts?: { limit?: number; topic?: string }): MappingEntry[]
+  clearErrors(): void
+  lastErrors(): MappingError[]
+}
+
+interface MappingEntry {
+  pluginId: string
+  topic: string
+  direction: 'input' | 'output'
+  localPayload: unknown
+  canonicalPayload: unknown
+  transformsApplied: string[]
+  errors: MappingError[]
+  durationMs: number
+}
+</code></pre>
+
+<h2 id="errors">Error codes</h2>
+<table>
+<thead><tr><th>Code</th><th>When</th></tr></thead>
+<tbody>
+<tr><td><code>mapping.cycle.detected</code></td><td>Cycle in inputMap/outputMap chain (compile-time)</td></tr>
+<tr><td><code>mapping.transform.failed</code></td><td>Registered transform threw an error</td></tr>
+<tr><td><code>mapping.field.missing</code></td><td>Required canonical field has no source value</td></tr>
+<tr><td><code>mapping.canonical.validation.failed</code></td><td>Canonical payload failed schema validation</td></tr>
+<tr><td><code>mapping.consumer.validation.failed</code></td><td>Consumer-side payload failed validation after inputMap</td></tr>
+<tr><td><code>alias.global.conflict</code></td><td>Conflicting global aliases for same local name</td></tr>
+<tr><td><code>alias.scoped.conflict</code></td><td>Conflicting scoped aliases within same plugin</td></tr>
+</tbody>
+</table>
+api/core.html">@gluezero/core</a>
+  <a class="sidebar-link" href="<h1><code>@gluezero/mapper</code></h1>
+<p class="lead">Canonical model + bidirectional mapper. <code>createMapperBroker(config)</code>, plus declaration merging that adds <code>inputMap</code> / <code>outputMap</code> to <code>PluginDescriptor</code>.</p>
+
+<h2 id="createMapperBroker"><code>createMapperBroker(config)</code></h2>
+<pre><code class="language-typescript">function createMapperBroker(config?: MapperBrokerConfig): MapperBroker
+
+interface MapperBrokerConfig extends BrokerConfig {
+  canonicalModel?: { schemas: CanonicalSchema[] }
+  aliasRegistry?: {
+    global?: Record&lt;string, string&gt;
+    scoped?: Record&lt;string, Record&lt;string, string&gt;&gt;
+  }
+  transforms?: Record&lt;string, TransformFn&gt;
+  validator?: ValidatorAdapter
+}
+</code></pre>
+
+<h2 id="canonicalschema"><code>CanonicalSchema</code></h2>
+<pre><code class="language-typescript">interface CanonicalSchema {
+  id: CanonicalSchemaId           // branded type
+  topic?: string                  // optional topic association
+  fields: Record&lt;string, FieldDescriptor&gt;
+  requires?: string[]             // dependent schema ids
+  requiresRoute?: boolean         // strict: throw if topic has no route
+}
+
+interface FieldDescriptor {
+  type: 'string' | 'number' | 'boolean' | 'object' | 'array' | 'date'
+  required?: boolean
+  default?: unknown               // applied when source field is missing
+  validate?: (v: unknown) =&gt; boolean | string  // custom validator
+}
+</code></pre>
+
+<h2 id="inputmap-outputmap">InputMap / OutputMap</h2>
+<p>Declared on <code>PluginDescriptor</code> via TypeScript declaration merging — automatic when you import <code>@gluezero/mapper</code>:</p>
+<pre><code class="language-typescript">interface OutputMap {
+  [localField: string]: {
+    to: string                    // canonical field name
+    transform?: string            // registered transform name
+  } | string                      // shortcut: just the canonical name
+}
+
+interface InputMap {
+  [localField: string]: string   // canonical → local field rename
+}
+</code></pre>
+
+<h2 id="register-canonical"><code>broker.registerCanonicalSchema(schema)</code></h2>
+<pre><code class="language-typescript">function registerCanonicalSchema(schema: CanonicalSchema): void
+</code></pre>
+<p>Idempotent. Throws on duplicate id with different shape (decision <code>D-36</code>).</p>
+
+<h2 id="register-alias"><code>broker.registerAlias(local, canonical, opts?)</code></h2>
+<pre><code class="language-typescript">function registerAlias(
+  local: string,
+  canonical: string,
+  opts?: { scope?: 'global' | string; warn?: boolean }
+): void
+</code></pre>
+
+<h2 id="register-transform"><code>broker.registerTransform(name, fn)</code></h2>
+<pre><code class="language-typescript">function registerTransform(
+  name: string,
+  fn: (value: unknown, ctx: TransformContext) =&gt; unknown
+): void
+
+interface TransformContext {
+  pluginId: string
+  fieldName: string
+  direction: 'input' | 'output'
+  payload: unknown                // full payload (for derived transforms)
+}
+</code></pre>
+
+<h2 id="validator"><code>ValidatorAdapter</code></h2>
+<p>Pluggable validator (decision <code>D-38</code>). Default: Valibot. Adapters for Zod and Ajv can be implemented without modifying the engine.</p>
+<pre><code class="language-typescript">interface ValidatorAdapter {
+  validate&lt;T&gt;(schema: unknown, payload: unknown):
+    | { ok: true; value: T }
+    | { ok: false; issues: ValidationIssue[] }
+}
+
+interface ValidationIssue {
+  path: string[]
+  message: string
+  expected?: string
+  received?: unknown
+}
+</code></pre>
+
+<h2 id="inspector"><code>broker.getMappingInspector()</code></h2>
+<pre><code class="language-typescript">function getMappingInspector(): MappingInspector
+
+interface MappingInspector {
+  getSnapshot(opts?: { limit?: number; topic?: string }): MappingEntry[]
+  clearErrors(): void
+  lastErrors(): MappingError[]
+}
+
+interface MappingEntry {
+  pluginId: string
+  topic: string
+  direction: 'input' | 'output'
+  localPayload: unknown
+  canonicalPayload: unknown
+  transformsApplied: string[]
+  errors: MappingError[]
+  durationMs: number
+}
+</code></pre>
+
+<h2 id="errors">Error codes</h2>
+<table>
+<thead><tr><th>Code</th><th>When</th></tr></thead>
+<tbody>
+<tr><td><code>mapping.cycle.detected</code></td><td>Cycle in inputMap/outputMap chain (compile-time)</td></tr>
+<tr><td><code>mapping.transform.failed</code></td><td>Registered transform threw an error</td></tr>
+<tr><td><code>mapping.field.missing</code></td><td>Required canonical field has no source value</td></tr>
+<tr><td><code>mapping.canonical.validation.failed</code></td><td>Canonical payload failed schema validation</td></tr>
+<tr><td><code>mapping.consumer.validation.failed</code></td><td>Consumer-side payload failed validation after inputMap</td></tr>
+<tr><td><code>alias.global.conflict</code></td><td>Conflicting global aliases for same local name</td></tr>
+<tr><td><code>alias.scoped.conflict</code></td><td>Conflicting scoped aliases within same plugin</td></tr>
+</tbody>
+</table>
+api/mapper.html">@gluezero/mapper</a>
+  <a class="sidebar-link" href="<h1><code>@gluezero/mapper</code></h1>
+<p class="lead">Canonical model + bidirectional mapper. <code>createMapperBroker(config)</code>, plus declaration merging that adds <code>inputMap</code> / <code>outputMap</code> to <code>PluginDescriptor</code>.</p>
+
+<h2 id="createMapperBroker"><code>createMapperBroker(config)</code></h2>
+<pre><code class="language-typescript">function createMapperBroker(config?: MapperBrokerConfig): MapperBroker
+
+interface MapperBrokerConfig extends BrokerConfig {
+  canonicalModel?: { schemas: CanonicalSchema[] }
+  aliasRegistry?: {
+    global?: Record&lt;string, string&gt;
+    scoped?: Record&lt;string, Record&lt;string, string&gt;&gt;
+  }
+  transforms?: Record&lt;string, TransformFn&gt;
+  validator?: ValidatorAdapter
+}
+</code></pre>
+
+<h2 id="canonicalschema"><code>CanonicalSchema</code></h2>
+<pre><code class="language-typescript">interface CanonicalSchema {
+  id: CanonicalSchemaId           // branded type
+  topic?: string                  // optional topic association
+  fields: Record&lt;string, FieldDescriptor&gt;
+  requires?: string[]             // dependent schema ids
+  requiresRoute?: boolean         // strict: throw if topic has no route
+}
+
+interface FieldDescriptor {
+  type: 'string' | 'number' | 'boolean' | 'object' | 'array' | 'date'
+  required?: boolean
+  default?: unknown               // applied when source field is missing
+  validate?: (v: unknown) =&gt; boolean | string  // custom validator
+}
+</code></pre>
+
+<h2 id="inputmap-outputmap">InputMap / OutputMap</h2>
+<p>Declared on <code>PluginDescriptor</code> via TypeScript declaration merging — automatic when you import <code>@gluezero/mapper</code>:</p>
+<pre><code class="language-typescript">interface OutputMap {
+  [localField: string]: {
+    to: string                    // canonical field name
+    transform?: string            // registered transform name
+  } | string                      // shortcut: just the canonical name
+}
+
+interface InputMap {
+  [localField: string]: string   // canonical → local field rename
+}
+</code></pre>
+
+<h2 id="register-canonical"><code>broker.registerCanonicalSchema(schema)</code></h2>
+<pre><code class="language-typescript">function registerCanonicalSchema(schema: CanonicalSchema): void
+</code></pre>
+<p>Idempotent. Throws on duplicate id with different shape (decision <code>D-36</code>).</p>
+
+<h2 id="register-alias"><code>broker.registerAlias(local, canonical, opts?)</code></h2>
+<pre><code class="language-typescript">function registerAlias(
+  local: string,
+  canonical: string,
+  opts?: { scope?: 'global' | string; warn?: boolean }
+): void
+</code></pre>
+
+<h2 id="register-transform"><code>broker.registerTransform(name, fn)</code></h2>
+<pre><code class="language-typescript">function registerTransform(
+  name: string,
+  fn: (value: unknown, ctx: TransformContext) =&gt; unknown
+): void
+
+interface TransformContext {
+  pluginId: string
+  fieldName: string
+  direction: 'input' | 'output'
+  payload: unknown                // full payload (for derived transforms)
+}
+</code></pre>
+
+<h2 id="validator"><code>ValidatorAdapter</code></h2>
+<p>Pluggable validator (decision <code>D-38</code>). Default: Valibot. Adapters for Zod and Ajv can be implemented without modifying the engine.</p>
+<pre><code class="language-typescript">interface ValidatorAdapter {
+  validate&lt;T&gt;(schema: unknown, payload: unknown):
+    | { ok: true; value: T }
+    | { ok: false; issues: ValidationIssue[] }
+}
+
+interface ValidationIssue {
+  path: string[]
+  message: string
+  expected?: string
+  received?: unknown
+}
+</code></pre>
+
+<h2 id="inspector"><code>broker.getMappingInspector()</code></h2>
+<pre><code class="language-typescript">function getMappingInspector(): MappingInspector
+
+interface MappingInspector {
+  getSnapshot(opts?: { limit?: number; topic?: string }): MappingEntry[]
+  clearErrors(): void
+  lastErrors(): MappingError[]
+}
+
+interface MappingEntry {
+  pluginId: string
+  topic: string
+  direction: 'input' | 'output'
+  localPayload: unknown
+  canonicalPayload: unknown
+  transformsApplied: string[]
+  errors: MappingError[]
+  durationMs: number
+}
+</code></pre>
+
+<h2 id="errors">Error codes</h2>
+<table>
+<thead><tr><th>Code</th><th>When</th></tr></thead>
+<tbody>
+<tr><td><code>mapping.cycle.detected</code></td><td>Cycle in inputMap/outputMap chain (compile-time)</td></tr>
+<tr><td><code>mapping.transform.failed</code></td><td>Registered transform threw an error</td></tr>
+<tr><td><code>mapping.field.missing</code></td><td>Required canonical field has no source value</td></tr>
+<tr><td><code>mapping.canonical.validation.failed</code></td><td>Canonical payload failed schema validation</td></tr>
+<tr><td><code>mapping.consumer.validation.failed</code></td><td>Consumer-side payload failed validation after inputMap</td></tr>
+<tr><td><code>alias.global.conflict</code></td><td>Conflicting global aliases for same local name</td></tr>
+<tr><td><code>alias.scoped.conflict</code></td><td>Conflicting scoped aliases within same plugin</td></tr>
+</tbody>
+</table>
+api/routing.html">@gluezero/routing</a>
+  <a class="sidebar-link" href="<h1><code>@gluezero/mapper</code></h1>
+<p class="lead">Canonical model + bidirectional mapper. <code>createMapperBroker(config)</code>, plus declaration merging that adds <code>inputMap</code> / <code>outputMap</code> to <code>PluginDescriptor</code>.</p>
+
+<h2 id="createMapperBroker"><code>createMapperBroker(config)</code></h2>
+<pre><code class="language-typescript">function createMapperBroker(config?: MapperBrokerConfig): MapperBroker
+
+interface MapperBrokerConfig extends BrokerConfig {
+  canonicalModel?: { schemas: CanonicalSchema[] }
+  aliasRegistry?: {
+    global?: Record&lt;string, string&gt;
+    scoped?: Record&lt;string, Record&lt;string, string&gt;&gt;
+  }
+  transforms?: Record&lt;string, TransformFn&gt;
+  validator?: ValidatorAdapter
+}
+</code></pre>
+
+<h2 id="canonicalschema"><code>CanonicalSchema</code></h2>
+<pre><code class="language-typescript">interface CanonicalSchema {
+  id: CanonicalSchemaId           // branded type
+  topic?: string                  // optional topic association
+  fields: Record&lt;string, FieldDescriptor&gt;
+  requires?: string[]             // dependent schema ids
+  requiresRoute?: boolean         // strict: throw if topic has no route
+}
+
+interface FieldDescriptor {
+  type: 'string' | 'number' | 'boolean' | 'object' | 'array' | 'date'
+  required?: boolean
+  default?: unknown               // applied when source field is missing
+  validate?: (v: unknown) =&gt; boolean | string  // custom validator
+}
+</code></pre>
+
+<h2 id="inputmap-outputmap">InputMap / OutputMap</h2>
+<p>Declared on <code>PluginDescriptor</code> via TypeScript declaration merging — automatic when you import <code>@gluezero/mapper</code>:</p>
+<pre><code class="language-typescript">interface OutputMap {
+  [localField: string]: {
+    to: string                    // canonical field name
+    transform?: string            // registered transform name
+  } | string                      // shortcut: just the canonical name
+}
+
+interface InputMap {
+  [localField: string]: string   // canonical → local field rename
+}
+</code></pre>
+
+<h2 id="register-canonical"><code>broker.registerCanonicalSchema(schema)</code></h2>
+<pre><code class="language-typescript">function registerCanonicalSchema(schema: CanonicalSchema): void
+</code></pre>
+<p>Idempotent. Throws on duplicate id with different shape (decision <code>D-36</code>).</p>
+
+<h2 id="register-alias"><code>broker.registerAlias(local, canonical, opts?)</code></h2>
+<pre><code class="language-typescript">function registerAlias(
+  local: string,
+  canonical: string,
+  opts?: { scope?: 'global' | string; warn?: boolean }
+): void
+</code></pre>
+
+<h2 id="register-transform"><code>broker.registerTransform(name, fn)</code></h2>
+<pre><code class="language-typescript">function registerTransform(
+  name: string,
+  fn: (value: unknown, ctx: TransformContext) =&gt; unknown
+): void
+
+interface TransformContext {
+  pluginId: string
+  fieldName: string
+  direction: 'input' | 'output'
+  payload: unknown                // full payload (for derived transforms)
+}
+</code></pre>
+
+<h2 id="validator"><code>ValidatorAdapter</code></h2>
+<p>Pluggable validator (decision <code>D-38</code>). Default: Valibot. Adapters for Zod and Ajv can be implemented without modifying the engine.</p>
+<pre><code class="language-typescript">interface ValidatorAdapter {
+  validate&lt;T&gt;(schema: unknown, payload: unknown):
+    | { ok: true; value: T }
+    | { ok: false; issues: ValidationIssue[] }
+}
+
+interface ValidationIssue {
+  path: string[]
+  message: string
+  expected?: string
+  received?: unknown
+}
+</code></pre>
+
+<h2 id="inspector"><code>broker.getMappingInspector()</code></h2>
+<pre><code class="language-typescript">function getMappingInspector(): MappingInspector
+
+interface MappingInspector {
+  getSnapshot(opts?: { limit?: number; topic?: string }): MappingEntry[]
+  clearErrors(): void
+  lastErrors(): MappingError[]
+}
+
+interface MappingEntry {
+  pluginId: string
+  topic: string
+  direction: 'input' | 'output'
+  localPayload: unknown
+  canonicalPayload: unknown
+  transformsApplied: string[]
+  errors: MappingError[]
+  durationMs: number
+}
+</code></pre>
+
+<h2 id="errors">Error codes</h2>
+<table>
+<thead><tr><th>Code</th><th>When</th></tr></thead>
+<tbody>
+<tr><td><code>mapping.cycle.detected</code></td><td>Cycle in inputMap/outputMap chain (compile-time)</td></tr>
+<tr><td><code>mapping.transform.failed</code></td><td>Registered transform threw an error</td></tr>
+<tr><td><code>mapping.field.missing</code></td><td>Required canonical field has no source value</td></tr>
+<tr><td><code>mapping.canonical.validation.failed</code></td><td>Canonical payload failed schema validation</td></tr>
+<tr><td><code>mapping.consumer.validation.failed</code></td><td>Consumer-side payload failed validation after inputMap</td></tr>
+<tr><td><code>alias.global.conflict</code></td><td>Conflicting global aliases for same local name</td></tr>
+<tr><td><code>alias.scoped.conflict</code></td><td>Conflicting scoped aliases within same plugin</td></tr>
+</tbody>
+</table>
+api/gateway.html">@gluezero/gateway</a>
+  <a class="sidebar-link" href="<h1><code>@gluezero/mapper</code></h1>
+<p class="lead">Canonical model + bidirectional mapper. <code>createMapperBroker(config)</code>, plus declaration merging that adds <code>inputMap</code> / <code>outputMap</code> to <code>PluginDescriptor</code>.</p>
+
+<h2 id="createMapperBroker"><code>createMapperBroker(config)</code></h2>
+<pre><code class="language-typescript">function createMapperBroker(config?: MapperBrokerConfig): MapperBroker
+
+interface MapperBrokerConfig extends BrokerConfig {
+  canonicalModel?: { schemas: CanonicalSchema[] }
+  aliasRegistry?: {
+    global?: Record&lt;string, string&gt;
+    scoped?: Record&lt;string, Record&lt;string, string&gt;&gt;
+  }
+  transforms?: Record&lt;string, TransformFn&gt;
+  validator?: ValidatorAdapter
+}
+</code></pre>
+
+<h2 id="canonicalschema"><code>CanonicalSchema</code></h2>
+<pre><code class="language-typescript">interface CanonicalSchema {
+  id: CanonicalSchemaId           // branded type
+  topic?: string                  // optional topic association
+  fields: Record&lt;string, FieldDescriptor&gt;
+  requires?: string[]             // dependent schema ids
+  requiresRoute?: boolean         // strict: throw if topic has no route
+}
+
+interface FieldDescriptor {
+  type: 'string' | 'number' | 'boolean' | 'object' | 'array' | 'date'
+  required?: boolean
+  default?: unknown               // applied when source field is missing
+  validate?: (v: unknown) =&gt; boolean | string  // custom validator
+}
+</code></pre>
+
+<h2 id="inputmap-outputmap">InputMap / OutputMap</h2>
+<p>Declared on <code>PluginDescriptor</code> via TypeScript declaration merging — automatic when you import <code>@gluezero/mapper</code>:</p>
+<pre><code class="language-typescript">interface OutputMap {
+  [localField: string]: {
+    to: string                    // canonical field name
+    transform?: string            // registered transform name
+  } | string                      // shortcut: just the canonical name
+}
+
+interface InputMap {
+  [localField: string]: string   // canonical → local field rename
+}
+</code></pre>
+
+<h2 id="register-canonical"><code>broker.registerCanonicalSchema(schema)</code></h2>
+<pre><code class="language-typescript">function registerCanonicalSchema(schema: CanonicalSchema): void
+</code></pre>
+<p>Idempotent. Throws on duplicate id with different shape (decision <code>D-36</code>).</p>
+
+<h2 id="register-alias"><code>broker.registerAlias(local, canonical, opts?)</code></h2>
+<pre><code class="language-typescript">function registerAlias(
+  local: string,
+  canonical: string,
+  opts?: { scope?: 'global' | string; warn?: boolean }
+): void
+</code></pre>
+
+<h2 id="register-transform"><code>broker.registerTransform(name, fn)</code></h2>
+<pre><code class="language-typescript">function registerTransform(
+  name: string,
+  fn: (value: unknown, ctx: TransformContext) =&gt; unknown
+): void
+
+interface TransformContext {
+  pluginId: string
+  fieldName: string
+  direction: 'input' | 'output'
+  payload: unknown                // full payload (for derived transforms)
+}
+</code></pre>
+
+<h2 id="validator"><code>ValidatorAdapter</code></h2>
+<p>Pluggable validator (decision <code>D-38</code>). Default: Valibot. Adapters for Zod and Ajv can be implemented without modifying the engine.</p>
+<pre><code class="language-typescript">interface ValidatorAdapter {
+  validate&lt;T&gt;(schema: unknown, payload: unknown):
+    | { ok: true; value: T }
+    | { ok: false; issues: ValidationIssue[] }
+}
+
+interface ValidationIssue {
+  path: string[]
+  message: string
+  expected?: string
+  received?: unknown
+}
+</code></pre>
+
+<h2 id="inspector"><code>broker.getMappingInspector()</code></h2>
+<pre><code class="language-typescript">function getMappingInspector(): MappingInspector
+
+interface MappingInspector {
+  getSnapshot(opts?: { limit?: number; topic?: string }): MappingEntry[]
+  clearErrors(): void
+  lastErrors(): MappingError[]
+}
+
+interface MappingEntry {
+  pluginId: string
+  topic: string
+  direction: 'input' | 'output'
+  localPayload: unknown
+  canonicalPayload: unknown
+  transformsApplied: string[]
+  errors: MappingError[]
+  durationMs: number
+}
+</code></pre>
+
+<h2 id="errors">Error codes</h2>
+<table>
+<thead><tr><th>Code</th><th>When</th></tr></thead>
+<tbody>
+<tr><td><code>mapping.cycle.detected</code></td><td>Cycle in inputMap/outputMap chain (compile-time)</td></tr>
+<tr><td><code>mapping.transform.failed</code></td><td>Registered transform threw an error</td></tr>
+<tr><td><code>mapping.field.missing</code></td><td>Required canonical field has no source value</td></tr>
+<tr><td><code>mapping.canonical.validation.failed</code></td><td>Canonical payload failed schema validation</td></tr>
+<tr><td><code>mapping.consumer.validation.failed</code></td><td>Consumer-side payload failed validation after inputMap</td></tr>
+<tr><td><code>alias.global.conflict</code></td><td>Conflicting global aliases for same local name</td></tr>
+<tr><td><code>alias.scoped.conflict</code></td><td>Conflicting scoped aliases within same plugin</td></tr>
+</tbody>
+</table>
+api/worker.html">@gluezero/worker</a>
+  <a class="sidebar-link" href="<h1><code>@gluezero/mapper</code></h1>
+<p class="lead">Canonical model + bidirectional mapper. <code>createMapperBroker(config)</code>, plus declaration merging that adds <code>inputMap</code> / <code>outputMap</code> to <code>PluginDescriptor</code>.</p>
+
+<h2 id="createMapperBroker"><code>createMapperBroker(config)</code></h2>
+<pre><code class="language-typescript">function createMapperBroker(config?: MapperBrokerConfig): MapperBroker
+
+interface MapperBrokerConfig extends BrokerConfig {
+  canonicalModel?: { schemas: CanonicalSchema[] }
+  aliasRegistry?: {
+    global?: Record&lt;string, string&gt;
+    scoped?: Record&lt;string, Record&lt;string, string&gt;&gt;
+  }
+  transforms?: Record&lt;string, TransformFn&gt;
+  validator?: ValidatorAdapter
+}
+</code></pre>
+
+<h2 id="canonicalschema"><code>CanonicalSchema</code></h2>
+<pre><code class="language-typescript">interface CanonicalSchema {
+  id: CanonicalSchemaId           // branded type
+  topic?: string                  // optional topic association
+  fields: Record&lt;string, FieldDescriptor&gt;
+  requires?: string[]             // dependent schema ids
+  requiresRoute?: boolean         // strict: throw if topic has no route
+}
+
+interface FieldDescriptor {
+  type: 'string' | 'number' | 'boolean' | 'object' | 'array' | 'date'
+  required?: boolean
+  default?: unknown               // applied when source field is missing
+  validate?: (v: unknown) =&gt; boolean | string  // custom validator
+}
+</code></pre>
+
+<h2 id="inputmap-outputmap">InputMap / OutputMap</h2>
+<p>Declared on <code>PluginDescriptor</code> via TypeScript declaration merging — automatic when you import <code>@gluezero/mapper</code>:</p>
+<pre><code class="language-typescript">interface OutputMap {
+  [localField: string]: {
+    to: string                    // canonical field name
+    transform?: string            // registered transform name
+  } | string                      // shortcut: just the canonical name
+}
+
+interface InputMap {
+  [localField: string]: string   // canonical → local field rename
+}
+</code></pre>
+
+<h2 id="register-canonical"><code>broker.registerCanonicalSchema(schema)</code></h2>
+<pre><code class="language-typescript">function registerCanonicalSchema(schema: CanonicalSchema): void
+</code></pre>
+<p>Idempotent. Throws on duplicate id with different shape (decision <code>D-36</code>).</p>
+
+<h2 id="register-alias"><code>broker.registerAlias(local, canonical, opts?)</code></h2>
+<pre><code class="language-typescript">function registerAlias(
+  local: string,
+  canonical: string,
+  opts?: { scope?: 'global' | string; warn?: boolean }
+): void
+</code></pre>
+
+<h2 id="register-transform"><code>broker.registerTransform(name, fn)</code></h2>
+<pre><code class="language-typescript">function registerTransform(
+  name: string,
+  fn: (value: unknown, ctx: TransformContext) =&gt; unknown
+): void
+
+interface TransformContext {
+  pluginId: string
+  fieldName: string
+  direction: 'input' | 'output'
+  payload: unknown                // full payload (for derived transforms)
+}
+</code></pre>
+
+<h2 id="validator"><code>ValidatorAdapter</code></h2>
+<p>Pluggable validator (decision <code>D-38</code>). Default: Valibot. Adapters for Zod and Ajv can be implemented without modifying the engine.</p>
+<pre><code class="language-typescript">interface ValidatorAdapter {
+  validate&lt;T&gt;(schema: unknown, payload: unknown):
+    | { ok: true; value: T }
+    | { ok: false; issues: ValidationIssue[] }
+}
+
+interface ValidationIssue {
+  path: string[]
+  message: string
+  expected?: string
+  received?: unknown
+}
+</code></pre>
+
+<h2 id="inspector"><code>broker.getMappingInspector()</code></h2>
+<pre><code class="language-typescript">function getMappingInspector(): MappingInspector
+
+interface MappingInspector {
+  getSnapshot(opts?: { limit?: number; topic?: string }): MappingEntry[]
+  clearErrors(): void
+  lastErrors(): MappingError[]
+}
+
+interface MappingEntry {
+  pluginId: string
+  topic: string
+  direction: 'input' | 'output'
+  localPayload: unknown
+  canonicalPayload: unknown
+  transformsApplied: string[]
+  errors: MappingError[]
+  durationMs: number
+}
+</code></pre>
+
+<h2 id="errors">Error codes</h2>
+<table>
+<thead><tr><th>Code</th><th>When</th></tr></thead>
+<tbody>
+<tr><td><code>mapping.cycle.detected</code></td><td>Cycle in inputMap/outputMap chain (compile-time)</td></tr>
+<tr><td><code>mapping.transform.failed</code></td><td>Registered transform threw an error</td></tr>
+<tr><td><code>mapping.field.missing</code></td><td>Required canonical field has no source value</td></tr>
+<tr><td><code>mapping.canonical.validation.failed</code></td><td>Canonical payload failed schema validation</td></tr>
+<tr><td><code>mapping.consumer.validation.failed</code></td><td>Consumer-side payload failed validation after inputMap</td></tr>
+<tr><td><code>alias.global.conflict</code></td><td>Conflicting global aliases for same local name</td></tr>
+<tr><td><code>alias.scoped.conflict</code></td><td>Conflicting scoped aliases within same plugin</td></tr>
+</tbody>
+</table>
+api/cache.html">@gluezero/cache</a>
+  <a class="sidebar-link" href="<h1><code>@gluezero/mapper</code></h1>
+<p class="lead">Canonical model + bidirectional mapper. <code>createMapperBroker(config)</code>, plus declaration merging that adds <code>inputMap</code> / <code>outputMap</code> to <code>PluginDescriptor</code>.</p>
+
+<h2 id="createMapperBroker"><code>createMapperBroker(config)</code></h2>
+<pre><code class="language-typescript">function createMapperBroker(config?: MapperBrokerConfig): MapperBroker
+
+interface MapperBrokerConfig extends BrokerConfig {
+  canonicalModel?: { schemas: CanonicalSchema[] }
+  aliasRegistry?: {
+    global?: Record&lt;string, string&gt;
+    scoped?: Record&lt;string, Record&lt;string, string&gt;&gt;
+  }
+  transforms?: Record&lt;string, TransformFn&gt;
+  validator?: ValidatorAdapter
+}
+</code></pre>
+
+<h2 id="canonicalschema"><code>CanonicalSchema</code></h2>
+<pre><code class="language-typescript">interface CanonicalSchema {
+  id: CanonicalSchemaId           // branded type
+  topic?: string                  // optional topic association
+  fields: Record&lt;string, FieldDescriptor&gt;
+  requires?: string[]             // dependent schema ids
+  requiresRoute?: boolean         // strict: throw if topic has no route
+}
+
+interface FieldDescriptor {
+  type: 'string' | 'number' | 'boolean' | 'object' | 'array' | 'date'
+  required?: boolean
+  default?: unknown               // applied when source field is missing
+  validate?: (v: unknown) =&gt; boolean | string  // custom validator
+}
+</code></pre>
+
+<h2 id="inputmap-outputmap">InputMap / OutputMap</h2>
+<p>Declared on <code>PluginDescriptor</code> via TypeScript declaration merging — automatic when you import <code>@gluezero/mapper</code>:</p>
+<pre><code class="language-typescript">interface OutputMap {
+  [localField: string]: {
+    to: string                    // canonical field name
+    transform?: string            // registered transform name
+  } | string                      // shortcut: just the canonical name
+}
+
+interface InputMap {
+  [localField: string]: string   // canonical → local field rename
+}
+</code></pre>
+
+<h2 id="register-canonical"><code>broker.registerCanonicalSchema(schema)</code></h2>
+<pre><code class="language-typescript">function registerCanonicalSchema(schema: CanonicalSchema): void
+</code></pre>
+<p>Idempotent. Throws on duplicate id with different shape (decision <code>D-36</code>).</p>
+
+<h2 id="register-alias"><code>broker.registerAlias(local, canonical, opts?)</code></h2>
+<pre><code class="language-typescript">function registerAlias(
+  local: string,
+  canonical: string,
+  opts?: { scope?: 'global' | string; warn?: boolean }
+): void
+</code></pre>
+
+<h2 id="register-transform"><code>broker.registerTransform(name, fn)</code></h2>
+<pre><code class="language-typescript">function registerTransform(
+  name: string,
+  fn: (value: unknown, ctx: TransformContext) =&gt; unknown
+): void
+
+interface TransformContext {
+  pluginId: string
+  fieldName: string
+  direction: 'input' | 'output'
+  payload: unknown                // full payload (for derived transforms)
+}
+</code></pre>
+
+<h2 id="validator"><code>ValidatorAdapter</code></h2>
+<p>Pluggable validator (decision <code>D-38</code>). Default: Valibot. Adapters for Zod and Ajv can be implemented without modifying the engine.</p>
+<pre><code class="language-typescript">interface ValidatorAdapter {
+  validate&lt;T&gt;(schema: unknown, payload: unknown):
+    | { ok: true; value: T }
+    | { ok: false; issues: ValidationIssue[] }
+}
+
+interface ValidationIssue {
+  path: string[]
+  message: string
+  expected?: string
+  received?: unknown
+}
+</code></pre>
+
+<h2 id="inspector"><code>broker.getMappingInspector()</code></h2>
+<pre><code class="language-typescript">function getMappingInspector(): MappingInspector
+
+interface MappingInspector {
+  getSnapshot(opts?: { limit?: number; topic?: string }): MappingEntry[]
+  clearErrors(): void
+  lastErrors(): MappingError[]
+}
+
+interface MappingEntry {
+  pluginId: string
+  topic: string
+  direction: 'input' | 'output'
+  localPayload: unknown
+  canonicalPayload: unknown
+  transformsApplied: string[]
+  errors: MappingError[]
+  durationMs: number
+}
+</code></pre>
+
+<h2 id="errors">Error codes</h2>
+<table>
+<thead><tr><th>Code</th><th>When</th></tr></thead>
+<tbody>
+<tr><td><code>mapping.cycle.detected</code></td><td>Cycle in inputMap/outputMap chain (compile-time)</td></tr>
+<tr><td><code>mapping.transform.failed</code></td><td>Registered transform threw an error</td></tr>
+<tr><td><code>mapping.field.missing</code></td><td>Required canonical field has no source value</td></tr>
+<tr><td><code>mapping.canonical.validation.failed</code></td><td>Canonical payload failed schema validation</td></tr>
+<tr><td><code>mapping.consumer.validation.failed</code></td><td>Consumer-side payload failed validation after inputMap</td></tr>
+<tr><td><code>alias.global.conflict</code></td><td>Conflicting global aliases for same local name</td></tr>
+<tr><td><code>alias.scoped.conflict</code></td><td>Conflicting scoped aliases within same plugin</td></tr>
+</tbody>
+</table>
+api/devtools.html">@gluezero/devtools</a>
 </div>
 <div class="sidebar-section">
   <div class="sidebar-section-title">Recipes</div>
-  <a class="sidebar-link" href="../recipes/auth-token-refresh.html">Auth + token refresh</a>
-  <a class="sidebar-link" href="../recipes/multi-tenant-cache.html">Multi-tenant cache</a>
-  <a class="sidebar-link" href="../recipes/reconnect-realtime.html">Reconnect SSE→WS</a>
-  <a class="sidebar-link" href="../recipes/worker-progress.html">Worker progress</a>
-  <a class="sidebar-link" href="../recipes/debug-flow.html">Debug with Inspector</a>
-  <a class="sidebar-link" href="../recipes/react-integration.html">React integration</a>
+  <a class="sidebar-link" href="<h1><code>@gluezero/mapper</code></h1>
+<p class="lead">Canonical model + bidirectional mapper. <code>createMapperBroker(config)</code>, plus declaration merging that adds <code>inputMap</code> / <code>outputMap</code> to <code>PluginDescriptor</code>.</p>
+
+<h2 id="createMapperBroker"><code>createMapperBroker(config)</code></h2>
+<pre><code class="language-typescript">function createMapperBroker(config?: MapperBrokerConfig): MapperBroker
+
+interface MapperBrokerConfig extends BrokerConfig {
+  canonicalModel?: { schemas: CanonicalSchema[] }
+  aliasRegistry?: {
+    global?: Record&lt;string, string&gt;
+    scoped?: Record&lt;string, Record&lt;string, string&gt;&gt;
+  }
+  transforms?: Record&lt;string, TransformFn&gt;
+  validator?: ValidatorAdapter
+}
+</code></pre>
+
+<h2 id="canonicalschema"><code>CanonicalSchema</code></h2>
+<pre><code class="language-typescript">interface CanonicalSchema {
+  id: CanonicalSchemaId           // branded type
+  topic?: string                  // optional topic association
+  fields: Record&lt;string, FieldDescriptor&gt;
+  requires?: string[]             // dependent schema ids
+  requiresRoute?: boolean         // strict: throw if topic has no route
+}
+
+interface FieldDescriptor {
+  type: 'string' | 'number' | 'boolean' | 'object' | 'array' | 'date'
+  required?: boolean
+  default?: unknown               // applied when source field is missing
+  validate?: (v: unknown) =&gt; boolean | string  // custom validator
+}
+</code></pre>
+
+<h2 id="inputmap-outputmap">InputMap / OutputMap</h2>
+<p>Declared on <code>PluginDescriptor</code> via TypeScript declaration merging — automatic when you import <code>@gluezero/mapper</code>:</p>
+<pre><code class="language-typescript">interface OutputMap {
+  [localField: string]: {
+    to: string                    // canonical field name
+    transform?: string            // registered transform name
+  } | string                      // shortcut: just the canonical name
+}
+
+interface InputMap {
+  [localField: string]: string   // canonical → local field rename
+}
+</code></pre>
+
+<h2 id="register-canonical"><code>broker.registerCanonicalSchema(schema)</code></h2>
+<pre><code class="language-typescript">function registerCanonicalSchema(schema: CanonicalSchema): void
+</code></pre>
+<p>Idempotent. Throws on duplicate id with different shape (decision <code>D-36</code>).</p>
+
+<h2 id="register-alias"><code>broker.registerAlias(local, canonical, opts?)</code></h2>
+<pre><code class="language-typescript">function registerAlias(
+  local: string,
+  canonical: string,
+  opts?: { scope?: 'global' | string; warn?: boolean }
+): void
+</code></pre>
+
+<h2 id="register-transform"><code>broker.registerTransform(name, fn)</code></h2>
+<pre><code class="language-typescript">function registerTransform(
+  name: string,
+  fn: (value: unknown, ctx: TransformContext) =&gt; unknown
+): void
+
+interface TransformContext {
+  pluginId: string
+  fieldName: string
+  direction: 'input' | 'output'
+  payload: unknown                // full payload (for derived transforms)
+}
+</code></pre>
+
+<h2 id="validator"><code>ValidatorAdapter</code></h2>
+<p>Pluggable validator (decision <code>D-38</code>). Default: Valibot. Adapters for Zod and Ajv can be implemented without modifying the engine.</p>
+<pre><code class="language-typescript">interface ValidatorAdapter {
+  validate&lt;T&gt;(schema: unknown, payload: unknown):
+    | { ok: true; value: T }
+    | { ok: false; issues: ValidationIssue[] }
+}
+
+interface ValidationIssue {
+  path: string[]
+  message: string
+  expected?: string
+  received?: unknown
+}
+</code></pre>
+
+<h2 id="inspector"><code>broker.getMappingInspector()</code></h2>
+<pre><code class="language-typescript">function getMappingInspector(): MappingInspector
+
+interface MappingInspector {
+  getSnapshot(opts?: { limit?: number; topic?: string }): MappingEntry[]
+  clearErrors(): void
+  lastErrors(): MappingError[]
+}
+
+interface MappingEntry {
+  pluginId: string
+  topic: string
+  direction: 'input' | 'output'
+  localPayload: unknown
+  canonicalPayload: unknown
+  transformsApplied: string[]
+  errors: MappingError[]
+  durationMs: number
+}
+</code></pre>
+
+<h2 id="errors">Error codes</h2>
+<table>
+<thead><tr><th>Code</th><th>When</th></tr></thead>
+<tbody>
+<tr><td><code>mapping.cycle.detected</code></td><td>Cycle in inputMap/outputMap chain (compile-time)</td></tr>
+<tr><td><code>mapping.transform.failed</code></td><td>Registered transform threw an error</td></tr>
+<tr><td><code>mapping.field.missing</code></td><td>Required canonical field has no source value</td></tr>
+<tr><td><code>mapping.canonical.validation.failed</code></td><td>Canonical payload failed schema validation</td></tr>
+<tr><td><code>mapping.consumer.validation.failed</code></td><td>Consumer-side payload failed validation after inputMap</td></tr>
+<tr><td><code>alias.global.conflict</code></td><td>Conflicting global aliases for same local name</td></tr>
+<tr><td><code>alias.scoped.conflict</code></td><td>Conflicting scoped aliases within same plugin</td></tr>
+</tbody>
+</table>
+recipes/auth-token-refresh.html">Auth + token refresh</a>
+  <a class="sidebar-link" href="<h1><code>@gluezero/mapper</code></h1>
+<p class="lead">Canonical model + bidirectional mapper. <code>createMapperBroker(config)</code>, plus declaration merging that adds <code>inputMap</code> / <code>outputMap</code> to <code>PluginDescriptor</code>.</p>
+
+<h2 id="createMapperBroker"><code>createMapperBroker(config)</code></h2>
+<pre><code class="language-typescript">function createMapperBroker(config?: MapperBrokerConfig): MapperBroker
+
+interface MapperBrokerConfig extends BrokerConfig {
+  canonicalModel?: { schemas: CanonicalSchema[] }
+  aliasRegistry?: {
+    global?: Record&lt;string, string&gt;
+    scoped?: Record&lt;string, Record&lt;string, string&gt;&gt;
+  }
+  transforms?: Record&lt;string, TransformFn&gt;
+  validator?: ValidatorAdapter
+}
+</code></pre>
+
+<h2 id="canonicalschema"><code>CanonicalSchema</code></h2>
+<pre><code class="language-typescript">interface CanonicalSchema {
+  id: CanonicalSchemaId           // branded type
+  topic?: string                  // optional topic association
+  fields: Record&lt;string, FieldDescriptor&gt;
+  requires?: string[]             // dependent schema ids
+  requiresRoute?: boolean         // strict: throw if topic has no route
+}
+
+interface FieldDescriptor {
+  type: 'string' | 'number' | 'boolean' | 'object' | 'array' | 'date'
+  required?: boolean
+  default?: unknown               // applied when source field is missing
+  validate?: (v: unknown) =&gt; boolean | string  // custom validator
+}
+</code></pre>
+
+<h2 id="inputmap-outputmap">InputMap / OutputMap</h2>
+<p>Declared on <code>PluginDescriptor</code> via TypeScript declaration merging — automatic when you import <code>@gluezero/mapper</code>:</p>
+<pre><code class="language-typescript">interface OutputMap {
+  [localField: string]: {
+    to: string                    // canonical field name
+    transform?: string            // registered transform name
+  } | string                      // shortcut: just the canonical name
+}
+
+interface InputMap {
+  [localField: string]: string   // canonical → local field rename
+}
+</code></pre>
+
+<h2 id="register-canonical"><code>broker.registerCanonicalSchema(schema)</code></h2>
+<pre><code class="language-typescript">function registerCanonicalSchema(schema: CanonicalSchema): void
+</code></pre>
+<p>Idempotent. Throws on duplicate id with different shape (decision <code>D-36</code>).</p>
+
+<h2 id="register-alias"><code>broker.registerAlias(local, canonical, opts?)</code></h2>
+<pre><code class="language-typescript">function registerAlias(
+  local: string,
+  canonical: string,
+  opts?: { scope?: 'global' | string; warn?: boolean }
+): void
+</code></pre>
+
+<h2 id="register-transform"><code>broker.registerTransform(name, fn)</code></h2>
+<pre><code class="language-typescript">function registerTransform(
+  name: string,
+  fn: (value: unknown, ctx: TransformContext) =&gt; unknown
+): void
+
+interface TransformContext {
+  pluginId: string
+  fieldName: string
+  direction: 'input' | 'output'
+  payload: unknown                // full payload (for derived transforms)
+}
+</code></pre>
+
+<h2 id="validator"><code>ValidatorAdapter</code></h2>
+<p>Pluggable validator (decision <code>D-38</code>). Default: Valibot. Adapters for Zod and Ajv can be implemented without modifying the engine.</p>
+<pre><code class="language-typescript">interface ValidatorAdapter {
+  validate&lt;T&gt;(schema: unknown, payload: unknown):
+    | { ok: true; value: T }
+    | { ok: false; issues: ValidationIssue[] }
+}
+
+interface ValidationIssue {
+  path: string[]
+  message: string
+  expected?: string
+  received?: unknown
+}
+</code></pre>
+
+<h2 id="inspector"><code>broker.getMappingInspector()</code></h2>
+<pre><code class="language-typescript">function getMappingInspector(): MappingInspector
+
+interface MappingInspector {
+  getSnapshot(opts?: { limit?: number; topic?: string }): MappingEntry[]
+  clearErrors(): void
+  lastErrors(): MappingError[]
+}
+
+interface MappingEntry {
+  pluginId: string
+  topic: string
+  direction: 'input' | 'output'
+  localPayload: unknown
+  canonicalPayload: unknown
+  transformsApplied: string[]
+  errors: MappingError[]
+  durationMs: number
+}
+</code></pre>
+
+<h2 id="errors">Error codes</h2>
+<table>
+<thead><tr><th>Code</th><th>When</th></tr></thead>
+<tbody>
+<tr><td><code>mapping.cycle.detected</code></td><td>Cycle in inputMap/outputMap chain (compile-time)</td></tr>
+<tr><td><code>mapping.transform.failed</code></td><td>Registered transform threw an error</td></tr>
+<tr><td><code>mapping.field.missing</code></td><td>Required canonical field has no source value</td></tr>
+<tr><td><code>mapping.canonical.validation.failed</code></td><td>Canonical payload failed schema validation</td></tr>
+<tr><td><code>mapping.consumer.validation.failed</code></td><td>Consumer-side payload failed validation after inputMap</td></tr>
+<tr><td><code>alias.global.conflict</code></td><td>Conflicting global aliases for same local name</td></tr>
+<tr><td><code>alias.scoped.conflict</code></td><td>Conflicting scoped aliases within same plugin</td></tr>
+</tbody>
+</table>
+recipes/multi-tenant-cache.html">Multi-tenant cache</a>
+  <a class="sidebar-link" href="<h1><code>@gluezero/mapper</code></h1>
+<p class="lead">Canonical model + bidirectional mapper. <code>createMapperBroker(config)</code>, plus declaration merging that adds <code>inputMap</code> / <code>outputMap</code> to <code>PluginDescriptor</code>.</p>
+
+<h2 id="createMapperBroker"><code>createMapperBroker(config)</code></h2>
+<pre><code class="language-typescript">function createMapperBroker(config?: MapperBrokerConfig): MapperBroker
+
+interface MapperBrokerConfig extends BrokerConfig {
+  canonicalModel?: { schemas: CanonicalSchema[] }
+  aliasRegistry?: {
+    global?: Record&lt;string, string&gt;
+    scoped?: Record&lt;string, Record&lt;string, string&gt;&gt;
+  }
+  transforms?: Record&lt;string, TransformFn&gt;
+  validator?: ValidatorAdapter
+}
+</code></pre>
+
+<h2 id="canonicalschema"><code>CanonicalSchema</code></h2>
+<pre><code class="language-typescript">interface CanonicalSchema {
+  id: CanonicalSchemaId           // branded type
+  topic?: string                  // optional topic association
+  fields: Record&lt;string, FieldDescriptor&gt;
+  requires?: string[]             // dependent schema ids
+  requiresRoute?: boolean         // strict: throw if topic has no route
+}
+
+interface FieldDescriptor {
+  type: 'string' | 'number' | 'boolean' | 'object' | 'array' | 'date'
+  required?: boolean
+  default?: unknown               // applied when source field is missing
+  validate?: (v: unknown) =&gt; boolean | string  // custom validator
+}
+</code></pre>
+
+<h2 id="inputmap-outputmap">InputMap / OutputMap</h2>
+<p>Declared on <code>PluginDescriptor</code> via TypeScript declaration merging — automatic when you import <code>@gluezero/mapper</code>:</p>
+<pre><code class="language-typescript">interface OutputMap {
+  [localField: string]: {
+    to: string                    // canonical field name
+    transform?: string            // registered transform name
+  } | string                      // shortcut: just the canonical name
+}
+
+interface InputMap {
+  [localField: string]: string   // canonical → local field rename
+}
+</code></pre>
+
+<h2 id="register-canonical"><code>broker.registerCanonicalSchema(schema)</code></h2>
+<pre><code class="language-typescript">function registerCanonicalSchema(schema: CanonicalSchema): void
+</code></pre>
+<p>Idempotent. Throws on duplicate id with different shape (decision <code>D-36</code>).</p>
+
+<h2 id="register-alias"><code>broker.registerAlias(local, canonical, opts?)</code></h2>
+<pre><code class="language-typescript">function registerAlias(
+  local: string,
+  canonical: string,
+  opts?: { scope?: 'global' | string; warn?: boolean }
+): void
+</code></pre>
+
+<h2 id="register-transform"><code>broker.registerTransform(name, fn)</code></h2>
+<pre><code class="language-typescript">function registerTransform(
+  name: string,
+  fn: (value: unknown, ctx: TransformContext) =&gt; unknown
+): void
+
+interface TransformContext {
+  pluginId: string
+  fieldName: string
+  direction: 'input' | 'output'
+  payload: unknown                // full payload (for derived transforms)
+}
+</code></pre>
+
+<h2 id="validator"><code>ValidatorAdapter</code></h2>
+<p>Pluggable validator (decision <code>D-38</code>). Default: Valibot. Adapters for Zod and Ajv can be implemented without modifying the engine.</p>
+<pre><code class="language-typescript">interface ValidatorAdapter {
+  validate&lt;T&gt;(schema: unknown, payload: unknown):
+    | { ok: true; value: T }
+    | { ok: false; issues: ValidationIssue[] }
+}
+
+interface ValidationIssue {
+  path: string[]
+  message: string
+  expected?: string
+  received?: unknown
+}
+</code></pre>
+
+<h2 id="inspector"><code>broker.getMappingInspector()</code></h2>
+<pre><code class="language-typescript">function getMappingInspector(): MappingInspector
+
+interface MappingInspector {
+  getSnapshot(opts?: { limit?: number; topic?: string }): MappingEntry[]
+  clearErrors(): void
+  lastErrors(): MappingError[]
+}
+
+interface MappingEntry {
+  pluginId: string
+  topic: string
+  direction: 'input' | 'output'
+  localPayload: unknown
+  canonicalPayload: unknown
+  transformsApplied: string[]
+  errors: MappingError[]
+  durationMs: number
+}
+</code></pre>
+
+<h2 id="errors">Error codes</h2>
+<table>
+<thead><tr><th>Code</th><th>When</th></tr></thead>
+<tbody>
+<tr><td><code>mapping.cycle.detected</code></td><td>Cycle in inputMap/outputMap chain (compile-time)</td></tr>
+<tr><td><code>mapping.transform.failed</code></td><td>Registered transform threw an error</td></tr>
+<tr><td><code>mapping.field.missing</code></td><td>Required canonical field has no source value</td></tr>
+<tr><td><code>mapping.canonical.validation.failed</code></td><td>Canonical payload failed schema validation</td></tr>
+<tr><td><code>mapping.consumer.validation.failed</code></td><td>Consumer-side payload failed validation after inputMap</td></tr>
+<tr><td><code>alias.global.conflict</code></td><td>Conflicting global aliases for same local name</td></tr>
+<tr><td><code>alias.scoped.conflict</code></td><td>Conflicting scoped aliases within same plugin</td></tr>
+</tbody>
+</table>
+recipes/reconnect-realtime.html">Reconnect SSE→WS</a>
+  <a class="sidebar-link" href="<h1><code>@gluezero/mapper</code></h1>
+<p class="lead">Canonical model + bidirectional mapper. <code>createMapperBroker(config)</code>, plus declaration merging that adds <code>inputMap</code> / <code>outputMap</code> to <code>PluginDescriptor</code>.</p>
+
+<h2 id="createMapperBroker"><code>createMapperBroker(config)</code></h2>
+<pre><code class="language-typescript">function createMapperBroker(config?: MapperBrokerConfig): MapperBroker
+
+interface MapperBrokerConfig extends BrokerConfig {
+  canonicalModel?: { schemas: CanonicalSchema[] }
+  aliasRegistry?: {
+    global?: Record&lt;string, string&gt;
+    scoped?: Record&lt;string, Record&lt;string, string&gt;&gt;
+  }
+  transforms?: Record&lt;string, TransformFn&gt;
+  validator?: ValidatorAdapter
+}
+</code></pre>
+
+<h2 id="canonicalschema"><code>CanonicalSchema</code></h2>
+<pre><code class="language-typescript">interface CanonicalSchema {
+  id: CanonicalSchemaId           // branded type
+  topic?: string                  // optional topic association
+  fields: Record&lt;string, FieldDescriptor&gt;
+  requires?: string[]             // dependent schema ids
+  requiresRoute?: boolean         // strict: throw if topic has no route
+}
+
+interface FieldDescriptor {
+  type: 'string' | 'number' | 'boolean' | 'object' | 'array' | 'date'
+  required?: boolean
+  default?: unknown               // applied when source field is missing
+  validate?: (v: unknown) =&gt; boolean | string  // custom validator
+}
+</code></pre>
+
+<h2 id="inputmap-outputmap">InputMap / OutputMap</h2>
+<p>Declared on <code>PluginDescriptor</code> via TypeScript declaration merging — automatic when you import <code>@gluezero/mapper</code>:</p>
+<pre><code class="language-typescript">interface OutputMap {
+  [localField: string]: {
+    to: string                    // canonical field name
+    transform?: string            // registered transform name
+  } | string                      // shortcut: just the canonical name
+}
+
+interface InputMap {
+  [localField: string]: string   // canonical → local field rename
+}
+</code></pre>
+
+<h2 id="register-canonical"><code>broker.registerCanonicalSchema(schema)</code></h2>
+<pre><code class="language-typescript">function registerCanonicalSchema(schema: CanonicalSchema): void
+</code></pre>
+<p>Idempotent. Throws on duplicate id with different shape (decision <code>D-36</code>).</p>
+
+<h2 id="register-alias"><code>broker.registerAlias(local, canonical, opts?)</code></h2>
+<pre><code class="language-typescript">function registerAlias(
+  local: string,
+  canonical: string,
+  opts?: { scope?: 'global' | string; warn?: boolean }
+): void
+</code></pre>
+
+<h2 id="register-transform"><code>broker.registerTransform(name, fn)</code></h2>
+<pre><code class="language-typescript">function registerTransform(
+  name: string,
+  fn: (value: unknown, ctx: TransformContext) =&gt; unknown
+): void
+
+interface TransformContext {
+  pluginId: string
+  fieldName: string
+  direction: 'input' | 'output'
+  payload: unknown                // full payload (for derived transforms)
+}
+</code></pre>
+
+<h2 id="validator"><code>ValidatorAdapter</code></h2>
+<p>Pluggable validator (decision <code>D-38</code>). Default: Valibot. Adapters for Zod and Ajv can be implemented without modifying the engine.</p>
+<pre><code class="language-typescript">interface ValidatorAdapter {
+  validate&lt;T&gt;(schema: unknown, payload: unknown):
+    | { ok: true; value: T }
+    | { ok: false; issues: ValidationIssue[] }
+}
+
+interface ValidationIssue {
+  path: string[]
+  message: string
+  expected?: string
+  received?: unknown
+}
+</code></pre>
+
+<h2 id="inspector"><code>broker.getMappingInspector()</code></h2>
+<pre><code class="language-typescript">function getMappingInspector(): MappingInspector
+
+interface MappingInspector {
+  getSnapshot(opts?: { limit?: number; topic?: string }): MappingEntry[]
+  clearErrors(): void
+  lastErrors(): MappingError[]
+}
+
+interface MappingEntry {
+  pluginId: string
+  topic: string
+  direction: 'input' | 'output'
+  localPayload: unknown
+  canonicalPayload: unknown
+  transformsApplied: string[]
+  errors: MappingError[]
+  durationMs: number
+}
+</code></pre>
+
+<h2 id="errors">Error codes</h2>
+<table>
+<thead><tr><th>Code</th><th>When</th></tr></thead>
+<tbody>
+<tr><td><code>mapping.cycle.detected</code></td><td>Cycle in inputMap/outputMap chain (compile-time)</td></tr>
+<tr><td><code>mapping.transform.failed</code></td><td>Registered transform threw an error</td></tr>
+<tr><td><code>mapping.field.missing</code></td><td>Required canonical field has no source value</td></tr>
+<tr><td><code>mapping.canonical.validation.failed</code></td><td>Canonical payload failed schema validation</td></tr>
+<tr><td><code>mapping.consumer.validation.failed</code></td><td>Consumer-side payload failed validation after inputMap</td></tr>
+<tr><td><code>alias.global.conflict</code></td><td>Conflicting global aliases for same local name</td></tr>
+<tr><td><code>alias.scoped.conflict</code></td><td>Conflicting scoped aliases within same plugin</td></tr>
+</tbody>
+</table>
+recipes/worker-progress.html">Worker progress</a>
+  <a class="sidebar-link" href="<h1><code>@gluezero/mapper</code></h1>
+<p class="lead">Canonical model + bidirectional mapper. <code>createMapperBroker(config)</code>, plus declaration merging that adds <code>inputMap</code> / <code>outputMap</code> to <code>PluginDescriptor</code>.</p>
+
+<h2 id="createMapperBroker"><code>createMapperBroker(config)</code></h2>
+<pre><code class="language-typescript">function createMapperBroker(config?: MapperBrokerConfig): MapperBroker
+
+interface MapperBrokerConfig extends BrokerConfig {
+  canonicalModel?: { schemas: CanonicalSchema[] }
+  aliasRegistry?: {
+    global?: Record&lt;string, string&gt;
+    scoped?: Record&lt;string, Record&lt;string, string&gt;&gt;
+  }
+  transforms?: Record&lt;string, TransformFn&gt;
+  validator?: ValidatorAdapter
+}
+</code></pre>
+
+<h2 id="canonicalschema"><code>CanonicalSchema</code></h2>
+<pre><code class="language-typescript">interface CanonicalSchema {
+  id: CanonicalSchemaId           // branded type
+  topic?: string                  // optional topic association
+  fields: Record&lt;string, FieldDescriptor&gt;
+  requires?: string[]             // dependent schema ids
+  requiresRoute?: boolean         // strict: throw if topic has no route
+}
+
+interface FieldDescriptor {
+  type: 'string' | 'number' | 'boolean' | 'object' | 'array' | 'date'
+  required?: boolean
+  default?: unknown               // applied when source field is missing
+  validate?: (v: unknown) =&gt; boolean | string  // custom validator
+}
+</code></pre>
+
+<h2 id="inputmap-outputmap">InputMap / OutputMap</h2>
+<p>Declared on <code>PluginDescriptor</code> via TypeScript declaration merging — automatic when you import <code>@gluezero/mapper</code>:</p>
+<pre><code class="language-typescript">interface OutputMap {
+  [localField: string]: {
+    to: string                    // canonical field name
+    transform?: string            // registered transform name
+  } | string                      // shortcut: just the canonical name
+}
+
+interface InputMap {
+  [localField: string]: string   // canonical → local field rename
+}
+</code></pre>
+
+<h2 id="register-canonical"><code>broker.registerCanonicalSchema(schema)</code></h2>
+<pre><code class="language-typescript">function registerCanonicalSchema(schema: CanonicalSchema): void
+</code></pre>
+<p>Idempotent. Throws on duplicate id with different shape (decision <code>D-36</code>).</p>
+
+<h2 id="register-alias"><code>broker.registerAlias(local, canonical, opts?)</code></h2>
+<pre><code class="language-typescript">function registerAlias(
+  local: string,
+  canonical: string,
+  opts?: { scope?: 'global' | string; warn?: boolean }
+): void
+</code></pre>
+
+<h2 id="register-transform"><code>broker.registerTransform(name, fn)</code></h2>
+<pre><code class="language-typescript">function registerTransform(
+  name: string,
+  fn: (value: unknown, ctx: TransformContext) =&gt; unknown
+): void
+
+interface TransformContext {
+  pluginId: string
+  fieldName: string
+  direction: 'input' | 'output'
+  payload: unknown                // full payload (for derived transforms)
+}
+</code></pre>
+
+<h2 id="validator"><code>ValidatorAdapter</code></h2>
+<p>Pluggable validator (decision <code>D-38</code>). Default: Valibot. Adapters for Zod and Ajv can be implemented without modifying the engine.</p>
+<pre><code class="language-typescript">interface ValidatorAdapter {
+  validate&lt;T&gt;(schema: unknown, payload: unknown):
+    | { ok: true; value: T }
+    | { ok: false; issues: ValidationIssue[] }
+}
+
+interface ValidationIssue {
+  path: string[]
+  message: string
+  expected?: string
+  received?: unknown
+}
+</code></pre>
+
+<h2 id="inspector"><code>broker.getMappingInspector()</code></h2>
+<pre><code class="language-typescript">function getMappingInspector(): MappingInspector
+
+interface MappingInspector {
+  getSnapshot(opts?: { limit?: number; topic?: string }): MappingEntry[]
+  clearErrors(): void
+  lastErrors(): MappingError[]
+}
+
+interface MappingEntry {
+  pluginId: string
+  topic: string
+  direction: 'input' | 'output'
+  localPayload: unknown
+  canonicalPayload: unknown
+  transformsApplied: string[]
+  errors: MappingError[]
+  durationMs: number
+}
+</code></pre>
+
+<h2 id="errors">Error codes</h2>
+<table>
+<thead><tr><th>Code</th><th>When</th></tr></thead>
+<tbody>
+<tr><td><code>mapping.cycle.detected</code></td><td>Cycle in inputMap/outputMap chain (compile-time)</td></tr>
+<tr><td><code>mapping.transform.failed</code></td><td>Registered transform threw an error</td></tr>
+<tr><td><code>mapping.field.missing</code></td><td>Required canonical field has no source value</td></tr>
+<tr><td><code>mapping.canonical.validation.failed</code></td><td>Canonical payload failed schema validation</td></tr>
+<tr><td><code>mapping.consumer.validation.failed</code></td><td>Consumer-side payload failed validation after inputMap</td></tr>
+<tr><td><code>alias.global.conflict</code></td><td>Conflicting global aliases for same local name</td></tr>
+<tr><td><code>alias.scoped.conflict</code></td><td>Conflicting scoped aliases within same plugin</td></tr>
+</tbody>
+</table>
+recipes/debug-flow.html">Debug with Inspector</a>
+  <a class="sidebar-link" href="<h1><code>@gluezero/mapper</code></h1>
+<p class="lead">Canonical model + bidirectional mapper. <code>createMapperBroker(config)</code>, plus declaration merging that adds <code>inputMap</code> / <code>outputMap</code> to <code>PluginDescriptor</code>.</p>
+
+<h2 id="createMapperBroker"><code>createMapperBroker(config)</code></h2>
+<pre><code class="language-typescript">function createMapperBroker(config?: MapperBrokerConfig): MapperBroker
+
+interface MapperBrokerConfig extends BrokerConfig {
+  canonicalModel?: { schemas: CanonicalSchema[] }
+  aliasRegistry?: {
+    global?: Record&lt;string, string&gt;
+    scoped?: Record&lt;string, Record&lt;string, string&gt;&gt;
+  }
+  transforms?: Record&lt;string, TransformFn&gt;
+  validator?: ValidatorAdapter
+}
+</code></pre>
+
+<h2 id="canonicalschema"><code>CanonicalSchema</code></h2>
+<pre><code class="language-typescript">interface CanonicalSchema {
+  id: CanonicalSchemaId           // branded type
+  topic?: string                  // optional topic association
+  fields: Record&lt;string, FieldDescriptor&gt;
+  requires?: string[]             // dependent schema ids
+  requiresRoute?: boolean         // strict: throw if topic has no route
+}
+
+interface FieldDescriptor {
+  type: 'string' | 'number' | 'boolean' | 'object' | 'array' | 'date'
+  required?: boolean
+  default?: unknown               // applied when source field is missing
+  validate?: (v: unknown) =&gt; boolean | string  // custom validator
+}
+</code></pre>
+
+<h2 id="inputmap-outputmap">InputMap / OutputMap</h2>
+<p>Declared on <code>PluginDescriptor</code> via TypeScript declaration merging — automatic when you import <code>@gluezero/mapper</code>:</p>
+<pre><code class="language-typescript">interface OutputMap {
+  [localField: string]: {
+    to: string                    // canonical field name
+    transform?: string            // registered transform name
+  } | string                      // shortcut: just the canonical name
+}
+
+interface InputMap {
+  [localField: string]: string   // canonical → local field rename
+}
+</code></pre>
+
+<h2 id="register-canonical"><code>broker.registerCanonicalSchema(schema)</code></h2>
+<pre><code class="language-typescript">function registerCanonicalSchema(schema: CanonicalSchema): void
+</code></pre>
+<p>Idempotent. Throws on duplicate id with different shape (decision <code>D-36</code>).</p>
+
+<h2 id="register-alias"><code>broker.registerAlias(local, canonical, opts?)</code></h2>
+<pre><code class="language-typescript">function registerAlias(
+  local: string,
+  canonical: string,
+  opts?: { scope?: 'global' | string; warn?: boolean }
+): void
+</code></pre>
+
+<h2 id="register-transform"><code>broker.registerTransform(name, fn)</code></h2>
+<pre><code class="language-typescript">function registerTransform(
+  name: string,
+  fn: (value: unknown, ctx: TransformContext) =&gt; unknown
+): void
+
+interface TransformContext {
+  pluginId: string
+  fieldName: string
+  direction: 'input' | 'output'
+  payload: unknown                // full payload (for derived transforms)
+}
+</code></pre>
+
+<h2 id="validator"><code>ValidatorAdapter</code></h2>
+<p>Pluggable validator (decision <code>D-38</code>). Default: Valibot. Adapters for Zod and Ajv can be implemented without modifying the engine.</p>
+<pre><code class="language-typescript">interface ValidatorAdapter {
+  validate&lt;T&gt;(schema: unknown, payload: unknown):
+    | { ok: true; value: T }
+    | { ok: false; issues: ValidationIssue[] }
+}
+
+interface ValidationIssue {
+  path: string[]
+  message: string
+  expected?: string
+  received?: unknown
+}
+</code></pre>
+
+<h2 id="inspector"><code>broker.getMappingInspector()</code></h2>
+<pre><code class="language-typescript">function getMappingInspector(): MappingInspector
+
+interface MappingInspector {
+  getSnapshot(opts?: { limit?: number; topic?: string }): MappingEntry[]
+  clearErrors(): void
+  lastErrors(): MappingError[]
+}
+
+interface MappingEntry {
+  pluginId: string
+  topic: string
+  direction: 'input' | 'output'
+  localPayload: unknown
+  canonicalPayload: unknown
+  transformsApplied: string[]
+  errors: MappingError[]
+  durationMs: number
+}
+</code></pre>
+
+<h2 id="errors">Error codes</h2>
+<table>
+<thead><tr><th>Code</th><th>When</th></tr></thead>
+<tbody>
+<tr><td><code>mapping.cycle.detected</code></td><td>Cycle in inputMap/outputMap chain (compile-time)</td></tr>
+<tr><td><code>mapping.transform.failed</code></td><td>Registered transform threw an error</td></tr>
+<tr><td><code>mapping.field.missing</code></td><td>Required canonical field has no source value</td></tr>
+<tr><td><code>mapping.canonical.validation.failed</code></td><td>Canonical payload failed schema validation</td></tr>
+<tr><td><code>mapping.consumer.validation.failed</code></td><td>Consumer-side payload failed validation after inputMap</td></tr>
+<tr><td><code>alias.global.conflict</code></td><td>Conflicting global aliases for same local name</td></tr>
+<tr><td><code>alias.scoped.conflict</code></td><td>Conflicting scoped aliases within same plugin</td></tr>
+</tbody>
+</table>
+recipes/react-integration.html">React integration</a>
 </div>
 <div class="sidebar-section">
   <div class="sidebar-section-title">Reference</div>
-  <a class="sidebar-link" href="../decisions.html">Architectural decisions</a>
-  <a class="sidebar-link" href="../faq.html">FAQ</a>
+  <a class="sidebar-link" href="<h1><code>@gluezero/mapper</code></h1>
+<p class="lead">Canonical model + bidirectional mapper. <code>createMapperBroker(config)</code>, plus declaration merging that adds <code>inputMap</code> / <code>outputMap</code> to <code>PluginDescriptor</code>.</p>
+
+<h2 id="createMapperBroker"><code>createMapperBroker(config)</code></h2>
+<pre><code class="language-typescript">function createMapperBroker(config?: MapperBrokerConfig): MapperBroker
+
+interface MapperBrokerConfig extends BrokerConfig {
+  canonicalModel?: { schemas: CanonicalSchema[] }
+  aliasRegistry?: {
+    global?: Record&lt;string, string&gt;
+    scoped?: Record&lt;string, Record&lt;string, string&gt;&gt;
+  }
+  transforms?: Record&lt;string, TransformFn&gt;
+  validator?: ValidatorAdapter
+}
+</code></pre>
+
+<h2 id="canonicalschema"><code>CanonicalSchema</code></h2>
+<pre><code class="language-typescript">interface CanonicalSchema {
+  id: CanonicalSchemaId           // branded type
+  topic?: string                  // optional topic association
+  fields: Record&lt;string, FieldDescriptor&gt;
+  requires?: string[]             // dependent schema ids
+  requiresRoute?: boolean         // strict: throw if topic has no route
+}
+
+interface FieldDescriptor {
+  type: 'string' | 'number' | 'boolean' | 'object' | 'array' | 'date'
+  required?: boolean
+  default?: unknown               // applied when source field is missing
+  validate?: (v: unknown) =&gt; boolean | string  // custom validator
+}
+</code></pre>
+
+<h2 id="inputmap-outputmap">InputMap / OutputMap</h2>
+<p>Declared on <code>PluginDescriptor</code> via TypeScript declaration merging — automatic when you import <code>@gluezero/mapper</code>:</p>
+<pre><code class="language-typescript">interface OutputMap {
+  [localField: string]: {
+    to: string                    // canonical field name
+    transform?: string            // registered transform name
+  } | string                      // shortcut: just the canonical name
+}
+
+interface InputMap {
+  [localField: string]: string   // canonical → local field rename
+}
+</code></pre>
+
+<h2 id="register-canonical"><code>broker.registerCanonicalSchema(schema)</code></h2>
+<pre><code class="language-typescript">function registerCanonicalSchema(schema: CanonicalSchema): void
+</code></pre>
+<p>Idempotent. Throws on duplicate id with different shape (decision <code>D-36</code>).</p>
+
+<h2 id="register-alias"><code>broker.registerAlias(local, canonical, opts?)</code></h2>
+<pre><code class="language-typescript">function registerAlias(
+  local: string,
+  canonical: string,
+  opts?: { scope?: 'global' | string; warn?: boolean }
+): void
+</code></pre>
+
+<h2 id="register-transform"><code>broker.registerTransform(name, fn)</code></h2>
+<pre><code class="language-typescript">function registerTransform(
+  name: string,
+  fn: (value: unknown, ctx: TransformContext) =&gt; unknown
+): void
+
+interface TransformContext {
+  pluginId: string
+  fieldName: string
+  direction: 'input' | 'output'
+  payload: unknown                // full payload (for derived transforms)
+}
+</code></pre>
+
+<h2 id="validator"><code>ValidatorAdapter</code></h2>
+<p>Pluggable validator (decision <code>D-38</code>). Default: Valibot. Adapters for Zod and Ajv can be implemented without modifying the engine.</p>
+<pre><code class="language-typescript">interface ValidatorAdapter {
+  validate&lt;T&gt;(schema: unknown, payload: unknown):
+    | { ok: true; value: T }
+    | { ok: false; issues: ValidationIssue[] }
+}
+
+interface ValidationIssue {
+  path: string[]
+  message: string
+  expected?: string
+  received?: unknown
+}
+</code></pre>
+
+<h2 id="inspector"><code>broker.getMappingInspector()</code></h2>
+<pre><code class="language-typescript">function getMappingInspector(): MappingInspector
+
+interface MappingInspector {
+  getSnapshot(opts?: { limit?: number; topic?: string }): MappingEntry[]
+  clearErrors(): void
+  lastErrors(): MappingError[]
+}
+
+interface MappingEntry {
+  pluginId: string
+  topic: string
+  direction: 'input' | 'output'
+  localPayload: unknown
+  canonicalPayload: unknown
+  transformsApplied: string[]
+  errors: MappingError[]
+  durationMs: number
+}
+</code></pre>
+
+<h2 id="errors">Error codes</h2>
+<table>
+<thead><tr><th>Code</th><th>When</th></tr></thead>
+<tbody>
+<tr><td><code>mapping.cycle.detected</code></td><td>Cycle in inputMap/outputMap chain (compile-time)</td></tr>
+<tr><td><code>mapping.transform.failed</code></td><td>Registered transform threw an error</td></tr>
+<tr><td><code>mapping.field.missing</code></td><td>Required canonical field has no source value</td></tr>
+<tr><td><code>mapping.canonical.validation.failed</code></td><td>Canonical payload failed schema validation</td></tr>
+<tr><td><code>mapping.consumer.validation.failed</code></td><td>Consumer-side payload failed validation after inputMap</td></tr>
+<tr><td><code>alias.global.conflict</code></td><td>Conflicting global aliases for same local name</td></tr>
+<tr><td><code>alias.scoped.conflict</code></td><td>Conflicting scoped aliases within same plugin</td></tr>
+</tbody>
+</table>
+decisions.html">Architectural decisions</a>
+  <a class="sidebar-link" href="<h1><code>@gluezero/mapper</code></h1>
+<p class="lead">Canonical model + bidirectional mapper. <code>createMapperBroker(config)</code>, plus declaration merging that adds <code>inputMap</code> / <code>outputMap</code> to <code>PluginDescriptor</code>.</p>
+
+<h2 id="createMapperBroker"><code>createMapperBroker(config)</code></h2>
+<pre><code class="language-typescript">function createMapperBroker(config?: MapperBrokerConfig): MapperBroker
+
+interface MapperBrokerConfig extends BrokerConfig {
+  canonicalModel?: { schemas: CanonicalSchema[] }
+  aliasRegistry?: {
+    global?: Record&lt;string, string&gt;
+    scoped?: Record&lt;string, Record&lt;string, string&gt;&gt;
+  }
+  transforms?: Record&lt;string, TransformFn&gt;
+  validator?: ValidatorAdapter
+}
+</code></pre>
+
+<h2 id="canonicalschema"><code>CanonicalSchema</code></h2>
+<pre><code class="language-typescript">interface CanonicalSchema {
+  id: CanonicalSchemaId           // branded type
+  topic?: string                  // optional topic association
+  fields: Record&lt;string, FieldDescriptor&gt;
+  requires?: string[]             // dependent schema ids
+  requiresRoute?: boolean         // strict: throw if topic has no route
+}
+
+interface FieldDescriptor {
+  type: 'string' | 'number' | 'boolean' | 'object' | 'array' | 'date'
+  required?: boolean
+  default?: unknown               // applied when source field is missing
+  validate?: (v: unknown) =&gt; boolean | string  // custom validator
+}
+</code></pre>
+
+<h2 id="inputmap-outputmap">InputMap / OutputMap</h2>
+<p>Declared on <code>PluginDescriptor</code> via TypeScript declaration merging — automatic when you import <code>@gluezero/mapper</code>:</p>
+<pre><code class="language-typescript">interface OutputMap {
+  [localField: string]: {
+    to: string                    // canonical field name
+    transform?: string            // registered transform name
+  } | string                      // shortcut: just the canonical name
+}
+
+interface InputMap {
+  [localField: string]: string   // canonical → local field rename
+}
+</code></pre>
+
+<h2 id="register-canonical"><code>broker.registerCanonicalSchema(schema)</code></h2>
+<pre><code class="language-typescript">function registerCanonicalSchema(schema: CanonicalSchema): void
+</code></pre>
+<p>Idempotent. Throws on duplicate id with different shape (decision <code>D-36</code>).</p>
+
+<h2 id="register-alias"><code>broker.registerAlias(local, canonical, opts?)</code></h2>
+<pre><code class="language-typescript">function registerAlias(
+  local: string,
+  canonical: string,
+  opts?: { scope?: 'global' | string; warn?: boolean }
+): void
+</code></pre>
+
+<h2 id="register-transform"><code>broker.registerTransform(name, fn)</code></h2>
+<pre><code class="language-typescript">function registerTransform(
+  name: string,
+  fn: (value: unknown, ctx: TransformContext) =&gt; unknown
+): void
+
+interface TransformContext {
+  pluginId: string
+  fieldName: string
+  direction: 'input' | 'output'
+  payload: unknown                // full payload (for derived transforms)
+}
+</code></pre>
+
+<h2 id="validator"><code>ValidatorAdapter</code></h2>
+<p>Pluggable validator (decision <code>D-38</code>). Default: Valibot. Adapters for Zod and Ajv can be implemented without modifying the engine.</p>
+<pre><code class="language-typescript">interface ValidatorAdapter {
+  validate&lt;T&gt;(schema: unknown, payload: unknown):
+    | { ok: true; value: T }
+    | { ok: false; issues: ValidationIssue[] }
+}
+
+interface ValidationIssue {
+  path: string[]
+  message: string
+  expected?: string
+  received?: unknown
+}
+</code></pre>
+
+<h2 id="inspector"><code>broker.getMappingInspector()</code></h2>
+<pre><code class="language-typescript">function getMappingInspector(): MappingInspector
+
+interface MappingInspector {
+  getSnapshot(opts?: { limit?: number; topic?: string }): MappingEntry[]
+  clearErrors(): void
+  lastErrors(): MappingError[]
+}
+
+interface MappingEntry {
+  pluginId: string
+  topic: string
+  direction: 'input' | 'output'
+  localPayload: unknown
+  canonicalPayload: unknown
+  transformsApplied: string[]
+  errors: MappingError[]
+  durationMs: number
+}
+</code></pre>
+
+<h2 id="errors">Error codes</h2>
+<table>
+<thead><tr><th>Code</th><th>When</th></tr></thead>
+<tbody>
+<tr><td><code>mapping.cycle.detected</code></td><td>Cycle in inputMap/outputMap chain (compile-time)</td></tr>
+<tr><td><code>mapping.transform.failed</code></td><td>Registered transform threw an error</td></tr>
+<tr><td><code>mapping.field.missing</code></td><td>Required canonical field has no source value</td></tr>
+<tr><td><code>mapping.canonical.validation.failed</code></td><td>Canonical payload failed schema validation</td></tr>
+<tr><td><code>mapping.consumer.validation.failed</code></td><td>Consumer-side payload failed validation after inputMap</td></tr>
+<tr><td><code>alias.global.conflict</code></td><td>Conflicting global aliases for same local name</td></tr>
+<tr><td><code>alias.scoped.conflict</code></td><td>Conflicting scoped aliases within same plugin</td></tr>
+</tbody>
+</table>
+faq.html">FAQ</a>
 </div>
 </nav>
 <main class="content" role="main">
 <div class="content-inner">
-<nav class="breadcrumb" aria-label="Breadcrumb"><a href="../index.html">Docs</a> / API reference</nav>
-<h1>@gluezero/mapper</h1>
-<p class="lead">This page is under construction. Check back shortly for the full content.</p>
-<p><a href="../index.html">← Back to docs home</a></p>
+<nav class="breadcrumb" aria-label="Breadcrumb"><a href="<h1><code>@gluezero/mapper</code></h1>
+<p class="lead">Canonical model + bidirectional mapper. <code>createMapperBroker(config)</code>, plus declaration merging that adds <code>inputMap</code> / <code>outputMap</code> to <code>PluginDescriptor</code>.</p>
+
+<h2 id="createMapperBroker"><code>createMapperBroker(config)</code></h2>
+<pre><code class="language-typescript">function createMapperBroker(config?: MapperBrokerConfig): MapperBroker
+
+interface MapperBrokerConfig extends BrokerConfig {
+  canonicalModel?: { schemas: CanonicalSchema[] }
+  aliasRegistry?: {
+    global?: Record&lt;string, string&gt;
+    scoped?: Record&lt;string, Record&lt;string, string&gt;&gt;
+  }
+  transforms?: Record&lt;string, TransformFn&gt;
+  validator?: ValidatorAdapter
+}
+</code></pre>
+
+<h2 id="canonicalschema"><code>CanonicalSchema</code></h2>
+<pre><code class="language-typescript">interface CanonicalSchema {
+  id: CanonicalSchemaId           // branded type
+  topic?: string                  // optional topic association
+  fields: Record&lt;string, FieldDescriptor&gt;
+  requires?: string[]             // dependent schema ids
+  requiresRoute?: boolean         // strict: throw if topic has no route
+}
+
+interface FieldDescriptor {
+  type: 'string' | 'number' | 'boolean' | 'object' | 'array' | 'date'
+  required?: boolean
+  default?: unknown               // applied when source field is missing
+  validate?: (v: unknown) =&gt; boolean | string  // custom validator
+}
+</code></pre>
+
+<h2 id="inputmap-outputmap">InputMap / OutputMap</h2>
+<p>Declared on <code>PluginDescriptor</code> via TypeScript declaration merging — automatic when you import <code>@gluezero/mapper</code>:</p>
+<pre><code class="language-typescript">interface OutputMap {
+  [localField: string]: {
+    to: string                    // canonical field name
+    transform?: string            // registered transform name
+  } | string                      // shortcut: just the canonical name
+}
+
+interface InputMap {
+  [localField: string]: string   // canonical → local field rename
+}
+</code></pre>
+
+<h2 id="register-canonical"><code>broker.registerCanonicalSchema(schema)</code></h2>
+<pre><code class="language-typescript">function registerCanonicalSchema(schema: CanonicalSchema): void
+</code></pre>
+<p>Idempotent. Throws on duplicate id with different shape (decision <code>D-36</code>).</p>
+
+<h2 id="register-alias"><code>broker.registerAlias(local, canonical, opts?)</code></h2>
+<pre><code class="language-typescript">function registerAlias(
+  local: string,
+  canonical: string,
+  opts?: { scope?: 'global' | string; warn?: boolean }
+): void
+</code></pre>
+
+<h2 id="register-transform"><code>broker.registerTransform(name, fn)</code></h2>
+<pre><code class="language-typescript">function registerTransform(
+  name: string,
+  fn: (value: unknown, ctx: TransformContext) =&gt; unknown
+): void
+
+interface TransformContext {
+  pluginId: string
+  fieldName: string
+  direction: 'input' | 'output'
+  payload: unknown                // full payload (for derived transforms)
+}
+</code></pre>
+
+<h2 id="validator"><code>ValidatorAdapter</code></h2>
+<p>Pluggable validator (decision <code>D-38</code>). Default: Valibot. Adapters for Zod and Ajv can be implemented without modifying the engine.</p>
+<pre><code class="language-typescript">interface ValidatorAdapter {
+  validate&lt;T&gt;(schema: unknown, payload: unknown):
+    | { ok: true; value: T }
+    | { ok: false; issues: ValidationIssue[] }
+}
+
+interface ValidationIssue {
+  path: string[]
+  message: string
+  expected?: string
+  received?: unknown
+}
+</code></pre>
+
+<h2 id="inspector"><code>broker.getMappingInspector()</code></h2>
+<pre><code class="language-typescript">function getMappingInspector(): MappingInspector
+
+interface MappingInspector {
+  getSnapshot(opts?: { limit?: number; topic?: string }): MappingEntry[]
+  clearErrors(): void
+  lastErrors(): MappingError[]
+}
+
+interface MappingEntry {
+  pluginId: string
+  topic: string
+  direction: 'input' | 'output'
+  localPayload: unknown
+  canonicalPayload: unknown
+  transformsApplied: string[]
+  errors: MappingError[]
+  durationMs: number
+}
+</code></pre>
+
+<h2 id="errors">Error codes</h2>
+<table>
+<thead><tr><th>Code</th><th>When</th></tr></thead>
+<tbody>
+<tr><td><code>mapping.cycle.detected</code></td><td>Cycle in inputMap/outputMap chain (compile-time)</td></tr>
+<tr><td><code>mapping.transform.failed</code></td><td>Registered transform threw an error</td></tr>
+<tr><td><code>mapping.field.missing</code></td><td>Required canonical field has no source value</td></tr>
+<tr><td><code>mapping.canonical.validation.failed</code></td><td>Canonical payload failed schema validation</td></tr>
+<tr><td><code>mapping.consumer.validation.failed</code></td><td>Consumer-side payload failed validation after inputMap</td></tr>
+<tr><td><code>alias.global.conflict</code></td><td>Conflicting global aliases for same local name</td></tr>
+<tr><td><code>alias.scoped.conflict</code></td><td>Conflicting scoped aliases within same plugin</td></tr>
+</tbody>
+</table>
+index.html">Docs</a> / API reference</nav>
+../
 <footer class="footer">
   <div>GlueZero v1.0.0 — MIT License</div>
   <div>
@@ -87,6 +3960,131 @@
 </footer>
 </div>
 </main>
-<script src="../assets/docs.js"></script>
+<script src="<h1><code>@gluezero/mapper</code></h1>
+<p class="lead">Canonical model + bidirectional mapper. <code>createMapperBroker(config)</code>, plus declaration merging that adds <code>inputMap</code> / <code>outputMap</code> to <code>PluginDescriptor</code>.</p>
+
+<h2 id="createMapperBroker"><code>createMapperBroker(config)</code></h2>
+<pre><code class="language-typescript">function createMapperBroker(config?: MapperBrokerConfig): MapperBroker
+
+interface MapperBrokerConfig extends BrokerConfig {
+  canonicalModel?: { schemas: CanonicalSchema[] }
+  aliasRegistry?: {
+    global?: Record&lt;string, string&gt;
+    scoped?: Record&lt;string, Record&lt;string, string&gt;&gt;
+  }
+  transforms?: Record&lt;string, TransformFn&gt;
+  validator?: ValidatorAdapter
+}
+</code></pre>
+
+<h2 id="canonicalschema"><code>CanonicalSchema</code></h2>
+<pre><code class="language-typescript">interface CanonicalSchema {
+  id: CanonicalSchemaId           // branded type
+  topic?: string                  // optional topic association
+  fields: Record&lt;string, FieldDescriptor&gt;
+  requires?: string[]             // dependent schema ids
+  requiresRoute?: boolean         // strict: throw if topic has no route
+}
+
+interface FieldDescriptor {
+  type: 'string' | 'number' | 'boolean' | 'object' | 'array' | 'date'
+  required?: boolean
+  default?: unknown               // applied when source field is missing
+  validate?: (v: unknown) =&gt; boolean | string  // custom validator
+}
+</code></pre>
+
+<h2 id="inputmap-outputmap">InputMap / OutputMap</h2>
+<p>Declared on <code>PluginDescriptor</code> via TypeScript declaration merging — automatic when you import <code>@gluezero/mapper</code>:</p>
+<pre><code class="language-typescript">interface OutputMap {
+  [localField: string]: {
+    to: string                    // canonical field name
+    transform?: string            // registered transform name
+  } | string                      // shortcut: just the canonical name
+}
+
+interface InputMap {
+  [localField: string]: string   // canonical → local field rename
+}
+</code></pre>
+
+<h2 id="register-canonical"><code>broker.registerCanonicalSchema(schema)</code></h2>
+<pre><code class="language-typescript">function registerCanonicalSchema(schema: CanonicalSchema): void
+</code></pre>
+<p>Idempotent. Throws on duplicate id with different shape (decision <code>D-36</code>).</p>
+
+<h2 id="register-alias"><code>broker.registerAlias(local, canonical, opts?)</code></h2>
+<pre><code class="language-typescript">function registerAlias(
+  local: string,
+  canonical: string,
+  opts?: { scope?: 'global' | string; warn?: boolean }
+): void
+</code></pre>
+
+<h2 id="register-transform"><code>broker.registerTransform(name, fn)</code></h2>
+<pre><code class="language-typescript">function registerTransform(
+  name: string,
+  fn: (value: unknown, ctx: TransformContext) =&gt; unknown
+): void
+
+interface TransformContext {
+  pluginId: string
+  fieldName: string
+  direction: 'input' | 'output'
+  payload: unknown                // full payload (for derived transforms)
+}
+</code></pre>
+
+<h2 id="validator"><code>ValidatorAdapter</code></h2>
+<p>Pluggable validator (decision <code>D-38</code>). Default: Valibot. Adapters for Zod and Ajv can be implemented without modifying the engine.</p>
+<pre><code class="language-typescript">interface ValidatorAdapter {
+  validate&lt;T&gt;(schema: unknown, payload: unknown):
+    | { ok: true; value: T }
+    | { ok: false; issues: ValidationIssue[] }
+}
+
+interface ValidationIssue {
+  path: string[]
+  message: string
+  expected?: string
+  received?: unknown
+}
+</code></pre>
+
+<h2 id="inspector"><code>broker.getMappingInspector()</code></h2>
+<pre><code class="language-typescript">function getMappingInspector(): MappingInspector
+
+interface MappingInspector {
+  getSnapshot(opts?: { limit?: number; topic?: string }): MappingEntry[]
+  clearErrors(): void
+  lastErrors(): MappingError[]
+}
+
+interface MappingEntry {
+  pluginId: string
+  topic: string
+  direction: 'input' | 'output'
+  localPayload: unknown
+  canonicalPayload: unknown
+  transformsApplied: string[]
+  errors: MappingError[]
+  durationMs: number
+}
+</code></pre>
+
+<h2 id="errors">Error codes</h2>
+<table>
+<thead><tr><th>Code</th><th>When</th></tr></thead>
+<tbody>
+<tr><td><code>mapping.cycle.detected</code></td><td>Cycle in inputMap/outputMap chain (compile-time)</td></tr>
+<tr><td><code>mapping.transform.failed</code></td><td>Registered transform threw an error</td></tr>
+<tr><td><code>mapping.field.missing</code></td><td>Required canonical field has no source value</td></tr>
+<tr><td><code>mapping.canonical.validation.failed</code></td><td>Canonical payload failed schema validation</td></tr>
+<tr><td><code>mapping.consumer.validation.failed</code></td><td>Consumer-side payload failed validation after inputMap</td></tr>
+<tr><td><code>alias.global.conflict</code></td><td>Conflicting global aliases for same local name</td></tr>
+<tr><td><code>alias.scoped.conflict</code></td><td>Conflicting scoped aliases within same plugin</td></tr>
+</tbody>
+</table>
+assets/docs.js"></script>
 </body>
 </html>
