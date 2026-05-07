@@ -31,6 +31,10 @@ CLAUDE.md
 prd.md
 .planning
 
+# Python build cache (docs-site builder)
+__pycache__
+*.pyc
+
 # OS
 Thumbs.db
 
