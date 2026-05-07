@@ -21,6 +21,44 @@ from pathlib import Path
 
 ROOT = Path(__file__).parent.resolve()
 VERSION = "1.0.0"
+SITE_URL = "https://gluezero.org"
+DOCS_BASE_URL = "https://gluezero.org/docs"
+OG_IMAGE = "https://gluezero.org/og-image.png"  # 1200x630, fallback to site root if missing
+TWITTER_HANDLE = ""  # set if you have one, e.g. "@gluezero"
+
+# Per-page SEO descriptions (concise, search-result optimized 140-160 chars)
+PAGE_DESCRIPTIONS = {
+    'index.html': "GlueZero documentation: a TypeScript-first frontend integration runtime that connects modules, plugins, APIs, realtime, workers and cache.",
+    'getting-started.html': "Install GlueZero, create your first broker, register a plugin, route an event end-to-end. Five minutes from zero to working app.",
+    'concepts/overview.html': "GlueZero mental model: events, routes, canonical mapping, plugin lifecycle, the §28 14-step pipeline, composition wrapper architecture.",
+    'concepts/broker.html': "The pub/sub broker: createBroker, topics with wildcards, subscribe/publish, plugin lifecycle, cascade unregister with no leaks.",
+    'concepts/canonical-model.html': "Canonical model + bidirectional mapper: shared vocabulary across plugins, alias resolution order, cycle detection at register time.",
+    'concepts/routing.html': "Declarative routing: 6 route types (local, http, realtime, worker, cache, composite) with policy chain — timeout, retry, dedupe, auth.",
+    'concepts/gateway.html': "HTTP gateway with 11-step strategy chain: auth single-flight, retry on 5xx, dedupe, idempotency keys, URL allowlist, sanitized errors.",
+    'concepts/realtime.html': "Realtime inbound: SSE-first with auto-fallback to WebSocket, visibility-aware reconnection, Last-Event-ID resume, app-level ping/pong.",
+    'concepts/worker.html': "Web Worker runtime: registry, bounded pool, Comlink RPC bridge, hybrid cancellation, transferable opt-in, dev-mode serialization checks.",
+    'concepts/cache.html': "In-memory LRU cache with 3 strategies (cache-first, network-first, cache-then-network) and 3-layer scope hybrid for multi-tenant safety.",
+    'concepts/devtools.html': "Devtools: Event/Mapping/Route Inspector, MetricsCollector simil-OpenMetrics with reservoir sampling, PauseController, tap registry.",
+
+    'api/gluezero.html': "createGlueZero(config) API reference: aggregate factory composing all 6 phases, GlueZeroConfig union type, instance methods, feature opt-out.",
+    'api/core.html': "@gluezero/core API reference: createBroker, BrokerEvent, PluginDescriptor, subscribe/publish options, error codes, full type signatures.",
+    'api/mapper.html': "@gluezero/mapper API reference: createMapperBroker, CanonicalSchema, InputMap/OutputMap, ValidatorAdapter, MappingInspector.",
+    'api/routing.html': "@gluezero/routing API reference: createRouterBroker, RouteDefinition union (6 types), RoutePolicies, RouteInspector.",
+    'api/gateway.html': "@gluezero/gateway API reference: HTTP gateway + SSE/WebSocket realtime adapters, AuthPolicy single-flight, BackpressurePolicy modes.",
+    'api/worker.html': "@gluezero/worker API reference: createWorkerBroker, WorkerDescriptor, expose() inside worker, TaskState, TaskTracker, error codes.",
+    'api/cache.html': "@gluezero/cache API reference: CacheAdapter interface, MemoryCacheAdapter, invalidate, scope hybrid configuration.",
+    'api/devtools.html': "@gluezero/devtools API reference: EventInspector, MetricsSnapshot with histograms, EventTap interface, MultiplexTap chaining.",
+
+    'recipes/auth-token-refresh.html': "Recipe: configure Bearer auth with single-flight token refresh on 401. Many concurrent 401s trigger only one refresh.",
+    'recipes/multi-tenant-cache.html': "Recipe: per-user cache isolation with scopeProvider, fail-secure on missing scope, audit events, logout invalidation.",
+    'recipes/reconnect-realtime.html': "Recipe: SSE-first realtime with auto-fallback to WebSocket, full reconnection state machine, cycle cap, visibility-aware.",
+    'recipes/worker-progress.html': "Recipe: parse 50MB CSV in a Web Worker with throttled progress events, transferable zero-copy ArrayBuffer, latest-only cancellation.",
+    'recipes/debug-flow.html': "Recipe: trace a broken event flow through the §28 14-step pipeline using Event/Mapping/Route Inspector and metrics.",
+    'recipes/react-integration.html': "Recipe: React integration with useGlueZeroEvent hook, context provider, plugin tied to component lifecycle, SSR-safe.",
+
+    'decisions.html': "Architectural decisions index: 170 decisions D-01..D-170 across the 6 implementation phases of GlueZero v1.0.",
+    'faq.html': "GlueZero FAQ: when to use, when not to use, comparisons with Redux/RxJS/React Query/EventEmitter, bundle size, SSR, TypeScript.",
+}
 
 # ==========================================================================
 # SIDEBAR STRUCTURE
@@ -111,20 +149,83 @@ def render_footer() -> str:
 </footer>'''
 
 
-def page_html(title: str, section: str, content: str, rel_base: str, breadcrumb: str = "") -> str:
-    """Wrap content in full HTML doc."""
-    description = f"{section} — GlueZero v{VERSION} documentation"
+def page_html(title: str, section: str, content: str, rel_base: str, url: str, breadcrumb: str = "") -> str:
+    """Wrap content in full HTML doc with full SEO meta."""
+    description = PAGE_DESCRIPTIONS.get(url, f"{section} — GlueZero v{VERSION} documentation")
+    canonical = f"{DOCS_BASE_URL}/{url}"
+    page_title = f"{title} — GlueZero docs" if url != 'index.html' else "GlueZero — frontend integration runtime documentation"
+
     if not breadcrumb:
         breadcrumb = f'<nav class="breadcrumb" aria-label="Breadcrumb"><a href="{rel_base}index.html">Docs</a> / {section}</nav>'
+
+    # JSON-LD structured data — TechArticle for content pages, WebSite for index
+    if url == 'index.html':
+        jsonld = {
+            "@context": "https://schema.org",
+            "@type": "WebSite",
+            "name": "GlueZero documentation",
+            "url": DOCS_BASE_URL + "/",
+            "description": description,
+            "publisher": {"@type": "Organization", "name": "GlueZero", "url": SITE_URL},
+            "potentialAction": {
+                "@type": "SearchAction",
+                "target": {"@type": "EntryPoint", "urlTemplate": f"{DOCS_BASE_URL}/?q={{search_term_string}}"},
+                "query-input": "required name=search_term_string",
+            },
+        }
+    else:
+        jsonld = {
+            "@context": "https://schema.org",
+            "@type": "TechArticle",
+            "headline": title,
+            "description": description,
+            "url": canonical,
+            "inLanguage": "en",
+            "author": {"@type": "Organization", "name": "GlueZero", "url": SITE_URL},
+            "publisher": {"@type": "Organization", "name": "GlueZero", "url": SITE_URL},
+            "isPartOf": {"@type": "WebSite", "name": "GlueZero documentation", "url": DOCS_BASE_URL + "/"},
+            "articleSection": section,
+            "keywords": "gluezero, frontend, browser, pub-sub, event-bus, typescript",
+        }
+    jsonld_str = json.dumps(jsonld, separators=(',', ':'))
+
+    twitter_extra = f'<meta name="twitter:site" content="{TWITTER_HANDLE}">\n' if TWITTER_HANDLE else ''
+
     return f'''<!DOCTYPE html>
 <html lang="en" data-theme="light">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>{title} — GlueZero docs</title>
+<title>{page_title}</title>
 <meta name="description" content="{description}">
+<meta name="theme-color" content="#6366F1">
+<meta name="color-scheme" content="light dark">
+<meta name="generator" content="GlueZero docs builder">
+<link rel="canonical" href="{canonical}">
+<link rel="alternate" hreflang="en" href="{canonical}">
+<link rel="alternate" hreflang="x-default" href="{canonical}">
+
+<!-- Open Graph -->
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="GlueZero">
+<meta property="og:title" content="{title} — GlueZero">
+<meta property="og:description" content="{description}">
+<meta property="og:url" content="{canonical}">
+<meta property="og:image" content="{OG_IMAGE}">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:locale" content="en_US">
+
+<!-- Twitter Card -->
+<meta name="twitter:card" content="summary_large_image">
+{twitter_extra}<meta name="twitter:title" content="{title} — GlueZero">
+<meta name="twitter:description" content="{description}">
+<meta name="twitter:image" content="{OG_IMAGE}">
+
 <link rel="stylesheet" href="{rel_base}assets/styles.css">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect width='24' height='24' rx='6' fill='%236366F1'/%3E%3Ctext x='12' y='17' text-anchor='middle' fill='white' font-family='sans-serif' font-weight='800' font-size='12'%3EGZ%3C/text%3E%3C/svg%3E">
+
+<script type="application/ld+json">{jsonld_str}</script>
 </head>
 <body data-base="{rel_base}">
 {render_topbar(rel_base)}
@@ -344,6 +445,7 @@ def main():
             section=p['section'],
             content=p['html'],
             rel_base=p['rel_base'],
+            url=p['url'],
         )
         out_path.write_text(full_html, encoding='utf-8')
         print(f"  ✓ {p['url']}")
@@ -358,8 +460,60 @@ def main():
             'url': p['url'],
         })
     (ROOT / 'search-index.json').write_text(json.dumps(index, indent=2), encoding='utf-8')
-    print(f"\n  ✓ search-index.json ({len(index)} entries)")
-    print(f"\n  Built {len(PAGES)} pages in {ROOT}")
+    print(f"  ✓ search-index.json ({len(index)} entries)")
+
+    # robots.txt — allow all, point to sitemap
+    robots_txt = f"""# GlueZero documentation — robots
+User-agent: *
+Allow: /
+
+Sitemap: {DOCS_BASE_URL}/sitemap.xml
+"""
+    (ROOT / 'robots.txt').write_text(robots_txt, encoding='utf-8')
+    print(f"  ✓ robots.txt")
+
+    # sitemap.xml — full URL set with lastmod and priority
+    from datetime import datetime, timezone
+    today = datetime.now(timezone.utc).strftime('%Y-%m-%d')
+    priority_map = {
+        'index.html': '1.0',
+        'getting-started.html': '0.9',
+    }
+    sitemap_lines = ['<?xml version="1.0" encoding="UTF-8"?>']
+    sitemap_lines.append('<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">')
+    for p in PAGES:
+        url = p['url']
+        loc = f"{DOCS_BASE_URL}/{url}"
+        priority = priority_map.get(url, '0.7' if url.startswith('concepts/') else '0.6')
+        changefreq = 'monthly' if url == 'index.html' else 'quarterly'
+        sitemap_lines.append('  <url>')
+        sitemap_lines.append(f'    <loc>{loc}</loc>')
+        sitemap_lines.append(f'    <lastmod>{today}</lastmod>')
+        sitemap_lines.append(f'    <changefreq>{changefreq}</changefreq>')
+        sitemap_lines.append(f'    <priority>{priority}</priority>')
+        sitemap_lines.append('  </url>')
+    sitemap_lines.append('</urlset>')
+    (ROOT / 'sitemap.xml').write_text('\n'.join(sitemap_lines), encoding='utf-8')
+    print(f"  ✓ sitemap.xml ({len(PAGES)} URLs)")
+
+    # OG image placeholder (1200x630 SVG → PNG would need ImageMagick; SVG works for og:image fallback)
+    og_svg = '''<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <defs>
+    <linearGradient id="g" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#6366F1"/>
+      <stop offset="100%" stop-color="#4F46E5"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="630" fill="url(#g)"/>
+  <rect x="500" y="200" width="200" height="200" rx="40" fill="white" fill-opacity="0.1"/>
+  <text x="600" y="335" text-anchor="middle" fill="white" font-family="-apple-system,BlinkMacSystemFont,sans-serif" font-weight="900" font-size="100">GZ</text>
+  <text x="600" y="475" text-anchor="middle" fill="white" font-family="-apple-system,BlinkMacSystemFont,sans-serif" font-weight="800" font-size="72">GlueZero</text>
+  <text x="600" y="525" text-anchor="middle" fill="white" fill-opacity="0.85" font-family="-apple-system,BlinkMacSystemFont,sans-serif" font-weight="500" font-size="28">Frontend integration runtime · v''' + VERSION + '''</text>
+</svg>'''
+    (ROOT / 'assets' / 'og-image.svg').write_text(og_svg, encoding='utf-8')
+    print(f"  ✓ assets/og-image.svg (placeholder — convert to og-image.png for production)")
+
+    print(f"\n  Built {len(PAGES)} pages + sitemap + robots in {ROOT}")
 
 
 if __name__ == '__main__':

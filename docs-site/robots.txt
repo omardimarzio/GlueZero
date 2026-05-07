@@ -1,0 +1,5 @@
+# GlueZero documentation — robots
+User-agent: *
+Allow: /
+
+Sitemap: https://gluezero.org/docs/sitemap.xml

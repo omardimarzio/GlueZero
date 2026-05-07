@@ -2,6 +2,15 @@
 
 **Connect frontend modules without glue code.**
 
+### 🌐 [gluezero.org](https://gluezero.org) · 📚 [docs](https://gluezero.org/docs) · 📦 [npm](https://www.npmjs.com/package/@gluezero/gluezero)
+
+[![npm version](https://img.shields.io/npm/v/@gluezero/gluezero?color=6366F1&label=npm)](https://www.npmjs.com/package/@gluezero/gluezero)
+[![License: MIT](https://img.shields.io/badge/License-MIT-6366F1.svg)](./LICENSE)
+[![Bundle size](https://img.shields.io/bundlephobia/minzip/@gluezero/gluezero?color=6366F1&label=bundle)](https://bundlephobia.com/package/@gluezero/gluezero)
+[![Types](https://img.shields.io/npm/types/@gluezero/gluezero?color=6366F1)](./packages/gluezero)
+[![ESM only](https://img.shields.io/badge/module-ESM-6366F1.svg)](./packages/gluezero/package.json)
+[![Decisions](https://img.shields.io/badge/decisions-170-6366F1.svg)](./DECISIONS.md)
+
 GlueZero is a **browser-side orchestration runtime** for modular frontend applications.
 
 It connects components, plugins, backend APIs, realtime events, cache and Web Workers through **declarative events**, **canonical data mapping** and a **single observable gateway**.
