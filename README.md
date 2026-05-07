@@ -22,10 +22,7 @@ It connects components, plugins, backend APIs, realtime events, cache and Web Wo
 
 ### 🎮 Try it live
 
-- [**examples/pub-sub-demo.html**](./examples/pub-sub-demo.html) — **Start here.** Pure pub/sub: 1 publisher, 4 subscribers reacting independently. Zero network, zero mocks.
-- [**examples/weather-demo.html**](./examples/weather-demo.html) — Canonical mapping between plugins with different naming + HTTP route (mocked via fetch interception for demo).
-
-Open in browser, no build step needed.
+[**examples/pub-sub-demo.html**](./examples/pub-sub-demo.html) — pure pub/sub: 1 publisher, 4 subscribers reacting independently to the same topic. Zero network, zero mocks. Open in browser, no build step needed.
 
 ---
 
