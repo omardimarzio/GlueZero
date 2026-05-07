@@ -1,7 +1,7 @@
 {
   "name": "@gluezero/core",
-  "version": "1.0.0",
-  "description": "GlueZero pub/sub broker \u2014 declarative event bus with plugin lifecycle and EventTap pre-instrumentation",
+  "version": "1.0.1",
+  "description": "GlueZero pub/sub broker — declarative event bus with plugin lifecycle and EventTap pre-instrumentation",
   "license": "MIT",
   "author": "Omar Di Marzio",
   "type": "module",

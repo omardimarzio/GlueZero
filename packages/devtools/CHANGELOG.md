@@ -1,5 +1,38 @@
 # @gluezero/devtools
 
+## 1.0.1
+
+### Patch Changes
+
+- # v1.0.1 — npm registry metadata propagation
+
+  Patch release per propagare metadata e fix di build pipeline su npm registry. **Nessun cambio funzionale**, nessun cambio di API, nessun cambio di runtime behavior. Tutti i package sono interscambiabili con `1.0.0` a livello di codice.
+
+  ## What changed (metadata only)
+
+  - **`description`** user-facing aggiunta a tutti gli 8 package (era assente / generica in v1.0.0). Ora ogni package su npm mostra una description concisa e search-friendly.
+  - **`keywords`** aggiunte a tutti gli 8 package (10-14 keywords specifiche per package: `pub-sub`, `event-bus`, `web-worker`, `lru`, `sse`, `websocket`, `routing`, ecc.). Critico per `npm search` discoverability.
+  - **`author`** popolato (`Omar Di Marzio`).
+  - **`repository`** completo con `directory: "packages/<name>"` (npm best practice multi-package repo: abilita "View on GitHub" pointing direttamente al sub-folder).
+  - **`homepage`** unificata a `https://gluezero.org` (era inconsistente fra package).
+  - **`bugs`** aggiunto puntando a `https://github.com/omardimarzio/GlueZero/issues`.
+  - **`publishConfig.provenance`** rimosso (richiedeva CI environment con OIDC, fallisce da terminale locale; lo riabiliteremo via GitHub Actions in una release futura).
+
+  ## Build pipeline fix
+
+  - Root `pnpm build` ora gestisce correttamente la dipendenza ciclica `routing ↔ gateway` per la generazione DTS (script `build:f3` + sequenziale per pacchetti dipendenti). Prima `pnpm release` falliva con `TS7016`. Solo manutentori del repo sono toccati da questo fix.
+
+  ## Why a patch release
+
+  Niente di funzionale è cambiato. Il codice runtime di v1.0.1 è identico a v1.0.0. La patch esiste esclusivamente per propagare i metadata che migliorano la discoverability su npmjs.com e nei tool che leggono `package.json` (npm registry search, GitHub Dependents UI, bundlephobia, libraries.io, ecc.).
+
+  Se non hai bisogno di metadata aggiornati, rimanere su 1.0.0 è perfettamente OK.
+
+- Updated dependencies
+  - @gluezero/core@1.0.1
+  - @gluezero/mapper@1.0.1
+  - @gluezero/routing@1.0.1
+
 ## 1.0.0
 
 ### Major Changes
@@ -74,10 +107,6 @@
   - Worker retry policy idempotent opt-in
   - Auto-detect transferable heuristic
   - Cross-fase pipeline ordering canonical doc
-
-  ## Co-Authored-By
-
-  Claude Opus 4.7 <noreply@anthropic.com>
 
 ### Patch Changes
 

@@ -1,7 +1,7 @@
 {
   "name": "@gluezero/devtools",
-  "version": "1.0.0",
-  "description": "GlueZero devtools \u2014 Event/Mapping/Route Inspector, MetricsCollector (simil-OpenMetrics), PauseController",
+  "version": "1.0.1",
+  "description": "GlueZero devtools — Event/Mapping/Route Inspector, MetricsCollector (simil-OpenMetrics), PauseController",
   "license": "MIT",
   "author": "Omar Di Marzio",
   "type": "module",

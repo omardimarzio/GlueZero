@@ -1,7 +1,7 @@
 {
   "name": "@gluezero/mapper",
-  "version": "1.0.0",
-  "description": "GlueZero canonical model mapper \u2014 bidirectional plugin/canonical payload translation with validation",
+  "version": "1.0.1",
+  "description": "GlueZero canonical model mapper — bidirectional plugin/canonical payload translation with validation",
   "license": "MIT",
   "author": "Omar Di Marzio",
   "type": "module",
