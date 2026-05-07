@@ -25,6 +25,9 @@ graphify-out
 .idea
 .DS_Store
 
+# AI dev tooling (specifico ambiente sviluppatore, non rilevante per consumer della libreria)
+.claude
+
 # OS
 Thumbs.db
 
