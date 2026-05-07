@@ -1,0 +1,77 @@
+name: Bug report
+description: Segnala un comportamento non corretto o inatteso.
+title: "[bug] "
+labels: ["bug", "triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Grazie per il bug report. Compila i campi sotto: più precisi sono, più rapida è la fix.
+  - type: dropdown
+    id: package
+    attributes:
+      label: Pacchetto interessato
+      options:
+        - "@gluezero/core"
+        - "@gluezero/mapper"
+        - "@gluezero/routing"
+        - "@gluezero/gateway"
+        - "@gluezero/worker"
+        - "@gluezero/cache"
+        - "@gluezero/devtools"
+        - "@gluezero/gluezero (aggregate)"
+        - "monorepo / build / tooling"
+        - "non lo so"
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Versione installata
+      description: Output di `pnpm list @gluezero/<pkg>` o `npm ls @gluezero/<pkg>`.
+      placeholder: "es. 1.0.0"
+    validations:
+      required: true
+  - type: input
+    id: env
+    attributes:
+      label: Browser / Node / runtime
+      description: Engine + versione (Chrome 132, Node 20.18, jsdom 29, ecc.).
+      placeholder: "es. Chrome 132 + macOS 15"
+    validations:
+      required: true
+  - type: textarea
+    id: repro
+    attributes:
+      label: Steps di riproduzione
+      description: Codice minimale che riproduce il problema. Più piccolo è, meglio è.
+      render: ts
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Comportamento atteso
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Comportamento osservato
+    validations:
+      required: true
+  - type: textarea
+    id: snapshot
+    attributes:
+      label: Output `getDebugSnapshot()` (opzionale)
+      description: Se rilevante, allega l'output di `broker.getDebugSnapshot()` con `debug: true`.
+      render: json
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Pre-check
+      options:
+        - label: Ho cercato issue duplicate aperte e chiuse
+          required: true
+        - label: Ho letto la sezione corrispondente in [`DECISIONS.md`](../../DECISIONS.md) (se applicabile)
+          required: false

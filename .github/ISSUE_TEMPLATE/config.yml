@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Discussions
+    url: https://github.com/omardimarzio/GlueZero/discussions
+    about: Ask questions, propose ideas, share use-cases.
+  - name: Security disclosure
+    url: https://github.com/omardimarzio/GlueZero/security/advisories/new
+    about: Report a security vulnerability privately. Do not open a public issue.

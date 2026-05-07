@@ -1,0 +1,71 @@
+name: Feature request / proposal
+description: Proponi una nuova feature, API, o estensione.
+title: "[feature] "
+labels: ["enhancement", "triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Prima di proporre una nuova feature, verifica:
+        1. Non sia già coperta da una decisione esistente in [`DECISIONS.md`](../../DECISIONS.md)
+        2. Non sia un deferral V1.x già pianificato (sezione "V1.x roadmap" in README.md)
+        3. Non sia esplicitamente fuori scope per il PRD (sezione "What GlueZero is not")
+  - type: dropdown
+    id: package
+    attributes:
+      label: Pacchetto interessato
+      options:
+        - "@gluezero/core"
+        - "@gluezero/mapper"
+        - "@gluezero/routing"
+        - "@gluezero/gateway"
+        - "@gluezero/worker"
+        - "@gluezero/cache"
+        - "@gluezero/devtools"
+        - "@gluezero/gluezero (aggregate)"
+        - "nuovo pacchetto @gluezero/*"
+        - "tooling / docs / repo"
+    validations:
+      required: true
+  - type: textarea
+    id: usecase
+    attributes:
+      label: Use-case reale
+      description: Quale problema concreto risolve? Chi è l'utente? Esempio applicativo.
+    validations:
+      required: true
+  - type: textarea
+    id: proposed
+    attributes:
+      label: API o approccio proposto
+      description: Codice/interfaccia indicativa. Anche pseudocodice va bene.
+      render: ts
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternative considerate
+      description: Workaround attuali, librerie esterne, perché non bastano.
+  - type: textarea
+    id: decisions
+    attributes:
+      label: Decisioni rilevanti
+      description: D-XX in [`DECISIONS.md`](../../DECISIONS.md) toccate o da rivisitare. Cita ID e perché.
+  - type: dropdown
+    id: scope
+    attributes:
+      label: Scope suggerito
+      options:
+        - "v1.x (compatibile)"
+        - "v2.0 (breaking)"
+        - "non lo so"
+    validations:
+      required: true
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Pre-check
+      options:
+        - label: Ho consultato `DECISIONS.md` per evitare di proporre una decisione già presa
+          required: true
+        - label: Ho letto la sezione "V1.x deferred opt-ins" del README per evitare duplicati
+          required: true
