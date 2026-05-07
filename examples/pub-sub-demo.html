@@ -332,19 +332,19 @@
 
 <main>
   <section class="hero">
-    <h1>Pub/sub demo — 1 publisher, 4 subscribers</h1>
+    <h1>Pub/sub + canonical mapping demo</h1>
     <p>
-      One component publishes <span class="pill">message.posted</span> when you click "Send". Four subscribers react independently:
-      a feed lists every message, a counter aggregates statistics, a card shows the latest, a histogram tracks activity per second.
-      <strong>Zero network. Zero mocks. Just GlueZero coordinating components inside the same page.</strong>
+      One Italian-named publisher emits <span class="pill">message.posted</span> with fields <code>mittente</code> / <code>messaggio</code> / <code>ora</code>.
+      Four subscribers receive the same event but each sees the payload <strong>in their own local vocabulary</strong> — Italian, English, compact —
+      thanks to GlueZero&rsquo;s canonical model. <strong>No pairwise adapters. No network. Just one shared canonical schema.</strong>
     </p>
   </section>
 
   <div class="info-bar">
     <span><strong>Library:</strong> <code>@gluezero/gluezero@1.0.1</code></span>
-    <span><strong>Loaded from:</strong> <code>esm.sh</code></span>
-    <span><strong>Topic used:</strong> <span class="pill">message.posted</span></span>
-    <span><strong>Backend:</strong> none (pure pub/sub)</span>
+    <span><strong>Topic:</strong> <span class="pill">message.posted</span></span>
+    <span><strong>Canonical fields:</strong> <code>author</code>, <code>body</code>, <code>sent_at</code></span>
+    <span><strong>Backend:</strong> none (pure pub/sub + mapper)</span>
   </div>
 
   <div class="controls">
@@ -361,27 +361,38 @@
     <!-- ============ PUBLISHER ============ -->
     <div class="panel">
       <div class="panel-header">
-        <h2>Publisher</h2>
+        <h2>Italian publisher</h2>
         <span class="role role-pub">PUBLISHER</span>
         <span class="status" id="pub-count">0 sent</span>
       </div>
       <div class="panel-body">
-        <label for="from">From (sender name)</label>
+        <label for="from">Mittente</label>
         <input id="from" type="text" value="Alice" maxlength="20">
 
-        <label for="text">Message</label>
-        <textarea id="text" maxlength="280" placeholder="Type something and press Send…">Hello from GlueZero!</textarea>
+        <label for="text">Messaggio</label>
+        <textarea id="text" maxlength="280" placeholder="Scrivi qualcosa e premi Send…">Hello from GlueZero!</textarea>
 
         <div class="btn-row">
           <button class="btn" id="send" style="margin:0;">Send (publish)</button>
           <button class="btn-secondary btn" id="send-burst" style="margin:0;">Send 5 burst</button>
         </div>
 
-        <div class="code-snippet"><span class="com">// What this button does:</span>
-broker.<span class="fn">publish</span>(<span class="str">'message.posted'</span>, {
-  from: <span class="str">'Alice'</span>,
-  text: <span class="str">'Hello from GlueZero!'</span>,
-  ts: Date.<span class="fn">now</span>()
+        <div class="code-snippet"><span class="com">// Plugin with outputMap: local fields → canonical</span>
+broker.<span class="fn">registerPlugin</span>({
+  id: <span class="str">'italian-form'</span>,
+  publishes: [{ topic: <span class="str">'message.posted'</span> }],
+  outputMap: {
+    mittente:  { to: <span class="str">'author'</span> },
+    messaggio: { to: <span class="str">'body'</span> },
+    ora:       { to: <span class="str">'sent_at'</span> },
+  },
+})
+
+<span class="com">// On Send click — payload uses local Italian field names:</span>
+ctx.broker.<span class="fn">publish</span>(<span class="str">'message.posted'</span>, {
+  mittente: <span class="str">'Alice'</span>,
+  messaggio: <span class="str">'Hello from GlueZero!'</span>,
+  ora: Date.<span class="fn">now</span>(),
 })</div>
       </div>
     </div>
@@ -389,30 +400,41 @@ broker.<span class="fn">publish</span>(<span class="str">'message.posted'</span>
     <!-- ============ SUBSCRIBERS ============ -->
     <div class="subscribers-grid">
 
-      <!-- SUBSCRIBER 1: Feed -->
+      <!-- SUBSCRIBER 1: Feed (italian vocab) -->
       <div class="panel">
         <div class="panel-header">
-          <h2>Subscriber 1 — Feed</h2>
+          <h2>Sub 1 — Feed (italian)</h2>
           <span class="role role-sub">SUBSCRIBER</span>
           <span class="status" id="sub1-count">0 received</span>
         </div>
         <div class="panel-body">
           <div class="feed" id="feed">
-            <div class="feed-empty">Waiting for <code>message.posted</code>…</div>
+            <div class="feed-empty">In attesa di <code>message.posted</code>…</div>
           </div>
-          <div class="code-snippet"><span class="com">// Subscribe + render the message</span>
-broker.<span class="fn">subscribe</span>(<span class="str">'message.posted'</span>, (event) =&gt; {
-  <span class="com">// payload mapping: read from + text + ts</span>
-  <span class="kw">const</span> { from, text, ts } = event.payload
-  feedEl.<span class="fn">appendChild</span>(<span class="fn">renderItem</span>(from, text, ts))
+          <div class="code-snippet"><span class="com">// Italian consumer plugin: canonical → local italian</span>
+broker.<span class="fn">registerPlugin</span>({
+  id: <span class="str">'italian-feed'</span>,
+  subscribes: [{ topic: <span class="str">'message.posted'</span> }],
+  inputMap: {
+    mittente: <span class="str">'author'</span>,
+    messaggio: <span class="str">'body'</span>,
+    ora: <span class="str">'sent_at'</span>,
+  },
+  handlers: {
+    <span class="str">'message.posted'</span>: (event) =&gt; {
+      <span class="com">// event.payload = { mittente, messaggio, ora }</span>
+      <span class="kw">const</span> { mittente, messaggio, ora } = event.payload
+      <span class="fn">appendToFeed</span>(mittente, messaggio, ora)
+    },
+  },
 })</div>
         </div>
       </div>
 
-      <!-- SUBSCRIBER 2: Stats -->
+      <!-- SUBSCRIBER 2: Stats (english vocab) -->
       <div class="panel">
         <div class="panel-header">
-          <h2>Subscriber 2 — Stats</h2>
+          <h2>Sub 2 — Stats (english)</h2>
           <span class="role role-sub">SUBSCRIBER</span>
           <span class="status" id="sub2-count">0 received</span>
         </div>
@@ -435,20 +457,31 @@ broker.<span class="fn">subscribe</span>(<span class="str">'message.posted'</spa
               <div class="stat-value" id="stat-avg">0<span class="stat-unit">chars</span></div>
             </div>
           </div>
-          <div class="code-snippet"><span class="com">// Subscribe + aggregate counters</span>
-broker.<span class="fn">subscribe</span>(<span class="str">'message.posted'</span>, (event) =&gt; {
-  total++
-  totalChars += event.payload.text.length
-  senders.<span class="fn">add</span>(event.payload.from)
-  <span class="fn">renderStats</span>(total, senders.size, totalChars)
+          <div class="code-snippet"><span class="com">// English consumer plugin: canonical → local english</span>
+broker.<span class="fn">registerPlugin</span>({
+  id: <span class="str">'english-stats'</span>,
+  subscribes: [{ topic: <span class="str">'message.posted'</span> }],
+  inputMap: {
+    from: <span class="str">'author'</span>,
+    text: <span class="str">'body'</span>,
+    timestamp: <span class="str">'sent_at'</span>,
+  },
+  handlers: {
+    <span class="str">'message.posted'</span>: (event) =&gt; {
+      <span class="com">// event.payload = { from, text, timestamp }</span>
+      total++
+      totalChars += event.payload.text.length
+      senders.<span class="fn">add</span>(event.payload.from)
+    },
+  },
 })</div>
         </div>
       </div>
 
-      <!-- SUBSCRIBER 3: Latest -->
+      <!-- SUBSCRIBER 3: Latest (compact vocab) -->
       <div class="panel" id="panel-sub3">
         <div class="panel-header">
-          <h2>Subscriber 3 — Latest</h2>
+          <h2>Sub 3 — Latest (compact)</h2>
           <span class="role role-sub" id="sub3-role">SUBSCRIBER</span>
           <span class="status" id="sub3-count">0 received</span>
         </div>
@@ -456,20 +489,32 @@ broker.<span class="fn">subscribe</span>(<span class="str">'message.posted'</spa
           <div id="latest">
             <div class="latest-empty">No messages yet.</div>
           </div>
-          <div class="code-snippet"><span class="com">// Subscribe returns a handle — store it for unsubscribe</span>
-<span class="kw">const</span> sub = broker.<span class="fn">subscribe</span>(<span class="str">'message.posted'</span>, (event) =&gt; {
-  <span class="fn">renderLatest</span>(event.payload, event.id)
+          <div class="code-snippet"><span class="com">// Compact consumer plugin: canonical → 3-letter local</span>
+broker.<span class="fn">registerPlugin</span>({
+  id: <span class="str">'compact-latest'</span>,
+  subscribes: [{ topic: <span class="str">'message.posted'</span> }],
+  inputMap: {
+    who:  <span class="str">'author'</span>,
+    msg:  <span class="str">'body'</span>,
+    when: <span class="str">'sent_at'</span>,
+  },
+  handlers: {
+    <span class="str">'message.posted'</span>: (event) =&gt; {
+      <span class="com">// event.payload = { who, msg, when }</span>
+      <span class="fn">renderLatest</span>(event.payload)
+    },
+  },
 })
 
-<span class="com">// Toggle off → release the subscription (LIFE-02 cleanup)</span>
-sub.<span class="fn">unsubscribe</span>()</div>
+<span class="com">// Toggle off → unregisterPlugin (LIFE-02 cascade cleanup)</span>
+broker.<span class="fn">unregisterPlugin</span>(<span class="str">'compact-latest'</span>)</div>
         </div>
       </div>
 
-      <!-- SUBSCRIBER 4: Histogram -->
+      <!-- SUBSCRIBER 4: Histogram (no map needed) -->
       <div class="panel" id="panel-sub4">
         <div class="panel-header">
-          <h2>Subscriber 4 — Activity (last 30s)</h2>
+          <h2>Sub 4 — Activity (no map)</h2>
           <span class="role role-sub" id="sub4-role">SUBSCRIBER</span>
           <span class="status" id="sub4-count">0 received</span>
         </div>
@@ -480,8 +525,9 @@ sub.<span class="fn">unsubscribe</span>()</div>
             <span id="hist-peak">peak: 0/sec</span>
             <span>now</span>
           </div>
-          <div class="code-snippet"><span class="com">// Subscribe + bucket per second (sliding window 30s)</span>
-<span class="kw">const</span> sub = broker.<span class="fn">subscribe</span>(<span class="str">'message.posted'</span>, (event) =&gt; {
+          <div class="code-snippet"><span class="com">// Counts only — no field mapping needed.</span>
+<span class="com">// Plain subscribe is enough when you don't read the payload.</span>
+<span class="kw">const</span> sub = broker.<span class="fn">subscribe</span>(<span class="str">'message.posted'</span>, () =&gt; {
   buckets[buckets.length - <span class="kw">1</span>]++
   <span class="fn">renderHistogram</span>()
 })</div>
@@ -516,21 +562,50 @@ sub.<span class="fn">unsubscribe</span>()</div>
     themeBtn.textContent = t === 'dark' ? '☀' : '🌙'
   }
 
-  // ---------- The broker. One instance for the whole page. ----------
-  const broker = createGlueZero({ debug: true })
+  // ---------- The broker with canonical model ----------
+  const broker = createGlueZero({
+    debug: true,
+    canonicalModel: {
+      schemas: [{
+        id: 'message.canonical',
+        fields: {
+          author:  { type: 'string', required: true },
+          body:    { type: 'string', required: true },
+          sent_at: { type: 'number', required: true },
+        },
+      }],
+    },
+  })
 
   // ============================================================
-  // PUBLISHER component — wires UI to broker.publish
+  // ITALIAN PUBLISHER plugin — emits with local italian field names
+  // outputMap maps mittente/messaggio/ora → canonical author/body/sent_at
   // ============================================================
+  let pluginBroker = null  // captured from ctx in onMount
+
+  broker.registerPlugin({
+    id: 'italian-form',
+    name: 'Italian message form',
+    version: '1.0.0',
+    publishes: [{ topic: 'message.posted' }],
+    outputMap: {
+      mittente:  { to: 'author' },
+      messaggio: { to: 'body' },
+      ora:       { to: 'sent_at' },
+    },
+    onMount: (ctx) => { pluginBroker = ctx.broker },
+  })
+
   const fromInput = document.getElementById('from')
   const textInput = document.getElementById('text')
   let publishedCount = 0
 
-  function publishMessage(from, text) {
-    broker.publish('message.posted', {
-      from: String(from || 'anonymous').trim() || 'anonymous',
-      text: String(text || '').trim(),
-      ts: Date.now(),
+  function publishMessage(mittente, messaggio) {
+    // Publish via the plugin-scoped broker so outputMap kicks in
+    pluginBroker.publish('message.posted', {
+      mittente: String(mittente || 'anonimo').trim() || 'anonimo',
+      messaggio: String(messaggio || '').trim(),
+      ora: Date.now(),
     })
     publishedCount++
     document.getElementById('pub-count').textContent = `${publishedCount} sent`
@@ -544,7 +619,7 @@ sub.<span class="fn">unsubscribe</span>()</div>
   })
 
   document.getElementById('send-burst').addEventListener('click', () => {
-    const senders = ['Alice', 'Bob', 'Carol', 'Dan', 'Eve']
+    const sendersList = ['Alice', 'Bob', 'Carol', 'Dan', 'Eve']
     const samples = [
       'Just deployed v1.0.1 🎉',
       'Anyone working on the dashboard?',
@@ -552,84 +627,130 @@ sub.<span class="fn">unsubscribe</span>()</div>
       'PR ready for review',
       'Build is green',
     ]
-    senders.forEach((s, i) => {
+    sendersList.forEach((s, i) => {
       setTimeout(() => publishMessage(s, samples[i]), i * 200)
     })
   })
 
   // ============================================================
-  // SUBSCRIBER 1 — Feed: lists every message in chronological order
+  // SUBSCRIBER 1 — Italian Feed: payload arrives with local italian names
   // ============================================================
   const feedEl = document.getElementById('feed')
   let sub1Count = 0
   let feedEmpty = true
 
-  broker.subscribe('message.posted', (event) => {
-    if (feedEmpty) { feedEl.innerHTML = ''; feedEmpty = false }
-    sub1Count++
-    document.getElementById('sub1-count').textContent = `${sub1Count} received`
+  broker.registerPlugin({
+    id: 'italian-feed',
+    name: 'Italian feed widget',
+    version: '1.0.0',
+    subscribes: [{ topic: 'message.posted' }],
+    inputMap: {
+      mittente:  'author',
+      messaggio: 'body',
+      ora:       'sent_at',
+    },
+    handlers: {
+      'message.posted': (event) => {
+        if (feedEmpty) { feedEl.innerHTML = ''; feedEmpty = false }
+        sub1Count++
+        document.getElementById('sub1-count').textContent = `${sub1Count} received`
 
-    const item = document.createElement('div')
-    item.className = 'feed-item'
-    item.innerHTML = `
-      <span class="feed-item-from">${escapeHtml(event.payload.from)}</span>
-      <span class="feed-item-time">${formatTime(event.payload.ts)}</span>
-      <span class="feed-item-text">${escapeHtml(event.payload.text)}</span>
-    `
-    feedEl.appendChild(item)
-    feedEl.scrollTop = feedEl.scrollHeight
+        // event.payload uses italian field names, not canonical
+        const { mittente, messaggio, ora } = event.payload
+        const item = document.createElement('div')
+        item.className = 'feed-item'
+        item.innerHTML = `
+          <span class="feed-item-from">${escapeHtml(mittente)}</span>
+          <span class="feed-item-time">${formatTime(ora)}</span>
+          <span class="feed-item-text">${escapeHtml(messaggio)}</span>
+        `
+        feedEl.appendChild(item)
+        feedEl.scrollTop = feedEl.scrollHeight
+      },
+    },
   })
 
   // ============================================================
-  // SUBSCRIBER 2 — Stats: aggregates totals
+  // SUBSCRIBER 2 — English Stats: payload arrives with english names
   // ============================================================
   let sub2Count = 0
   let totalChars = 0
   const senders = new Set()
 
-  broker.subscribe('message.posted', (event) => {
-    sub2Count++
-    totalChars += event.payload.text.length
-    senders.add(event.payload.from)
+  broker.registerPlugin({
+    id: 'english-stats',
+    name: 'English stats widget',
+    version: '1.0.0',
+    subscribes: [{ topic: 'message.posted' }],
+    inputMap: {
+      from:      'author',
+      text:      'body',
+      timestamp: 'sent_at',
+    },
+    handlers: {
+      'message.posted': (event) => {
+        // event.payload uses english field names: from, text, timestamp
+        const { from, text } = event.payload
+        sub2Count++
+        totalChars += text.length
+        senders.add(from)
 
-    document.getElementById('sub2-count').textContent = `${sub2Count} received`
-    document.getElementById('stat-total').textContent = sub2Count
-    document.getElementById('stat-senders').textContent = senders.size
-    document.getElementById('stat-chars').textContent = totalChars.toLocaleString()
-    document.getElementById('stat-avg').innerHTML = sub2Count > 0
-      ? `${Math.round(totalChars / sub2Count)}<span class="stat-unit">chars</span>`
-      : '0<span class="stat-unit">chars</span>'
+        document.getElementById('sub2-count').textContent = `${sub2Count} received`
+        document.getElementById('stat-total').textContent = sub2Count
+        document.getElementById('stat-senders').textContent = senders.size
+        document.getElementById('stat-chars').textContent = totalChars.toLocaleString()
+        document.getElementById('stat-avg').innerHTML = sub2Count > 0
+          ? `${Math.round(totalChars / sub2Count)}<span class="stat-unit">chars</span>`
+          : '0<span class="stat-unit">chars</span>'
+      },
+    },
   })
 
   // ============================================================
-  // SUBSCRIBER 3 — Latest: shows only the most recent message
-  // (this subscription can be toggled on/off at runtime)
+  // SUBSCRIBER 3 — Compact Latest: payload uses 3-letter local names
+  // Plugin can be unregistered/re-registered at runtime (LIFE-02 cascade)
   // ============================================================
   const latestEl = document.getElementById('latest')
   let sub3Count = 0
-  let sub3 = null
+  let sub3Active = false
 
   function startSub3() {
-    if (sub3) return
-    sub3 = broker.subscribe('message.posted', (event) => {
-      sub3Count++
-      document.getElementById('sub3-count').textContent = `${sub3Count} received`
-      latestEl.innerHTML = `
-        <div class="latest-from">${escapeHtml(event.payload.from)}</div>
-        <div class="latest-text">${escapeHtml(event.payload.text)}</div>
-        <div class="latest-time">${formatTime(event.payload.ts)} · event id: ${event.id.slice(0, 8)}…</div>
-      `
+    if (sub3Active) return
+    broker.registerPlugin({
+      id: 'compact-latest',
+      name: 'Compact latest widget',
+      version: '1.0.0',
+      subscribes: [{ topic: 'message.posted' }],
+      inputMap: {
+        who:  'author',
+        msg:  'body',
+        when: 'sent_at',
+      },
+      handlers: {
+        'message.posted': (event) => {
+          // event.payload = { who, msg, when }
+          const { who, msg, when } = event.payload
+          sub3Count++
+          document.getElementById('sub3-count').textContent = `${sub3Count} received`
+          latestEl.innerHTML = `
+            <div class="latest-from">${escapeHtml(who)}</div>
+            <div class="latest-text">${escapeHtml(msg)}</div>
+            <div class="latest-time">${formatTime(when)} · event id: ${event.id.slice(0, 8)}…</div>
+          `
+        },
+      },
     })
+    sub3Active = true
     document.getElementById('sub3-role').textContent = 'SUBSCRIBER'
     document.getElementById('sub3-role').className = 'role role-sub'
   }
   function stopSub3() {
-    if (!sub3) return
-    sub3.unsubscribe()
-    sub3 = null
+    if (!sub3Active) return
+    broker.unregisterPlugin('compact-latest')   // cascade LIFE-02
+    sub3Active = false
     document.getElementById('sub3-role').textContent = 'PAUSED'
     document.getElementById('sub3-role').className = 'role role-sub-paused'
-    latestEl.innerHTML = '<div class="latest-empty">Subscription paused. Toggle ON to resume receiving.</div>'
+    latestEl.innerHTML = '<div class="latest-empty">Plugin unregistered. Toggle ON to re-register.</div>'
   }
 
   // ============================================================
@@ -650,7 +771,9 @@ sub.<span class="fn">unsubscribe</span>()</div>
   }
   function startSub4() {
     if (sub4) return
-    sub4 = broker.subscribe('message.posted', (event) => {
+    // No inputMap needed: this subscriber only counts events,
+    // doesn't read any field. Plain subscribe is fine.
+    sub4 = broker.subscribe('message.posted', () => {
       sub4Count++
       document.getElementById('sub4-count').textContent = `${sub4Count} received`
       buckets[buckets.length - 1]++
