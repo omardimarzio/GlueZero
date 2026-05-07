@@ -27,11 +27,11 @@ The simplest way:
 
 ```bash
 # Open directly in the browser
-open examples/weather-demo.html
+open examples/pub-sub-demo.html
 
 # Or via a local static server (avoids potential CORS issues with file://)
 python3 -m http.server 8080 --directory examples
-# then visit http://localhost:8080/weather-demo.html
+# then visit http://localhost:8080/pub-sub-demo.html
 ```
 
 ## Hosting on gluezero.org
@@ -40,7 +40,7 @@ These files are designed to be hosted under `gluezero.org/examples/` (or anywher
 
 ## Building your own example
 
-Start from the structure of `weather-demo.html`:
+Start from the structure of `pub-sub-demo.html`:
 
 1. Single HTML file
 2. `<script type="module">` block at the bottom
