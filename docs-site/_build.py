@@ -309,7 +309,8 @@ if CONTENT_DIR.exists():
         module = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(module)
         if hasattr(module, "PAGES"):
-            for url, title, section, keywords, html, rel_base in module.PAGES:
+            # Content files use tuple shape: (url, title, section, keywords, rel_base, html)
+            for url, title, section, keywords, rel_base, html in module.PAGES:
                 # Replace existing stub or add new
                 existing_idx = None
                 for i, p in enumerate(PAGES):
