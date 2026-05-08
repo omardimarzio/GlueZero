@@ -30,6 +30,8 @@ graphify-out
 CLAUDE.md
 prd.md
 .planning
+SPIEGAZIONE.md
+UI-STANDARDIZATION.md
 
 # Python build cache (docs-site builder)
 __pycache__
