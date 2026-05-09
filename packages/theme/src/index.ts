@@ -74,6 +74,24 @@ export {
   type CapCheckResult,
 } from './cardinality-cap'
 
+// W2 — ThemeManager closure factory orchestratore mode/density/direction
+// (THEME-04..07, THEME-09; D-F7-13 auto-mode mirror OS)
+export {
+  createThemeManager,
+  type ThemeManager,
+  type ThemeMode,
+  type ThemeDensity,
+  type ThemeDirection,
+} from './theme-manager'
+
+// W2 — OsPreferenceWatcher matchMedia subscriber (D-F7-13, Pitfall HIGH #6)
+export {
+  createOsPreferenceWatcher,
+  type OsPreferenceWatcher,
+  type OsPreferenceKind,
+  type ColorScheme,
+} from './os-preference'
+
 // Internal Valibot schemas NOT re-exported via barrel (path internal/) — opt-in
 // via `import { TokenSetSchema } from '@gluezero/theme/internal/valibot-schemas'`
 // per advanced users che validano adapter custom in userland.
