@@ -1,0 +1,320 @@
+<!doctype html>
+<html lang="it" data-gz-mode="light">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>GlueZero Theme — Tokens Only Example</title>
+  <meta name="description" content="Demo standalone @gluezero/theme — Strategia B (cssRules) con LiveTokenEditor + ThemeInspector. Zero install, zero build, apri-e-funziona.">
+
+  <!-- Tokens canonici @gluezero/theme v1.1 (CSS Custom Properties --gz-*) -->
+  <link rel="stylesheet" href="https://esm.sh/@gluezero/theme@1.1.0/tokens-default.css">
+
+  <style>
+    /* Stili minimal del demo, basati interamente sui token canonici --gz-* */
+    body {
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+      margin: 0;
+      padding: var(--gz-spacing-lg, 24px);
+      background: var(--gz-color-surface, #FFFFFF);
+      color: var(--gz-color-text, #0F172A);
+      transition:
+        background var(--gz-motion-medium, 200ms) ease,
+        color var(--gz-motion-medium, 200ms) ease;
+      line-height: 1.5;
+    }
+    .container { max-width: 880px; margin: 0 auto; }
+
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: var(--gz-spacing-xl, 32px);
+      padding-bottom: var(--gz-spacing-md, 16px);
+      border-bottom: 1px solid var(--gz-color-border, #E2E8F0);
+    }
+    h1 {
+      color: var(--gz-color-primary, #6366F1);
+      margin: 0;
+      font-size: var(--gz-font-size-xl, 24px);
+      letter-spacing: -0.01em;
+    }
+    h2 {
+      font-size: var(--gz-font-size-lg, 18px);
+      margin: 0 0 var(--gz-spacing-sm, 8px);
+    }
+    p { margin: 0 0 var(--gz-spacing-md, 16px); color: var(--gz-color-text-muted, #64748B); }
+    code {
+      font-family: ui-monospace, "SF Mono", Consolas, monospace;
+      font-size: 0.9em;
+      background: var(--gz-color-surface, #FFFFFF);
+      padding: 1px 5px;
+      border-radius: var(--gz-radius-sm, 4px);
+      border: 1px solid var(--gz-color-border, #E2E8F0);
+    }
+
+    /* Panel = il role surface.elevated lo styla ulteriormente via cssRules */
+    .panel {
+      padding: var(--gz-spacing-md, 16px);
+      margin-bottom: var(--gz-spacing-md, 16px);
+      border-radius: var(--gz-radius-md, 8px);
+      border: 1px solid var(--gz-color-border, #E2E8F0);
+    }
+
+    .actions { display: flex; gap: var(--gz-spacing-sm, 8px); flex-wrap: wrap; margin-top: var(--gz-spacing-md, 16px); }
+
+    button { cursor: pointer; border: none; font: inherit; }
+
+    .editor-row {
+      display: grid;
+      grid-template-columns: 200px 1fr 80px;
+      gap: var(--gz-spacing-sm, 8px);
+      align-items: center;
+      margin-bottom: var(--gz-spacing-sm, 8px);
+    }
+    .editor-row label { font-size: var(--gz-font-size-base, 14px); color: var(--gz-color-text, #0F172A); }
+    .editor-row input[type="color"] { width: 100%; height: 32px; padding: 0; border: 1px solid var(--gz-color-border, #E2E8F0); border-radius: var(--gz-radius-sm, 4px); background: var(--gz-color-surface, #FFFFFF); }
+    .editor-row input[type="text"] { width: 100%; padding: 6px 8px; border: 1px solid var(--gz-color-border, #E2E8F0); border-radius: var(--gz-radius-sm, 4px); background: var(--gz-color-surface, #FFFFFF); color: var(--gz-color-text, #0F172A); font: inherit; }
+    .editor-row .swatch { font-family: ui-monospace, monospace; font-size: 11px; color: var(--gz-color-text-muted, #64748B); text-align: right; }
+
+    pre.buffer {
+      max-height: 240px;
+      overflow: auto;
+      background: var(--gz-color-surface, #FFFFFF);
+      color: var(--gz-color-text, #0F172A);
+      padding: var(--gz-spacing-sm, 8px);
+      border-radius: var(--gz-radius-sm, 4px);
+      border: 1px solid var(--gz-color-border, #E2E8F0);
+      font-family: ui-monospace, "SF Mono", monospace;
+      font-size: 12px;
+      line-height: 1.45;
+      margin: 0;
+    }
+
+    .note {
+      font-size: var(--gz-font-size-base, 14px);
+      color: var(--gz-color-text-muted, #64748B);
+      margin: 0 0 var(--gz-spacing-md, 16px);
+    }
+    .note strong { color: var(--gz-color-text, #0F172A); }
+  </style>
+</head>
+<body>
+  <div class="container">
+
+    <header>
+      <h1>Theme — Tokens Only</h1>
+      <button id="darkToggle" data-gz-role="action.secondary" type="button">
+        Toggle dark / light
+      </button>
+    </header>
+
+    <p class="note">
+      Demo della <strong>Strategia B</strong> di <code>@gluezero/theme</code>: l'adapter
+      <code>tokens-only</code> dichiara <code>cssRules</code> per ogni ruolo. Lo
+      <code>StyleSheetGenerator</code> inietta un <code>&lt;style&gt;@layer
+      gluezero-theme.adapter</code> in <code>&lt;head&gt;</code> con le regole risolte
+      a partire dai token canonici <code>--gz-*</code>.
+    </p>
+
+    <!-- ============ Strategia B showcase ============ -->
+    <section class="panel" data-gz-role="surface.elevated">
+      <h2>Ruoli applicati via <code>data-gz-role</code></h2>
+      <p>I 4 button qui sotto NON hanno classi: lo styling arriva interamente dalle
+      <code>cssRules</code> dell'adapter <code>tokens-only</code>.</p>
+      <div class="actions">
+        <button data-gz-role="action.primary" type="button">Primary action</button>
+        <button data-gz-role="action.secondary" type="button">Secondary</button>
+        <button data-gz-role="action.danger" type="button">Danger</button>
+        <button data-gz-role="action.ghost" type="button">Ghost</button>
+      </div>
+    </section>
+
+    <!-- ============ Live token editor ============ -->
+    <section class="panel" data-gz-role="surface.elevated">
+      <h2>Live Token Editor</h2>
+      <p>Cambia i 4 branded core token e osserva il render aggiornarsi in 1 paint
+      (tutto il DOM legge <code>var(--gz-*)</code>).</p>
+
+      <div id="editor"></div>
+
+      <div class="actions">
+        <button id="brandIndigo" data-gz-role="action.primary" type="button">Brand: Indigo</button>
+        <button id="brandOrange" data-gz-role="action.secondary" type="button">Brand: Orange</button>
+        <button id="brandTeal" data-gz-role="action.secondary" type="button">Brand: Teal</button>
+      </div>
+    </section>
+
+    <!-- ============ Theme Inspector ============ -->
+    <section class="panel" data-gz-role="surface.elevated">
+      <h2>Theme Inspector</h2>
+      <p>Buffer ring degli eventi <code>ui.*</code> pubblicati dal broker
+      (<code>ui.theme.changed</code>, <code>ui.adapter.changed</code>,
+      <code>ui.osPreference.changed</code>):</p>
+      <pre class="buffer" id="buffer">(nessun evento ancora — cambia mode o token sopra)</pre>
+      <div class="actions">
+        <button id="refreshBuffer" data-gz-role="action.ghost" type="button">Refresh buffer</button>
+        <button id="clearBuffer" data-gz-role="action.ghost" type="button">Clear</button>
+      </div>
+    </section>
+
+  </div>
+
+  <!-- =========================================================================
+       Script applicativo — single ESM module via esm.sh, ~80 righe.
+       ========================================================================= -->
+  <script type="module">
+    import { createBroker } from 'https://esm.sh/@gluezero/core@1.0.1'
+    import { createTheme } from 'https://esm.sh/@gluezero/theme@1.1.0/factory'
+    import {
+      UI_THEME_CHANGED,
+      UI_ADAPTER_CHANGED,
+      UI_OS_PREFERENCE_CHANGED,
+    } from 'https://esm.sh/@gluezero/theme@1.1.0'
+
+    // ---------- Broker + theme handle ----------
+    const broker = createBroker()
+    const theme = createTheme({ broker })
+
+    // ---------- Adapter Strategia B (cssRules) ----------
+    theme.register({
+      id: 'tokens-only',
+      cssRules: {
+        'action.primary':
+          'background: var(--gz-color-primary); color: var(--gz-color-on-primary); padding: var(--gz-spacing-sm) var(--gz-spacing-md); border-radius: var(--gz-radius-md); border: none; font-weight: 600; cursor: pointer;',
+        'action.secondary':
+          'background: var(--gz-color-surface-elevated); color: var(--gz-color-text); padding: var(--gz-spacing-sm) var(--gz-spacing-md); border: 1px solid var(--gz-color-border); border-radius: var(--gz-radius-md); cursor: pointer;',
+        'action.danger':
+          'background: var(--gz-color-error); color: var(--gz-color-on-primary); padding: var(--gz-spacing-sm) var(--gz-spacing-md); border-radius: var(--gz-radius-md); border: none; font-weight: 600; cursor: pointer;',
+        'action.ghost':
+          'background: transparent; color: var(--gz-color-primary); padding: var(--gz-spacing-xs) var(--gz-spacing-sm); border: none; cursor: pointer;',
+        'surface.elevated':
+          'background: var(--gz-color-surface-elevated); box-shadow: var(--gz-elevation-1);',
+      },
+    })
+    theme.setActiveAdapter('tokens-only')
+
+    // Initial brand
+    theme.applyTokens({
+      'color-primary': '#6366F1',
+      'color-on-primary': '#FFFFFF',
+    })
+
+    // ---------- Dark / light toggle ----------
+    document.getElementById('darkToggle').addEventListener('click', () => {
+      const current = theme.getActiveTheme().resolvedMode
+      theme.manager.setMode(current === 'dark' ? 'light' : 'dark')
+    })
+
+    // ---------- Live Token Editor (UI-DEVTOOLS-03 fattorizzato inline) ----------
+    const EDITOR_TOKENS = [
+      { name: 'color-primary', label: 'color-primary', kind: 'color' },
+      { name: 'color-on-primary', label: 'color-on-primary', kind: 'color' },
+      { name: 'spacing-md', label: 'spacing-md', kind: 'text' },
+      { name: 'radius-md', label: 'radius-md', kind: 'text' },
+    ]
+
+    function readTokenValue(name) {
+      const v = getComputedStyle(document.documentElement)
+        .getPropertyValue(`--gz-${name}`)
+        .trim()
+      return v || ''
+    }
+
+    function buildEditor(host) {
+      host.innerHTML = ''
+      for (const t of EDITOR_TOKENS) {
+        const row = document.createElement('div')
+        row.className = 'editor-row'
+
+        const label = document.createElement('label')
+        label.textContent = t.label
+        label.htmlFor = `tok-${t.name}`
+
+        const input = document.createElement('input')
+        input.id = `tok-${t.name}`
+        input.type = t.kind === 'color' ? 'color' : 'text'
+        const initial = readTokenValue(t.name)
+        input.value = t.kind === 'color' ? toHexSafe(initial) : initial
+
+        const swatch = document.createElement('span')
+        swatch.className = 'swatch'
+        swatch.textContent = initial
+
+        input.addEventListener('input', () => {
+          theme.applyTokens({ [t.name]: input.value })
+          swatch.textContent = input.value
+        })
+
+        row.appendChild(label)
+        row.appendChild(input)
+        row.appendChild(swatch)
+        host.appendChild(row)
+      }
+    }
+
+    function toHexSafe(value) {
+      // input[type=color] vuole #RRGGBB. Se il valore è già hex 6 char usa
+      // direttamente; altrimenti fallback a #6366F1 e l'utente può modificare.
+      const trimmed = (value || '').trim()
+      return /^#[0-9A-Fa-f]{6}$/.test(trimmed) ? trimmed : '#6366F1'
+    }
+
+    buildEditor(document.getElementById('editor'))
+
+    // ---------- Brand swap shortcuts ----------
+    document.getElementById('brandIndigo').addEventListener('click', () => {
+      theme.applyTokens({ 'color-primary': '#6366F1', 'color-on-primary': '#FFFFFF' })
+      buildEditor(document.getElementById('editor'))
+    })
+    document.getElementById('brandOrange').addEventListener('click', () => {
+      theme.applyTokens({ 'color-primary': '#FF6B35', 'color-on-primary': '#FFFFFF' })
+      buildEditor(document.getElementById('editor'))
+    })
+    document.getElementById('brandTeal').addEventListener('click', () => {
+      theme.applyTokens({ 'color-primary': '#14B8A6', 'color-on-primary': '#FFFFFF' })
+      buildEditor(document.getElementById('editor'))
+    })
+
+    // ---------- Theme Inspector inline (passive subscriber su ui.*) ----------
+    const ringBuffer = []
+    const RING_CAP = 200
+    function record(topic, payload) {
+      ringBuffer.push({ topic, payload, at: Date.now() })
+      if (ringBuffer.length > RING_CAP) ringBuffer.shift()
+    }
+    broker.subscribe(UI_THEME_CHANGED, (e) => record(UI_THEME_CHANGED, e.payload))
+    broker.subscribe(UI_ADAPTER_CHANGED, (e) => record(UI_ADAPTER_CHANGED, e.payload))
+    broker.subscribe(UI_OS_PREFERENCE_CHANGED, (e) => record(UI_OS_PREFERENCE_CHANGED, e.payload))
+
+    function renderBuffer() {
+      const el = document.getElementById('buffer')
+      if (ringBuffer.length === 0) {
+        el.textContent = '(nessun evento ancora — cambia mode o token sopra)'
+        return
+      }
+      el.textContent = ringBuffer
+        .slice(-30)
+        .map((r) => {
+          const t = new Date(r.at).toLocaleTimeString('it-IT', { hour12: false })
+          return `[${t}] ${r.topic}\n  ${JSON.stringify(r.payload)}`
+        })
+        .join('\n')
+    }
+
+    document.getElementById('refreshBuffer').addEventListener('click', renderBuffer)
+    document.getElementById('clearBuffer').addEventListener('click', () => {
+      ringBuffer.length = 0
+      renderBuffer()
+    })
+
+    // Auto-refresh ogni mode/adapter change per UX
+    broker.subscribe(UI_THEME_CHANGED, () => renderBuffer())
+    broker.subscribe(UI_ADAPTER_CHANGED, () => renderBuffer())
+
+    // expose for devtools experimentation
+    window.__theme = theme
+    window.__broker = broker
+    console.log('GlueZero theme-tokens-only demo ready. window.__theme / window.__broker exposed.')
+  </script>
+</body>
+</html>
