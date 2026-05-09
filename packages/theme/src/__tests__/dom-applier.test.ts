@@ -17,13 +17,15 @@ const bootstrap = {
 }
 
 /**
- * Helper: flush microtasks + RIC fallback (setTimeout 0) for batching.
- * jsdom non implementa requestIdleCallback, quindi il fallback usa setTimeout(0).
+ * Helper: flush microtasks + RIC/rAF fallback for batching.
+ * jsdom non implementa requestIdleCallback; il fallback usa requestAnimationFrame
+ * che in jsdom è schedulato via timer (~16ms). Servono >1 tick reale.
  */
 async function flushAll(): Promise<void> {
-  await Promise.resolve()
-  await new Promise((resolve) => setTimeout(resolve, 0))
-  await new Promise((resolve) => setTimeout(resolve, 0))
+  for (let i = 0; i < 5; i++) {
+    await Promise.resolve()
+    await new Promise((resolve) => setTimeout(resolve, 20))
+  }
 }
 
 describe('createDomApplier (Strategia A)', () => {
