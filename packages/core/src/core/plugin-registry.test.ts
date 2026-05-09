@@ -310,15 +310,62 @@ describe('createPluginScopedBroker', () => {
     expect(bus.getStats().topics.length).toBe(0)
   })
 
-  it('delegates non-subscribe methods to root broker', () => {
+  it('delegates non-subscribe/non-publish methods to root broker', () => {
     const bus = buildBus()
     const root = {
-      publish: (topic: string): string => `published:${topic}`,
       getDebugSnapshot: (): { marker: string } => ({ marker: 'root' }),
+      enableDebug: (): string => 'debug-on',
     }
     const scoped = createPluginScopedBroker(root, bus, 'p1') as typeof root
-    expect(scoped.publish('test.topic')).toBe('published:test.topic')
     expect(scoped.getDebugSnapshot()).toEqual({ marker: 'root' })
+    expect(scoped.enableDebug()).toBe('debug-on')
+  })
+
+  it('publish auto-injects source={type:plugin,id:pluginId} when omitted (D-23 asymmetry fix)', () => {
+    const bus = buildBus()
+    const calls: Array<[string, unknown, unknown]> = []
+    const root = {
+      publish: (topic: string, payload: unknown, options: unknown): void => {
+        calls.push([topic, payload, options])
+      },
+    }
+    const scoped = createPluginScopedBroker(root, bus, 'plugin-X') as typeof root
+    scoped.publish('a.b', { v: 1 })
+    expect(calls).toHaveLength(1)
+    expect(calls[0]?.[0]).toBe('a.b')
+    expect(calls[0]?.[1]).toEqual({ v: 1 })
+    expect(calls[0]?.[2]).toEqual({ source: { type: 'plugin', id: 'plugin-X' } })
+  })
+
+  it('publish preserves explicit source from caller (override allowed)', () => {
+    const bus = buildBus()
+    const calls: Array<[string, unknown, unknown]> = []
+    const root = {
+      publish: (topic: string, payload: unknown, options: unknown): void => {
+        calls.push([topic, payload, options])
+      },
+    }
+    const scoped = createPluginScopedBroker(root, bus, 'plugin-X') as typeof root
+    const customSource = { type: 'component' as const, id: 'ui-form' }
+    scoped.publish('a.b', { v: 2 }, { source: customSource, priority: 'high' })
+    expect(calls[0]?.[2]).toEqual({ source: customSource, priority: 'high' })
+  })
+
+  it('publish merges other options while still injecting source default', () => {
+    const bus = buildBus()
+    const calls: Array<[string, unknown, unknown]> = []
+    const root = {
+      publish: (topic: string, payload: unknown, options: unknown): void => {
+        calls.push([topic, payload, options])
+      },
+    }
+    const scoped = createPluginScopedBroker(root, bus, 'plugin-Y') as typeof root
+    scoped.publish('a.b', { v: 3 }, { priority: 'high', correlationId: 'abc' })
+    expect(calls[0]?.[2]).toEqual({
+      priority: 'high',
+      correlationId: 'abc',
+      source: { type: 'plugin', id: 'plugin-Y' },
+    })
   })
 
   it('subscribe via scoped broker with no signal still tags ownerId', () => {
