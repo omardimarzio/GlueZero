@@ -82,7 +82,7 @@ export interface RoleRegistry {
 /**
  * Crea un nuovo {@link RoleRegistry} closure-based (D-30 anti-singleton).
  *
- * @example
+ * @example Register + subscribe + destroy
  * ```ts
  * const registry = createRoleRegistry()
  * registry.register({
@@ -92,6 +92,17 @@ export interface RoleRegistry {
  * // ...
  * registry.destroy()
  * ```
+ *
+ * @example Cap override esplicito (D-F7-14)
+ * ```ts
+ * registry.register(bigRoleSet, { allowMore: true })
+ * // bypassa il cap 100 (richiede opt-in esplicito; soft-warn al 50%)
+ * ```
+ *
+ * @see D-F7-15 (STANDARD_ROLES v1.1.0 lockata)
+ * @see D-F7-16 (dot-notation `category.subname`)
+ * @see UI-ROLE-06 (cardinality cap)
+ * @see UI-ROLE-07 (Inspector observer)
  */
 export function createRoleRegistry(): RoleRegistry {
   const roles = new Map<string, RoleDefinition>()

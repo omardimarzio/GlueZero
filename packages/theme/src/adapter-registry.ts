@@ -122,12 +122,19 @@ export interface AdapterRegistry {
 /**
  * Crea un nuovo {@link AdapterRegistry} closure-based (D-30 anti-singleton).
  *
- * @example
+ * @example Register + activate + observer
  * ```ts
  * const reg = createAdapterRegistry()
  * reg.register({ id: 'tailwind', roleMap: { 'action.primary': 'btn-primary' } })
  * reg.setActive('tailwind')
  * reg.subscribe((ev) => console.log(ev))
+ * ```
+ *
+ * @example Collision throw + override esplicito (D-F7-09)
+ * ```ts
+ * reg.register({ id: 'tailwind', roleMap: { ... } })
+ * reg.register({ id: 'tailwind', roleMap: { ... } }) // throw theme.adapter.duplicate
+ * reg.register({ id: 'tailwind', roleMap: { ... } }, { override: true }) // OK
  * ```
  *
  * @see UI-ROLE-03 (roleMap + cssRules)

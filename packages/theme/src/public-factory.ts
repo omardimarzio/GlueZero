@@ -67,15 +67,55 @@ export interface Theme {
    * Registra un adapter nel registry interno. Throw `theme.adapter.duplicate`
    * su id collisione (override esplicito via `{ override: true }`).
    * `ownerPluginId` propagato per LIFE-02 ext F7 cascade automatico.
+   *
+   * @example
+   * ```ts
+   * theme.register({
+   *   id: 'tailwind',
+   *   roleMap: { 'action.primary': 'bg-indigo-600 text-white px-4 py-2 rounded' },
+   * })
+   * ```
+   *
+   * @example Plugin-scoped adapter (cascade su unregister, LIFE-02 ext F7)
+   * ```ts
+   * theme.register(meteoAdapter, { ownerPluginId: 'meteo' })
+   * // gz.plugins.unregister('meteo') → adapter cleanup automatico
+   * ```
+   *
+   * @see {@link RegisterAdapterOptions}
+   * @see UI-ROLE-09 + D-F7-09 (collision throw)
    */
   register(adapter: ThemeAdapter, opts?: RegisterAdapterOptions): void
   /**
    * Cambia adapter attivo (`null` = deactivate). Hot-swap atomico (UI-ROLE-05):
    * Strategia A re-apply classi via DomApplier; Strategia B remount `<style>`
    * con CSS rules nuove. Pubblica `ui.adapter.changed` se broker fornito.
+   *
+   * @example Hot-swap atomico cross-DS
+   * ```ts
+   * theme.setActiveAdapter('tailwind')   // utility classes via DomApplier
+   * theme.setActiveAdapter('tokens-only')// cssRules via StyleSheetGenerator
+   * theme.setActiveAdapter(null)         // deactivate (cleanup non-destructive)
+   * ```
+   *
+   * @see UI-ROLE-05 (hot-swap atomico via queueMicrotask)
    */
   setActiveAdapter(adapterId: string | null): void
-  /** Applica token deltas via `manager.tokens.apply`. */
+  /**
+   * Applica token deltas via `manager.tokens.apply`.
+   *
+   * @example Brand swap atomico
+   * ```ts
+   * theme.applyTokens({ 'color-primary': '#FF6B35', 'color-on-primary': '#FFFFFF' })
+   * // Tutti i nodi che leggono var(--gz-color-primary) si aggiornano in 1 paint
+   * ```
+   *
+   * @example Multi-scope (D-F7-05)
+   * ```ts
+   * const dashboard = document.querySelector<HTMLElement>('.dashboard')!
+   * theme.applyTokens({ 'color-primary': '#0EA5E9' }, { scope: dashboard })
+   * ```
+   */
   applyTokens(
     tokens: Record<string, string>,
     opts?: { scope?: HTMLElement; allowMore?: boolean },
@@ -91,6 +131,24 @@ export interface Theme {
  *
  * @param opts - Configurazione opzionale (broker, persistence, scope, observerRoot).
  * @returns Theme handle ergonomico.
+ *
+ * @example Standalone — token override runtime senza broker
+ * ```ts
+ * import { createTheme } from '@gluezero/theme'
+ * const theme = createTheme()
+ * theme.applyTokens({ 'color-primary': '#FF6B35' })
+ * ```
+ *
+ * @example Aggregate composition (D-F7-07)
+ * ```ts
+ * import { createGlueZero } from '@gluezero/gluezero'
+ * import { createTheme } from '@gluezero/theme'
+ * const gz = createGlueZero({ theme: createTheme({ persistence: 'localStorage' }) })
+ * gz.theme?.manager.setMode('auto')
+ * ```
+ *
+ * @see {@link Theme}
+ * @see UI-ROLE-04 (3 strategie applicazione DOM)
  */
 export function createTheme(opts: CreateThemeOptions = {}): Theme {
   const manager = createThemeManager(opts)

@@ -96,6 +96,15 @@ export interface ThemeManager {
   setMode(mode: ThemeMode): void
   /**
    * Imposta la density semantic.
+   *
+   * @example
+   * ```ts
+   * tm.setDensity('compact')      // dashboard ad alta densità (mobile/tablet)
+   * tm.setDensity('comfortable')  // default desktop
+   * tm.setDensity('spacious')     // accessibility / touch-first
+   * ```
+   *
+   * @see UI-EVENT-02 (`ui.density.changed` payload)
    * @throws {ThemeError} `theme.density.invalid` su input fuori whitelist.
    * @throws {ThemeError} `theme.snapshot.frozen` post-destroy.
    */
@@ -103,6 +112,14 @@ export interface ThemeManager {
   /**
    * Imposta la direction (LTR/RTL); scrive sia `dir` attribute nativo HTML che
    * `data-gz-direction` per coerenza con altri data-attr GlueZero.
+   *
+   * @example RTL switch i18n runtime
+   * ```ts
+   * tm.setDirection('rtl') // Arabic / Hebrew layout
+   * // <html dir="rtl" data-gz-direction="rtl">
+   * ```
+   *
+   * @see UI-EVENT-03 (`ui.direction.changed` payload)
    * @throws {ThemeError} `theme.direction.invalid` su input fuori whitelist.
    * @throws {ThemeError} `theme.snapshot.frozen` post-destroy.
    */

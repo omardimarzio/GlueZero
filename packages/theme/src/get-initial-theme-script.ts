@@ -52,6 +52,20 @@ export interface GetInitialThemeScriptOptions {
  *
  * @param opts - Opzioni configurazione (default `{ persistence: false }`).
  * @returns Stringa IIFE pronta per `<script>`.
+ *
+ * @example SSR Next.js — inject in `<head>` build-time
+ * ```ts
+ * // app/layout.tsx (Next.js App Router)
+ * <script
+ *   nonce={cspNonce}
+ *   dangerouslySetInnerHTML={{
+ *     __html: getInitialThemeScript({ persistence: 'localStorage' }),
+ *   }}
+ * />
+ * ```
+ *
+ * @see Pitfall HIGH #1 anti-FOUC mitigation
+ * @see D-F7-12 (persistenza default OFF)
  */
 export function getInitialThemeScript(opts: GetInitialThemeScriptOptions = {}): string {
   const persistence = opts.persistence ?? false

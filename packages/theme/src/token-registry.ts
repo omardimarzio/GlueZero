@@ -93,7 +93,7 @@ type ActiveListener = (active: Readonly<Record<string, string>>) => void
  * @param opts - Configurazione opzionale (initial seed).
  * @returns Nuova istanza indipendente (D-30).
  *
- * @example
+ * @example Apply globale + multi-scope (D-F7-05)
  * ```ts
  * const reg = createTokenRegistry()
  * reg.apply({ 'color-primary': '#FF6B35' })
@@ -101,6 +101,20 @@ type ActiveListener = (active: Readonly<Record<string, string>>) => void
  *
  * reg.apply({ 'spacing-md': '1.5rem' }, { scope: document.querySelector('.dashboard')! })
  * // → element.style.setProperty(...) — :root NON modificato
+ * ```
+ *
+ * @example Subscribe a token changes (Inspector / live editor)
+ * ```ts
+ * const unsub = reg.subscribe((active) => console.log('tokens →', active))
+ * reg.apply({ 'color-primary': '#FF6B35' })
+ * unsub()
+ * ```
+ *
+ * @example Initial seed (anti-FOUC boot)
+ * ```ts
+ * const reg = createTokenRegistry({
+ *   initial: { 'color-primary': '#3B82F6' }, // letti da pre-paint script
+ * })
  * ```
  *
  * @see THEME-01

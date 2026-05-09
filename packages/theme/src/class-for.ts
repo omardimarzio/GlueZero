@@ -29,6 +29,22 @@ import type { ThemeAdapter } from './types/theme-adapter'
  * @param adapter Adapter attivo (`null` ammesso = nessun adapter)
  * @param role Role name (es. `'action.primary'`)
  * @returns Stringa classi space-separated o `''` se ruolo non mappato (no throw)
+ *
+ * @example Vanilla DOM imperativo
+ * ```ts
+ * const adapter = theme.manager.adapters.getActive()
+ * btn.className = classFor(adapter, 'action.primary')
+ * ```
+ *
+ * @example Composition con classi extra (utility coexist)
+ * ```tsx
+ * <button className={`${classFor(adapter, 'action.primary')} my-extra-utility`}>
+ *   Salva
+ * </button>
+ * ```
+ *
+ * @see {@link createDomApplier} — Strategia A (MutationObserver auto)
+ * @see {@link createStyleSheetGenerator} — Strategia B (cssRules)
  */
 export function classFor(adapter: ThemeAdapter | null, role: string): string {
   if (adapter == null || adapter.roleMap == null) return ''
