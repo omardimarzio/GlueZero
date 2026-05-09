@@ -12,6 +12,8 @@ docs
 # test
 coverage
 .vitest
+.vitest-attachments
+__screenshots__
 
 # tooling
 .turbo
