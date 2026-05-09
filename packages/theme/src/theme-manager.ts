@@ -3,9 +3,13 @@
  * `<html>` + auto-mode mirror OS prefs (D-F7-13). Front door pubblico di
  * `@gluezero/theme`.
  *
- * **W2 scope (questo plan 07-03):** standalone — NON inietta broker. Composizione
- * interna `TokenRegistry` + `OsPreferenceWatcher`. Il broker injection per emit
- * `ui.*` events arriva in W4 plan 07-08.
+ * **W2 scope (plan 07-03):** standalone — composizione `TokenRegistry` +
+ * `OsPreferenceWatcher` + Persistence opt-in.
+ *
+ * **W4 ext F7 (plan 07-08, D-F7-01 Opzione B):** broker injection opt-in per
+ * emettere `ui.*` events (UI-EVENT-01..05) + LIFE-02 ext F7 cascade subscribe
+ * a `system.plugin.unregistered` (D-F7-06). Surface estesa con `adapters` +
+ * `roles` + `setAdapter`.
  *
  * **Anti-singleton (D-30):** ogni call a `createThemeManager()` ritorna istanza
  * indipendente con stato isolato. Pattern role-match con
@@ -19,22 +23,24 @@
  * - `setDirection('ltr'|'rtl')` → `<html dir='...' data-gz-direction='...'>`
  *
  * **Validation (T-F7-01 mitigation):** whitelist enum `Set` check pre-apply;
- * input fuori whitelist throw `ThemeError` con code dedicato:
- * - `theme.mode.invalid` / `theme.density.invalid` / `theme.direction.invalid`
+ * input fuori whitelist throw `ThemeError` con code dedicato.
  *
  * **Lifecycle (T-F7-04 mitigation):** `destroy()` rimuove matchMedia listener
- * via `osWatcher.destroy()` + `tokens.destroy()`; flag `destroyed` blocca
- * successive `setMode/setDensity/setDirection` con throw `theme.snapshot.frozen`.
- * Idempotent.
+ * + cascade subscriber + adapter/role registry; flag `destroyed` blocca
+ * successive setter. Idempotent.
  *
  * Refs:
- * - 07-CONTEXT.md D-F7-13 (default auto), D-F7-08 (deep-frozen snapshot),
- *   D-F7-12 (persistence default OFF — placeholder qui)
- * - 07-03-PLAN.md Task 2
- * - THEME-04, THEME-05, THEME-06, THEME-07, THEME-09
+ * - 07-CONTEXT.md D-F7-01 (broker injection), D-F7-06 (LIFE-02 cascade),
+ *   D-F7-08 (deep-frozen snapshot), D-F7-13 (default auto)
+ * - 07-08-PLAN.md Task 2
+ * - THEME-04..09, UI-EVENT-01..06, LIFE-02 ext F7
  */
 
 import { nanoid } from 'nanoid'
+import {
+  createAdapterRegistry,
+  type AdapterRegistry,
+} from './adapter-registry'
 import {
   createOsPreferenceWatcher,
   type OsPreferenceWatcher,
@@ -43,11 +49,13 @@ import {
   createThemePersistence,
   type ThemePersistence,
 } from './persistence'
+import { createRoleRegistry, type RoleRegistry } from './role-registry'
 import { createSnapshot } from './snapshot'
 import { createThemeError } from './theme-error'
 import { createTokenRegistry, type TokenRegistry } from './token-registry'
 import type { ThemeConfig } from './types/theme-config'
 import type { ThemeSnapshot } from './types/theme-snapshot'
+import type { BrokerLike } from './types/ui-events'
 
 /** Mode utente: 'auto' segue OS, 'light'/'dark' override esplicito (THEME-04). */
 export type ThemeMode = 'auto' | 'light' | 'dark'
@@ -78,7 +86,7 @@ const VALID_DIRECTIONS: ReadonlySet<ThemeDirection> = new Set<ThemeDirection>([
   'rtl',
 ])
 
-/** Surface API esposta da `createThemeManager()`. */
+/** Surface API esposta da `createThemeManager()` (W4 estesa con adapters/roles/setAdapter). */
 export interface ThemeManager {
   /**
    * Imposta il mode. `'auto'` mirror OS via matchMedia (D-F7-13).
@@ -99,53 +107,62 @@ export interface ThemeManager {
    * @throws {ThemeError} `theme.snapshot.frozen` post-destroy.
    */
   setDirection(direction: ThemeDirection): void
+  /**
+   * W4 ext F7: imposta l'adapter attivo (`null` = deactivate). Pubblica
+   * `ui.adapter.changed` cause='manual' se broker fornito.
+   * @throws {ThemeError} `theme.adapter.unknown` su id non registrato.
+   */
+  setAdapter(adapterId: string | null): void
   /** Ritorna snapshot deep-frozen dello stato corrente (D-F7-08). */
   getActiveTheme(): ThemeSnapshot
   /** TokenRegistry composto internamente (THEME-01..02). */
   readonly tokens: TokenRegistry
-  /** Cleanup matchMedia listener + tokens registry. Idempotent. */
+  /** W4 ext F7: AdapterRegistry composto internamente (UI-ROLE-03/09). */
+  readonly adapters: AdapterRegistry
+  /** W4 ext F7: RoleRegistry composto internamente (UI-ROLE-01/06/07). */
+  readonly roles: RoleRegistry
+  /** Cleanup matchMedia listener + cascade subscriber + sub-registry. Idempotent. */
   destroy(): void
 }
 
 /**
  * Crea un nuovo {@link ThemeManager} (D-30 anti-singleton).
  *
- * **W2 scope:** standalone — NESSUNA `broker` injection. L'estensione W4 plan
- * 07-08 aggiungerà il parametro `broker` per emit `ui.theme.changed` etc.
+ * **W4 ext F7:** se `config.broker` fornito → emette `ui.*` events su ogni
+ * setter + sottoscrive `system.plugin.unregistered` per cascade unregister
+ * adapter (LIFE-02 ext F7). Senza broker behavior pre-W4 preservato.
  *
- * @param config - Configurazione opzionale (themeId, scope, persistence,
- *                 cardinality cap override).
+ * @param config - Configurazione opzionale (themeId, scope, persistence, broker).
  * @returns Nuova istanza indipendente.
  *
  * @example
  * ```ts
- * const tm = createThemeManager({ themeId: 'app-theme' })
- * tm.setMode('auto')              // Mirror OS prefers-color-scheme
- * tm.setDensity('comfortable')
- * tm.setDirection('ltr')
- * const snap = tm.getActiveTheme() // deep-frozen ThemeSnapshot
+ * import { createBroker } from '@gluezero/core'
+ * const broker = createBroker()
+ * const tm = createThemeManager({ broker, persistence: 'localStorage' })
+ * tm.setMode('auto')              // → publish ui.theme.changed
+ * tm.adapters.register({ id: 'tailwind', roleMap: {...} }, { ownerPluginId: 'p' })
+ * tm.setAdapter('tailwind')       // → publish ui.adapter.changed
  * // … later
  * tm.destroy()
  * ```
  *
- * @see THEME-04
- * @see THEME-05
- * @see THEME-06
- * @see THEME-07
- * @see THEME-09
+ * @see THEME-04..09
+ * @see UI-EVENT-01..06
+ * @see LIFE-02 ext F7
  */
 export function createThemeManager(config: ThemeConfig = {}): ThemeManager {
   const themeId = config.themeId ?? nanoid()
   const tokens = createTokenRegistry()
+  const adapters = createAdapterRegistry()
+  const roles = createRoleRegistry()
   const osWatcher: OsPreferenceWatcher = createOsPreferenceWatcher()
-  // Persistenza opt-in (D-F7-12 default OFF). `enabled: false` ritorna stub
-  // no-op che non tocca localStorage né registra listener.
   const persistence: ThemePersistence = createThemePersistence({
     enabled: config.persistence === 'localStorage',
   })
+  const broker: BrokerLike | null = config.broker ?? null
+  const subscriptions: Array<() => void> = []
   let destroyed = false
-  // Flag interno per disabilitare write durante apply da cross-tab
-  // StorageEvent (no echo loop multi-tab).
   let suppressWrite = false
 
   const state = {
@@ -185,6 +202,22 @@ export function createThemeManager(config: ThemeConfig = {}): ThemeManager {
     el.setAttribute('data-gz-mode', state.mode)
   }
 
+  // Single shared publish helper (mitigation: inline reduces footprint vs 5
+  // separate functions). Tipi inference via call site (zero runtime cost).
+  function pub(topic: string, payload: unknown): void {
+    if (broker != null) broker.publish(topic, payload)
+  }
+
+  function publishThemeChanged(): void {
+    pub('ui.theme.changed', {
+      themeId,
+      tokens: { ...tokens.getActive() },
+      mode: state.mode,
+      resolvedMode: state.resolvedMode,
+      scope: state.scope,
+    })
+  }
+
   function setMode(mode: ThemeMode): void {
     ensureLive()
     if (!VALID_MODES.has(mode)) {
@@ -197,27 +230,29 @@ export function createThemeManager(config: ThemeConfig = {}): ThemeManager {
     state.mode = mode
     if (mode === 'auto') {
       state.resolvedMode = osWatcher.getColorScheme()
-      // Subscribe lazily on first auto enter
       if (!osUnsub) {
         osUnsub = osWatcher.subscribe('color-scheme', (value) => {
           if (state.mode === 'auto') {
             state.resolvedMode = value === 'dark' ? 'dark' : 'light'
             applyDomMode()
+            pub('ui.osPreference.changed', {
+              kind: 'color-scheme',
+              value: state.resolvedMode,
+            })
+            publishThemeChanged()
           }
         })
       }
     } else {
       state.resolvedMode = mode
-      // Unsubscribe from auto-mode listener if leaving auto
       if (osUnsub) {
         osUnsub()
         osUnsub = null
       }
     }
     applyDomMode()
-    // Persist (no-op se disabled). Skip durante apply da StorageEvent
-    // cross-tab per evitare echo loop.
     if (!suppressWrite) persistence.write({ mode })
+    publishThemeChanged()
   }
 
   function setDensity(density: ThemeDensity): void {
@@ -229,9 +264,11 @@ export function createThemeManager(config: ThemeConfig = {}): ThemeManager {
         details: { received: density },
       })
     }
+    const previous = state.density
     state.density = density
     targetEl().setAttribute('data-gz-density', density)
     if (!suppressWrite) persistence.write({ density })
+    pub('ui.density.changed', { density, previous })
   }
 
   function setDirection(direction: ThemeDirection): void {
@@ -243,11 +280,21 @@ export function createThemeManager(config: ThemeConfig = {}): ThemeManager {
         details: { received: direction },
       })
     }
+    const previous = state.direction
     state.direction = direction
     const el = targetEl()
     el.setAttribute('dir', direction)
     el.setAttribute('data-gz-direction', direction)
     if (!suppressWrite) persistence.write({ direction })
+    pub('ui.direction.changed', { dir: direction, previous })
+  }
+
+  function setAdapter(adapterId: string | null): void {
+    ensureLive()
+    const { previous, current } = adapters.setActive(adapterId)
+    state.activeAdapterId = current
+    if (!suppressWrite) persistence.write({ adapter: current ?? '' })
+    pub('ui.adapter.changed', { previous, current, cause: 'manual' })
   }
 
   function getActiveTheme(): ThemeSnapshot {
@@ -266,6 +313,8 @@ export function createThemeManager(config: ThemeConfig = {}): ThemeManager {
   function destroy(): void {
     if (destroyed) return
     destroyed = true
+    for (const unsub of subscriptions) unsub()
+    subscriptions.length = 0
     if (persistenceUnsub) {
       persistenceUnsub()
       persistenceUnsub = null
@@ -276,7 +325,31 @@ export function createThemeManager(config: ThemeConfig = {}): ThemeManager {
       osUnsub = null
     }
     osWatcher.destroy()
+    adapters.destroy()
+    roles.destroy()
     tokens.destroy()
+  }
+
+  // LIFE-02 ext F7 cascade (D-F7-06): subscribe a system.plugin.unregistered.
+  // Per ogni adapter `ownerPluginId === event.payload.id` → unregister + emit
+  // ui.adapter.changed cause='plugin-cascade' se l'adapter era ATTIVO.
+  if (broker != null) {
+    subscriptions.push(
+      broker.subscribe<{ id: unknown }>('system.plugin.unregistered', (event) => {
+        if (destroyed) return
+        const pid = event?.payload?.id
+        if (typeof pid !== 'string') return
+        for (const aid of [...adapters.list()]) {
+          if (adapters.getOwnerPluginId(aid) !== pid) continue
+          const wasActive = adapters.getActiveId() === aid
+          adapters.unregister(aid)
+          if (wasActive) {
+            state.activeAdapterId = null
+            pub('ui.adapter.changed', { previous: aid, current: null, cause: 'plugin-cascade' })
+          }
+        }
+      }),
+    )
   }
 
   // Boot-time: legge stato pre-esistente in localStorage e applica al boot
@@ -290,14 +363,11 @@ export function createThemeManager(config: ThemeConfig = {}): ThemeManager {
         if (persisted.mode) setMode(persisted.mode)
         if (persisted.density) setDensity(persisted.density)
         if (persisted.direction) setDirection(persisted.direction)
-        // adapter restoration handled in W3 (adapter-registry consume adapter id).
       } finally {
         suppressWrite = false
       }
     }
 
-    // Cross-tab subscribe: applica i cambi via setter ma con suppressWrite
-    // per evitare echo loop su localStorage (no ping-pong multi-tab).
     persistenceUnsub = persistence.subscribe((partial) => {
       if (destroyed) return
       suppressWrite = true
@@ -315,8 +385,11 @@ export function createThemeManager(config: ThemeConfig = {}): ThemeManager {
     setMode,
     setDensity,
     setDirection,
+    setAdapter,
     getActiveTheme,
     tokens,
+    adapters,
+    roles,
     destroy,
   }
 }
