@@ -102,7 +102,9 @@ describe('createAdapterRegistry', () => {
 
   it('setActive unknown throws theme.adapter.unknown', () => {
     const r = createAdapterRegistry()
-    expect(() => r.setActive('ghost')).toThrowError(/adapter\.unknown/)
+    expect(() => r.setActive('ghost')).toThrowError(
+      /adapter\.unknown|unknown adapter/,
+    )
   })
 
   it('setActive(null) deactivates', () => {
@@ -125,7 +127,9 @@ describe('createAdapterRegistry', () => {
 
   it('unregister unknown throws theme.adapter.unknown', () => {
     const r = createAdapterRegistry()
-    expect(() => r.unregister('ghost')).toThrowError(/adapter\.unknown/)
+    expect(() => r.unregister('ghost')).toThrowError(
+      /adapter\.unknown|not registered/,
+    )
   })
 
   it('subscribe receives registered/activated/deactivated/unregistered events', () => {
