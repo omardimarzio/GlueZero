@@ -1,0 +1,278 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>GlueZero Theme — Tailwind Adapter Example</title>
+  <meta name="description" content="Demo Strategia A roleMap con Tailwind via CDN. Stesso markup data-gz-role, 3 adapter intercambiabili runtime: tailwind / minimal / none.">
+
+  <!-- Tailwind via CDN (mode JIT runtime) — adatto solo a demo, non production -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Tokens canonici @gluezero/theme — l'adapter "minimal" li userà via cssRules -->
+  <link rel="stylesheet" href="https://esm.sh/@gluezero/theme@1.1.0/tokens-default.css">
+
+  <style>
+    /* Stili scaffolding indipendenti dall'adapter (header, layout, intro). */
+    body {
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+      margin: 0;
+      padding: 24px;
+      background: var(--gz-color-surface, #FFFFFF);
+      color: var(--gz-color-text, #0F172A);
+      line-height: 1.5;
+    }
+    .container { max-width: 880px; margin: 0 auto; }
+
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 16px;
+      margin-bottom: 32px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid var(--gz-color-border, #E2E8F0);
+    }
+    header h1 {
+      margin: 0;
+      font-size: var(--gz-font-size-xl, 24px);
+      letter-spacing: -0.01em;
+      color: var(--gz-color-primary, #6366F1);
+    }
+    .switcher { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+    .switcher button.raw {
+      padding: 6px 12px;
+      border: 1px solid var(--gz-color-border, #E2E8F0);
+      border-radius: 6px;
+      background: var(--gz-color-surface-elevated, #FAFAFA);
+      color: var(--gz-color-text, #0F172A);
+      cursor: pointer;
+      font: inherit;
+    }
+    .switcher button.raw[aria-pressed="true"] {
+      background: var(--gz-color-primary, #6366F1);
+      color: var(--gz-color-on-primary, #FFFFFF);
+      border-color: var(--gz-color-primary, #6366F1);
+    }
+    .intro { color: var(--gz-color-text-muted, #64748B); margin: 0 0 24px; }
+    .intro code { background: var(--gz-color-surface-elevated, #FAFAFA); padding: 1px 5px; border-radius: 4px; }
+
+    /* Sezioni demo — il "guscio" è gestito dal tema, qui solo layout */
+    section.demo {
+      padding: 16px;
+      margin-bottom: 16px;
+      border-radius: 8px;
+      border: 1px solid var(--gz-color-border, #E2E8F0);
+      background: var(--gz-color-surface, #FFFFFF);
+    }
+    section.demo h2 { margin: 0 0 12px; font-size: var(--gz-font-size-lg, 18px); }
+
+    .row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 12px;
+      align-items: center;
+    }
+    .field { display: flex; flex-direction: column; gap: 4px; }
+    .field-label { font-size: 12px; color: var(--gz-color-text-muted, #64748B); }
+
+    .legend {
+      font-size: 12px;
+      color: var(--gz-color-text-muted, #64748B);
+      margin-top: 8px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+
+    <header>
+      <h1>Theme — Tailwind Adapter</h1>
+      <div class="switcher" role="group" aria-label="Adapter switcher">
+        <span style="font-size:12px;color:var(--gz-color-text-muted, #64748B);margin-right:4px;">Adapter:</span>
+        <button class="raw" data-switcher="tailwind"  aria-pressed="true">Tailwind</button>
+        <button class="raw" data-switcher="minimal"   aria-pressed="false">Minimal</button>
+        <button class="raw" data-switcher="none"      aria-pressed="false">None</button>
+        <button class="raw" id="darkToggle" style="margin-left:8px;" type="button">Dark / Light</button>
+      </div>
+    </header>
+
+    <p class="intro">
+      Demo della <strong>Strategia A</strong> (<code>roleMap</code>) di
+      <code>@gluezero/theme</code>. L'adapter <code>tailwind</code> mappa ogni
+      ruolo canonico a una stringa di utility classes Tailwind; il
+      <code>DomApplier</code> osserva <code>[data-gz-role]</code> e applica
+      le classi via <code>classList.add</code> in modo non-distruttivo
+      (WeakMap tracker). Switchando adapter a runtime,
+      <strong>lo stesso markup</strong> riceve classi diverse o nessuna —
+      <em>l'HTML non cambia mai</em>.
+    </p>
+
+    <!-- ===================== Form demo ===================== -->
+    <section class="demo">
+      <h2>Form: input + actions</h2>
+
+      <div class="row">
+        <div class="field" style="flex:1; min-width:240px;">
+          <label class="field-label" for="email">Email</label>
+          <input id="email" type="email" data-gz-role="input.text" placeholder="user@example.com">
+        </div>
+        <div class="field" style="flex:1; min-width:240px;">
+          <label class="field-label" for="email-bad">Email (invalido)</label>
+          <input id="email-bad" type="email" data-gz-role="input.invalid" value="not-an-email">
+        </div>
+      </div>
+
+      <div class="row">
+        <button data-gz-role="action.primary"   type="button">Save</button>
+        <button data-gz-role="action.secondary" type="button">Cancel</button>
+        <button data-gz-role="action.danger"    type="button">Delete</button>
+        <button data-gz-role="action.ghost"     type="button">Skip</button>
+      </div>
+
+      <div class="row" style="flex-direction:column; align-items:stretch;">
+        <span data-gz-role="feedback.error"   style="margin-top:4px;">Email non valida — controlla il formato.</span>
+        <span data-gz-role="feedback.success" style="margin-top:4px;">Saved correctly.</span>
+        <span data-gz-role="feedback.warning" style="margin-top:4px;">Rate-limit vicino al massimo.</span>
+        <span data-gz-role="feedback.info"    style="margin-top:4px;">Built-in CDN demo — non per produzione.</span>
+      </div>
+
+      <p class="legend">
+        Stesso DOM, 3 adapter:
+        <code>tailwind</code> (utility classes) →
+        <code>minimal</code> (cssRules con 4 regole base) →
+        <code>none</code> (nessuno styling, vedi <em>fallback</em> dei token).
+      </p>
+    </section>
+
+    <!-- ===================== Cards demo ===================== -->
+    <section class="demo">
+      <h2>Cards (surface.elevated)</h2>
+      <div class="row" style="align-items:stretch; flex-wrap:wrap;">
+        <div data-gz-role="surface.elevated" style="flex:1; min-width:240px;">
+          <strong>Adapter swap</strong>
+          <p style="margin:6px 0 0;">Click sui bottoni in alto per cambiare adapter live. Nessun reload.</p>
+        </div>
+        <div data-gz-role="surface.elevated" style="flex:1; min-width:240px;">
+          <strong>Hot-swap atomico</strong>
+          <p style="margin:6px 0 0;">DomApplier dispose() + remount in <code>queueMicrotask</code>. UI-ROLE-05.</p>
+        </div>
+      </div>
+    </section>
+
+  </div>
+
+  <script type="module">
+    import { createBroker } from 'https://esm.sh/@gluezero/core@1.0.1'
+    import { createTheme } from 'https://esm.sh/@gluezero/theme@1.1.0/factory'
+    import {
+      UI_ADAPTER_CHANGED,
+      UI_THEME_CHANGED,
+    } from 'https://esm.sh/@gluezero/theme@1.1.0'
+
+    const broker = createBroker()
+    const theme = createTheme({ broker })
+
+    // =========================================================================
+    // Adapter "tailwind" — Strategia A (roleMap)
+    // Ogni ruolo canonico → stringa di utility classes Tailwind.
+    // =========================================================================
+    theme.register({
+      id: 'tailwind',
+      roleMap: {
+        'action.primary':   'bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded font-medium shadow-sm',
+        'action.secondary': 'bg-gray-200 hover:bg-gray-300 text-gray-900 px-4 py-2 rounded font-medium',
+        'action.danger':    'bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded font-medium shadow-sm',
+        'action.ghost':     'text-indigo-600 hover:text-indigo-800 px-3 py-2',
+        'feedback.error':   'text-red-600 text-sm font-medium',
+        'feedback.success': 'text-green-600 text-sm font-medium',
+        'feedback.warning': 'text-yellow-700 text-sm font-medium',
+        'feedback.info':    'text-blue-600 text-sm',
+        'input.text':       'border border-gray-300 rounded px-3 py-2 w-full focus:outline-none focus:ring-2 focus:ring-indigo-500',
+        'input.invalid':    'border border-red-500 rounded px-3 py-2 w-full focus:outline-none focus:ring-2 focus:ring-red-500',
+        'surface.elevated': 'bg-white shadow rounded-lg p-4 border border-gray-100',
+        'surface.base':     'bg-gray-50',
+        'navigation.link':  'text-indigo-600 hover:underline',
+        'navigation.active':'text-indigo-700 font-semibold underline',
+      },
+    })
+
+    // =========================================================================
+    // Adapter "minimal" — Strategia B (cssRules), CSS basic via token canonici.
+    // Mostra che lo STESSO markup funziona con qualunque strategia.
+    // =========================================================================
+    theme.register({
+      id: 'minimal',
+      cssRules: {
+        'action.primary':
+          'background: #333; color: white; padding: 8px 16px; border: none; border-radius: 4px; cursor: pointer; font-weight: 600;',
+        'action.secondary':
+          'background: white; color: #333; padding: 8px 16px; border: 1px solid #ccc; border-radius: 4px; cursor: pointer;',
+        'action.danger':
+          'background: #C0392B; color: white; padding: 8px 16px; border: none; border-radius: 4px; cursor: pointer; font-weight: 600;',
+        'action.ghost':
+          'background: transparent; color: #333; padding: 6px 10px; border: none; cursor: pointer; text-decoration: underline;',
+        'feedback.error':   'color: #C0392B; font-size: 13px;',
+        'feedback.success': 'color: #16A34A; font-size: 13px;',
+        'feedback.warning': 'color: #B45309; font-size: 13px;',
+        'feedback.info':    'color: #1D4ED8; font-size: 13px;',
+        'input.text':       'border: 1px solid #999; border-radius: 4px; padding: 6px 10px; background: white; color: #111;',
+        'input.invalid':    'border: 1px solid #C0392B; border-radius: 4px; padding: 6px 10px; background: #FEF2F2; color: #111;',
+        'surface.elevated': 'background: #FAFAFA; border: 1px solid #ccc; padding: 12px; border-radius: 6px;',
+      },
+    })
+
+    // Adapter "none" non si registra — semplicemente setActiveAdapter(null)
+
+    theme.setActiveAdapter('tailwind')
+
+    // =========================================================================
+    // Switcher buttons
+    // =========================================================================
+    const switcherBtns = document.querySelectorAll('[data-switcher]')
+    function syncPressed(activeId) {
+      switcherBtns.forEach((b) => {
+        const id = b.getAttribute('data-switcher')
+        b.setAttribute('aria-pressed', String(id === activeId))
+      })
+    }
+    syncPressed('tailwind')
+
+    switcherBtns.forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const id = btn.getAttribute('data-switcher')
+        if (id === 'none') {
+          theme.setActiveAdapter(null)
+          syncPressed('none')
+        } else {
+          theme.setActiveAdapter(id)
+          syncPressed(id)
+        }
+      })
+    })
+
+    // =========================================================================
+    // Dark / light toggle
+    // =========================================================================
+    document.getElementById('darkToggle').addEventListener('click', () => {
+      const cur = theme.getActiveTheme().resolvedMode
+      theme.manager.setMode(cur === 'dark' ? 'light' : 'dark')
+    })
+
+    // Log su console per i developer curiosi
+    broker.subscribe(UI_ADAPTER_CHANGED, (e) => {
+      console.log('[ui.adapter.changed]', e.payload)
+    })
+    broker.subscribe(UI_THEME_CHANGED, (e) => {
+      console.log('[ui.theme.changed]', e.payload)
+    })
+
+    // expose
+    window.__theme = theme
+    window.__broker = broker
+    console.log('GlueZero theme-tailwind ready. Try theme.setActiveAdapter("minimal").')
+  </script>
+</body>
+</html>
