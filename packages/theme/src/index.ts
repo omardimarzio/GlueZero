@@ -110,11 +110,12 @@ export {
 // W3 — STANDARD_ROLES vocabolario canonico v1.1.0 lockato (D-F7-15) +
 // StandardRole union derivato (UI-ROLE-07). Sostituisce il type-only export
 // W1 da `./types/role` (stessa union, ora derivata dal runtime constant).
-export {
-  STANDARD_ROLES,
-  STANDARD_ROLE_DEFINITIONS,
-  type StandardRole,
-} from './standard-roles'
+//
+// Le `STANDARD_ROLE_DEFINITIONS` (descrizioni IT human-readable) sono esposte
+// via subpath separato `@gluezero/theme/standard-role-definitions` per NON
+// gravare il bundle runtime con ~250 B di stringhe utili solo a docs/Inspector
+// (D-F7-04 subpath additivo + bundle ≤ 6 KB cap PKG-04 ext F7).
+export { STANDARD_ROLES, type StandardRole } from './standard-roles'
 
 // W3 — RoleRegistry closure factory: register/unregister/has/list/subscribe/
 // destroy con cardinality cap 100 (D-F7-14, UI-ROLE-06) + Valibot dot-notation
@@ -126,6 +127,16 @@ export {
   type RoleRegistryEvent,
   type RoleRegistryListener,
 } from './role-registry'
+
+// W3 — AdapterRegistry closure factory: register/unregister/setActive +
+// collision throw `theme.adapter.duplicate` + override opt-in (D-F7-09,
+// UI-ROLE-03, UI-ROLE-09). ownerPluginId preserved per cascade W4
+// (LIFE-02 ext F7). Internal weakmap-classes NOT re-exported (path internal/).
+export {
+  createAdapterRegistry,
+  type AdapterRegistry,
+  type AdapterRegistryEvent,
+} from './adapter-registry'
 
 // Type-only re-export per garantire che TypeScript carichi il module augmentation
 // `csstype-augment` nella public surface (D-F7-21 — IDE autocomplete sui 10

@@ -59,59 +59,12 @@ export const STANDARD_ROLES: ReadonlyArray<StandardRole> = Object.freeze([
   'navigation.active',
 ] as const)
 
-/**
- * Definizioni human-readable per devtools / docs / Inspector W5a.
- *
- * `description` è destinata al consumo di documentazione e devtools UI; il
- * consumer (es. ThemeInspector W5a) è responsabile dell'escape se renderizza
- * la stringa nel DOM (T-F7-05 disposition: accept).
- */
-export const STANDARD_ROLE_DEFINITIONS: Readonly<
-  Record<StandardRole, { readonly description: string }>
-> = Object.freeze({
-  'action.primary': {
-    description:
-      'Azione primaria del flow corrente (es. Salva, Continua, Conferma)',
-  },
-  'action.secondary': {
-    description: 'Azione secondaria non distruttiva (es. Annulla, Indietro)',
-  },
-  'action.danger': {
-    description: 'Azione distruttiva o irreversibile (es. Elimina, Reset)',
-  },
-  'action.ghost': {
-    description:
-      'Azione minimale priva di sfondo (es. link-style button, icon button)',
-  },
-  'feedback.error': {
-    description: 'Feedback errore bloccante o critico',
-  },
-  'feedback.success': {
-    description: 'Feedback successo operazione',
-  },
-  'feedback.warning': {
-    description: 'Feedback warning non bloccante',
-  },
-  'feedback.info': {
-    description: 'Feedback informativo neutrale',
-  },
-  'surface.base': {
-    description: 'Superficie di base della pagina/contenitore principale',
-  },
-  'surface.elevated': {
-    description: 'Superficie elevata (card, dialog, popover, tooltip)',
-  },
-  'input.text': {
-    description: 'Campo di input testuale standard',
-  },
-  'input.invalid': {
-    description: 'Campo di input in stato invalido (validation failure)',
-  },
-  'navigation.link': {
-    description: 'Link di navigazione standard',
-  },
-  'navigation.active': {
-    description:
-      'Link di navigazione corrispondente alla pagina/sezione corrente',
-  },
-})
+// `STANDARD_ROLE_DEFINITIONS` (descrizioni IT human-readable) è esposto via
+// subpath separato `@gluezero/theme/standard-role-definitions` per NON
+// gravare sul bundle runtime principale (~250 B di stringhe inutili a
+// runtime, utili solo a Inspector W5a / docs UI).
+//
+// Consumer:
+//   import { STANDARD_ROLE_DEFINITIONS } from '@gluezero/theme/standard-role-definitions'
+//
+// Refs: 07-CONTEXT.md D-F7-04 (subpath additivo); 07-06-PLAN.md mitigation.

@@ -8,11 +8,8 @@
  * - UI-ROLE-07
  */
 import { describe, expect, it } from 'vitest'
-import {
-  STANDARD_ROLE_DEFINITIONS,
-  STANDARD_ROLES,
-  type StandardRole,
-} from '../standard-roles'
+import { STANDARD_ROLE_DEFINITIONS } from '../standard-role-definitions'
+import { STANDARD_ROLES, type StandardRole } from '../standard-roles'
 
 describe('STANDARD_ROLES (D-F7-15)', () => {
   it('contains exactly 14 roles', () => {

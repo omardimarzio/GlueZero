@@ -15,7 +15,13 @@ import { copyFile } from 'node:fs/promises'
 import { defineConfig } from 'tsup'
 
 export default defineConfig({
-  entry: { index: 'src/index.ts' },
+  entry: {
+    index: 'src/index.ts',
+    // Subpath additivo (D-F7-04): le descrizioni IT dei 14 ruoli canonici
+    // sono importate solo da consumer Inspector/docs (W5a) — NON gravano
+    // il bundle runtime principale (07-06-PLAN.md bundle mitigation).
+    'standard-role-definitions': 'src/standard-role-definitions.ts',
+  },
   format: ['esm'],
   dts: true,
   sourcemap: true,
