@@ -238,6 +238,9 @@ importers:
         specifier: 1.3.1
         version: 1.3.1(typescript@6.0.3)
     devDependencies:
+      '@gluezero/theme':
+        specifier: workspace:*
+        version: link:../theme
       '@vitest/coverage-v8':
         specifier: 4.1.5
         version: 4.1.5(@vitest/browser@4.1.5)(vitest@4.1.5)

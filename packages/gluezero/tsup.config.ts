@@ -30,6 +30,9 @@ export default defineConfig({
     '@gluezero/worker',
     '@gluezero/cache',
     '@gluezero/devtools',
+    // v1.1.0 ext F7 (D-F7-07): peer optional theme — type-only import in source.
+    '@gluezero/theme',
+    /^@gluezero\/theme\//,
     'valibot',
   ],
   banner: {

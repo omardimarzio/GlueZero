@@ -45,7 +45,30 @@ import { createRouterBroker } from '@gluezero/routing'
 import { createWorkerBroker } from '@gluezero/worker'
 import * as v from 'valibot'
 
+// v1.1.0 ext F7 (D-F7-07): type-only import — peer optional `@gluezero/theme`.
+// Zero runtime dep: il consumer costruisce il theme tramite
+// `createTheme()` da `@gluezero/theme/factory` e lo passa in input. Tree-shake
+// safe: se il consumer NON usa `theme`, nulla del package theme entra nel bundle.
+import type { Theme } from '@gluezero/theme/factory'
+
 import type { GlueZeroConfig } from './types/gluezero-config'
+
+/**
+ * v1.1.0 ext F7 (D-F7-07): augmentation passthrough applicata al return value
+ * di `createGlueZero` — il broker ritornato espone un field `.theme` (`Theme |
+ * null`) addizionale, indipendente dalla chain composition F1-F6.
+ *
+ * Implementazione runtime: `Object.defineProperty(broker, 'theme', { value })`
+ * (vedi `createGlueZero` body). La presenza del field NON altera il behavior
+ * della chain (theme è standalone — D-F7-01 Opzione B).
+ */
+export interface GlueZeroThemeAugment {
+  /**
+   * Theme handle se `config.theme` fornito; altrimenti `null`. Passthrough getter
+   * (D-F7-01 Opzione B standalone — il theme NON wrappa il broker).
+   */
+  readonly theme: Theme | null
+}
 
 /**
  * Type union completa: ogni call a `createGlueZero` può ritornare uno qualsiasi
@@ -56,8 +79,11 @@ import type { GlueZeroConfig } from './types/gluezero-config'
  * **BLOCKER-2 fix**: type union include OBBLIGATORIAMENTE
  * ReturnType<createWorkerBroker> + ReturnType<createRealtimeBroker> (chain F1..F6
  * non è opzionale).
+ *
+ * **v1.1.0 ext F7 (D-F7-07)**: ogni variante è intersezione con
+ * {@link GlueZeroThemeAugment} — espone `.theme` field (`Theme | null`).
  */
-export type GlueZero =
+export type GlueZero = (
   | ReturnType<typeof createBroker>
   | ReturnType<typeof createMapperBroker>
   | ReturnType<typeof createRouterBroker>
@@ -65,6 +91,8 @@ export type GlueZero =
   | ReturnType<typeof createWorkerBroker>
   | ReturnType<typeof createCacheBroker>
   | ReturnType<typeof createDevtoolsBroker>
+) &
+  GlueZeroThemeAugment
 
 /**
  * Schema Valibot per `GlueZeroConfig.features`. Tutti i campi sono boolean
@@ -134,6 +162,17 @@ const GlueZeroConfigSchema = v.looseObject({
  * // → ritorna RouterBroker con chain implicita F1+F2+F3
  * ```
  *
+ * @example v1.1.0 ext F7 — Optional theme layer (D-F7-07)
+ * ```ts
+ * import { createGlueZero } from '@gluezero/gluezero'
+ * import { createTheme } from '@gluezero/theme/factory'
+ *
+ * const theme = createTheme({ persistence: 'localStorage' })
+ * const broker = createGlueZero({ theme })
+ * broker.theme?.manager.setMode('dark')
+ * broker.theme?.applyTokens({ 'color-primary': '#FF6B35' })
+ * ```
+ *
  * @throws {Error} `Invalid GlueZeroConfig: <issues>` se Valibot validation fallisce.
  *   Propaga anche `Invalid CacheBrokerConfig:` / `Invalid DevtoolsBrokerConfig:` /
  *   `Invalid WorkerBrokerConfig:` / `Invalid RealtimeBrokerConfig:` / `Invalid
@@ -187,6 +226,19 @@ export function createGlueZero(config: GlueZeroConfig = {}): GlueZero {
     // Broker (F1) via composition interna (D-83 chain F1→F2→F3).
     broker = createRouterBroker(config) as GlueZero
   }
+
+  // v1.1.0 ext F7 (D-F7-07): attach `theme` field passthrough (D-F7-01 Opzione B
+  // standalone — il theme NON wrappa il broker, è handle separato passato in
+  // input dal consumer). `Object.defineProperty` per renderlo readonly e
+  // non-enumerable (no impatto su `Object.keys(broker)` / spread / iteration
+  // pre-W5b → zero regressione su consumer F1-F6).
+  const theme: Theme | null = config.theme ?? null
+  Object.defineProperty(broker, 'theme', {
+    value: theme,
+    writable: false,
+    enumerable: false,
+    configurable: false,
+  })
 
   return broker
 }
