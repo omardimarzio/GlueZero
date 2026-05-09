@@ -5,7 +5,10 @@
  *
  * Exports:
  * - Types: DesignTokens, CoreTokenName, ThemeConfig, ThemeSnapshot, ThemeAdapter,
- *   RegisterAdapterOptions, StandardRole, RoleDefinition, RoleSet
+ *   RegisterAdapterOptions, RoleDefinition, RoleSet
+ * - Constants: STANDARD_ROLES (14 ruoli D-F7-15) + StandardRole union +
+ *   STANDARD_ROLE_DEFINITIONS
+ * - Factories: createRoleRegistry (W3 plan 07-05)
  * - Helper: getInitialThemeScript (anti-FOUC IIFE)
  * - Error: createThemeError, isThemeError, ThemeError, ThemeErrorCode
  * - Topic constants: UI_THEME_CHANGED, UI_DENSITY_CHANGED, UI_DIRECTION_CHANGED,
@@ -22,7 +25,7 @@ export type { CoreTokenName, DesignTokens } from './types/design-tokens'
 export type { ThemeConfig } from './types/theme-config'
 export type { ThemeSnapshot } from './types/theme-snapshot'
 export type { RegisterAdapterOptions, ThemeAdapter } from './types/theme-adapter'
-export type { RoleDefinition, RoleSet, StandardRole } from './types/role'
+export type { RoleDefinition, RoleSet } from './types/role'
 
 // Helper IIFE anti-FOUC (Pitfall HIGH #1)
 export {
@@ -103,6 +106,26 @@ export {
 // Internal Valibot schemas NOT re-exported via barrel (path internal/) — opt-in
 // via `import { TokenSetSchema } from '@gluezero/theme/internal/valibot-schemas'`
 // per advanced users che validano adapter custom in userland.
+
+// W3 — STANDARD_ROLES vocabolario canonico v1.1.0 lockato (D-F7-15) +
+// StandardRole union derivato (UI-ROLE-07). Sostituisce il type-only export
+// W1 da `./types/role` (stessa union, ora derivata dal runtime constant).
+export {
+  STANDARD_ROLES,
+  STANDARD_ROLE_DEFINITIONS,
+  type StandardRole,
+} from './standard-roles'
+
+// W3 — RoleRegistry closure factory: register/unregister/has/list/subscribe/
+// destroy con cardinality cap 100 (D-F7-14, UI-ROLE-06) + Valibot dot-notation
+// enforcement (D-F7-16) + observer pattern per Inspector W5a.
+export {
+  createRoleRegistry,
+  type RegisterRolesOptions,
+  type RoleRegistry,
+  type RoleRegistryEvent,
+  type RoleRegistryListener,
+} from './role-registry'
 
 // Type-only re-export per garantire che TypeScript carichi il module augmentation
 // `csstype-augment` nella public surface (D-F7-21 — IDE autocomplete sui 10
