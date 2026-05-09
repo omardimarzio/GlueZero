@@ -430,6 +430,107 @@ Nessuna breaking change attesa V1 → V1.x. La V1.x roadmap include estensioni o
 
 ---
 
+## v1.1 — Optional Theme Layer
+
+Da v1.1.0, `@gluezero/gluezero` aggregato accetta un parametro opzionale `theme?: Theme` (D-F7-07) per integrare il theme layer (`@gluezero/theme`).
+
+Il theme è **standalone** (D-F7-01 Opzione B): NON wrappa il broker, semplicemente ascolta/emette `ui.*` events sulla pipeline §28 standard. L'aggregate espone `theme` come getter passthrough (`broker.theme` → `Theme | null`).
+
+`@gluezero/theme` è una **peer dependency optional**: l'aggregate v1.0 funziona senza installarla. Se vuoi usare il theme layer:
+
+```bash
+pnpm add @gluezero/theme
+```
+
+Il consumer costruisce il `Theme` handle via `createTheme()` da `@gluezero/theme/factory` e lo passa in input — `createGlueZero` NON istanzia il theme internamente (D-30 anti-singleton + zero coupling al theme runtime). Quando `theme` non è passato, `broker.theme === null` e il behavior pre-W5b è preservato (zero regressioni F1-F6).
+
+### Esempio basic — token override runtime
+
+```typescript
+import { createGlueZero } from '@gluezero/gluezero'
+import { createTheme } from '@gluezero/theme/factory'
+
+const theme = createTheme({ persistence: 'localStorage' })
+const broker = createGlueZero({ theme })
+
+// Brand swap a runtime
+broker.theme?.applyTokens({
+  'color-primary': '#FF6B35',
+  'color-on-primary': '#FFFFFF',
+})
+```
+
+### Esempio dark mode + OS prefs mirror
+
+```typescript
+import { createGlueZero } from '@gluezero/gluezero'
+import { createTheme } from '@gluezero/theme/factory'
+
+const theme = createTheme({ persistence: 'localStorage' })
+const broker = createGlueZero({ theme })
+
+// Default 'auto' mirror prefers-color-scheme dell'OS (D-F7-13)
+broker.theme?.manager.setMode('auto')
+
+// Override esplicito
+broker.theme?.manager.setMode('dark')
+```
+
+### Esempio adapter swap runtime cross-framework
+
+```typescript
+import { createGlueZero } from '@gluezero/gluezero'
+import { createTheme } from '@gluezero/theme/factory'
+
+const theme = createTheme()
+const broker = createGlueZero({ theme })
+
+broker.theme?.register({
+  id: 'tailwind',
+  roleMap: {
+    'action.primary': 'bg-indigo-600 text-white px-4 py-2 rounded',
+    'action.secondary': 'bg-gray-200 text-gray-900 px-4 py-2 rounded',
+  },
+})
+broker.theme?.register({
+  id: 'bootstrap5',
+  roleMap: {
+    'action.primary': 'btn btn-primary',
+    'action.secondary': 'btn btn-secondary',
+  },
+})
+
+// Lo stesso markup `<button data-gz-role="action.primary">Salva</button>`
+// riceve le classi corrispondenti all'adapter attivo:
+broker.theme?.setActiveAdapter('tailwind')   // → bg-indigo-600 text-white …
+broker.theme?.setActiveAdapter('bootstrap5') // → btn btn-primary
+```
+
+### Vincolo D-83 strict carryover esteso (v1.1)
+
+Il theme layer rispetta il principio D-83: zero modifiche runtime ai pacchetti F1-F6 + `devtools/src`.
+
+Le uniche eccezioni ammesse:
+- `packages/devtools/package.json#exports` per il subpath additivo `@gluezero/devtools/theme-inspector` (D-F7-04)
+- `packages/gluezero/src/{glue-zero.ts, index.ts, types/gluezero-config.ts}` per il parametro `theme?` additivo
+- `packages/gluezero/package.json` per `peerDependencies['@gluezero/theme']` + `peerDependenciesMeta optional: true`
+
+### Cleanup ownership
+
+Il theme è creato dal consumer → la responsabilità di chiamare `theme.destroy()` è del consumer (`createGlueZero` NON gestisce il lifecycle del theme — è passthrough puro). Pattern consigliato:
+
+```typescript
+const theme = createTheme({})
+const broker = createGlueZero({ theme })
+
+// … on app teardown
+theme.destroy()
+```
+
+Vedi [`@gluezero/theme`](https://npmjs.com/package/@gluezero/theme) per la documentazione completa del theme layer.
+
+---
+
 ## Riferimenti
 
 - [`DECISIONS.md`](../../DECISIONS.md) — 170 decisioni architetturali con riferimenti a sezioni di design
@@ -441,6 +542,7 @@ Nessuna breaking change attesa V1 → V1.x. La V1.x roadmap include estensioni o
 - [`@gluezero/worker`](../worker/README.md) (F5)
 - [`@gluezero/cache`](../cache/README.md) (F6)
 - [`@gluezero/devtools`](../devtools/README.md) (F6 — TOOL-05 closure PRD §39 #10)
+- [`@gluezero/theme`](../theme/README.md) (F7 v1.1 — UI Standardization Layer)
 
 ## Licenza
 
