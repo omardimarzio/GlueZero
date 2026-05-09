@@ -49,6 +49,35 @@ export {
   type UiTopic,
 } from './topic-constants'
 
+// W2 — TokenRegistry closure factory (THEME-01/02/09/11)
+export {
+  createTokenRegistry,
+  type ApplyOptions,
+  type CreateTokenRegistryOptions,
+  type TokenRegistry,
+} from './token-registry'
+
+// W2 — Snapshot helpers + diff (D-F7-08, UI-DEVTOOLS-04 reuse)
+export {
+  createSnapshot,
+  diffSnapshots,
+  type SnapshotDiff,
+  type SnapshotInput,
+} from './snapshot'
+
+// W2 — Cardinality cap helper (D-166 replica locale, D-83 strict)
+export {
+  TOKEN_CAP,
+  ROLE_CAP,
+  SOFT_WARN_RATIO,
+  checkCap,
+  type CapCheckResult,
+} from './cardinality-cap'
+
+// Internal Valibot schemas NOT re-exported via barrel (path internal/) — opt-in
+// via `import { TokenSetSchema } from '@gluezero/theme/internal/valibot-schemas'`
+// per advanced users che validano adapter custom in userland.
+
 // Type-only re-export per garantire che TypeScript carichi il module augmentation
 // `csstype-augment` nella public surface (D-F7-21 — IDE autocomplete sui 10
 // branded core token). Zero runtime cost — solo declaration merge a build-time.
