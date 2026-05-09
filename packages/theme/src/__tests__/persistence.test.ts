@@ -262,31 +262,43 @@ describe('createThemePersistence', () => {
   })
 
   it('SecurityError on getItem: read returns null without throw', () => {
-    const spy = vi
-      .spyOn(window.localStorage, 'getItem')
-      .mockImplementation(() => {
-        throw new Error('SecurityError')
-      })
-    const p = createThemePersistence({ enabled: true })
-    expect(() => p.read()).not.toThrow()
-    expect(p.read()).toBeNull()
-    p.destroy()
-    spy.mockRestore()
+    // jsdom Storage usa Proxy: replace via prototype, non instance.
+    const proto = Object.getPrototypeOf(window.localStorage) as Storage
+    const origGet = proto.getItem
+    proto.getItem = (): string | null => {
+      throw new Error('SecurityError')
+    }
+    try {
+      const p = createThemePersistence({ enabled: true })
+      expect(() => p.read()).not.toThrow()
+      expect(p.read()).toBeNull()
+      p.destroy()
+    } finally {
+      proto.getItem = origGet
+    }
   })
 
   it('QuotaExceededError on setItem: write logs warn, no throw', () => {
-    const spy = vi
-      .spyOn(window.localStorage, 'setItem')
-      .mockImplementation(() => {
-        throw new Error('QuotaExceededError')
-      })
-    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {})
-    const p = createThemePersistence({ enabled: true })
-    expect(() => p.write({ mode: 'dark' })).not.toThrow()
-    expect(warnSpy).toHaveBeenCalled()
-    p.destroy()
-    spy.mockRestore()
-    warnSpy.mockRestore()
+    // jsdom Storage usa Proxy: replace via prototype, non instance.
+    const proto = Object.getPrototypeOf(window.localStorage) as Storage
+    const origSet = proto.setItem
+    proto.setItem = (): void => {
+      throw new Error('QuotaExceededError')
+    }
+    const originalWarn = console.warn
+    const warnCalls: unknown[][] = []
+    console.warn = (...args: unknown[]): void => {
+      warnCalls.push(args)
+    }
+    try {
+      const p = createThemePersistence({ enabled: true })
+      expect(() => p.write({ mode: 'dark' })).not.toThrow()
+      expect(warnCalls.length).toBeGreaterThan(0)
+      p.destroy()
+    } finally {
+      proto.setItem = origSet
+      console.warn = originalWarn
+    }
   })
 
   it('enabled is exposed read-only on the returned API', () => {
