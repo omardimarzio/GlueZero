@@ -359,8 +359,106 @@ metrics.increment('gluezero.cache.hits_total', { routeId: 'weather-route' })
 - [`@gluezero/routing`](../routing/README.md) (RouterBroker + step 9+10 pipeline, F3)
 - [`@gluezero/cache`](../cache/README.md) (cache layer F6 — emette `event.cache.{lookup,hit,miss,evicted}` consumati da Inspector)
 
+## Subpath theme-inspector (v1.1.0 — Phase 7 W5a)
+
+Da v1.1.0, `@gluezero/devtools` espone un **subpath additivo** `@gluezero/devtools/theme-inspector` per l'observability del theme layer (`@gluezero/theme`). Pattern role-match con F6 `createEventInspector` applicato al namespace canonico `ui.*` (UI-EVENT-01..05).
+
+**Vincolo D-F7-04 D-83 strict carryover esteso:** il subpath è additivo. `packages/devtools/src/index.ts` e i moduli pre-esistenti restano invariati. La source vive in `packages/devtools/src/theme-inspector/` (NUOVA sub-folder con 4 moduli). L'unica modifica al `package.json` è l'aggiunta di `"./theme-inspector"` alla `exports` map + `peerDependenciesMeta.@gluezero/theme.optional: true`.
+
+### Peer dependency optional
+
+`@gluezero/theme` è dichiarato come `peerDependencies` con `peerDependenciesMeta.optional: true`. Consumer che NON usano il subpath `theme-inspector` non vedono install warning. Consumer che lo usano devono installare `@gluezero/theme` accanto.
+
+### Quick start
+
+```ts
+import { createBroker } from '@gluezero/core'
+import { createTheme } from '@gluezero/theme/factory'
+import {
+  createThemeInspector,
+  createRoleCoverageReport,
+  createLiveTokenEditor,
+  snapshotTokens,
+  diffSnapshots,
+} from '@gluezero/devtools/theme-inspector'
+
+const broker = createBroker()
+const theme = createTheme({ broker })
+
+// Subscriber passivo `ui.*` ring buffer 500 (D-167)
+const inspector = createThemeInspector(broker, { initiallyEnabled: true })
+
+theme.manager.setMode('dark')
+theme.manager.setDensity('compact')
+
+console.log(inspector.getBuffer())
+// [
+//   { topic: 'ui.theme.changed',   payload: { ... }, timestamp: ... },
+//   { topic: 'ui.density.changed', payload: { ... }, timestamp: ... },
+// ]
+
+inspector.disable() // memory hygiene: drop buffer
+inspector.destroy() // unsubscribe + cleanup
+```
+
+### API surface
+
+| Factory | REQ-ID | Behavior |
+|---|---|---|
+| `createThemeInspector(broker, opts?)` | UI-DEVTOOLS-01 | Subscriber passivo `ui.*` con ring buffer 500 (D-167) + lazy-mode hot-path (D-160) + deep-clone via `structuredClone` (D-162). |
+| `createRoleCoverageReport({ adapter, roles, scope? })` | UI-DEVTOOLS-02 | Scan DOM `[data-gz-role]` + diff vs `adapter.roleMap`/`cssRules`. Output 5 categorie: registeredAndUsed / registeredAndOrphan / unregisteredAndUsedWarn / inlineStyleWarn / nonSemanticWarn. |
+| `createLiveTokenEditor(theme, opts?)` | UI-DEVTOOLS-03 | Form HTML minimal con un `<input>` per ogni token; on `change` invoca `theme.applyTokens({ [name]: value })`. **Production no-op (NODE_ENV gate D-160 — T-F7-02 mitigation).** |
+| `snapshotTokens(scope?)` | UI-DEVTOOLS-04 | Read CSS Custom Properties con prefix `--gz-*` da `getComputedStyle(scope ?? document.documentElement)` filtrate. |
+| `diffSnapshots(a, b)` | UI-DEVTOOLS-05 | Re-export pure da `@gluezero/theme/snapshot.ts` (W2 plan 07-02). Diff JSON readonly+frozen `{ added, removed, changed }`. |
+
+### Role coverage scenario
+
+```ts
+const report = createRoleCoverageReport({
+  adapter: theme.manager.adapters.get('tailwind') ?? null,
+  roles: theme.manager.roles.list().map((r) => r.name),
+})
+
+const result = report.scan()
+console.log('OK:', result.registeredAndUsed.map((e) => `${e.role} (${e.count})`))
+console.log('WARN orphan DOM:', result.unregisteredAndUsedWarn.map((e) => e.role))
+console.log('WARN inline:', result.inlineStyleWarn.map((w) => w.cssText))
+console.log('WARN a11y:', result.nonSemanticWarn.map((w) => `${w.role} on ${w.got}`))
+```
+
+### Live token editor (dev-only)
+
+```ts
+const editor = createLiveTokenEditor(theme, {
+  tokens: ['color-primary', 'spacing-md', 'radius-md'],
+})
+const panel = document.getElementById('devtools-panel')!
+editor.render(panel)
+// In production NODE_ENV → render+destroy diventano no-op (T-F7-02 mitigation)
+```
+
+### Snapshot + diff
+
+```ts
+const before = snapshotTokens()
+theme.applyTokens({ 'color-primary': '#FF6B35' })
+const after = snapshotTokens()
+const delta = diffSnapshots(before, after)
+console.log(delta.changed) // { 'color-primary': { from: '...', to: '#FF6B35' } }
+```
+
+### Threat model (W5a)
+
+| Threat | Categoria | Mitigation |
+|---|---|---|
+| T-F7-01 Tampering buffer entries | Tampering | Buffer entries deep-cloned via `structuredClone` (D-162); subscriber passivo (no event mutation). |
+| T-F7-02 LiveTokenEditor in production bundle | InformationDisclosure | NODE_ENV !== 'production' inline detect (D-160); production no-op editor — bundler tree-shake del body. |
+| T-F7-03 Ring buffer overflow | DoS | Cap 500 entries (D-167); shift FIFO su exceed; buffer cleared su disable. |
+
 ## Licenza
 
 MIT.
 
-*Phase 6 closure date: 2026-05-05. Milestone v1.0 chiusa. PRD §39 #10 (TOOL-05) → CLOSED. Ready for `gsd-verifier 6` finale.*
+*Phase 6 closure date: 2026-05-05. Milestone v1.0 chiusa. PRD §39 #10 (TOOL-05) → CLOSED.*
+
+*Phase 7 W5a closure date: 2026-05-09. Subpath `@gluezero/devtools/theme-inspector` chiuso (UI-DEVTOOLS-01..05 + DOC-05 ext F7). Ready for parallel W5b (aggregate) e W6 (final gate).*
