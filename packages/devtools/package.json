@@ -13,6 +13,10 @@
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js"
     },
+    "./theme-inspector": {
+      "types": "./dist/theme-inspector/index.d.ts",
+      "import": "./dist/theme-inspector/index.js"
+    },
     "./package.json": "./package.json"
   },
   "files": [
@@ -48,7 +52,16 @@
     "nanoid": "5.1.11",
     "valibot": "1.3.1"
   },
+  "peerDependencies": {
+    "@gluezero/theme": "workspace:*"
+  },
+  "peerDependenciesMeta": {
+    "@gluezero/theme": {
+      "optional": true
+    }
+  },
   "devDependencies": {
+    "@gluezero/theme": "workspace:*",
     "@vitest/browser": "4.1.5",
     "@vitest/browser-playwright": "^4.1.5",
     "@vitest/coverage-v8": "4.1.5",
