@@ -92,6 +92,14 @@ export {
   type ColorScheme,
 } from './os-preference'
 
+// W2 — Persistenza opt-in 4-keys (THEME-08, D-F7-12 default OFF, Q3 lockata)
+export {
+  createThemePersistence,
+  type ThemePersistence,
+  type PersistenceState,
+  type CreateThemePersistenceOptions,
+} from './persistence'
+
 // Internal Valibot schemas NOT re-exported via barrel (path internal/) — opt-in
 // via `import { TokenSetSchema } from '@gluezero/theme/internal/valibot-schemas'`
 // per advanced users che validano adapter custom in userland.

@@ -39,6 +39,10 @@ import {
   createOsPreferenceWatcher,
   type OsPreferenceWatcher,
 } from './os-preference'
+import {
+  createThemePersistence,
+  type ThemePersistence,
+} from './persistence'
 import { createSnapshot } from './snapshot'
 import { createThemeError } from './theme-error'
 import { createTokenRegistry, type TokenRegistry } from './token-registry'
@@ -134,7 +138,15 @@ export function createThemeManager(config: ThemeConfig = {}): ThemeManager {
   const themeId = config.themeId ?? nanoid()
   const tokens = createTokenRegistry()
   const osWatcher: OsPreferenceWatcher = createOsPreferenceWatcher()
+  // Persistenza opt-in (D-F7-12 default OFF). `enabled: false` ritorna stub
+  // no-op che non tocca localStorage né registra listener.
+  const persistence: ThemePersistence = createThemePersistence({
+    enabled: config.persistence === 'localStorage',
+  })
   let destroyed = false
+  // Flag interno per disabilitare write durante apply da cross-tab
+  // StorageEvent (no echo loop multi-tab).
+  let suppressWrite = false
 
   const state = {
     mode: 'auto' as ThemeMode,
@@ -146,6 +158,7 @@ export function createThemeManager(config: ThemeConfig = {}): ThemeManager {
   }
 
   let osUnsub: (() => void) | null = null
+  let persistenceUnsub: (() => void) | null = null
 
   function targetEl(): HTMLElement {
     if (config.scope) return config.scope
@@ -202,6 +215,9 @@ export function createThemeManager(config: ThemeConfig = {}): ThemeManager {
       }
     }
     applyDomMode()
+    // Persist (no-op se disabled). Skip durante apply da StorageEvent
+    // cross-tab per evitare echo loop.
+    if (!suppressWrite) persistence.write({ mode })
   }
 
   function setDensity(density: ThemeDensity): void {
@@ -215,6 +231,7 @@ export function createThemeManager(config: ThemeConfig = {}): ThemeManager {
     }
     state.density = density
     targetEl().setAttribute('data-gz-density', density)
+    if (!suppressWrite) persistence.write({ density })
   }
 
   function setDirection(direction: ThemeDirection): void {
@@ -230,6 +247,7 @@ export function createThemeManager(config: ThemeConfig = {}): ThemeManager {
     const el = targetEl()
     el.setAttribute('dir', direction)
     el.setAttribute('data-gz-direction', direction)
+    if (!suppressWrite) persistence.write({ direction })
   }
 
   function getActiveTheme(): ThemeSnapshot {
@@ -248,12 +266,49 @@ export function createThemeManager(config: ThemeConfig = {}): ThemeManager {
   function destroy(): void {
     if (destroyed) return
     destroyed = true
+    if (persistenceUnsub) {
+      persistenceUnsub()
+      persistenceUnsub = null
+    }
+    persistence.destroy()
     if (osUnsub) {
       osUnsub()
       osUnsub = null
     }
     osWatcher.destroy()
     tokens.destroy()
+  }
+
+  // Boot-time: legge stato pre-esistente in localStorage e applica al boot
+  // (usando i setter standard per riutilizzare validation + DOM apply, ma con
+  // `suppressWrite` per evitare di ri-scrivere subito ciò che abbiamo letto).
+  if (persistence.enabled) {
+    const persisted = persistence.read()
+    if (persisted) {
+      suppressWrite = true
+      try {
+        if (persisted.mode) setMode(persisted.mode)
+        if (persisted.density) setDensity(persisted.density)
+        if (persisted.direction) setDirection(persisted.direction)
+        // adapter restoration handled in W3 (adapter-registry consume adapter id).
+      } finally {
+        suppressWrite = false
+      }
+    }
+
+    // Cross-tab subscribe: applica i cambi via setter ma con suppressWrite
+    // per evitare echo loop su localStorage (no ping-pong multi-tab).
+    persistenceUnsub = persistence.subscribe((partial) => {
+      if (destroyed) return
+      suppressWrite = true
+      try {
+        if (partial.mode) setMode(partial.mode)
+        if (partial.density) setDensity(partial.density)
+        if (partial.direction) setDirection(partial.direction)
+      } finally {
+        suppressWrite = false
+      }
+    })
   }
 
   return {
