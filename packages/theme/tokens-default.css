@@ -1,1 +1,127 @@
-/* @gluezero/theme — tokens-default.css W1 placeholder, popolato da Task 2 plan 07-01 */
+/* @gluezero/theme — tokens-default.css v1.1.0
+ *
+ * Vocabolario canonico lockato (D-F7-19/D-F7-20/D-F7-21/D-F7-22).
+ * Lean target ~35 token = 12 color semantic + 6 spacing + 5 radius + 4 elevation
+ *                       + 3 font + 3 motion + 2 z-index.
+ * Cap THEME-11 = 200; margine ~165 per estensioni custom downstream.
+ *
+ * Cascade order locked (D-F7-10 + Open Q7):
+ *   reset → vendor → plugin → gluezero-theme.{tokens,roles,adapter} → animation → app-overrides
+ *
+ * Dark mode swap atomico (D-F7-20): 12 color override su `[data-gz-theme="dark"]`.
+ * OS preferences safety-net (Pitfall HIGH #6): `:root:not([data-gz-theme])` + `@media
+ * (prefers-color-scheme: dark)` previene flicker se `getInitialThemeScript` non ha
+ * ancora eseguito (extra guard pre-paint).
+ *
+ * Animation safety-net (Pitfall HIGH #1): `@media (prefers-reduced-motion: reduce)`
+ * con `!important` — ECCEZIONE documentata uso `!important` (D-F7-10 + Open Q7), unico
+ * caso autorizzato perché coinvolge accessibilità a11y mandatoria WCAG 2.1.
+ */
+
+@layer reset, vendor, plugin, gluezero-theme.tokens, gluezero-theme.roles, gluezero-theme.adapter, animation, app-overrides;
+
+@layer gluezero-theme.tokens {
+  :root {
+    /* Color semantic 12 (D-F7-20) — light default */
+    --gz-color-primary: #6366F1;
+    --gz-color-on-primary: #FFFFFF;
+    --gz-color-secondary: #06B6D4;
+    --gz-color-on-secondary: #FFFFFF;
+    --gz-color-surface: #FFFFFF;
+    --gz-color-surface-elevated: #F9FAFB;
+    --gz-color-text: #111827;
+    --gz-color-text-muted: #6B7280;
+    --gz-color-border: #E5E7EB;
+    --gz-color-error: #EF4444;
+    --gz-color-success: #10B981;
+    --gz-color-warning: #F59E0B;
+    --gz-color-info: #3B82F6;
+
+    /* Spacing 6 */
+    --gz-spacing-xs: 0.25rem;
+    --gz-spacing-sm: 0.5rem;
+    --gz-spacing-md: 1rem;
+    --gz-spacing-lg: 1.5rem;
+    --gz-spacing-xl: 2rem;
+    --gz-spacing-2xl: 3rem;
+
+    /* Radius 5 */
+    --gz-radius-none: 0;
+    --gz-radius-sm: 0.25rem;
+    --gz-radius-md: 0.5rem;
+    --gz-radius-lg: 0.75rem;
+    --gz-radius-full: 9999px;
+
+    /* Elevation 4 */
+    --gz-elevation-0: none;
+    --gz-elevation-1: 0 1px 2px rgba(0, 0, 0, 0.05);
+    --gz-elevation-2: 0 4px 6px rgba(0, 0, 0, 0.1);
+    --gz-elevation-3: 0 10px 15px rgba(0, 0, 0, 0.15);
+
+    /* Font 3 */
+    --gz-font-size-base: 1rem;
+    --gz-font-size-lg: 1.125rem;
+    --gz-font-size-xl: 1.25rem;
+
+    /* Motion 3 */
+    --gz-motion-short: 150ms;
+    --gz-motion-medium: 250ms;
+    --gz-motion-long: 400ms;
+
+    /* Z-index 2 */
+    --gz-z-overlay: 1000;
+    --gz-z-modal: 1100;
+  }
+
+  /* Dark theme override 12 (atomic dark mode swap — D-F7-20) */
+  [data-gz-theme="dark"] {
+    --gz-color-primary: #818CF8;
+    --gz-color-on-primary: #1E1B4B;
+    --gz-color-secondary: #22D3EE;
+    --gz-color-on-secondary: #083344;
+    --gz-color-surface: #111827;
+    --gz-color-surface-elevated: #1F2937;
+    --gz-color-text: #F9FAFB;
+    --gz-color-text-muted: #9CA3AF;
+    --gz-color-border: #374151;
+    --gz-color-error: #F87171;
+    --gz-color-success: #34D399;
+    --gz-color-warning: #FBBF24;
+    --gz-color-info: #60A5FA;
+  }
+
+  /* OS preferences safety-net (Pitfall HIGH #6) — applica auto se nessun
+   * data-gz-theme già impostato (extra guard pre-paint).
+   */
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-gz-theme]) {
+      --gz-color-primary: #818CF8;
+      --gz-color-on-primary: #1E1B4B;
+      --gz-color-secondary: #22D3EE;
+      --gz-color-on-secondary: #083344;
+      --gz-color-surface: #111827;
+      --gz-color-surface-elevated: #1F2937;
+      --gz-color-text: #F9FAFB;
+      --gz-color-text-muted: #9CA3AF;
+      --gz-color-border: #374151;
+      --gz-color-error: #F87171;
+      --gz-color-success: #34D399;
+      --gz-color-warning: #FBBF24;
+      --gz-color-info: #60A5FA;
+    }
+  }
+}
+
+/* Animation safety-net (Open Q7 + D-F7-10) — `prefers-reduced-motion` ECCEZIONE
+ * documentata uso `!important` (a11y WCAG 2.1 — unico caso autorizzato).
+ */
+@layer animation {
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}
