@@ -21,6 +21,14 @@ export default defineConfig({
     // sono importate solo da consumer Inspector/docs (W5a) — NON gravano
     // il bundle runtime principale (07-06-PLAN.md bundle mitigation).
     'standard-role-definitions': 'src/standard-role-definitions.ts',
+    // Subpath additivi (D-F7-04): le strategie A (DomApplier, MutationObserver +
+    // ClassesTracker batched) e B (StyleSheetGenerator, <style>@layer adapter)
+    // sono opt-in. Consumer importa solo quella che usa, e classFor (Strategia C
+    // escape hatch ~50 B) resta nel barrel come default minimal-cost.
+    // Bundle savings ~1.7 KB gzipped (07-07-PLAN.md bundle mitigation per
+    // restare entro cap 6 KB con W3.3).
+    'dom-applier': 'src/dom-applier.ts',
+    'stylesheet-generator': 'src/stylesheet-generator.ts',
   },
   format: ['esm'],
   dts: true,

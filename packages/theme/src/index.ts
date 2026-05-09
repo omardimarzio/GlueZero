@@ -138,6 +138,18 @@ export {
   type AdapterRegistryEvent,
 } from './adapter-registry'
 
+// W3 plan 07-07 — Le 3 strategie applicazione DOM (D-F7-03, UI-ROLE-04 — HERO):
+// - Strategia A: `createDomApplier` (MutationObserver + classesTracker) — subpath
+//   separato `@gluezero/theme/dom-applier` (D-F7-04 bundle mitigation).
+// - Strategia B: `createStyleSheetGenerator` (<style>@layer adapter) — subpath
+//   separato `@gluezero/theme/stylesheet-generator` (D-F7-04 bundle mitigation).
+// - Strategia C: `classFor` (escape hatch imperativo) — esposto qui nel barrel
+//   come default minimal-cost (≤50 B): tutte le altre strategie sono opt-in.
+//
+// Bundle savings totale ~1.7 KB gzipped (Strategie A+B subpath) per restare entro
+// cap 6 KB con W3.3 anche con i nuovi 234 test.
+export { classFor } from './class-for'
+
 // Type-only re-export per garantire che TypeScript carichi il module augmentation
 // `csstype-augment` nella public surface (D-F7-21 — IDE autocomplete sui 10
 // branded core token). Zero runtime cost — solo declaration merge a build-time.

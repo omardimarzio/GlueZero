@@ -17,6 +17,14 @@
       "types": "./dist/standard-role-definitions.d.ts",
       "import": "./dist/standard-role-definitions.js"
     },
+    "./dom-applier": {
+      "types": "./dist/dom-applier.d.ts",
+      "import": "./dist/dom-applier.js"
+    },
+    "./stylesheet-generator": {
+      "types": "./dist/stylesheet-generator.d.ts",
+      "import": "./dist/stylesheet-generator.js"
+    },
     "./tokens-default.css": "./dist/tokens-default.css",
     "./package.json": "./package.json"
   },
