@@ -23,6 +23,9 @@ export type ThemeErrorCode =
   | 'theme.adapter.unknown'
   | 'theme.snapshot.frozen'
   | 'theme.persistence.unavailable'
+  | 'theme.mode.invalid'
+  | 'theme.density.invalid'
+  | 'theme.direction.invalid'
 
 /** Shape readonly del ThemeError pubblicato da `createThemeError`. */
 export interface ThemeError extends Error {
