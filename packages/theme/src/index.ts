@@ -162,6 +162,14 @@ export {
 // cap 6 KB con W3.3 anche con i nuovi 234 test.
 export { classFor } from './class-for'
 
+// W4 plan 07-08 Task 3 — `createTheme()` public factory orchestratore esposto
+// come SUBPATH `@gluezero/theme/factory` (D-F7-04 bundle mitigation, ULTIMA
+// ratio per execution_context). Compone ThemeManager + DomApplier (Strategia
+// A) + StyleSheetGenerator (Strategia B) + ClassesTracker. Consumer che non
+// usano createTheme (es. SSR-only) NON pagano i ~1.7 KB delle Strategie A+B
+// nel barrel principale. Type-only Theme + CreateThemeOptions disponibili
+// importando da subpath.
+
 // Type-only re-export per garantire che TypeScript carichi il module augmentation
 // `csstype-augment` nella public surface (D-F7-21 — IDE autocomplete sui 10
 // branded core token). Zero runtime cost — solo declaration merge a build-time.

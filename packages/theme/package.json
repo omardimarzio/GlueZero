@@ -25,6 +25,10 @@
       "types": "./dist/stylesheet-generator.d.ts",
       "import": "./dist/stylesheet-generator.js"
     },
+    "./factory": {
+      "types": "./dist/factory.d.ts",
+      "import": "./dist/factory.js"
+    },
     "./tokens-default.css": "./dist/tokens-default.css",
     "./package.json": "./package.json"
   },

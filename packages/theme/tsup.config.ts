@@ -29,6 +29,11 @@ export default defineConfig({
     // restare entro cap 6 KB con W3.3).
     'dom-applier': 'src/dom-applier.ts',
     'stylesheet-generator': 'src/stylesheet-generator.ts',
+    // Subpath additivo W4 plan 07-08 Task 3 (D-F7-04): createTheme orchestratore
+    // pesante (~1.7 KB gzip per import DomApplier+StyleSheetGenerator). Tenerlo
+    // fuori dal barrel principale è ULTIMA ratio raccomandata da execution_context
+    // per restare entro 7 KB cap.
+    factory: 'src/public-factory.ts',
   },
   format: ['esm'],
   dts: true,
