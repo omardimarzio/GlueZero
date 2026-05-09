@@ -27,6 +27,18 @@ export type { ThemeSnapshot } from './types/theme-snapshot'
 export type { RegisterAdapterOptions, ThemeAdapter } from './types/theme-adapter'
 export type { RoleDefinition, RoleSet } from './types/role'
 
+// W4 — Payload types per `ui.*` broker events + duck-typed BrokerLike (D-F7-01 Opzione B).
+// Type-only exports: zero runtime cost (UI-EVENT-01..06).
+export type {
+  BrokerLike,
+  UiAdapterChangedPayload,
+  UiDensityChangedPayload,
+  UiDirectionChangedPayload,
+  UiEventMap,
+  UiOsPreferenceChangedPayload,
+  UiThemeChangedPayload,
+} from './types/ui-events'
+
 // Helper IIFE anti-FOUC (Pitfall HIGH #1)
 export {
   getInitialThemeScript,

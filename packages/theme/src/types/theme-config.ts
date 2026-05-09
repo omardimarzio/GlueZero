@@ -5,6 +5,8 @@
  * estendono questa interfaccia con campi addizionali (initial mode/density,
  * adapter pre-registration, ecc.).
  */
+import type { BrokerLike } from './ui-events'
+
 export interface ThemeConfig {
   /** Identifier theme (default nanoid). Esposto in `ThemeSnapshot.themeId`. */
   themeId?: string
@@ -32,4 +34,10 @@ export interface ThemeConfig {
     tokens?: boolean
     roles?: boolean
   }
+  /**
+   * W4 ext F7 (D-F7-01 Opzione B): broker opzionale per emettere `ui.*` events
+   * + LIFE-02 ext F7 cascade subscribe a `system.plugin.unregistered`. Default
+   * `undefined` → ThemeManager standalone (no publish, no cascade subscriber).
+   */
+  broker?: BrokerLike
 }
