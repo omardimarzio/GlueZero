@@ -90,6 +90,12 @@
       "gzip": true
     },
     {
+      "name": "@gluezero/theme (gzip)",
+      "path": "packages/theme/dist/index.js",
+      "limit": "6 KB",
+      "gzip": true
+    },
+    {
       "name": "@gluezero/gluezero (gzip)",
       "path": "packages/gluezero/dist/index.js",
       "limit": "42 KB",
