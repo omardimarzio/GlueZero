@@ -9,6 +9,9 @@
 <link rel="canonical" href="https://gluezero.org/examples/pub-sub-demo.html">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect width='24' height='24' rx='6' fill='%236366F1'/%3E%3Ctext x='12' y='17' text-anchor='middle' fill='white' font-family='sans-serif' font-weight='800' font-size='12'%3EGZ%3C/text%3E%3C/svg%3E">
 
+<!-- Hero v1.1.1: tokens canonici @gluezero/theme — alimenta i 3 adapter del switcher -->
+<link rel="stylesheet" href="https://esm.sh/@gluezero/theme@1.1.0/tokens-default.css">
+
 <style>
   :root {
     --accent: #6366F1;
@@ -402,6 +405,12 @@
     <a href="https://gluezero.org/docs" target="_blank" rel="noopener">Docs</a>
     <a href="https://github.com/omardimarzio/GlueZero" target="_blank" rel="noopener">GitHub</a>
     <a href="https://www.npmjs.com/package/@gluezero/gluezero" target="_blank" rel="noopener">npm</a>
+    <!-- Hero v1.1.1: theme switcher (D-F7-25) — 3 adapter intercambiabili runtime -->
+    <div class="theme-switcher" role="group" aria-label="Theme adapter switcher" style="display:inline-flex; gap:4px; margin-left:8px; padding-left:8px; border-left:1px solid var(--border);">
+      <button class="adapter-btn" data-theme-switcher="tokens-only"    data-gz-role="action.ghost" aria-pressed="true"  type="button">Tokens</button>
+      <button class="adapter-btn" data-theme-switcher="tailwind-vibe"  data-gz-role="action.ghost" aria-pressed="false" type="button">Tailwind</button>
+      <button class="adapter-btn" data-theme-switcher="bootstrap-vibe" data-gz-role="action.ghost" aria-pressed="false" type="button">Bootstrap</button>
+    </div>
     <button class="theme-toggle" aria-label="Toggle theme">🌙</button>
   </div>
 </header>
@@ -435,7 +444,7 @@
 
   <div class="layout">
     <!-- ============ PUBLISHER ============ -->
-    <div class="panel">
+    <div class="panel" data-gz-role="surface.elevated">
       <div class="panel-header">
         <h2>Italian publisher</h2>
         <span class="role role-pub">PUBLISHER</span>
@@ -443,14 +452,14 @@
       </div>
       <div class="panel-body">
         <label for="from">Mittente</label>
-        <input id="from" type="text" value="Alice" maxlength="20">
+        <input id="from" type="text" value="Alice" maxlength="20" data-gz-role="input.text">
 
         <label for="text">Messaggio</label>
-        <textarea id="text" maxlength="280" placeholder="Scrivi qualcosa e premi Send…">Hello from GlueZero!</textarea>
+        <textarea id="text" maxlength="280" placeholder="Scrivi qualcosa e premi Send…" data-gz-role="input.text">Hello from GlueZero!</textarea>
 
         <div class="btn-row">
-          <button class="btn" id="send" style="margin:0;">Send (publish)</button>
-          <button class="btn-secondary btn" id="send-burst" style="margin:0;">Send 5 burst</button>
+          <button class="btn" id="send" style="margin:0;" data-gz-role="action.primary">Send (publish)</button>
+          <button class="btn-secondary btn" id="send-burst" style="margin:0;" data-gz-role="action.secondary">Send 5 burst</button>
         </div>
 
         <div class="code-snippet"><span class="com">// Plugin with outputMap: canonical key ← { source: local field }</span>
@@ -523,7 +532,7 @@ broker.<span class="fn">publish</span>(<span class="str">'message.posted'</span>
     <div class="subscribers-grid">
 
       <!-- SUBSCRIBER 1: Feed (italian vocab) -->
-      <div class="panel">
+      <div class="panel" data-gz-role="surface.elevated">
         <div class="panel-header">
           <h2>Sub 1 — Feed (italian)</h2>
           <span class="role role-sub">SUBSCRIBER</span>
@@ -554,7 +563,7 @@ broker.<span class="fn">registerPlugin</span>({
       </div>
 
       <!-- SUBSCRIBER 2: Stats (english vocab) -->
-      <div class="panel">
+      <div class="panel" data-gz-role="surface.elevated">
         <div class="panel-header">
           <h2>Sub 2 — Stats (english)</h2>
           <span class="role role-sub">SUBSCRIBER</span>
@@ -601,7 +610,7 @@ broker.<span class="fn">registerPlugin</span>({
       </div>
 
       <!-- SUBSCRIBER 3: Latest (compact vocab) -->
-      <div class="panel" id="panel-sub3">
+      <div class="panel" id="panel-sub3" data-gz-role="surface.elevated">
         <div class="panel-header">
           <h2>Sub 3 — Latest (compact)</h2>
           <span class="role role-sub" id="sub3-role">SUBSCRIBER</span>
@@ -634,7 +643,7 @@ broker.<span class="fn">unregisterPlugin</span>(<span class="str">'compact-lates
       </div>
 
       <!-- SUBSCRIBER 4: Histogram (no map needed) -->
-      <div class="panel" id="panel-sub4">
+      <div class="panel" id="panel-sub4" data-gz-role="surface.elevated">
         <div class="panel-header">
           <h2>Sub 4 — Activity (no map)</h2>
           <span class="role role-sub" id="sub4-role">SUBSCRIBER</span>
@@ -1013,5 +1022,113 @@ broker.<span class="fn">unregisterPlugin</span>(<span class="str">'compact-lates
   console.log('Try: broker.publish("message.posted", { mittente: "you", messaggio: "hi", ora: Date.now() }, { source: { type: "plugin", id: "italian-form" } })')
   window.broker = broker  // expose for devtools experimentation
 </script>
+
+<!-- =====================================================================
+     Hero v1.1.1 demo — theme switcher (D-F7-25 + D-F7-26)
+     Estensione additiva: 3 adapter intercambiabili runtime + dark mode preservato.
+     Scope LOCKATO: solo adapter swap + dark mode (D-F7-26). Theme Inspector e
+     LiveTokenEditor restano in examples/theme-tokens-only/ dedicato.
+     ===================================================================== -->
+<script type="module">
+  import { createTheme } from 'https://esm.sh/@gluezero/theme@1.1.0/factory'
+
+  // Riusa il broker già esposto dal demo esistente per inviare/ricevere ui.*
+  // (window.broker = broker, vedi l'altro <script> sopra). In assenza,
+  // createTheme funziona standalone — DomApplier + StyleSheetGenerator continuano
+  // a operare senza broker, semplicemente non pubblicano ui.* events.
+  const broker = window.broker ?? null
+  const theme = createTheme({ broker, persistence: 'localStorage' })
+
+  // ============================================================
+  // 3 adapter (D-F7-25): tokens-only + tailwind-vibe + bootstrap-vibe.
+  // Tutti Strategia B (cssRules) — niente dipendenza Tailwind/Bootstrap CDN
+  // qui per non gonfiare il hero. Le classi sono "vibe" cioè CSS che imita
+  // l'estetica dei due framework con un set minimo di regole.
+  // ============================================================
+  theme.register({
+    id: 'tokens-only',
+    cssRules: {
+      'action.primary':
+        'background: var(--gz-color-primary); color: var(--gz-color-on-primary); padding: var(--gz-spacing-sm) var(--gz-spacing-md); border-radius: var(--gz-radius-md); border: 1px solid var(--gz-color-primary); font-weight: 600; cursor: pointer;',
+      'action.secondary':
+        'background: var(--gz-color-surface-elevated); color: var(--gz-color-text); padding: var(--gz-spacing-sm) var(--gz-spacing-md); border: 1px solid var(--gz-color-border); border-radius: var(--gz-radius-md); cursor: pointer;',
+      'action.ghost':
+        'background: transparent; color: var(--gz-color-primary); padding: var(--gz-spacing-xs) var(--gz-spacing-sm); border: none; cursor: pointer;',
+      'input.text':
+        'background: var(--gz-color-surface); color: var(--gz-color-text); border: 1px solid var(--gz-color-border); border-radius: var(--gz-radius-sm); padding: var(--gz-spacing-sm); font: inherit;',
+      'surface.elevated':
+        'background: var(--gz-color-surface-elevated); border: 1px solid var(--gz-color-border); border-radius: var(--gz-radius-md); box-shadow: var(--gz-elevation-1);',
+    },
+  })
+
+  theme.register({
+    id: 'tailwind-vibe',
+    cssRules: {
+      'action.primary':
+        'background: #4F46E5; color: #FFFFFF; padding: 8px 16px; border-radius: 6px; border: 1px solid #4F46E5; font-weight: 600; cursor: pointer;',
+      'action.secondary':
+        'background: #E5E7EB; color: #111827; padding: 8px 16px; border-radius: 6px; border: 1px solid #E5E7EB; font-weight: 500; cursor: pointer;',
+      'action.ghost':
+        'background: transparent; color: #4F46E5; padding: 6px 10px; border: none; cursor: pointer; font-weight: 500;',
+      'input.text':
+        'background: #FFFFFF; color: #111827; border: 1px solid #D1D5DB; border-radius: 6px; padding: 8px 12px; font: inherit;',
+      'surface.elevated':
+        'background: #FFFFFF; border: 1px solid #E5E7EB; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1), 0 1px 2px rgba(0,0,0,0.06);',
+    },
+  })
+
+  theme.register({
+    id: 'bootstrap-vibe',
+    cssRules: {
+      'action.primary':
+        'background: #0D6EFD; color: #FFFFFF; padding: 6px 12px; border-radius: 6px; border: 1px solid #0D6EFD; font-weight: 400; cursor: pointer;',
+      'action.secondary':
+        'background: #6C757D; color: #FFFFFF; padding: 6px 12px; border-radius: 6px; border: 1px solid #6C757D; font-weight: 400; cursor: pointer;',
+      'action.ghost':
+        'background: transparent; color: #0D6EFD; padding: 4px 8px; border: none; cursor: pointer; text-decoration: none;',
+      'input.text':
+        'background: #FFFFFF; color: #212529; border: 1px solid #CED4DA; border-radius: 6px; padding: 6px 12px; font: inherit;',
+      'surface.elevated':
+        'background: #FFFFFF; border: 1px solid rgba(0,0,0,.125); border-radius: 6px; box-shadow: 0 0.125rem 0.25rem rgba(0,0,0,.075);',
+    },
+  })
+
+  theme.setActiveAdapter('tokens-only')
+
+  // ============================================================
+  // Switcher buttons
+  // ============================================================
+  const adapterBtns = document.querySelectorAll('[data-theme-switcher]')
+  function syncAdapterPressed(activeId) {
+    adapterBtns.forEach((b) => {
+      const id = b.getAttribute('data-theme-switcher')
+      b.setAttribute('aria-pressed', String(id === activeId))
+    })
+  }
+
+  adapterBtns.forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const id = btn.getAttribute('data-theme-switcher')
+      theme.setActiveAdapter(id)
+      syncAdapterPressed(id)
+    })
+  })
+
+  // Mode auto-mirror OS è già gestito dal toggle esistente del demo (data-theme
+  // attribute su <html>). Qui sincronizziamo il theme manager con la preferenza
+  // localStorage corrente per non duplicare lo stato. Lo storage key del demo
+  // esistente è "gz-theme" — il theme manager usa il suo namespace gluezero.theme.*.
+  const storedMode = localStorage.getItem('gz-theme')
+  if (storedMode === 'dark' || storedMode === 'light') {
+    theme.manager.setMode(storedMode)
+  } else {
+    theme.manager.setMode('auto')
+  }
+
+  // expose
+  window.__theme = theme
+  console.log('Hero theme switcher ready. Try theme.setActiveAdapter("tailwind-vibe").')
+</script>
+
 </body>
 </html>
