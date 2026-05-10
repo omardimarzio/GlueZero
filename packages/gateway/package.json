@@ -1,6 +1,6 @@
 {
   "name": "@gluezero/gateway",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "GlueZero HTTP gateway + SSE/WebSocket realtime adapters — auth, retry, timeout, dedupe, backpressure, auto-fallback",
   "license": "MIT",
   "author": "Omar Di Marzio",

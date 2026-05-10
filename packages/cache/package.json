@@ -1,6 +1,6 @@
 {
   "name": "@gluezero/cache",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "GlueZero in-memory cache — LRU adapter, 3 strategies (cache-first/network-first/cache-then-network), scope hybrid",
   "license": "MIT",
   "author": "Omar Di Marzio",

@@ -1,6 +1,6 @@
 {
   "name": "@gluezero/worker",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "GlueZero Web Worker runtime — registry, bounded pool, Comlink bridge, hybrid cancellation, serialization checks",
   "license": "MIT",
   "author": "Omar Di Marzio",

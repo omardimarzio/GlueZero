@@ -1,6 +1,6 @@
 {
   "name": "@gluezero/routing",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "GlueZero declarative routing engine — local/http/realtime/worker/cache/composite route types",
   "license": "MIT",
   "author": "Omar Di Marzio",

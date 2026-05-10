@@ -1,6 +1,6 @@
 {
   "name": "@gluezero/gluezero",
-  "version": "1.0.1",
+  "version": "1.1.0",
   "description": "GlueZero — frontend integration runtime: pub/sub broker, canonical mapping, declarative routing, HTTP gateway, realtime, worker, cache, devtools",
   "license": "MIT",
   "author": "Omar Di Marzio",

@@ -1,5 +1,12 @@
 # @gluezero/mapper
 
+## 1.0.2
+
+### Patch Changes
+
+- Updated dependencies [ad830fe]
+  - @gluezero/core@1.0.2
+
 ## 1.0.1
 
 ### Patch Changes
