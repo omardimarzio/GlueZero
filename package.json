@@ -7,7 +7,7 @@
     "node": ">=20"
   },
   "scripts": {
-    "build": "pnpm run build:f3 && pnpm --filter @gluezero/worker --filter @gluezero/cache --filter @gluezero/devtools --filter @gluezero/gluezero run build",
+    "build": "pnpm run build:f3 && pnpm --filter @gluezero/worker --filter @gluezero/cache run build && pnpm --filter @gluezero/theme run build && pnpm --filter @gluezero/devtools --filter @gluezero/gluezero run build",
     "build:parallel": "pnpm -r --filter='./packages/*' --if-present run build",
     "build:f3": "pnpm --filter @gluezero/core --filter @gluezero/mapper run build && pnpm run build:f3:cyclic",
     "build:f3:cyclic": "pnpm --filter @gluezero/routing exec tsup --format esm --no-dts && pnpm --filter @gluezero/gateway exec tsup --format esm --no-dts && pnpm run build:f3:dts:bootstrap && pnpm run build:f3:dts:bundle",
@@ -18,8 +18,8 @@
     "lint": "biome check .",
     "format": "biome format --write .",
     "typecheck": "pnpm -r --filter='./packages/*' --if-present run typecheck",
-    "ci:publint": "pnpm --filter @gluezero/core --filter @gluezero/mapper --filter @gluezero/routing --filter @gluezero/gateway --filter @gluezero/worker --filter @gluezero/cache --filter @gluezero/devtools --filter @gluezero/gluezero exec publint",
-    "ci:attw": "pnpm --filter @gluezero/core --filter @gluezero/mapper --filter @gluezero/routing --filter @gluezero/gateway --filter @gluezero/worker --filter @gluezero/cache --filter @gluezero/devtools --filter @gluezero/gluezero exec attw --pack --profile=esm-only",
+    "ci:publint": "pnpm --filter @gluezero/core --filter @gluezero/mapper --filter @gluezero/routing --filter @gluezero/gateway --filter @gluezero/worker --filter @gluezero/cache --filter @gluezero/theme --filter @gluezero/devtools --filter @gluezero/gluezero exec publint",
+    "ci:attw": "pnpm --filter @gluezero/core --filter @gluezero/mapper --filter @gluezero/routing --filter @gluezero/gateway --filter @gluezero/worker --filter @gluezero/cache --filter @gluezero/theme --filter @gluezero/devtools --filter @gluezero/gluezero exec attw --pack --profile=esm-only",
     "ci:size": "size-limit",
     "ci:gate:f3": "pnpm ci:publint && pnpm ci:attw && pnpm ci:size",
     "ci:gate:f6": "pnpm ci:publint && pnpm ci:attw && pnpm ci:size",
