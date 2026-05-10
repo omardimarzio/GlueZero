@@ -1,0 +1,342 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>GlueZero — Dark mode + Canonical meteo end-to-end</title>
+  <meta name="description" content="Demo F1+F2+F7 end-to-end: plugin meteo canonical schema + dark mode auto + brand swap. Standalone HTML, zero install.">
+
+  <link rel="stylesheet" href="https://esm.sh/@gluezero/theme@1.1.0/tokens-default.css">
+
+  <style>
+    /* =========================================================================
+       Stili "scaffolding" minimi — tutto leggibile da var(--gz-*).
+       Lo styling dei ruoli specifici (data-gz-role) arriva dall'adapter
+       Strategia B `meteo-tokens` registrato a runtime.
+       ========================================================================= */
+    body {
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+      margin: 0;
+      padding: var(--gz-spacing-lg, 24px);
+      background: var(--gz-color-surface, #FFFFFF);
+      color: var(--gz-color-text, #0F172A);
+      transition:
+        background var(--gz-motion-medium, 200ms) ease,
+        color var(--gz-motion-medium, 200ms) ease;
+      line-height: 1.5;
+    }
+    .container { max-width: 1000px; margin: 0 auto; }
+
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: var(--gz-spacing-md, 16px);
+      margin-bottom: var(--gz-spacing-xl, 32px);
+      padding-bottom: var(--gz-spacing-md, 16px);
+      border-bottom: 1px solid var(--gz-color-border, #E2E8F0);
+      flex-wrap: wrap;
+    }
+    header h1 {
+      color: var(--gz-color-primary, #6366F1);
+      margin: 0;
+      font-size: var(--gz-font-size-xl, 24px);
+      letter-spacing: -0.01em;
+    }
+    .header-actions { display: flex; gap: var(--gz-spacing-sm, 8px); flex-wrap: wrap; }
+
+    .intro { color: var(--gz-color-text-muted, #64748B); margin-bottom: var(--gz-spacing-lg, 24px); }
+    .intro code { background: var(--gz-color-surface-elevated, #FAFAFA); padding: 1px 5px; border-radius: var(--gz-radius-sm, 4px); }
+
+    /* Grid responsive per le card meteo (3-4 colonne max) */
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: var(--gz-spacing-md, 16px);
+    }
+
+    /* Mode badge: piccolo indicatore visivo dello stato resolved */
+    .mode-badge {
+      font-family: ui-monospace, "SF Mono", Consolas, monospace;
+      font-size: 12px;
+      padding: 4px 10px;
+      border-radius: var(--gz-radius-sm, 4px);
+      background: var(--gz-color-surface-elevated, #FAFAFA);
+      border: 1px solid var(--gz-color-border, #E2E8F0);
+      color: var(--gz-color-text-muted, #64748B);
+    }
+
+    pre.log {
+      max-height: 160px;
+      overflow: auto;
+      background: var(--gz-color-surface-elevated, #FAFAFA);
+      color: var(--gz-color-text, #0F172A);
+      padding: var(--gz-spacing-sm, 8px);
+      border: 1px solid var(--gz-color-border, #E2E8F0);
+      border-radius: var(--gz-radius-sm, 4px);
+      font-family: ui-monospace, "SF Mono", monospace;
+      font-size: 12px;
+      line-height: 1.5;
+      margin: var(--gz-spacing-md, 16px) 0 0;
+    }
+
+    button { cursor: pointer; border: none; font: inherit; }
+
+    /* Card weather: lo styling visivo "ricco" arriva dall'adapter via cssRules */
+    article.weather-card { /* solo layout, non styling */
+      display: flex;
+      flex-direction: column;
+      gap: var(--gz-spacing-xs, 4px);
+    }
+    article.weather-card .meta { display: flex; justify-content: space-between; align-items: baseline; gap: var(--gz-spacing-sm, 8px); }
+    article.weather-card .temp { font-size: 28px; font-weight: 700; font-variant-numeric: tabular-nums; }
+  </style>
+</head>
+<body>
+  <div class="container">
+
+    <header>
+      <h1>Meteo — Canonical + Theme F7</h1>
+      <div class="header-actions">
+        <span class="mode-badge" id="modeBadge">mode: auto</span>
+        <button id="modeAuto" data-gz-role="action.ghost" type="button">Mode: auto (OS)</button>
+        <button id="modeLight" data-gz-role="action.ghost" type="button">Light</button>
+        <button id="modeDark" data-gz-role="action.ghost" type="button">Dark</button>
+        <button id="brandSwap" data-gz-role="action.secondary" type="button">Brand swap</button>
+      </div>
+    </header>
+
+    <p class="intro">
+      Scenario end-to-end <strong>F1 broker</strong> + <strong>F2 canonical mapper</strong> + <strong>F7 theme</strong>:
+      un plugin <code>meteo-source</code> emette osservazioni con vocabolario canonico
+      <code>weather.observation</code> via <code>broker.publish('weather.posted', …)</code>.
+      Un plugin <code>weather-widget</code> riceve via <code>inputMap</code> e renderizza
+      le card. Lo styling delle card NON è hard-coded: arriva dall'adapter
+      Strategia B <code>meteo-tokens</code> via <code>data-gz-role</code> +
+      <code>cssRules</code>. Toggle dark/light e brand swap sono runtime, no reload.
+    </p>
+
+    <!-- Lista card meteo popolata dal plugin weather-widget -->
+    <div class="grid" id="weatherList"></div>
+
+    <pre class="log" id="log">(log eventi ui.* + weather.posted — interagisci con i bottoni sopra)</pre>
+  </div>
+
+  <script type="module">
+    import { createGlueZero } from 'https://esm.sh/@gluezero/gluezero@1.0.1'
+    import { createTheme } from 'https://esm.sh/@gluezero/theme@1.1.0/factory'
+    import {
+      UI_THEME_CHANGED,
+      UI_OS_PREFERENCE_CHANGED,
+      UI_ADAPTER_CHANGED,
+    } from 'https://esm.sh/@gluezero/theme@1.1.0'
+
+    // =========================================================================
+    // Broker F1 + canonical schema F2 (weather.observation: city/temp/forecast)
+    // =========================================================================
+    const broker = createGlueZero({
+      debug: false,
+      canonicalModel: {
+        schemas: [{
+          id: 'weather.observation',
+          fields: {
+            city: { type: 'string', required: true },
+            temperatureC: { type: 'number', required: true },
+            forecast: { type: 'string', required: true },
+          },
+        }],
+      },
+    })
+
+    // =========================================================================
+    // Theme F7 — manager + Strategia B adapter
+    // (persistence: localStorage opt-in, manager.setMode('auto') mirror OS)
+    // =========================================================================
+    const theme = createTheme({ broker, persistence: 'localStorage' })
+
+    theme.register({
+      id: 'meteo-tokens',
+      cssRules: {
+        // Card = surface.elevated
+        'surface.elevated':
+          'background: var(--gz-color-surface-elevated); padding: var(--gz-spacing-md); border-radius: var(--gz-radius-lg); box-shadow: var(--gz-elevation-2); border: 1px solid var(--gz-color-border);',
+        // Titolo città = navigation.active (color-primary)
+        'navigation.active':
+          'color: var(--gz-color-primary); font-size: var(--gz-font-size-lg); margin: 0; font-weight: 600;',
+        // Forecast description = feedback.info
+        'feedback.info':
+          'color: var(--gz-color-text-muted); margin: 0;',
+        // Refresh button = action.primary
+        'action.primary':
+          'background: var(--gz-color-primary); color: var(--gz-color-on-primary); padding: var(--gz-spacing-sm) var(--gz-spacing-md); border-radius: var(--gz-radius-sm); border: none; font-weight: 600; cursor: pointer;',
+        // Header buttons riusano action.{secondary,ghost}
+        'action.secondary':
+          'background: var(--gz-color-surface-elevated); color: var(--gz-color-text); padding: var(--gz-spacing-sm) var(--gz-spacing-md); border: 1px solid var(--gz-color-border); border-radius: var(--gz-radius-sm); cursor: pointer;',
+        'action.ghost':
+          'background: transparent; color: var(--gz-color-primary); padding: var(--gz-spacing-xs) var(--gz-spacing-sm); border: none; cursor: pointer; font-size: var(--gz-font-size-base);',
+      },
+    })
+    theme.setActiveAdapter('meteo-tokens')
+    theme.manager.setMode('auto')
+
+    // =========================================================================
+    // Plugin weather-source: emette osservazioni meteo via canonical schema
+    // (outputMap: canonical key ← local field). In questa demo i field locali
+    // sono già canonici, quindi outputMap è identità — il valore didattico è
+    // mostrare la registrazione + publish via top-level con explicit source.
+    // =========================================================================
+    await broker.registerPlugin({
+      id: 'weather-source',
+      name: 'Weather source plugin',
+      version: '1.0.0',
+      canonicalSchemaId: 'weather.observation',
+      outputMap: {
+        city: { source: 'city' },
+        temperatureC: { source: 'temperatureC' },
+        forecast: { source: 'forecast' },
+      },
+    })
+
+    // =========================================================================
+    // Plugin weather-widget: subscriber che renderizza le card via inputMap
+    // (qui inputMap = identità per chiarezza). Le card hanno data-gz-role
+    // attribute = lo styling arriva dall'adapter `meteo-tokens`.
+    // =========================================================================
+    const listEl = document.getElementById('weatherList')
+
+    await broker.registerPlugin({
+      id: 'weather-widget',
+      name: 'Weather widget',
+      version: '1.0.0',
+      canonicalSchemaId: 'weather.observation',
+      inputMap: {
+        city: { source: 'city' },
+        temperatureC: { source: 'temperatureC' },
+        forecast: { source: 'forecast' },
+      },
+      onMount: (ctx) => {
+        ctx.broker.subscribe('weather.posted', (event) => {
+          const { city, temperatureC, forecast } = event.payload
+          renderCard({ city, temperatureC, forecast })
+        })
+      },
+    })
+
+    function renderCard(obs) {
+      const card = document.createElement('article')
+      card.className = 'weather-card'
+      card.setAttribute('data-gz-role', 'surface.elevated')
+      card.innerHTML = `
+        <div class="meta">
+          <h3 data-gz-role="navigation.active">${escapeHtml(obs.city)}</h3>
+          <span class="temp">${obs.temperatureC}°C</span>
+        </div>
+        <p data-gz-role="feedback.info">${escapeHtml(obs.forecast)}</p>
+        <div style="margin-top: var(--gz-spacing-sm, 8px);">
+          <button data-gz-role="action.primary" type="button">Refresh</button>
+        </div>
+      `
+      const refreshBtn = card.querySelector('button')
+      refreshBtn.addEventListener('click', () => {
+        // Re-publish con temp randomizzato — dimostra il loop end-to-end
+        broker.publish(
+          'weather.posted',
+          {
+            city: obs.city,
+            temperatureC: Math.round(obs.temperatureC + (Math.random() * 6 - 3)),
+            forecast: obs.forecast,
+          },
+          { source: { type: 'plugin', id: 'weather-source' } },
+        )
+        // Rimuove la card vecchia per evitare duplicate (la nuova arriva dal subscribe)
+        card.remove()
+      })
+      listEl.appendChild(card)
+    }
+
+    // =========================================================================
+    // Seed iniziale: 4 città fittizie pubblicate dal weather-source
+    // (top-level publish con explicit source → MapperBroker applica outputMap)
+    // =========================================================================
+    const SEED = [
+      { city: 'Roma',     temperatureC: 22, forecast: 'Sereno' },
+      { city: 'Milano',   temperatureC: 15, forecast: 'Nebbioso' },
+      { city: 'Napoli',   temperatureC: 28, forecast: 'Caldo e soleggiato' },
+      { city: 'Torino',   temperatureC: 18, forecast: 'Nuvoloso' },
+    ]
+    for (const obs of SEED) {
+      broker.publish('weather.posted', obs, {
+        source: { type: 'plugin', id: 'weather-source' },
+      })
+    }
+
+    // =========================================================================
+    // UI controls
+    // =========================================================================
+    const modeBadge = document.getElementById('modeBadge')
+    function refreshBadge() {
+      const snap = theme.getActiveTheme()
+      modeBadge.textContent = `mode: ${snap.mode} (resolved: ${snap.resolvedMode})`
+    }
+    refreshBadge()
+
+    document.getElementById('modeAuto').addEventListener('click', () => {
+      theme.manager.setMode('auto')
+      refreshBadge()
+    })
+    document.getElementById('modeLight').addEventListener('click', () => {
+      theme.manager.setMode('light')
+      refreshBadge()
+    })
+    document.getElementById('modeDark').addEventListener('click', () => {
+      theme.manager.setMode('dark')
+      refreshBadge()
+    })
+
+    document.getElementById('brandSwap').addEventListener('click', () => {
+      const snap = theme.getActiveTheme()
+      const isOrange = (snap.tokens?.['color-primary'] || '').toLowerCase() === '#ff6b35'
+      theme.applyTokens({
+        'color-primary': isOrange ? '#6366F1' : '#FF6B35',
+        'color-on-primary': '#FFFFFF',
+      })
+    })
+
+    // =========================================================================
+    // Log eventi ui.* + weather.posted
+    // =========================================================================
+    const logEl = document.getElementById('log')
+    const logLines = []
+    function log(prefix, payload) {
+      const t = new Date().toLocaleTimeString('it-IT', { hour12: false })
+      logLines.push(`[${t}] ${prefix} ${JSON.stringify(payload)}`)
+      while (logLines.length > 12) logLines.shift()
+      logEl.textContent = logLines.join('\n')
+    }
+
+    broker.subscribe(UI_THEME_CHANGED, (e) => {
+      log('ui.theme.changed   ', e.payload)
+      refreshBadge()
+    })
+    broker.subscribe(UI_ADAPTER_CHANGED, (e) => log('ui.adapter.changed ', e.payload))
+    broker.subscribe(UI_OS_PREFERENCE_CHANGED, (e) => log('ui.osPreference.ch ', e.payload))
+    broker.subscribe('weather.posted', (e) => log('weather.posted     ', e.payload))
+
+    // =========================================================================
+    // Helpers
+    // =========================================================================
+    function escapeHtml(s) {
+      return String(s)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+    }
+
+    // expose
+    window.__theme = theme
+    window.__broker = broker
+    console.log('GlueZero theme-dark-mode-meteo ready. Try theme.manager.setMode("dark").')
+  </script>
+</body>
+</html>

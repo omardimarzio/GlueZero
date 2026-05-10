@@ -116,6 +116,8 @@ await broker.registerPlugin({
 
 **Cascade cleanup (D-26, LIFE-02 — chiusura PRD §39 #7):** `unregisterPlugin(id)` invoca `onUnmount`, poi rimuove tutte le subscription registrate via `ctx.broker.subscribe(...)`, fires `AbortController.abort()`, e infine `onDestroy`. Anche se `onUnmount` lancia eccezione, la cascade procede comunque (D-26 must always run). Dopo `unregisterPlugin`, `getDebugSnapshot()` mostra contatori al baseline pre-registrazione.
 
+**Auto-inject `source` su scoped broker (v1.0.1, patch — fix simmetria D-23):** quando un plugin pubblica via lo scoped broker fornito a `ctx.broker.publish(...)`, il campo `source.type === 'plugin'` e `source.id === <pluginId>` viene **iniettato automaticamente** se `options.source` è omesso. Backward-compatible: se il chiamante fornisce `options.source` esplicito, quello vince e nessun cast forzato avviene. La modifica vale solo per il broker scoped — il broker root (`createBroker(...)`) continua a richiedere `options.source` come prima. Replica il pattern lifecycle ownership di `subscribe(ctx.signal)` al canale di publish.
+
 ## Handler isolation (CORE-12, ERR-03)
 
 Un handler che lancia eccezione (sync o async via Promise rejected) è catturato dal broker:

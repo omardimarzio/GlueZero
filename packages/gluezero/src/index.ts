@@ -74,6 +74,14 @@ export {
   type RouteInspector,
 } from '@gluezero/devtools'
 // ---------- Wave 4b plan 06-08b — runtime factory aggregato ----------
-export { createGlueZero, type GlueZero } from './glue-zero'
+export { createGlueZero, type GlueZero, type GlueZeroThemeAugment } from './glue-zero'
 // ---------- Type re-export ----------
 export type { GlueZeroConfig, GlueZeroFeatures } from './types/gluezero-config'
+
+// ---------- v1.1.0 ext F7 (D-F7-07) — Optional theme layer type re-export ----------
+// Type-only re-export per ergonomic import. Zero runtime dep su `@gluezero/theme`
+// (peer optional via `peerDependenciesMeta`). Consumer che NON installa
+// @gluezero/theme NON paga costo bundle e NON ha import error a runtime — solo
+// se prova a costruire `createGlueZero({ theme })` TS richiederà install esplicito.
+export type { Theme, CreateThemeOptions } from '@gluezero/theme/factory'
+export type { BrokerLike } from '@gluezero/theme'

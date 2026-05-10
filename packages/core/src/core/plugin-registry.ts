@@ -28,7 +28,16 @@
 //   `ownerId=pluginId` al bus, garantendo che D-26 punto 1
 //   (`unsubscribeByOwner`) durante `unregisterPlugin` rimuova le subscription
 //   create dentro hooks plugin in modo naturale (senza richiedere AbortSignal hookup).
-//   Gli altri metodi (publish, registerPlugin, unregisterPlugin, getDebugSnapshot,
+//
+//   `publish(topic, payload, options?)` auto-inietta `source: { type: 'plugin',
+//   id: pluginId }` quando il caller non fornisce `options.source`. Risolve
+//   l'asimmetria publisher/subscriber: prima del fix il plugin "sapeva chi era"
+//   solo durante subscribe (auto-tag ownerId) ma su publish doveva ripetere il
+//   proprio id manualmente, a pena di `BrokerError 'event.source.missing'` (D-23).
+//   Source esplicito da parte del caller continua a vincere (override consentito,
+//   p.es. plugin che pubblica per conto di un componente UI).
+//
+//   Gli altri metodi (registerPlugin, unregisterPlugin, getDebugSnapshot,
 //   getTopicRegistry, enableDebug, disableDebug, setLogger) sono delegati invariati
 //   al broker root.
 //
@@ -41,7 +50,7 @@
 //   in single-threaded JS; transitionState valida pre-condition; race detection via
 //   state machine (transition invalida → throw).
 
-import type { BrokerEvent } from '../types/broker-event'
+import type { BrokerEvent, EventSource } from '../types/broker-event'
 import type { BrokerError } from '../types/error'
 import type { BrokerLogger } from '../types/logger'
 import type { PluginContext, PluginDescriptor, PluginRegistration } from '../types/plugin'
@@ -54,22 +63,44 @@ import { transitionState } from './lifecycle'
 // reale è la classe Broker (plan 08), ma `createPluginScopedBroker` resta agnostico
 // per facilitare testing e disaccoppiamento da broker.ts (evita ciclo import).
 //
-// Il wrapper override soltanto `subscribe`; tutti gli altri metodi sono delegati.
-// `[key: string]: unknown` permette al consumer di accedere a qualsiasi metodo del
-// rootBroker senza dover ridichiarare l'API completa qui.
+// Il wrapper override `subscribe` (auto-tag ownerId) e `publish` (auto-source);
+// tutti gli altri metodi sono delegati. `[key: string]: unknown` permette al
+// consumer di accedere a qualsiasi metodo del rootBroker senza dover
+// ridichiarare l'API completa qui.
 export interface PluginScopedBroker {
   subscribe(
     pattern: string,
     handler: (event: BrokerEvent) => void | Promise<void>,
     options?: SubscribeOptions,
   ): Subscription
+  publish<T>(
+    topic: string,
+    payload: T,
+    options?: { source?: EventSource } & Record<string, unknown>,
+  ): void
   [key: string]: unknown
 }
 
 /**
+ * Shape strutturale che `createPluginScopedBroker` assume sul rootBroker per
+ * delegare `publish`. Tipizzata localmente (non importata da broker.ts) per
+ * evitare ciclo import — coerente con la filosofia agnostica del wrapper.
+ */
+interface RootPublisher {
+  publish<T>(
+    topic: string,
+    payload: T,
+    options?: { source?: EventSource } & Record<string, unknown>,
+  ): void
+}
+
+/**
  * Crea un Proxy del rootBroker che propaga `ownerId=pluginId` al bus su ogni
- * chiamata a `subscribe()`. Tutti gli altri property access sono delegati al
- * rootBroker: i metodi sono auto-bound al target per mantenere `this` corretto.
+ * chiamata a `subscribe()` e auto-inietta `source: { type: 'plugin', id: pluginId }`
+ * su ogni chiamata a `publish()` priva di source esplicito (D-23 — chiusura
+ * asimmetria publisher/subscriber). Tutti gli altri property access sono
+ * delegati al rootBroker: i metodi sono auto-bound al target per mantenere
+ * `this` corretto.
  *
  * Type ritorno tipizzato come `PluginScopedBroker` (interface strutturale) per
  * conformità a `isolatedDeclarations: true`.
@@ -87,6 +118,19 @@ export function createPluginScopedBroker(
           handler: (event: BrokerEvent) => void | Promise<void>,
           options: SubscribeOptions = {},
         ): Subscription => bus.subscribe(pattern, handler, options, pluginId)
+      }
+      if (prop === 'publish') {
+        const rootPublish = (target as RootPublisher).publish.bind(target as RootPublisher)
+        return <T>(
+          topic: string,
+          payload: T,
+          options: { source?: EventSource } & Record<string, unknown> = {},
+        ): void => {
+          const merged: { source?: EventSource } & Record<string, unknown> = options.source
+            ? options
+            : { ...options, source: { type: 'plugin', id: pluginId } }
+          return rootPublish<T>(topic, payload, merged)
+        }
       }
       const value = Reflect.get(target, prop, receiver)
       if (typeof value === 'function') {

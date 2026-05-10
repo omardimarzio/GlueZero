@@ -17,6 +17,10 @@ export default defineConfig({
   entry: {
     index: 'src/index.ts',
     augment: 'src/augment.ts',
+    // F7 plan 07-09 W5a — subpath additivo `@gluezero/devtools/theme-inspector` (D-F7-04).
+    // Source in NUOVA sub-folder `packages/devtools/src/theme-inspector/`; zero
+    // modifiche a `packages/devtools/src/index.ts` (D-83 strict carryover esteso).
+    'theme-inspector/index': 'src/theme-inspector/index.ts',
   },
   format: ['esm'],
   dts: true,
@@ -27,7 +31,14 @@ export default defineConfig({
   minify: false,
   target: 'es2022',
   platform: 'browser',
-  external: [/^node:/, '@gluezero/core', '@gluezero/mapper', '@gluezero/routing'],
+  external: [
+    /^node:/,
+    '@gluezero/core',
+    '@gluezero/mapper',
+    '@gluezero/routing',
+    // F7 plan 07-09 — peer optional, lazy import dal subpath theme-inspector.
+    '@gluezero/theme',
+  ],
   banner: {
     js: '/* @gluezero/devtools — MIT — https://github.com/omardimarzio/GlueZero */',
   },

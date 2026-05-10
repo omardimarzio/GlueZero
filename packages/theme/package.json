@@ -1,0 +1,99 @@
+{
+  "name": "@gluezero/theme",
+  "version": "1.1.0",
+  "description": "GlueZero UI Standardization Layer — design tokens canonici + role registry + theme adapter intercambiabile + broker events ui.*",
+  "license": "MIT",
+  "author": "Omar Di Marzio",
+  "type": "module",
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./standard-role-definitions": {
+      "types": "./dist/standard-role-definitions.d.ts",
+      "import": "./dist/standard-role-definitions.js"
+    },
+    "./dom-applier": {
+      "types": "./dist/dom-applier.d.ts",
+      "import": "./dist/dom-applier.js"
+    },
+    "./stylesheet-generator": {
+      "types": "./dist/stylesheet-generator.d.ts",
+      "import": "./dist/stylesheet-generator.js"
+    },
+    "./factory": {
+      "types": "./dist/factory.d.ts",
+      "import": "./dist/factory.js"
+    },
+    "./tokens-default.css": "./dist/tokens-default.css",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "sideEffects": [
+    "./dist/tokens-default.css"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "build": "tsup",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:browser": "vitest run --config vitest.browser.config.ts --passWithNoTests",
+    "test:coverage": "vitest run --coverage",
+    "typecheck": "tsc --noEmit",
+    "clean": "rm -rf dist"
+  },
+  "peerDependencies": {
+    "@gluezero/core": "workspace:*",
+    "@gluezero/mapper": "workspace:*"
+  },
+  "dependencies": {
+    "nanoid": "5.1.11",
+    "valibot": "1.3.1"
+  },
+  "devDependencies": {
+    "@axe-core/playwright": "4.10.2",
+    "@gluezero/core": "workspace:*",
+    "@gluezero/mapper": "workspace:*",
+    "@vitest/browser": "4.1.5",
+    "@vitest/browser-playwright": "^4.1.5",
+    "@vitest/coverage-v8": "4.1.5",
+    "axe-core": "4.10.3",
+    "csstype": "3.1.3",
+    "jsdom": "29.1.0",
+    "playwright": "1.59.1",
+    "tsup": "8.5.1",
+    "typescript": "6.0.3",
+    "vitest": "4.1.5"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/omardimarzio/GlueZero.git",
+    "directory": "packages/theme"
+  },
+  "homepage": "https://github.com/omardimarzio/GlueZero/tree/main/packages/theme#readme",
+  "bugs": "https://github.com/omardimarzio/GlueZero/issues",
+  "keywords": [
+    "browser",
+    "design-tokens",
+    "esm",
+    "frontend",
+    "javascript",
+    "theme",
+    "theming",
+    "typescript",
+    "ui"
+  ]
+}
