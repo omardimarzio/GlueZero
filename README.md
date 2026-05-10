@@ -22,7 +22,10 @@ It connects components, plugins, backend APIs, realtime events, cache and Web Wo
 
 ### 🎮 Try it live
 
-[**examples/pub-sub-demo.html**](./examples/pub-sub-demo.html) — pure pub/sub: 1 publisher, 4 subscribers reacting independently to the same topic. Zero network, zero mocks. Open in browser, no build step needed.
+- [**examples/pub-sub-demo.html**](./examples/pub-sub-demo.html) — pure pub/sub: 1 publisher, 4 subscribers reacting independently to the same topic. Zero network, zero mocks. Open in browser, no build step needed. Now ships with a live theme switcher (v1.1).
+- [**examples/theme-tokens-only/**](./examples/theme-tokens-only/index.html) — **v1.1** — runtime brand swap via design tokens (`--gz-*` CSS Custom Properties + `applyTokens()`). Zero adapter.
+- [**examples/theme-dark-mode-meteo/**](./examples/theme-dark-mode-meteo/index.html) — **v1.1** — anti-FOUC dark mode with `getInitialThemeScript()` IIFE pre-paint + `prefers-color-scheme` auto-mirror.
+- [**examples/theme-tailwind/**](./examples/theme-tailwind/index.html) — **v1.1** — adapter swap on the same `data-gz-role` markup (Tailwind ↔ stylesheet) at runtime.
 
 ---
 
@@ -368,6 +371,26 @@ A full event trace can show:
 The goal is simple:
 
 **Debug the flow, not just the component.**
+
+---
+
+### Theme Layer (v1.1, opt-in)
+
+Available since v1.1.0 as a separate, opt-in package: [`@gluezero/theme`](./packages/theme).
+
+GlueZero applies the same canonical-vs-local paradigm of the data Mapper to the **visual surface** of plugins:
+
+- **Canonical design tokens** — `--gz-*` CSS Custom Properties (~35 lean tokens for color / spacing / radius / typography). One token vocabulary, swappable at runtime.
+- **Canonical visual roles** — 14 `STANDARD_ROLES` (`action.{primary,secondary,danger,ghost}`, `feedback.*`, `surface.*`, `input.*`, `navigation.*`) declared via `data-gz-role` attributes — independent of any UI framework.
+- **Interchangeable theme adapter** — three strategies (DomApplier MutationObserver / StyleSheetGenerator `@layer` / `classFor` escape hatch) map canonical roles to local CSS classes. Swap adapter at runtime: same markup, different visual brand.
+- **Broker-native lifecycle** — `ui.theme.changed` / `ui.density.changed` / `ui.direction.changed` / `ui.adapter.changed` / `ui.osPreference.changed` flow through the standard pipeline §28. Plugins ride the same observability the Event/Mapping/Route Inspector already provides.
+- **Anti-FOUC pre-paint** — `getInitialThemeScript()` IIFE inline blocking + `:root:not([data-gz-theme])` safety-net + auto `prefers-color-scheme` mirror via `matchMedia`.
+- **Lifecycle cascade** — `unregisterPlugin → unregisterAdapter` (LIFE-02 ext F7), zero leak.
+- **Theme Inspector** — observability subpath `@gluezero/devtools/theme-inspector` (ring buffer 500 + role coverage report + live token editor + snapshot/diff).
+
+**Bundle:** 6.35 KB gzipped. **Opt-in:** the aggregate `createGlueZero({ theme? })` accepts `theme` as an optional additive parameter — consumers who do not need theming pay zero overhead. Plugins built independently — in any UI framework — can be rebranded, dark-mode-switched, density-adapted and RTL-switched at runtime, without prior agreement on class names.
+
+See [`packages/theme/README.md`](./packages/theme/README.md) (italiano, 489 LoC) for the full F1+F2+F3+F4+F5+F6+F7 meteo scenario, browser support degradation policy, and the `data-gz-role` is **NOT ARIA** rule.
 
 ---
 

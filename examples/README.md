@@ -6,7 +6,10 @@ Standalone HTML files that import GlueZero from a CDN (`esm.sh`) and demonstrate
 
 | Example | What it demonstrates |
 |---------|----------------------|
-| [`pub-sub-demo.html`](./pub-sub-demo.html) | One publisher, four subscribers reacting independently to the same topic. Pure broker pub/sub between DOM components on the same page. Zero network. |
+| [`pub-sub-demo.html`](./pub-sub-demo.html) | One publisher, four subscribers reacting independently to the same topic. Pure broker pub/sub between DOM components on the same page. Zero network. Now extended (v1.1) with a live theme switcher (light/dark + brand swap) using `data-gz-role`. |
+| [`theme-tokens-only/`](./theme-tokens-only/index.html) | **v1.1** — Pure design tokens runtime override via `applyTokens()` and `--gz-*` CSS Custom Properties. Brand swap on the same DOM, zero adapter. |
+| [`theme-dark-mode-meteo/`](./theme-dark-mode-meteo/index.html) | **v1.1** — Anti-FOUC dark mode with `getInitialThemeScript()` IIFE pre-paint + `prefers-color-scheme` auto-mirror via `matchMedia`. Full meteo plugin scenario F1 → F7. |
+| [`theme-tailwind/`](./theme-tailwind/index.html) | **v1.1** — Theme adapter swap with the same canonical markup (`data-gz-role`) — Tailwind utility classes vs. custom stylesheet, intercambiabile a runtime. |
 
 ## How they work
 
@@ -14,7 +17,7 @@ Each example imports GlueZero directly via [`esm.sh`](https://esm.sh):
 
 ```html
 <script type="module">
-  import { createGlueZero } from 'https://esm.sh/@gluezero/gluezero@1.0.1'
+  import { createGlueZero } from 'https://esm.sh/@gluezero/gluezero@1.1.0'
   const broker = createGlueZero({ /* ... */ })
 </script>
 ```
@@ -44,7 +47,7 @@ Start from the structure of `pub-sub-demo.html`:
 
 1. Single HTML file
 2. `<script type="module">` block at the bottom
-3. `import { createGlueZero } from 'https://esm.sh/@gluezero/gluezero@1.0.1'`
+3. `import { createGlueZero } from 'https://esm.sh/@gluezero/gluezero@1.1.0'`
 4. Build your broker, plugins, routes
 5. Wire UI events to broker.publish, render data on broker.subscribe
 
