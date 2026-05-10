@@ -1,16 +1,16 @@
 <!doctype html>
-<html lang="it" data-gz-mode="light">
+<html lang="en" data-gz-mode="light">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>GlueZero Theme — Tokens Only Example</title>
-  <meta name="description" content="Demo standalone @gluezero/theme — Strategia B (cssRules) con LiveTokenEditor + ThemeInspector. Zero install, zero build, apri-e-funziona.">
+  <meta name="description" content="Standalone @gluezero/theme demo — Strategy B (cssRules) with LiveTokenEditor + ThemeInspector. Zero install, zero build, open and run.">
 
-  <!-- Tokens canonici @gluezero/theme v1.1 (CSS Custom Properties --gz-*) -->
+  <!-- Canonical tokens from @gluezero/theme v1.1 (CSS Custom Properties --gz-*) -->
   <link rel="stylesheet" href="https://esm.sh/@gluezero/theme@1.1.0/tokens-default.css">
 
   <style>
-    /* Stili minimal del demo, basati interamente sui token canonici --gz-* */
+    /* Minimal demo styles, based entirely on canonical --gz-* tokens */
     body {
       font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
       margin: 0;
@@ -52,7 +52,7 @@
       border: 1px solid var(--gz-color-border, #E2E8F0);
     }
 
-    /* Panel = il role surface.elevated lo styla ulteriormente via cssRules */
+    /* Panel = the surface.elevated role styles it further via cssRules */
     .panel {
       padding: var(--gz-spacing-md, 16px);
       margin-bottom: var(--gz-spacing-md, 16px);
@@ -109,18 +109,18 @@
     </header>
 
     <p class="note">
-      Demo della <strong>Strategia B</strong> di <code>@gluezero/theme</code>: l'adapter
-      <code>tokens-only</code> dichiara <code>cssRules</code> per ogni ruolo. Lo
-      <code>StyleSheetGenerator</code> inietta un <code>&lt;style&gt;@layer
-      gluezero-theme.adapter</code> in <code>&lt;head&gt;</code> con le regole risolte
-      a partire dai token canonici <code>--gz-*</code>.
+      Demo of <strong>Strategy B</strong> of <code>@gluezero/theme</code>: the
+      <code>tokens-only</code> adapter declares <code>cssRules</code> for each role. The
+      <code>StyleSheetGenerator</code> injects a <code>&lt;style&gt;@layer
+      gluezero-theme.adapter</code> in <code>&lt;head&gt;</code> with rules resolved
+      from the canonical <code>--gz-*</code> tokens.
     </p>
 
-    <!-- ============ Strategia B showcase ============ -->
+    <!-- ============ Strategy B showcase ============ -->
     <section class="panel" data-gz-role="surface.elevated">
-      <h2>Ruoli applicati via <code>data-gz-role</code></h2>
-      <p>I 4 button qui sotto NON hanno classi: lo styling arriva interamente dalle
-      <code>cssRules</code> dell'adapter <code>tokens-only</code>.</p>
+      <h2>Roles applied via <code>data-gz-role</code></h2>
+      <p>The 4 buttons below have NO classes: the styling comes entirely from the
+      <code>cssRules</code> of the <code>tokens-only</code> adapter.</p>
       <div class="actions">
         <button data-gz-role="action.primary" type="button">Primary action</button>
         <button data-gz-role="action.secondary" type="button">Secondary</button>
@@ -132,8 +132,8 @@
     <!-- ============ Live token editor ============ -->
     <section class="panel" data-gz-role="surface.elevated">
       <h2>Live Token Editor</h2>
-      <p>Cambia i 4 branded core token e osserva il render aggiornarsi in 1 paint
-      (tutto il DOM legge <code>var(--gz-*)</code>).</p>
+      <p>Change the 4 branded core tokens and watch the render update in 1 paint
+      (the entire DOM reads <code>var(--gz-*)</code>).</p>
 
       <div id="editor"></div>
 
@@ -147,10 +147,10 @@
     <!-- ============ Theme Inspector ============ -->
     <section class="panel" data-gz-role="surface.elevated">
       <h2>Theme Inspector</h2>
-      <p>Buffer ring degli eventi <code>ui.*</code> pubblicati dal broker
+      <p>Ring buffer of <code>ui.*</code> events published by the broker
       (<code>ui.theme.changed</code>, <code>ui.adapter.changed</code>,
       <code>ui.osPreference.changed</code>):</p>
-      <pre class="buffer" id="buffer">(nessun evento ancora — cambia mode o token sopra)</pre>
+      <pre class="buffer" id="buffer">(no events yet — change mode or token above)</pre>
       <div class="actions">
         <button id="refreshBuffer" data-gz-role="action.ghost" type="button">Refresh buffer</button>
         <button id="clearBuffer" data-gz-role="action.ghost" type="button">Clear</button>
@@ -160,10 +160,10 @@
   </div>
 
   <!-- =========================================================================
-       Script applicativo — single ESM module via esm.sh, ~80 righe.
+       Application script — single ESM module via esm.sh, ~80 lines.
        ========================================================================= -->
   <script type="module">
-    import { createBroker } from 'https://esm.sh/@gluezero/core@1.0.1'
+    import { createBroker } from 'https://esm.sh/@gluezero/core@1.0.2'
     import { createTheme } from 'https://esm.sh/@gluezero/theme@1.1.0/factory'
     import {
       UI_THEME_CHANGED,
@@ -175,7 +175,7 @@
     const broker = createBroker()
     const theme = createTheme({ broker })
 
-    // ---------- Adapter Strategia B (cssRules) ----------
+    // ---------- Adapter Strategy B (cssRules) ----------
     theme.register({
       id: 'tokens-only',
       cssRules: {
@@ -205,7 +205,7 @@
       theme.manager.setMode(current === 'dark' ? 'light' : 'dark')
     })
 
-    // ---------- Live Token Editor (UI-DEVTOOLS-03 fattorizzato inline) ----------
+    // ---------- Live Token Editor (UI-DEVTOOLS-03 inlined) ----------
     const EDITOR_TOKENS = [
       { name: 'color-primary', label: 'color-primary', kind: 'color' },
       { name: 'color-on-primary', label: 'color-on-primary', kind: 'color' },
@@ -253,8 +253,8 @@
     }
 
     function toHexSafe(value) {
-      // input[type=color] vuole #RRGGBB. Se il valore è già hex 6 char usa
-      // direttamente; altrimenti fallback a #6366F1 e l'utente può modificare.
+      // input[type=color] wants #RRGGBB. If the value is already 6-char hex use
+      // it directly; otherwise fallback to #6366F1 and the user can edit.
       const trimmed = (value || '').trim()
       return /^#[0-9A-Fa-f]{6}$/.test(trimmed) ? trimmed : '#6366F1'
     }
@@ -275,7 +275,7 @@
       buildEditor(document.getElementById('editor'))
     })
 
-    // ---------- Theme Inspector inline (passive subscriber su ui.*) ----------
+    // ---------- Theme Inspector inline (passive subscriber on ui.*) ----------
     const ringBuffer = []
     const RING_CAP = 200
     function record(topic, payload) {
@@ -289,13 +289,13 @@
     function renderBuffer() {
       const el = document.getElementById('buffer')
       if (ringBuffer.length === 0) {
-        el.textContent = '(nessun evento ancora — cambia mode o token sopra)'
+        el.textContent = '(no events yet — change mode or token above)'
         return
       }
       el.textContent = ringBuffer
         .slice(-30)
         .map((r) => {
-          const t = new Date(r.at).toLocaleTimeString('it-IT', { hour12: false })
+          const t = new Date(r.at).toLocaleTimeString('en-US', { hour12: false })
           return `[${t}] ${r.topic}\n  ${JSON.stringify(r.payload)}`
         })
         .join('\n')
@@ -307,7 +307,7 @@
       renderBuffer()
     })
 
-    // Auto-refresh ogni mode/adapter change per UX
+    // Auto-refresh on every mode/adapter change for UX
     broker.subscribe(UI_THEME_CHANGED, () => renderBuffer())
     broker.subscribe(UI_ADAPTER_CHANGED, () => renderBuffer())
 

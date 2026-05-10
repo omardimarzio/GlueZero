@@ -454,8 +454,8 @@
         <label for="from">Mittente</label>
         <input id="from" type="text" value="Alice" maxlength="20" data-gz-role="input.text">
 
-        <label for="text">Messaggio</label>
-        <textarea id="text" maxlength="280" placeholder="Scrivi qualcosa e premi Send…" data-gz-role="input.text">Hello from GlueZero!</textarea>
+        <label for="text">Message</label>
+        <textarea id="text" maxlength="280" placeholder="Type something and press Send…" data-gz-role="input.text">Hello from GlueZero!</textarea>
 
         <div class="btn-row">
           <button class="btn" id="send" style="margin:0;" data-gz-role="action.primary">Send (publish)</button>
@@ -540,7 +540,7 @@ broker.<span class="fn">publish</span>(<span class="str">'message.posted'</span>
         </div>
         <div class="panel-body">
           <div class="feed" id="feed">
-            <div class="feed-empty">In attesa di <code>message.posted</code>…</div>
+            <div class="feed-empty">Waiting for <code>message.posted</code>…</div>
           </div>
           <div class="code-snippet"><span class="com">// Italian consumer plugin: inputMap with local key → { source: canonical }</span>
 broker.<span class="fn">registerPlugin</span>({
@@ -1032,18 +1032,18 @@ broker.<span class="fn">unregisterPlugin</span>(<span class="str">'compact-lates
 <script type="module">
   import { createTheme } from 'https://esm.sh/@gluezero/theme@1.1.0/factory'
 
-  // Riusa il broker già esposto dal demo esistente per inviare/ricevere ui.*
-  // (window.broker = broker, vedi l'altro <script> sopra). In assenza,
-  // createTheme funziona standalone — DomApplier + StyleSheetGenerator continuano
-  // a operare senza broker, semplicemente non pubblicano ui.* events.
+  // Reuse the broker already exposed by the existing demo to send/receive ui.*
+  // (window.broker = broker, see the other <script> above). When absent,
+  // createTheme works standalone — DomApplier + StyleSheetGenerator continue
+  // to operate without a broker; they simply don't publish ui.* events.
   const broker = window.broker ?? null
   const theme = createTheme({ broker, persistence: 'localStorage' })
 
   // ============================================================
-  // 3 adapter (D-F7-25): tokens-only + tailwind-vibe + bootstrap-vibe.
-  // Tutti Strategia B (cssRules) — niente dipendenza Tailwind/Bootstrap CDN
-  // qui per non gonfiare il hero. Le classi sono "vibe" cioè CSS che imita
-  // l'estetica dei due framework con un set minimo di regole.
+  // 3 adapters (D-F7-25): tokens-only + tailwind-vibe + bootstrap-vibe.
+  // All Strategy B (cssRules) — no Tailwind/Bootstrap CDN dependency here
+  // to keep the hero demo lean. The classes are "vibe" — CSS that mimics
+  // the aesthetic of the two frameworks with a minimal rule set.
   // ============================================================
   theme.register({
     id: 'tokens-only',
@@ -1114,10 +1114,10 @@ broker.<span class="fn">unregisterPlugin</span>(<span class="str">'compact-lates
     })
   })
 
-  // Mode auto-mirror OS è già gestito dal toggle esistente del demo (data-theme
-  // attribute su <html>). Qui sincronizziamo il theme manager con la preferenza
-  // localStorage corrente per non duplicare lo stato. Lo storage key del demo
-  // esistente è "gz-theme" — il theme manager usa il suo namespace gluezero.theme.*.
+  // OS auto-mirror mode is already handled by the existing demo toggle (data-theme
+  // attribute on <html>). Here we sync the theme manager with the current
+  // localStorage preference to avoid duplicating state. The existing demo's
+  // storage key is "gz-theme" — the theme manager uses its own gluezero.theme.* namespace.
   const storedMode = localStorage.getItem('gz-theme')
   if (storedMode === 'dark' || storedMode === 'light') {
     theme.manager.setMode(storedMode)

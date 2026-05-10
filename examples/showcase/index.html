@@ -1,11 +1,11 @@
 <!DOCTYPE html>
-<html lang="it">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>GlueZero — Live Showcase</title>
 
-  <!-- Anti-FOUC IIFE: pattern @gluezero/theme getInitialThemeScript -->
+  <!-- Anti-FOUC IIFE: replicates the @gluezero/theme getInitialThemeScript pattern -->
   <script>
     (function () {
       try {
@@ -201,7 +201,7 @@
     .badge-cache-hit { background: #10b981; color: white; padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: 600; text-transform: uppercase }
     .badge-cache-miss { background: #ef4444; color: white; padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: 600; text-transform: uppercase }
 
-    /* Theme demo: brand swap targets — usa gluezero tokens */
+    /* Theme demo: brand swap targets — uses gluezero tokens */
     .theme-preview {
       padding: 24px; border-radius: 12px;
       background: var(--gz-color-surface-base, #ffffff);
@@ -317,47 +317,47 @@
         <div class="welcome">
           <h2>GlueZero Live Showcase</h2>
           <p>
-            7 capability del runtime di integrazione frontend, ognuna con un esempio
-            <strong>realmente eseguito</strong> — codice live, niente mockup. Niente
-            build step: questa pagina importa <code>@gluezero/*</code> direttamente
+            7 capabilities of the frontend integration runtime, each with a
+            <strong>real running example</strong> — live code, no mockups. No
+            build step: this page imports <code>@gluezero/*</code> directly
             via <a class="npm-link" href="https://esm.sh">esm.sh</a> CDN.
-            Naviga il menu sulla sinistra per esplorare ogni feature.
+            Use the menu on the left to explore each feature.
           </p>
           <div class="welcome-grid">
             <a class="welcome-card" href="#broker">
               <div class="icon">📡</div>
               <div class="title">Pub/Sub Broker</div>
-              <div class="desc">Eventi tipizzati pubblicati su topic + subscriber wildcard.</div>
+              <div class="desc">Typed events published on topics + wildcard subscribers.</div>
             </a>
             <a class="welcome-card" href="#mapping">
               <div class="icon">🔀</div>
               <div class="title">Canonical Mapping</div>
-              <div class="desc">Plugin con vocabolari diversi parlano la stessa lingua canonica.</div>
+              <div class="desc">Plugins with different vocabularies speak the same canonical language.</div>
             </a>
             <a class="welcome-card" href="#routing">
               <div class="icon">🧭</div>
               <div class="title">Routing + Gateway</div>
-              <div class="desc">Topic dichiarativo → fetch HTTP via gateway con retry policy.</div>
+              <div class="desc">Declarative topic → HTTP fetch via gateway with retry policy.</div>
             </a>
             <a class="welcome-card" href="#worker">
               <div class="icon">⚙️</div>
               <div class="title">Worker Runtime</div>
-              <div class="desc">Computazione pesante off-thread, UI sempre reattiva.</div>
+              <div class="desc">Heavy computation off-thread, UI always responsive.</div>
             </a>
             <a class="welcome-card" href="#cache">
               <div class="icon">💾</div>
               <div class="title">Cache Layer</div>
-              <div class="desc">Cache hit/miss in-memory con TTL visibile.</div>
+              <div class="desc">In-memory cache hit/miss with visible TTL.</div>
             </a>
             <a class="welcome-card" href="#observability">
               <div class="icon">🔍</div>
               <div class="title">Observability</div>
-              <div class="desc">Event Inspector live: ring buffer di eventi pipeline.</div>
+              <div class="desc">Live Event Inspector: ring buffer of pipeline events.</div>
             </a>
             <a class="welcome-card" href="#theme">
               <div class="icon">🎨</div>
               <div class="title">Theme Layer</div>
-              <div class="desc">Brand swap runtime via design tokens canonici --gz-*.</div>
+              <div class="desc">Runtime brand swap via canonical --gz-* design tokens.</div>
             </a>
           </div>
         </div>
@@ -372,16 +372,16 @@
         <div class="demo">
           <h2>📡 Pub/Sub Broker</h2>
           <p class="lead">
-            Il broker è il cuore di GlueZero. I componenti pubblicano eventi su topic
-            (formato <code>entity.action.status</code>) e altri si iscrivono a pattern
-            con wildcard. Zero accoppiamento diretto.
+            The broker is the heart of GlueZero. Components publish events on topics
+            (format <code>entity.action.status</code>) and others subscribe via
+            wildcard patterns. Zero direct coupling.
           </p>
 
           <div class="demo-section">
-            <h3>Live <span class="pill">UI reale</span></h3>
+            <h3>Live <span class="pill">real UI</span></h3>
             <div class="controls">
-              <input id="broker-topic" placeholder="topic (es. weather.requested)" value="weather.requested">
-              <input id="broker-payload" placeholder='payload JSON (es. {"city":"Roma"})' value='{"city":"Roma"}'>
+              <input id="broker-topic" placeholder="topic (e.g. weather.requested)" value="weather.requested">
+              <input id="broker-payload" placeholder='JSON payload (e.g. {"city":"Rome"})' value='{"city":"Rome"}'>
               <button class="primary" id="broker-publish" type="button">Publish</button>
               <button id="broker-clear" type="button">Clear log</button>
             </div>
@@ -389,27 +389,27 @@
               <div class="stat"><div class="label">Subscribers <code>weather.*</code></div><div class="value ok" id="broker-stat-weather">1</div></div>
               <div class="stat"><div class="label">Subscribers <code>*.requested</code></div><div class="value ok" id="broker-stat-requested">1</div></div>
               <div class="stat"><div class="label">Subscribers <code>system.error</code></div><div class="value warn" id="broker-stat-err">1</div></div>
-              <div class="stat"><div class="label">Eventi pubblicati</div><div class="value" id="broker-stat-count">0</div></div>
+              <div class="stat"><div class="label">Events published</div><div class="value" id="broker-stat-count">0</div></div>
             </div>
             <div class="live-output" id="broker-log"></div>
           </div>
 
           <div class="demo-section">
-            <h3>Codice saliente <span class="pill">@gluezero/core</span></h3>
+            <h3>Salient code <span class="pill">@gluezero/core</span></h3>
             <p class="pre-explainer">
-              Tre subscriber con pattern diversi: wildcard segmento, prefisso, topic esatto.
-              Il broker dispatcha lo stesso evento a tutti gli iscritti che match-ano il pattern.
+              Three subscribers with different patterns: single-segment wildcard, prefix wildcard, exact topic.
+              The broker dispatches the same event to all subscribers whose pattern matches.
             </p>
             ${codeBlock(`import { createBroker } from '@gluezero/core'
 
 const broker = createBroker({ runtime: { logLevel: 'info' } })
 
-// Subscribe — wildcard single-segment
+// Subscribe — single-segment wildcard
 broker.subscribe('weather.*', (event) => {
   console.log('weather:', event.topic, event.payload)
 })
 
-// Subscribe — wildcard di azione
+// Subscribe — action wildcard
 broker.subscribe('*.requested', (event) => {
   console.log('requested:', event.topic)
 })
@@ -420,7 +420,7 @@ broker.subscribe('system.error', (event) => {
 })
 
 // Publish — async via queueMicrotask (FIFO, no re-entrancy)
-broker.publish('weather.requested', { city: 'Roma' }, {
+broker.publish('weather.requested', { city: 'Rome' }, {
   source: { type: 'plugin', id: 'weather-form' }
 })`)}
           </div>
@@ -433,7 +433,7 @@ broker.publish('weather.requested', { city: 'Roma' }, {
       let count = 0
 
       const append = (cls, text) => {
-        const ts = new Date().toLocaleTimeString('it-IT', { hour12: false }) + '.' + String(Date.now() % 1000).padStart(3, '0')
+        const ts = new Date().toLocaleTimeString('en-US', { hour12: false }) + '.' + String(Date.now() % 1000).padStart(3, '0')
         const row = document.createElement('div')
         row.className = 'row'
         row.innerHTML = `<span class="ts">${ts}</span><span class="${cls}">${escapeHtml(text)}</span>`
@@ -451,22 +451,22 @@ broker.publish('weather.requested', { city: 'Roma' }, {
         append('err', `[system.error] ${event.payload?.error?.message || 'unknown error'}`)
       })
 
-      append('info', '✓ Broker creato. 3 subscriber registrati. Prova a pubblicare!')
+      append('info', '✓ Broker created. 3 subscribers registered. Try publishing!')
 
       document.getElementById('broker-publish').addEventListener('click', () => {
         const topic = document.getElementById('broker-topic').value.trim()
         const raw = document.getElementById('broker-payload').value.trim()
-        if (!topic) { append('err', 'Topic vuoto'); return }
+        if (!topic) { append('err', 'Topic is empty'); return }
         let payload
         try { payload = raw ? JSON.parse(raw) : {} }
-        catch (e) { append('err', `Payload JSON non valido: ${e.message}`); return }
+        catch (e) { append('err', `Invalid JSON payload: ${e.message}`); return }
         try {
           broker.publish(topic, payload, { source: { type: 'plugin', id: 'showcase' } })
           count++
           counter.textContent = String(count)
           append('ok', `→ publish ${topic}`)
         } catch (e) {
-          append('err', `Errore publish: ${e.message}`)
+          append('err', `Publish error: ${e.message}`)
         }
       })
       document.getElementById('broker-clear').addEventListener('click', () => { log.innerHTML = '' })
@@ -480,28 +480,28 @@ broker.publish('weather.requested', { city: 'Roma' }, {
         <div class="demo">
           <h2>🔀 Canonical Mapping</h2>
           <p class="lead">
-            Plugin sviluppati indipendentemente possono avere nomi di campo diversi.
-            Il <strong>mapper bidirezionale</strong> traduce dal vocabolario locale a
-            quello canonico (e viceversa) senza che plugin diversi debbano mettersi
-            d'accordo.
+            Plugins built independently may use different field names. The
+            <strong>bidirectional mapper</strong> translates from the local vocabulary
+            to the canonical one (and vice versa) without forcing different plugin
+            authors to agree on names.
           </p>
 
           <div class="demo-section">
-            <h3>Live <span class="pill">trasformazione bidirezionale</span></h3>
+            <h3>Live <span class="pill">bidirectional transform</span></h3>
             <div class="controls">
-              <button class="primary" id="map-publish-it" type="button">Publish formato italiano</button>
-              <button class="primary" id="map-publish-en" type="button">Publish formato inglese</button>
+              <button class="primary" id="map-publish-it" type="button">Publish Italian format</button>
+              <button class="primary" id="map-publish-en" type="button">Publish English format</button>
             </div>
             <div class="pre-explainer">
-              Plugin <strong>weather-form-it</strong> usa <code>città</code> + <code>codice_postale</code>;
-              plugin <strong>weather-form-en</strong> usa <code>city</code> + <code>postalCode</code>.
-              Il broker normalizza entrambi al modello canonico <code>{ cityName, zip }</code>.
+              Plugin <strong>weather-form-it</strong> uses <code>città</code> + <code>codice_postale</code>;
+              plugin <strong>weather-form-en</strong> uses <code>city</code> + <code>postalCode</code>.
+              The broker normalizes both into the canonical model <code>{ cityName, zip }</code>.
             </div>
             <div id="map-output"></div>
           </div>
 
           <div class="demo-section">
-            <h3>Codice saliente <span class="pill">@gluezero/mapper</span></h3>
+            <h3>Salient code <span class="pill">@gluezero/mapper</span></h3>
             ${codeBlock(`import { createMapperBroker } from '@gluezero/mapper'
 
 const broker = createMapperBroker({
@@ -513,12 +513,12 @@ const broker = createMapperBroker({
   },
   mappings: {
     'weather.requested': {
-      // Plugin italiano
+      // Italian plugin
       'weather-form-it': {
         outputMap: { 'città': 'cityName', 'codice_postale': 'zip' },
         inputMap:  { cityName: 'città', zip: 'codice_postale' }
       },
-      // Plugin inglese
+      // English plugin
       'weather-form-en': {
         outputMap: { city: 'cityName', postalCode: 'zip' },
         inputMap:  { cityName: 'city', zip: 'postalCode' }
@@ -527,12 +527,12 @@ const broker = createMapperBroker({
   }
 })
 
-// Plugin IT pubblica con suoi nomi locali
+// IT plugin publishes with its local names
 broker.publish('weather.requested',
-  { 'città': 'Roma', 'codice_postale': '00100' },
+  { 'città': 'Rome', 'codice_postale': '00100' },
   { source: { type: 'plugin', id: 'weather-form-it' } }
 )
-// → subscriber riceve canonical: { cityName: 'Roma', zip: '00100' }`)}
+// → subscriber receives canonical: { cityName: 'Rome', zip: '00100' }`)}
           </div>
         </div>
       `
@@ -593,7 +593,7 @@ broker.publish('weather.requested',
       }
 
       document.getElementById('map-publish-it').addEventListener('click', () => {
-        publish('weather-form-it', { 'città': 'Roma', 'codice_postale': '00100' })
+        publish('weather-form-it', { 'città': 'Rome', 'codice_postale': '00100' })
       })
       document.getElementById('map-publish-en').addEventListener('click', () => {
         publish('weather-form-en', { city: 'London', postalCode: 'SW1A' })
@@ -608,27 +608,27 @@ broker.publish('weather.requested',
         <div class="demo">
           <h2>🧭 Routing + Server Gateway</h2>
           <p class="lead">
-            Una <strong>route dichiarativa</strong> trasforma un topic broker in una
-            chiamata HTTP via gateway centralizzato. Retry/timeout/auth gestiti dal
-            gateway, non dal componente. Niente <code>fetch()</code> sparsi nell'UI.
+            A <strong>declarative route</strong> turns a broker topic into an HTTP
+            call via a centralized gateway. Retry/timeout/auth handled by the gateway,
+            not by the component. No <code>fetch()</code> calls scattered through the UI.
           </p>
 
           <div class="demo-section">
-            <h3>Live <span class="pill">fetch reale</span></h3>
+            <h3>Live <span class="pill">real fetch</span></h3>
             <div class="controls">
               <input id="route-userid" type="number" min="1" max="10" value="1" style="max-width:80px">
               <button class="primary" id="route-fetch" type="button">Publish users.requested</button>
-              <button id="route-fail" type="button">Simula fallimento (id=999)</button>
+              <button id="route-fail" type="button">Simulate failure (id=999)</button>
             </div>
             <div class="pre-explainer">
-              <code>users.requested</code> → route HTTP GET su <code>jsonplaceholder.typicode.com/users/:id</code>.
-              Il gateway aggiunge timeout 5s + retry 2× su 5xx. Risposta pubblicata su <code>users.loaded</code>.
+              <code>users.requested</code> → HTTP GET route to <code>jsonplaceholder.typicode.com/users/:id</code>.
+              The gateway adds a 5s timeout + 2× retry on 5xx responses. Result published on <code>users.loaded</code>.
             </div>
             <div class="live-output" id="route-log"></div>
           </div>
 
           <div class="demo-section">
-            <h3>Codice saliente <span class="pill">@gluezero/routing + @gluezero/gateway</span></h3>
+            <h3>Salient code <span class="pill">@gluezero/routing + @gluezero/gateway</span></h3>
             ${codeBlock(`import { createGlueZero } from '@gluezero/gluezero'
 
 const broker = createGlueZero({
@@ -652,7 +652,7 @@ const broker = createGlueZero({
 })
 
 broker.subscribe('users.loaded', (event) => {
-  // event.payload === user JSON dal server
+  // event.payload === user JSON from the server
 })
 broker.subscribe('users.failed', (event) => {
   // event.payload.error.code === 'http.timeout' | 'http.5xx' | ...
@@ -667,7 +667,7 @@ broker.publish('users.requested', { id: 1 }, {
 
       const log = document.getElementById('route-log')
       const append = (cls, text) => {
-        const ts = new Date().toLocaleTimeString('it-IT', { hour12: false })
+        const ts = new Date().toLocaleTimeString('en-US', { hour12: false })
         const row = document.createElement('div')
         row.className = 'row'
         row.innerHTML = `<span class="ts">${ts}</span><span class="${cls}">${escapeHtml(text)}</span>`
@@ -710,7 +710,7 @@ broker.publish('users.requested', { id: 1 }, {
         append('err', `[users.failed] ${event.payload.error.message}`)
       })
 
-      append('info', '✓ Route users.requested → HTTP GET registrata.')
+      append('info', '✓ Route users.requested → HTTP GET registered.')
 
       document.getElementById('route-fetch').addEventListener('click', () => {
         const id = Number(document.getElementById('route-userid').value) || 1
@@ -729,38 +729,38 @@ broker.publish('users.requested', { id: 1 }, {
         <div class="demo">
           <h2>⚙️ Worker Runtime</h2>
           <p class="lead">
-            Computazioni pesanti (parsing CSV, render PDF, calcoli numerici) vanno
-            in Web Worker per non bloccare la UI. GlueZero astrae il worker registry,
-            la pool strategy, il task tracking e l'error propagation.
+            Heavy computations (CSV parsing, PDF rendering, numeric work) belong in
+            a Web Worker so they don't block the UI. GlueZero abstracts the worker
+            registry, pool strategy, task tracking and error propagation.
           </p>
 
           <div class="demo-section">
-            <h3>Live <span class="pill">UI sempre reattiva</span></h3>
+            <h3>Live <span class="pill">UI stays responsive</span></h3>
             <div class="controls">
               <input id="worker-n" type="number" min="20" max="42" value="38" style="max-width:80px">
-              <button class="primary" id="worker-run" type="button">Calcola fibonacci(n) in worker</button>
-              <button id="worker-block" type="button">Calcola sul main thread (blocca!)</button>
+              <button class="primary" id="worker-run" type="button">Compute fibonacci(n) in worker</button>
+              <button id="worker-block" type="button">Compute on main thread (blocks!)</button>
             </div>
             <div class="stats">
-              <div class="stat"><div class="label">UI Counter live</div><div class="value ok" id="worker-counter">0</div></div>
-              <div class="stat"><div class="label">Ultimo risultato</div><div class="value" id="worker-result">—</div></div>
-              <div class="stat"><div class="label">Tempo di calcolo</div><div class="value" id="worker-time">—</div></div>
+              <div class="stat"><div class="label">Live UI counter</div><div class="value ok" id="worker-counter">0</div></div>
+              <div class="stat"><div class="label">Last result</div><div class="value" id="worker-result">—</div></div>
+              <div class="stat"><div class="label">Compute time</div><div class="value" id="worker-time">—</div></div>
             </div>
             <div class="pre-explainer">
-              Il counter si incrementa ogni 100ms. Lancia il calcolo: in worker la UI
-              continua a scorrere fluida; sul main thread si blocca finché non termina.
+              The counter increments every 100ms. Run the calculation: in the worker the UI
+              keeps ticking smoothly; on the main thread it freezes until completion.
             </div>
             <div class="live-output" id="worker-log"></div>
           </div>
 
           <div class="demo-section">
-            <h3>Codice saliente <span class="pill">@gluezero/worker</span></h3>
+            <h3>Salient code <span class="pill">@gluezero/worker</span></h3>
             ${codeBlock(`import { createGlueZero } from '@gluezero/gluezero'
 
 const broker = createGlueZero({
   workers: {
     'fib': {
-      // worker source as URL (es. blob:, /workers/fib.js, ecc.)
+      // worker source as URL (e.g. blob:, /workers/fib.js, ...)
       source: '/workers/fib.js',
       pool: { maxConcurrency: 2 }
     }
@@ -833,7 +833,7 @@ broker.publish('fib.requested', { n: 38 })`)}
         append('ok', `← worker result fib() = ${event.payload.result.toLocaleString()} in ${Math.round(event.payload.ms)} ms`)
       })
 
-      append('info', '✓ Worker creato (blob URL inline). Il counter UI continua a scorrere durante il calcolo.')
+      append('info', '✓ Worker created (inline blob URL). The UI counter keeps ticking during the calculation.')
 
       document.getElementById('worker-run').addEventListener('click', () => {
         const n = Number(document.getElementById('worker-n').value) || 35
@@ -847,7 +847,7 @@ broker.publish('fib.requested', { n: 38 })`)}
         const ms = performance.now() - start
         resultEl.textContent = result.toLocaleString()
         timeEl.textContent = Math.round(ms) + ' ms'
-        append('err', `⚠ MAIN THREAD blocked for ${Math.round(ms)} ms — counter ha smesso di scorrere!`)
+        append('err', `⚠ MAIN THREAD blocked for ${Math.round(ms)} ms — counter froze!`)
       })
     }
 
@@ -859,16 +859,16 @@ broker.publish('fib.requested', { n: 38 })`)}
         <div class="demo">
           <h2>💾 Cache Layer</h2>
           <p class="lead">
-            La cache in-memory di GlueZero salva la response di un fetch sotto chiave
-            <code>topic + payload-hash + scope</code>. Hit istantanei, miss vanno via
-            HTTP. TTL configurabile + invalidate manuale.
+            GlueZero's in-memory cache stores fetch responses keyed by
+            <code>topic + payload-hash + scope</code>. Hits are instant, misses go
+            over HTTP. Configurable TTL + manual invalidation.
           </p>
 
           <div class="demo-section">
-            <h3>Live <span class="pill">hit/miss in tempo reale</span></h3>
+            <h3>Live <span class="pill">real-time hit/miss</span></h3>
             <div class="controls">
               <input id="cache-userid" type="number" min="1" max="10" value="1" style="max-width:80px">
-              <button class="primary" id="cache-fetch" type="button">Fetch user (con cache)</button>
+              <button class="primary" id="cache-fetch" type="button">Fetch user (cached)</button>
               <button id="cache-clear" type="button">Invalidate cache</button>
               <select id="cache-ttl">
                 <option value="5000">TTL 5s</option>
@@ -879,20 +879,20 @@ broker.publish('fib.requested', { n: 38 })`)}
             <div class="stats">
               <div class="stat"><div class="label">Cache hits</div><div class="value ok" id="cache-stat-hit">0</div></div>
               <div class="stat"><div class="label">Cache misses</div><div class="value warn" id="cache-stat-miss">0</div></div>
-              <div class="stat"><div class="label">Entries memorizzate</div><div class="value" id="cache-stat-size">0</div></div>
+              <div class="stat"><div class="label">Stored entries</div><div class="value" id="cache-stat-size">0</div></div>
             </div>
             <div class="live-output" id="cache-log"></div>
           </div>
 
           <div class="demo-section">
-            <h3>Codice saliente <span class="pill">@gluezero/cache</span></h3>
+            <h3>Salient code <span class="pill">@gluezero/cache</span></h3>
             ${codeBlock(`import { createGlueZero } from '@gluezero/gluezero'
 import { createInMemoryCache } from '@gluezero/cache'
 
 const broker = createGlueZero({
   cache: {
     adapter: createInMemoryCache({ maxEntries: 100 }),
-    defaultTtlMs: 15000  // 15 secondi
+    defaultTtlMs: 15000  // 15 seconds
   },
   routes: [
     {
@@ -901,7 +901,7 @@ const broker = createGlueZero({
       url: ({ payload }) => \`/users/\${payload.id}\`,
       cache: {
         key: ({ payload }) => \`user:\${payload.id}\`,
-        scope: 'public',     // o 'user' per per-tenant isolation
+        scope: 'public',     // or 'user' for per-tenant isolation
         ttlMs: 15000
       },
       onSuccess: 'users.loaded'
@@ -909,9 +909,9 @@ const broker = createGlueZero({
   ]
 })
 
-// Prima publish: cache miss → HTTP GET
+// First publish: cache miss → HTTP GET
 broker.publish('users.requested', { id: 1 })
-// Seconda publish identica entro 15s: cache hit (no network)
+// Second identical publish within 15s: cache hit (no network)
 broker.publish('users.requested', { id: 1 })`)}
           </div>
         </div>
@@ -925,13 +925,13 @@ broker.publish('users.requested', { id: 1 })`)}
       const append = (cls, text) => {
         const row = document.createElement('div')
         row.className = 'row'
-        const ts = new Date().toLocaleTimeString('it-IT', { hour12: false })
+        const ts = new Date().toLocaleTimeString('en-US', { hour12: false })
         row.innerHTML = `<span class="ts">${ts}</span><span class="${cls}">${escapeHtml(text)}</span>`
         log.appendChild(row)
         log.scrollTop = log.scrollHeight
       }
 
-      // In-memory cache (replica del pattern @gluezero/cache InMemoryCache)
+      // In-memory cache (replicates the @gluezero/cache InMemoryCache pattern)
       const cache = new Map() // key -> { value, expiresAt }
       let hits = 0, misses = 0
 
@@ -945,7 +945,7 @@ broker.publish('users.requested', { id: 1 })`)}
           hits++
           hitEl.textContent = String(hits)
           const remaining = Math.round((entry.expiresAt - now) / 100) / 10
-          append('ok', `[CACHE HIT] ${key} → response istantanea (TTL ${remaining}s rimanenti)`)
+          append('ok', `[CACHE HIT] ${key} → instant response (${remaining}s TTL remaining)`)
           return entry.value
         }
         misses++
@@ -961,7 +961,7 @@ broker.publish('users.requested', { id: 1 })`)}
         return data
       }
 
-      append('info', '✓ Cache in-memory pronta. Stesso id entro TTL → hit. Cambia TTL e id per vedere il behavior.')
+      append('info', '✓ In-memory cache ready. Same id within TTL → hit. Change TTL and id to see the behavior.')
 
       document.getElementById('cache-fetch').addEventListener('click', async () => {
         const id = Number(document.getElementById('cache-userid').value) || 1
@@ -969,13 +969,13 @@ broker.publish('users.requested', { id: 1 })`)}
           const user = await fetchUser(id)
           append('ok', `→ user: ${user.name} <${user.email}>`)
         } catch (e) {
-          append('err', `Errore: ${e.message}`)
+          append('err', `Error: ${e.message}`)
         }
       })
       document.getElementById('cache-clear').addEventListener('click', () => {
         cache.clear()
         sizeEl.textContent = '0'
-        append('err', '✗ Cache invalidata (tutte le entry rimosse).')
+        append('err', '✗ Cache invalidated (all entries removed).')
       })
     }
 
@@ -987,35 +987,35 @@ broker.publish('users.requested', { id: 1 })`)}
         <div class="demo">
           <h2>🔍 Observability — Event Inspector</h2>
           <p class="lead">
-            <code>createEventInspector(broker)</code> apre un Tap sulla pipeline broker.
-            Ogni evento publica/dispatcha registra un record nel ring buffer (default
-            500). Use case: debugging live, replay, post-mortem.
+            <code>createEventInspector(broker)</code> opens a Tap on the broker pipeline.
+            Every published/dispatched event records an entry in the ring buffer (default
+            500). Use cases: live debugging, replay, post-mortem.
           </p>
 
           <div class="demo-section">
             <h3>Live <span class="pill">ring buffer</span></h3>
             <div class="controls">
-              <button class="primary" id="obs-burst" type="button">Burst di 5 eventi</button>
-              <button id="obs-error" type="button">Pubblica system.error</button>
+              <button class="primary" id="obs-burst" type="button">Burst of 5 events</button>
+              <button id="obs-error" type="button">Publish system.error</button>
               <button id="obs-clear" type="button">Clear inspector</button>
             </div>
             <div class="stats">
-              <div class="stat"><div class="label">Eventi nel buffer</div><div class="value ok" id="obs-stat-count">0</div></div>
+              <div class="stat"><div class="label">Events in buffer</div><div class="value ok" id="obs-stat-count">0</div></div>
               <div class="stat"><div class="label">Buffer capacity</div><div class="value" id="obs-stat-cap">500</div></div>
-              <div class="stat"><div class="label">Topic distinti</div><div class="value" id="obs-stat-topics">0</div></div>
+              <div class="stat"><div class="label">Distinct topics</div><div class="value" id="obs-stat-topics">0</div></div>
             </div>
             <div class="live-output" id="obs-log"></div>
           </div>
 
           <div class="demo-section">
-            <h3>Codice saliente <span class="pill">@gluezero/devtools</span></h3>
+            <h3>Salient code <span class="pill">@gluezero/devtools</span></h3>
             ${codeBlock(`import { createBroker } from '@gluezero/core'
 import { createEventInspector } from '@gluezero/devtools'
 
 const broker = createBroker()
 const inspector = createEventInspector(broker, {
   bufferSize: 500,        // ring buffer size
-  topicFilter: '*'        // o regex / lista per filtri mirati
+  topicFilter: '*'        // or regex / list for targeted filters
 })
 
 broker.publish('order.placed', { id: 'o-42', total: 199 }, {
@@ -1028,7 +1028,7 @@ console.log(snapshot.events.length)        // 1
 console.log(snapshot.events[0].topic)      // 'order.placed'
 console.log(snapshot.events[0].timings.ms) // pipeline latency
 
-// Subscribe live (UI, devtools panel, ecc.)
+// Live subscribe (UI, devtools panel, etc.)
 inspector.subscribe((latest) => {
   console.log('new event:', latest.topic)
 })
@@ -1052,7 +1052,7 @@ inspector.dispose()`)}
         const row = document.createElement('div')
         row.className = 'row'
         const cls = entry.topic.startsWith('system.error') ? 'err' : 'topic'
-        const ts = new Date(entry.timestamp || Date.now()).toLocaleTimeString('it-IT', { hour12: false })
+        const ts = new Date(entry.timestamp || Date.now()).toLocaleTimeString('en-US', { hour12: false })
         row.innerHTML = `<span class="ts">${ts}</span><span class="${cls}">${escapeHtml(entry.topic)}</span> <span style="opacity:0.6">${escapeHtml(JSON.stringify(entry.payload))}</span>`
         log.prepend(row)
       }
@@ -1101,14 +1101,14 @@ inspector.dispose()`)}
         <div class="demo">
           <h2>🎨 Theme Layer</h2>
           <p class="lead">
-            Design tokens canonici <code>--gz-*</code> + adapter swap a runtime con
-            <strong>stesso markup</strong> (<code>data-gz-role</code>). Plugin di
-            framework diversi vengono ribrandizzati senza accordo preventivo sulle
-            classi CSS.
+            Canonical <code>--gz-*</code> design tokens + adapter swap at runtime with
+            <strong>the same markup</strong> (<code>data-gz-role</code>). Plugins from
+            different frameworks get re-branded without prior agreement on CSS class
+            names.
           </p>
 
           <div class="demo-section">
-            <h3>Live <span class="pill">brand swap runtime</span></h3>
+            <h3>Live <span class="pill">runtime brand swap</span></h3>
             <div class="controls">
               <button id="theme-brand-default" class="primary" type="button">Brand: GlueZero default</button>
               <button id="theme-brand-emerald" type="button">Brand: Emerald</button>
@@ -1116,32 +1116,32 @@ inspector.dispose()`)}
             </div>
             <div class="theme-preview" id="theme-preview">
               <h4>Hero card</h4>
-              <p style="opacity:0.75;font-size:14px;margin:8px 0 16px">Stesso markup HTML, palette diversa applicata via CSS Custom Properties al <code>:root</code>. Niente full re-render React/Vue/Svelte: solo le proprietà cambiano.</p>
+              <p style="opacity:0.75;font-size:14px;margin:8px 0 16px">Same HTML markup, different palette applied via CSS Custom Properties on <code>:root</code>. No full React/Vue/Svelte re-render: only properties change.</p>
               <button data-gz-role="action.primary">Primary action</button>
               <button data-gz-role="action.secondary">Secondary</button>
             </div>
           </div>
 
           <div class="demo-section">
-            <h3>Codice saliente <span class="pill">@gluezero/theme</span></h3>
+            <h3>Salient code <span class="pill">@gluezero/theme</span></h3>
             ${codeBlock(`import { createTheme } from '@gluezero/theme/factory'
 import '@gluezero/theme/dist/tokens-default.css'
 
 const theme = createTheme({ mode: 'auto' })
 
-// Brand swap runtime — applyTokens override solo i token cambiati
+// Runtime brand swap — applyTokens overrides only the changed tokens
 theme.applyTokens({
   '--gz-color-action-primary-bg':   '#10b981',
   '--gz-color-action-primary-text': '#ffffff',
   '--gz-color-surface-base':        '#ecfdf5'
 })
 
-// Eventi broker (ui.*) per observability — pipeline §28
+// Broker events (ui.*) for observability — pipeline §28
 broker.subscribe('ui.theme.changed', (event) => {
-  console.log(event.payload.tokens)  // tokens applicati
+  console.log(event.payload.tokens)  // tokens applied
 })
 
-// Lifecycle cascade automatico:
+// Automatic lifecycle cascade:
 // unregisterPlugin → unregisterAdapter (LIFE-02 ext F7)`)}
           </div>
         </div>
@@ -1192,7 +1192,7 @@ broker.subscribe('ui.theme.changed', (event) => {
       setActive(key)
       try { fn() }
       catch (e) {
-        content.innerHTML = `<div class="demo"><h2>Errore demo</h2><pre class="code">${escapeHtml(e.stack || e.message)}</pre></div>`
+        content.innerHTML = `<div class="demo"><h2>Demo error</h2><pre class="code">${escapeHtml(e.stack || e.message)}</pre></div>`
       }
     }
     window.addEventListener('hashchange', route)

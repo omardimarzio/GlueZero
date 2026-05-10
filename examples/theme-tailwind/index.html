@@ -1,19 +1,19 @@
 <!doctype html>
-<html lang="it">
+<html lang="en">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>GlueZero Theme — Tailwind Adapter Example</title>
-  <meta name="description" content="Demo Strategia A roleMap con Tailwind via CDN. Stesso markup data-gz-role, 3 adapter intercambiabili runtime: tailwind / minimal / none.">
+  <meta name="description" content="Strategy A roleMap demo with Tailwind via CDN. Same data-gz-role markup, 3 runtime-swappable adapters: tailwind / minimal / none.">
 
-  <!-- Tailwind via CDN (mode JIT runtime) — adatto solo a demo, non production -->
+  <!-- Tailwind via CDN (JIT runtime mode) — demo-only, not for production -->
   <script src="https://cdn.tailwindcss.com"></script>
 
-  <!-- Tokens canonici @gluezero/theme — l'adapter "minimal" li userà via cssRules -->
+  <!-- Canonical tokens from @gluezero/theme — used by the "minimal" adapter via cssRules -->
   <link rel="stylesheet" href="https://esm.sh/@gluezero/theme@1.1.0/tokens-default.css">
 
   <style>
-    /* Stili scaffolding indipendenti dall'adapter (header, layout, intro). */
+    /* Adapter-independent scaffolding styles (header, layout, intro). */
     body {
       font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
       margin: 0;
@@ -58,7 +58,7 @@
     .intro { color: var(--gz-color-text-muted, #64748B); margin: 0 0 24px; }
     .intro code { background: var(--gz-color-surface-elevated, #FAFAFA); padding: 1px 5px; border-radius: 4px; }
 
-    /* Sezioni demo — il "guscio" è gestito dal tema, qui solo layout */
+    /* Demo sections — the visual "shell" comes from the theme; here only layout. */
     section.demo {
       padding: 16px;
       margin-bottom: 16px;
@@ -100,14 +100,14 @@
     </header>
 
     <p class="intro">
-      Demo della <strong>Strategia A</strong> (<code>roleMap</code>) di
-      <code>@gluezero/theme</code>. L'adapter <code>tailwind</code> mappa ogni
-      ruolo canonico a una stringa di utility classes Tailwind; il
-      <code>DomApplier</code> osserva <code>[data-gz-role]</code> e applica
-      le classi via <code>classList.add</code> in modo non-distruttivo
-      (WeakMap tracker). Switchando adapter a runtime,
-      <strong>lo stesso markup</strong> riceve classi diverse o nessuna —
-      <em>l'HTML non cambia mai</em>.
+      Demo of <strong>Strategy A</strong> (<code>roleMap</code>) of
+      <code>@gluezero/theme</code>. The <code>tailwind</code> adapter maps every
+      canonical role to a Tailwind utility-class string; the
+      <code>DomApplier</code> watches <code>[data-gz-role]</code> and applies
+      classes via <code>classList.add</code> non-destructively
+      (WeakMap tracker). Switching adapter at runtime,
+      <strong>the same markup</strong> receives different classes or none —
+      <em>the HTML never changes</em>.
     </p>
 
     <!-- ===================== Form demo ===================== -->
@@ -120,7 +120,7 @@
           <input id="email" type="email" data-gz-role="input.text" placeholder="user@example.com">
         </div>
         <div class="field" style="flex:1; min-width:240px;">
-          <label class="field-label" for="email-bad">Email (invalido)</label>
+          <label class="field-label" for="email-bad">Email (invalid)</label>
           <input id="email-bad" type="email" data-gz-role="input.invalid" value="not-an-email">
         </div>
       </div>
@@ -133,17 +133,17 @@
       </div>
 
       <div class="row" style="flex-direction:column; align-items:stretch;">
-        <span data-gz-role="feedback.error"   style="margin-top:4px;">Email non valida — controlla il formato.</span>
+        <span data-gz-role="feedback.error"   style="margin-top:4px;">Invalid email — check the format.</span>
         <span data-gz-role="feedback.success" style="margin-top:4px;">Saved correctly.</span>
-        <span data-gz-role="feedback.warning" style="margin-top:4px;">Rate-limit vicino al massimo.</span>
-        <span data-gz-role="feedback.info"    style="margin-top:4px;">Built-in CDN demo — non per produzione.</span>
+        <span data-gz-role="feedback.warning" style="margin-top:4px;">Rate-limit close to maximum.</span>
+        <span data-gz-role="feedback.info"    style="margin-top:4px;">Built-in CDN demo — not for production.</span>
       </div>
 
       <p class="legend">
-        Stesso DOM, 3 adapter:
+        Same DOM, 3 adapters:
         <code>tailwind</code> (utility classes) →
-        <code>minimal</code> (cssRules con 4 regole base) →
-        <code>none</code> (nessuno styling, vedi <em>fallback</em> dei token).
+        <code>minimal</code> (cssRules with 4 base rules) →
+        <code>none</code> (no styling, see token <em>fallbacks</em>).
       </p>
     </section>
 
@@ -153,10 +153,10 @@
       <div class="row" style="align-items:stretch; flex-wrap:wrap;">
         <div data-gz-role="surface.elevated" style="flex:1; min-width:240px;">
           <strong>Adapter swap</strong>
-          <p style="margin:6px 0 0;">Click sui bottoni in alto per cambiare adapter live. Nessun reload.</p>
+          <p style="margin:6px 0 0;">Click the buttons above to change adapter live. No reload.</p>
         </div>
         <div data-gz-role="surface.elevated" style="flex:1; min-width:240px;">
-          <strong>Hot-swap atomico</strong>
+          <strong>Atomic hot-swap</strong>
           <p style="margin:6px 0 0;">DomApplier dispose() + remount in <code>queueMicrotask</code>. UI-ROLE-05.</p>
         </div>
       </div>
@@ -165,7 +165,7 @@
   </div>
 
   <script type="module">
-    import { createBroker } from 'https://esm.sh/@gluezero/core@1.0.1'
+    import { createBroker } from 'https://esm.sh/@gluezero/core@1.0.2'
     import { createTheme } from 'https://esm.sh/@gluezero/theme@1.1.0/factory'
     import {
       UI_ADAPTER_CHANGED,
@@ -176,8 +176,8 @@
     const theme = createTheme({ broker })
 
     // =========================================================================
-    // Adapter "tailwind" — Strategia A (roleMap)
-    // Ogni ruolo canonico → stringa di utility classes Tailwind.
+    // Adapter "tailwind" — Strategy A (roleMap)
+    // Each canonical role → a Tailwind utility-class string.
     // =========================================================================
     theme.register({
       id: 'tailwind',
@@ -200,8 +200,8 @@
     })
 
     // =========================================================================
-    // Adapter "minimal" — Strategia B (cssRules), CSS basic via token canonici.
-    // Mostra che lo STESSO markup funziona con qualunque strategia.
+    // Adapter "minimal" — Strategy B (cssRules), basic CSS via canonical tokens.
+    // Shows that the SAME markup works with any strategy.
     // =========================================================================
     theme.register({
       id: 'minimal',
@@ -224,7 +224,7 @@
       },
     })
 
-    // Adapter "none" non si registra — semplicemente setActiveAdapter(null)
+    // Adapter "none" is not registered — simply call setActiveAdapter(null)
 
     theme.setActiveAdapter('tailwind')
 
@@ -261,7 +261,7 @@
       theme.manager.setMode(cur === 'dark' ? 'light' : 'dark')
     })
 
-    // Log su console per i developer curiosi
+    // Console log for curious developers
     broker.subscribe(UI_ADAPTER_CHANGED, (e) => {
       console.log('[ui.adapter.changed]', e.payload)
     })
