@@ -22,6 +22,7 @@ It connects components, plugins, backend APIs, realtime events, cache and Web Wo
 
 ### 🎮 Try it live
 
+- ⭐ [**examples/showcase/**](./examples/showcase/index.html) — **Live Showcase** — sidebar menu + 7 interactive demos: pub/sub, canonical mapping, routing+gateway (real fetch), worker runtime, cache, observability, theme. Each demo runs against the live `@gluezero/*@1.1.0` packages from esm.sh. **Best place to start.**
 - [**examples/pub-sub-demo.html**](./examples/pub-sub-demo.html) — pure pub/sub: 1 publisher, 4 subscribers reacting independently to the same topic. Zero network, zero mocks. Open in browser, no build step needed. Now ships with a live theme switcher (v1.1).
 - [**examples/theme-tokens-only/**](./examples/theme-tokens-only/index.html) — **v1.1** — runtime brand swap via design tokens (`--gz-*` CSS Custom Properties + `applyTokens()`). Zero adapter.
 - [**examples/theme-dark-mode-meteo/**](./examples/theme-dark-mode-meteo/index.html) — **v1.1** — anti-FOUC dark mode with `getInitialThemeScript()` IIFE pre-paint + `prefers-color-scheme` auto-mirror.
