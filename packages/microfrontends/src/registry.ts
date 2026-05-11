@@ -34,7 +34,12 @@ import {
   type MicroFrontendLoaderAdapter,
 } from './loader-registry'
 import { createMfError } from './microfrontend-error'
+import { MF_ERROR_TOPIC_FOR_PHASE, MF_LIFECYCLE_TOPIC_FOR_STATE } from './topics'
 import type { MicroFrontendDescriptor, MicroFrontendRegistration } from './types/descriptor'
+import type {
+  MicroFrontendErrorEventPayload,
+  MicroFrontendLifecycleEventPayload,
+} from './types/events'
 import type { MicroFrontendState } from './types/lifecycle'
 
 /** Operazione lifecycle tracciata in `inFlight` Map (P-04 prep). */
@@ -153,6 +158,9 @@ export function createMicroFrontendsService(ctx: BrokerModuleContext): MicroFron
       timings: { registeredAt: Date.now() },
     }
     registrations.set(validated.id, reg)
+
+    // MF-EVT-01: publish 'microfrontend.registered' lifecycle event
+    publishLifecycleEvent(reg)
   }
 
   async function unregister(id: string, options?: { force?: boolean }): Promise<void> {
@@ -173,6 +181,19 @@ export function createMicroFrontendsService(ctx: BrokerModuleContext): MicroFron
       // D-V2-16 + MIN-2 cascade — SEMPRE eseguito (anche su error nel destroy).
       broker.unsubscribeByOwner(mfOwnerId(id))
       registrations.delete(id)
+
+      // MF-EVT-01: publish 'microfrontend.unregistered' lifecycle event
+      const unregPayload: MicroFrontendLifecycleEventPayload = {
+        id: reg.descriptor.id,
+        name: reg.descriptor.name,
+        version: reg.descriptor.version,
+        previousState: reg.state,
+        state: 'destroyed',
+        timestamp: Date.now(),
+      }
+      broker.publish('microfrontend.unregistered', unregPayload, {
+        source: { type: 'plugin', id: reg.descriptor.id, name: reg.descriptor.name },
+      })
     }
   }
 
@@ -291,6 +312,72 @@ export function createMicroFrontendsService(ctx: BrokerModuleContext): MicroFron
     }
   }
 
+  // 08-10 helper PRESERVED — 08-11 will replace makeStubRuntimeContext with
+  // createMfRuntimeContext but MUST keep publishLifecycleEvent + publishErrorEvent
+  // publishing instrumentation intact (fix B2 sequential preservation guidance).
+
+  /**
+   * Helper publish lifecycle event dopo transition (MF-EVT-01 + MF-EVT-04).
+   *
+   * `descriptor` field popolato SOLO per `registered` topic (P-15 retention mitigation
+   * — T-F8-04 DoS memory). Fast-path P-02 garantisce overhead <5% quando publishInterceptors vuoti.
+   */
+  function publishLifecycleEvent(reg: MicroFrontendRegistration): void {
+    const topic = MF_LIFECYCLE_TOPIC_FOR_STATE[reg.state]
+    if (!topic) return // stato senza topic mapping (defensive)
+
+    // Shallow-copy timings + descriptor: il broker applica deep-freeze al payload (D-04)
+    // — evita di congelare `reg.timings`/`reg.descriptor` referenced internamente
+    // (le transition successive devono poter scrivere timings nuovi).
+    const payload: MicroFrontendLifecycleEventPayload = {
+      id: reg.descriptor.id,
+      name: reg.descriptor.name,
+      version: reg.descriptor.version,
+      ...(reg.previousState !== undefined && { previousState: reg.previousState }),
+      state: reg.state,
+      timestamp: Date.now(),
+      ...(reg.timings && { timings: { ...reg.timings } }),
+      ...(reg.state === 'registered' && { descriptor: { ...reg.descriptor } }),
+    }
+
+    broker.publish(topic, payload, {
+      source: { type: 'plugin', id: reg.descriptor.id, name: reg.descriptor.name },
+    })
+  }
+
+  /**
+   * Helper publish error event phase-specific (MF-EVT-02 + MF-EVT-05).
+   *
+   * Chiamato in addition al `microfrontend.failed` lifecycle event, per discriminare
+   * la `phase` dell'errore. Orchestrazione in registry.ts (fix M2 separation of
+   * concerns: `lifecycle-fsm.ts` rimane pure state machine, NON modificato).
+   */
+  function publishErrorEvent(reg: MicroFrontendRegistration, err: Error): void {
+    if (!reg.failureReason) return
+
+    const errorTopic = MF_ERROR_TOPIC_FOR_PHASE[reg.failureReason.phase]
+    if (!errorTopic) return
+
+    const errCode = (err as unknown as { code?: string }).code
+    const payload: MicroFrontendErrorEventPayload = {
+      id: reg.descriptor.id,
+      name: reg.descriptor.name,
+      version: reg.descriptor.version,
+      phase: reg.failureReason.phase,
+      error: {
+        message: err.message,
+        ...(err.stack !== undefined && { stack: err.stack }),
+        ...(errCode !== undefined && { code: errCode }),
+      },
+      recoverable: reg.failureReason.recoverable ?? false,
+      timestamp: Date.now(),
+    }
+
+    broker.publish(errorTopic, payload, {
+      source: { type: 'plugin', id: reg.descriptor.id, name: reg.descriptor.name },
+    })
+  }
+
   function load(id: string, options?: LoadOptions): Promise<void> {
     return runOp(id, 'load', async (reg) => {
       // Idempotenza: già loaded (o oltre) = no-op (PRD §10.6 + MF-LIFE-07).
@@ -319,6 +406,8 @@ export function createMicroFrontendsService(ctx: BrokerModuleContext): MicroFron
       if (!adapter) {
         const err = new Error(`Loader type "${loaderType}" not registered`)
         fsm.transition(reg, 'failed', { phase: 'load', error: err })
+        publishLifecycleEvent(reg) // 'microfrontend.failed'
+        publishErrorEvent(reg, err) // 'microfrontend.load.failed'
         throw createMfError({
           code: 'MF_LOADER_NOT_FOUND',
           message: `Loader type "${loaderType}" not registered`,
@@ -328,7 +417,10 @@ export function createMicroFrontendsService(ctx: BrokerModuleContext): MicroFron
 
       try {
         fsm.transition(reg, 'resolving')
+        publishLifecycleEvent(reg) // 'microfrontend.resolving'
+
         fsm.transition(reg, 'loading')
+        publishLifecycleEvent(reg) // 'microfrontend.loading'
 
         const loaderCtx: LoaderContext = {
           broker,
@@ -340,11 +432,14 @@ export function createMicroFrontendsService(ctx: BrokerModuleContext): MicroFron
         const loaded = await adapter.load(reg.descriptor.loader!, loaderCtx)
         reg.loadedModule = loaded
         fsm.transition(reg, 'loaded')
+        publishLifecycleEvent(reg) // 'microfrontend.loaded'
       } catch (err) {
         const errorObj = err instanceof Error ? err : new Error(String(err))
         // Solo se non già 'failed' (e.g. dal check loader non registrato)
         if (reg.state !== 'failed') {
           fsm.transition(reg, 'failed', { phase: 'load', error: errorObj })
+          publishLifecycleEvent(reg) // 'microfrontend.failed'
+          publishErrorEvent(reg, errorObj) // 'microfrontend.load.failed'
         }
         throw err
       }
@@ -374,15 +469,20 @@ export function createMicroFrontendsService(ctx: BrokerModuleContext): MicroFron
 
       try {
         fsm.transition(reg, 'bootstrapping')
+        publishLifecycleEvent(reg) // 'microfrontend.bootstrapping'
+
         const loaded = reg.loadedModule as LoadedModule | undefined
         if (loaded?.lifecycle.bootstrap) {
           const stubCtx = makeStubRuntimeContext(reg)
           await loaded.lifecycle.bootstrap(stubCtx as never)
         }
         fsm.transition(reg, 'bootstrapped')
+        publishLifecycleEvent(reg) // 'microfrontend.bootstrapped'
       } catch (err) {
         const errorObj = err instanceof Error ? err : new Error(String(err))
         fsm.transition(reg, 'failed', { phase: 'bootstrap', error: errorObj })
+        publishLifecycleEvent(reg) // 'microfrontend.failed'
+        publishErrorEvent(reg, errorObj) // 'microfrontend.bootstrap.failed'
         throw err
       }
     })
@@ -401,15 +501,20 @@ export function createMicroFrontendsService(ctx: BrokerModuleContext): MicroFron
       if (reg.state === 'loaded' && !options?.skipBootstrap) {
         try {
           fsm.transition(reg, 'bootstrapping')
+          publishLifecycleEvent(reg) // 'microfrontend.bootstrapping'
+
           const loaded = reg.loadedModule as LoadedModule | undefined
           if (loaded?.lifecycle.bootstrap) {
             const stubCtx = makeStubRuntimeContext(reg)
             await loaded.lifecycle.bootstrap(stubCtx as never)
           }
           fsm.transition(reg, 'bootstrapped')
+          publishLifecycleEvent(reg) // 'microfrontend.bootstrapped'
         } catch (err) {
           const errorObj = err instanceof Error ? err : new Error(String(err))
           fsm.transition(reg, 'failed', { phase: 'bootstrap', error: errorObj })
+          publishLifecycleEvent(reg) // 'microfrontend.failed'
+          publishErrorEvent(reg, errorObj) // 'microfrontend.bootstrap.failed'
           throw err
         }
       }
@@ -424,15 +529,20 @@ export function createMicroFrontendsService(ctx: BrokerModuleContext): MicroFron
 
       try {
         fsm.transition(reg, 'mounting')
+        publishLifecycleEvent(reg) // 'microfrontend.mounting'
+
         const loaded = reg.loadedModule as LoadedModule | undefined
         if (loaded?.lifecycle.mount) {
           const stubCtx = makeStubRuntimeContext(reg)
           await loaded.lifecycle.mount(stubCtx as never)
         }
         fsm.transition(reg, 'mounted')
+        publishLifecycleEvent(reg) // 'microfrontend.mounted'
       } catch (err) {
         const errorObj = err instanceof Error ? err : new Error(String(err))
         fsm.transition(reg, 'failed', { phase: 'mount', error: errorObj })
+        publishLifecycleEvent(reg) // 'microfrontend.failed'
+        publishErrorEvent(reg, errorObj) // 'microfrontend.mount.failed'
         throw err
       }
     })
@@ -448,15 +558,20 @@ export function createMicroFrontendsService(ctx: BrokerModuleContext): MicroFron
 
       try {
         fsm.transition(reg, 'unmounting')
+        publishLifecycleEvent(reg) // 'microfrontend.unmounting'
+
         const loaded = reg.loadedModule as LoadedModule | undefined
         if (loaded?.lifecycle.unmount) {
           const stubCtx = makeStubRuntimeContext(reg)
           await loaded.lifecycle.unmount(stubCtx as never)
         }
         fsm.transition(reg, 'unmounted')
+        publishLifecycleEvent(reg) // 'microfrontend.unmounted'
       } catch (err) {
         const errorObj = err instanceof Error ? err : new Error(String(err))
         fsm.transition(reg, 'failed', { phase: 'unmount', error: errorObj })
+        publishLifecycleEvent(reg) // 'microfrontend.failed'
+        publishErrorEvent(reg, errorObj) // 'microfrontend.unmount.failed'
         throw err
       }
     })
@@ -479,6 +594,7 @@ export function createMicroFrontendsService(ctx: BrokerModuleContext): MicroFron
         reg.previousState = reg.state
         reg.state = 'destroyed'
         reg.timings = { ...reg.timings, destroyedAt: Date.now() }
+        publishLifecycleEvent(reg) // 'microfrontend.destroyed' (force-path)
         // Cascade cleanup.
         broker.unsubscribeByOwner(mfOwnerId(id))
         return
@@ -488,21 +604,29 @@ export function createMicroFrontendsService(ctx: BrokerModuleContext): MicroFron
         // Se mounted, dobbiamo passare per unmounting prima (FSM enforcement).
         if (reg.state === 'mounted') {
           fsm.transition(reg, 'unmounting')
+          publishLifecycleEvent(reg) // 'microfrontend.unmounting'
+
           const loaded = reg.loadedModule as LoadedModule | undefined
           if (loaded?.lifecycle.unmount) {
             await loaded.lifecycle.unmount(makeStubRuntimeContext(reg) as never)
           }
           fsm.transition(reg, 'unmounted')
+          publishLifecycleEvent(reg) // 'microfrontend.unmounted'
         }
 
         fsm.transition(reg, 'destroying')
+        publishLifecycleEvent(reg) // 'microfrontend.destroying'
+
         const loaded = reg.loadedModule as LoadedModule | undefined
         // destroy hook è sync (vs altri async — semantic v1.x carryover).
         loaded?.lifecycle.destroy?.(makeStubRuntimeContext(reg) as never)
         fsm.transition(reg, 'destroyed')
+        publishLifecycleEvent(reg) // 'microfrontend.destroyed'
       } catch (err) {
         const errorObj = err instanceof Error ? err : new Error(String(err))
         fsm.transition(reg, 'failed', { phase: 'destroy', error: errorObj })
+        publishLifecycleEvent(reg) // 'microfrontend.failed'
+        publishErrorEvent(reg, errorObj) // 'microfrontend.destroy.failed'
         throw err
       } finally {
         // Cascade SEMPRE eseguito (D-V2-16 + MIN-2) — anche su error destroy hook.
