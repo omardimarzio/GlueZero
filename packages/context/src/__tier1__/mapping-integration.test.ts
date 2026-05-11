@@ -35,6 +35,7 @@ describe('mapping-integration — per-MF MapperEngine + AliasRegistry namespace 
   beforeEach(() => {
     warnSpy = vi.fn()
     mockLogger = {
+      trace: vi.fn(),
       debug: vi.fn(),
       info: vi.fn(),
       warn: warnSpy,
@@ -135,5 +136,127 @@ describe('mapping-integration — per-MF MapperEngine + AliasRegistry namespace 
         inputMap: { f: { canonical: 'c' } },
       }),
     ).toThrow(/not initialized/)
+  })
+})
+
+// ===== Integration SC2 scenario (Task 3 — lifecycle hooks cascade) =====
+
+import { createBroker } from '@gluezero/core'
+import { microfrontendModule } from '@gluezero/microfrontends'
+import type { MicroFrontendDescriptor, MicroFrontendsService } from '@gluezero/microfrontends'
+import { SERVICE_MICROFRONTENDS } from '@gluezero/core'
+import { contextModule } from '../context-module'
+
+describe('integration: SC2 scenario 2 MF namespace + lifecycle cascade (MF-MAP-02 + MF-INT-MAP-01 + T-F10-05)', () => {
+  beforeEach(() => {
+    __resetMappingForTest()
+  })
+  afterEach(() => {
+    __resetMappingForTest()
+  })
+
+  function makeHarness(): {
+    broker: ReturnType<typeof createBroker>
+    mfService: MicroFrontendsService
+  } {
+    const broker = createBroker({
+      modules: [microfrontendModule(), contextModule()],
+    })
+    const mfService = broker.getService<MicroFrontendsService>(SERVICE_MICROFRONTENDS)
+    if (!mfService) throw new Error('mfService missing')
+    return { broker, mfService }
+  }
+
+  function makeMfDescriptor(opts: {
+    id: string
+    inputMap?: Record<string, { canonical: string }>
+  }): MicroFrontendDescriptor {
+    return {
+      id: opts.id,
+      name: opts.id,
+      version: '1.0.0',
+      loader: { type: 'esm', url: '/x.js' },
+      ...(opts.inputMap !== undefined && {
+        mapping: { inputMap: opts.inputMap, namespace: `mf:${opts.id}` },
+      }),
+    } as unknown as MicroFrontendDescriptor
+  }
+
+  it('SC2 scenario 2 MF distinti con stesso canonical → engines isolati per namespace', async () => {
+    const { broker, mfService } = makeHarness()
+    await mfService.register(
+      makeMfDescriptor({
+        id: 'mf-customer-1',
+        inputMap: { customerId: { canonical: 'customer_id' } },
+      }),
+    )
+    await mfService.register(
+      makeMfDescriptor({
+        id: 'mf-customer-2',
+        inputMap: { customerId: { canonical: 'customer_id' } },
+      }),
+    )
+    // Simulate mounted lifecycle events — wireLifecycleHooks listens
+    broker.publish(
+      'microfrontend.mounted',
+      { id: 'mf-customer-1', name: 'mf-customer-1', version: '1.0.0', state: 'mounted', timestamp: Date.now() },
+      { source: { type: 'plugin', id: 'mf-customer-1', name: 'mf-customer-1' }, deliveryMode: 'sync' },
+    )
+    broker.publish(
+      'microfrontend.mounted',
+      { id: 'mf-customer-2', name: 'mf-customer-2', version: '1.0.0', state: 'mounted', timestamp: Date.now() },
+      { source: { type: 'plugin', id: 'mf-customer-2', name: 'mf-customer-2' }, deliveryMode: 'sync' },
+    )
+
+    // 2 engines distinti — namespace isolation (T-F10-03)
+    expect(getActiveMfIds().sort()).toEqual(['mf-customer-1', 'mf-customer-2'])
+    expect(getMfMapperEngine('mf-customer-1')).not.toBe(getMfMapperEngine('mf-customer-2'))
+    expect(getMfMapperEngine('mf-customer-1')).toBeDefined()
+    expect(getMfMapperEngine('mf-customer-2')).toBeDefined()
+  })
+
+  it('lifecycle hooks cleanup on unmount: detachMfMapping cascade', async () => {
+    const { broker, mfService } = makeHarness()
+    await mfService.register(
+      makeMfDescriptor({
+        id: 'mf-x',
+        inputMap: { customerId: { canonical: 'customer_id' } },
+      }),
+    )
+    broker.publish(
+      'microfrontend.mounted',
+      { id: 'mf-x', name: 'mf-x', version: '1.0.0', state: 'mounted', timestamp: Date.now() },
+      { source: { type: 'plugin', id: 'mf-x', name: 'mf-x' }, deliveryMode: 'sync' },
+    )
+    expect(getMfMapperEngine('mf-x')).toBeDefined()
+
+    broker.publish(
+      'microfrontend.unmounted',
+      { id: 'mf-x', name: 'mf-x', version: '1.0.0', state: 'unmounted', timestamp: Date.now() },
+      { source: { type: 'plugin', id: 'mf-x', name: 'mf-x' }, deliveryMode: 'sync' },
+    )
+    expect(getMfMapperEngine('mf-x')).toBeUndefined()
+  })
+
+  it('lifecycle hooks cleanup on unregistered (T-F10-05 leak prevention)', async () => {
+    const { broker, mfService } = makeHarness()
+    await mfService.register(
+      makeMfDescriptor({
+        id: 'mf-y',
+        inputMap: { f: { canonical: 'c' } },
+      }),
+    )
+    broker.publish(
+      'microfrontend.mounted',
+      { id: 'mf-y', name: 'mf-y', version: '1.0.0', state: 'mounted', timestamp: Date.now() },
+      { source: { type: 'plugin', id: 'mf-y', name: 'mf-y' }, deliveryMode: 'sync' },
+    )
+    expect(getMfMapperEngine('mf-y')).toBeDefined()
+    broker.publish(
+      'microfrontend.unregistered',
+      { id: 'mf-y', name: 'mf-y', version: '1.0.0', state: 'destroyed', timestamp: Date.now() },
+      { source: { type: 'plugin', id: 'mf-y', name: 'mf-y' }, deliveryMode: 'sync' },
+    )
+    expect(getMfMapperEngine('mf-y')).toBeUndefined()
   })
 })

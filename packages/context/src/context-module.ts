@@ -29,6 +29,8 @@
 import type { BrokerModule } from '@gluezero/core'
 import { SERVICE_MICROFRONTENDS } from '@gluezero/core'
 import type { MicroFrontendsService } from '@gluezero/microfrontends'
+import { wireLifecycleHooks } from './lifecycle-hooks'
+import { __initMappingIntegration } from './mapping-integration'
 import { initRuntimeContext } from './runtime-context'
 
 /**
@@ -104,8 +106,13 @@ export function contextModule(): BrokerModule {
       // W2 P03: estende a 2-args (broker + mfService) per ACL descriptor lookup
       // (`checkAcl` chiama `mfService.get(callerMfId).descriptor` per resolve writableKeys).
       initRuntimeContext(ctx.broker, service)
-      // W2 P04 aggiungerà: wireLifecycleHooks(ctx.broker, service, contextService) per
-      // ctx.context auto-injection LIVE + per-MF MapperEngine Map<mfId, MapperEngine>.
+      // W2 P04: init shared mapping integration (CanonicalRegistry + TransformPipeline
+      // singletons cross-MF — canonical model project-wide PRD §13.5).
+      __initMappingIntegration()
+      // W2 P04: subscribe lifecycle topics F8 (`MF_LIFECYCLE_TOPICS`) per attach/detach
+      // cascade automatic — per-MF MapperEngine (D-V2-F10-09) + ctx.context auto-injection
+      // LIVE (D-V2-F10-15). T-F10-05 leak prevention via cleanup cascade.
+      wireLifecycleHooks(ctx.broker, service)
     },
   }
 }

@@ -84,5 +84,9 @@ export {
   getWritableKeys,
 } from './acl-enforcer'
 
-// ===== Runtime exports (Wave 2+ — popolato da P04) =====
-// export { wrapInspectorWithMfAttribution } from './inspector-wrapper'  // W2 P04
+// ===== Mapping per-MF + Inspector wrapper (W2 P04) — MF-MAP-01/02/03 + MF-INT-MAP-01/02 + MF-CTX-06 =====
+export type { MicroFrontendMapping, MapperRule } from './mapping-integration'
+export { wrapInspectorWithMfAttribution } from './inspector-wrapper'
+
+// ===== Debug snapshot facade (W2 P04 — W3 P05 finalizza F6 SnapshotProvider integration) — MF-CTX-06 =====
+export { computeContextSnapshot, getDebugSnapshot } from './context-map-facade'

@@ -106,6 +106,7 @@ const perMfMapperEngines = new Map<string, MapperEngine>()
 const perMfAliasRegistries = new Map<string, AliasRegistry>()
 
 const noopLogger: BrokerLogger = {
+  trace() {},
   debug() {},
   info() {},
   warn() {},
