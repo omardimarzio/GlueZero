@@ -40,6 +40,19 @@ export {
 // ===== Runtime exports =====
 export { createMfError, type MicroFrontendErrorCode } from './microfrontend-error'
 export { microfrontendModule } from './microfrontend-module'
+// Mount Orchestrator (W4 — barrel export ownership 08-09 per fix M1 plan-check iter 1)
+// Implementazione in packages/microfrontends/src/mount-orchestrator.ts (creato da 08-08).
+// 08-08 deliberatamente NON modifica index.ts (file ownership disgiunta entro stessa wave).
+export { type MountResult, orchestrateMount } from './mount-orchestrator'
+// Contracts Validator (W4 — MF-CONTRACT-02)
+export {
+  type ContractValidationContext,
+  type ContractValidationResult,
+  type ContractWarning,
+  type ContractWarningSeverity,
+  type ValidationPhase,
+  validateContracts,
+} from './contracts-validator'
 // Registry + Service interface
 export {
   createMicroFrontendsService,
