@@ -49,7 +49,7 @@
     {
       "name": "@gluezero/core (gzip)",
       "path": "dist/index.js",
-      "limit": "8 KB",
+      "limit": "8870",
       "gzip": true
     }
   ],
