@@ -63,6 +63,16 @@
  * // grazie all'augment F8 — F9 NON aggiunge ulteriore surface.
  * ```
  *
+ * @example Audit tree-shake fail detection post-build
+ * ```sh
+ * # Verifica che il bundler consumer NON abbia tree-shakato il side-effect file.
+ * # Deve restituire match — `sideEffects: ["./dist/augment.js"]` package.json + marker tree-shake fail detection.
+ * grep "__mfEsmAugmentLoaded" packages/mf-esm/dist/augment.js
+ * ```
+ *
+ * @throws Mai — il modulo augment è side-effect-only intent signaling puro,
+ *   non esegue logica runtime e quindi non solleva mai eccezioni.
+ *
  * @see PRD §6.4 (Pattern S1), §22 (Loader Registry API), §23 (ESM loader)
  * @see D-V2-F9-01 (install lookup), D-V2-F9-02 (NO prototype augment + NO module
  *   augmentation block)

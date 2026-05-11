@@ -82,6 +82,21 @@ import { esmLoader } from './esm-loader'
  * await broker.loadMicroFrontend!('dashboard')
  * ```
  *
+ * @example Override timeoutMs + exportName per-MF (PRD §23.4 + §23.5)
+ * ```ts
+ * await broker.registerMicroFrontend!({
+ *   id: 'multi-export-mf',
+ *   name: 'Multi-export MF',
+ *   version: '1.0.0',
+ *   loader: {
+ *     type: 'esm',
+ *     url: '/mfs/multi.js',
+ *     timeoutMs: 5000,      // override default 15000 (Strategy SLOW network)
+ *     exportName: 'app',    // Strategy 1 esplicita (D-V2-F9-05)
+ *   },
+ * })
+ * ```
+ *
  * @throws `Error` se `@gluezero/microfrontends` non è installato prima (consumer deve
  *   aggiungere `microfrontendModule()` PRIMA di `mfEsmModule()` nell'array modules).
  * @throws `BrokerError` con `code: 'MF_LOADER_TYPE_DUPLICATE'` se un loader con
