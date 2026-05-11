@@ -10,9 +10,19 @@
  * Threat T-F10-01 (ACL bypass) verified: stateless check + fail-secure default.
  */
 import type { Broker } from '@gluezero/core'
-import type { MicroFrontendDescriptor } from '@gluezero/microfrontends'
-import { describe, expect, it, vi } from 'vitest'
+import { createBroker } from '@gluezero/core'
+import type { MicroFrontendDescriptor, MicroFrontendsService } from '@gluezero/microfrontends'
+import { microfrontendModule } from '@gluezero/microfrontends'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { CONTEXT_DENIED_TOPIC, enforceWrite, getWritableKeys } from '../acl-enforcer'
+import { contextModule } from '../context-module'
+import {
+  __resetForTest,
+  clearRuntimeContext,
+  getRuntimeContext,
+  replaceRuntimeContext,
+  setRuntimeContext,
+} from '../runtime-context'
 
 describe('getWritableKeys — type narrowing locale (D-V2-F10-05 fail-secure)', () => {
   it('default vuoto se descriptor sans context field', () => {
@@ -146,5 +156,147 @@ describe('enforceWrite — ACL throw + topic publish (MF-CTX-04, D-V2-F10-06)', 
       expect(e.details?.['allowedKeys']).toEqual(['currentRoute'])
       expect(e.details?.['deniedKeys']).toEqual(['tenantId', 'user'])
     }
+  })
+})
+
+// ===== Integration: setRuntimeContext + ACL writableKeys end-to-end =====
+
+interface TestMfDescriptor extends MicroFrontendDescriptor {
+  readonly context?: { readonly writableKeys?: readonly string[] }
+}
+
+describe('integration: setRuntimeContext + ACL writableKeys (MF-CTX-04 end-to-end)', () => {
+  beforeEach(() => {
+    __resetForTest()
+  })
+  afterEach(() => {
+    __resetForTest()
+  })
+
+  function makeHarnessWithMf(
+    mfId: string,
+    writableKeys: readonly string[] | undefined,
+  ): { broker: Broker; mfService: MicroFrontendsService } {
+    const broker = createBroker({ modules: [microfrontendModule(), contextModule()] })
+    const mfService = broker.getService<MicroFrontendsService>('microfrontends')
+    if (!mfService) throw new Error('mfService missing — microfrontendModule not installed')
+
+    // Build descriptor con context.writableKeys (cast TestMfDescriptor per type narrowing locale).
+    const descriptor: TestMfDescriptor = {
+      id: mfId,
+      name: `Test MF ${mfId}`,
+      version: '1.0.0',
+      loader: { type: 'esm', url: `/${mfId}.js` },
+      ...(writableKeys !== undefined && { context: { writableKeys } }),
+    } as TestMfDescriptor
+    mfService.register(descriptor)
+    return { broker, mfService }
+  }
+
+  it('callerMfId defined + chiave NOT in writableKeys → THROW + publish denied topic', () => {
+    const { broker } = makeHarnessWithMf('mf-x', ['currentRoute'])
+    const deniedHandler = vi.fn()
+    broker.subscribe('microfrontend.context.denied', deniedHandler)
+
+    expect(() =>
+      setRuntimeContext({ tenantId: 'acme' }, { callerMfId: 'mf-x' }),
+    ).toThrowError(/MicroFrontend "mf-x" attempted/)
+    expect(deniedHandler).toHaveBeenCalledTimes(1)
+  })
+
+  it('callerMfId defined + chiave IN writableKeys → OK + state aggiornato', () => {
+    makeHarnessWithMf('mf-x', ['currentRoute'])
+    const route = { path: '/home' }
+    expect(() =>
+      setRuntimeContext({ currentRoute: route }, { callerMfId: 'mf-x' }),
+    ).not.toThrow()
+    expect(getRuntimeContext().currentRoute).toEqual(route)
+  })
+
+  it('callerMfId undefined (app shell) → OK su qualsiasi chiave (bypass ACL)', () => {
+    makeHarnessWithMf('mf-x', ['currentRoute']) // MF setup ma chiamiamo da app shell
+    expect(() => setRuntimeContext({ tenantId: 'acme' })).not.toThrow()
+    expect(getRuntimeContext().tenantId).toBe('acme')
+  })
+
+  it('writableKeys vuoto (fail-secure explicit) → MF NON può scrivere niente', () => {
+    makeHarnessWithMf('mf-x', []) // explicit empty
+    expect(() => setRuntimeContext({ tenantId: 'acme' }, { callerMfId: 'mf-x' })).toThrow()
+    expect(() =>
+      setRuntimeContext({ currentRoute: { path: '/h' } }, { callerMfId: 'mf-x' }),
+    ).toThrow()
+  })
+
+  it('descriptor sans context field (fail-secure default) → MF NON può scrivere niente', () => {
+    makeHarnessWithMf('mf-y', undefined) // NO context field
+    expect(() => setRuntimeContext({ tenantId: 'acme' }, { callerMfId: 'mf-y' })).toThrow()
+  })
+
+  it('fail-fast: no partial mutation se denied (state invariato post-throw)', () => {
+    makeHarnessWithMf('mf-x', ['currentRoute'])
+    setRuntimeContext({ tenantId: 'pre' }) // app shell setup pre-existing
+    try {
+      setRuntimeContext(
+        { tenantId: 'denied', currentRoute: { path: '/h' } },
+        { callerMfId: 'mf-x' },
+      )
+      expect.fail('should have thrown')
+    } catch {
+      /* expected */
+    }
+    // State invariato: tenantId rimane 'pre', currentRoute mai scritto (no partial mutation)
+    const ctx = getRuntimeContext()
+    expect(ctx.tenantId).toBe('pre')
+    expect(ctx.currentRoute).toBeUndefined()
+  })
+
+  it('clearRuntimeContext con callerMfId che clear chiave NOT in writableKeys → THROW', () => {
+    makeHarnessWithMf('mf-x', ['currentRoute'])
+    setRuntimeContext({ tenantId: 'X' }) // app shell setup
+    expect(() => clearRuntimeContext(['tenantId'], { callerMfId: 'mf-x' })).toThrow()
+  })
+
+  it('clearRuntimeContext con callerMfId che clear chiave IN writableKeys → OK', () => {
+    makeHarnessWithMf('mf-x', ['currentRoute'])
+    setRuntimeContext({ currentRoute: { path: '/h' } }) // app shell setup
+    expect(() => clearRuntimeContext(['currentRoute'], { callerMfId: 'mf-x' })).not.toThrow()
+    expect(getRuntimeContext().currentRoute).toBeUndefined()
+  })
+
+  it('replaceRuntimeContext con callerMfId controlla union previous+next keys', () => {
+    makeHarnessWithMf('mf-x', ['currentRoute'])
+    setRuntimeContext({ tenantId: 'X' }) // app shell pre-existing
+    // MF tenta replace → union(['tenantId'], ['currentRoute']) include 'tenantId' NOT in writable → throw
+    expect(() =>
+      replaceRuntimeContext({ currentRoute: { path: '/h' } }, { callerMfId: 'mf-x' }),
+    ).toThrow()
+  })
+
+  it('MF non registrato (defensive) → pass-through senza throw (tratta come app shell)', () => {
+    makeHarnessWithMf('mf-x', ['currentRoute'])
+    // callerMfId 'mf-ghost' non registrato → checkAcl defensive return
+    expect(() =>
+      setRuntimeContext({ tenantId: 'acme' }, { callerMfId: 'mf-ghost' }),
+    ).not.toThrow()
+  })
+
+  it('payload denied topic shape end-to-end (microFrontendId + attemptedKeys + allowedKeys + timestamp)', () => {
+    const { broker } = makeHarnessWithMf('mf-x', ['currentRoute'])
+    const deniedHandler = vi.fn()
+    broker.subscribe('microfrontend.context.denied', deniedHandler)
+
+    try {
+      setRuntimeContext({ tenantId: 'acme', user: { id: 'u1' } }, { callerMfId: 'mf-x' })
+    } catch {
+      /* expected */
+    }
+    expect(deniedHandler).toHaveBeenCalledTimes(1)
+    const event = deniedHandler.mock.calls[0]![0] as {
+      payload: Record<string, unknown>
+    }
+    expect(event.payload['microFrontendId']).toBe('mf-x')
+    expect(event.payload['attemptedKeys']).toEqual(['tenantId', 'user'])
+    expect(event.payload['allowedKeys']).toEqual(['currentRoute'])
+    expect(typeof event.payload['timestamp']).toBe('number')
   })
 })

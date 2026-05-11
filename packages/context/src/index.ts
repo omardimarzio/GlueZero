@@ -69,6 +69,20 @@ export type {
   RuntimeRouteContext,
 } from './types/runtime-context'
 
-// ===== Runtime exports (Wave 2+ — popolato da P03/P04) =====
+// ===== Error factory locale (W2 P03) — MF-CTX-04 =====
+export {
+  type ContextErrorCode,
+  type CreateContextErrorParams,
+  createContextError,
+} from './context-error'
+
+// ===== ACL enforcer (W2 P03) — MF-CTX-04 =====
+export {
+  CONTEXT_DENIED_TOPIC,
+  type ContextDeniedPayload,
+  enforceWrite,
+  getWritableKeys,
+} from './acl-enforcer'
+
+// ===== Runtime exports (Wave 2+ — popolato da P04) =====
 // export { wrapInspectorWithMfAttribution } from './inspector-wrapper'  // W2 P04
-// export { type CreateContextErrorParams, createContextError, type ContextErrorCode } from './context-error'  // W2 P03

@@ -29,7 +29,10 @@
  * @packageDocumentation
  */
 import type { Broker } from '@gluezero/core'
+import type { MicroFrontendsService } from '@gluezero/microfrontends'
+import { enforceWrite, getWritableKeys } from './acl-enforcer'
 import { fireContextEvents } from './events'
+import { RUNTIME_CONTEXT_KEYS } from './internal/standard-keys'
 import {
   __resetSubscribersForTest,
   dispatchSelectors,
@@ -60,21 +63,61 @@ export interface SetContextOptions {
 }
 
 let brokerRef: Broker | undefined
+let mfServiceRef: MicroFrontendsService | undefined
 
 /**
- * Internal init — chiamato da `contextModule().install` per memorizzare broker reference.
+ * Internal init — chiamato da `contextModule().install` per memorizzare broker + mfService.
  *
- * Necessario perché le 5 API public sono module-level functions (non bound a un Broker
- * instance). Pattern coerente F8 `microfrontendModule` service register +
+ * **W2 P03 estensione:** signature 2-args (broker + mfService). `mfService` è necessario
+ * per il lookup `mfService.get(callerMfId).descriptor` durante l'ACL `enforceWrite` check
+ * (D-V2-F10-06). App shell (callerMfId undefined) bypassa il lookup → ACL pass-through.
+ *
+ * Pattern coerente F8 `microfrontendModule` service register +
  * F9 `mfEsmModule` LOOKUP register loader.
  *
  * @param broker Broker reference dall'install hook `ctx.broker`.
+ * @param mfService MicroFrontendsService reference (W2 P03 — ACL descriptor lookup).
  *
  * @internal Esportato dal barrel SOLO per uso da `context-module.ts` (consumer non chiama
  *   direttamente).
  */
-export function initRuntimeContext(broker: Broker): void {
+export function initRuntimeContext(
+  broker: Broker,
+  mfService: MicroFrontendsService,
+): void {
   brokerRef = broker
+  mfServiceRef = mfService
+}
+
+/**
+ * ACL check helper — risolve `writableKeys` da descriptor MF se `callerMfId` presente,
+ * poi chiama `enforceWrite` (throw fail-fast + topic publish PRIMA della mutazione).
+ *
+ * App shell (`callerMfId === undefined`) bypassa enforcement (D-V2-F10-05).
+ * MF non registrato (defensive) → tratta come app shell (pass-through).
+ *
+ * **Threat T-F10-01 mitigation:** stateless lookup at every call (no cache),
+ * descriptor immutable F8 post-register (D-V2-11), default fail-secure
+ * (writableKeys vuoto = MF read-only).
+ *
+ * @param broker Broker reference (per publish denied topic).
+ * @param callerMfId `string | undefined`: undefined = app shell; string = MF caller id.
+ * @param keys Chiavi che il caller sta tentando di scrivere/cancellare.
+ *
+ * @throws `BrokerError` con `code: 'MF_CONTEXT_WRITE_DENIED'` se denied.
+ * @internal
+ * @see D-V2-F10-06 (enforcement throw + topic publish PRIMA del throw)
+ */
+function checkAcl(
+  broker: Broker,
+  callerMfId: string | undefined,
+  keys: ReadonlyArray<string>,
+): void {
+  if (callerMfId === undefined) return // App shell pass-through
+  const reg = mfServiceRef?.get(callerMfId)
+  if (!reg) return // MF non registrato → tratta come app shell (defensive)
+  const writableKeys = getWritableKeys(reg.descriptor)
+  enforceWrite(broker, callerMfId, keys, writableKeys)
 }
 
 /**
@@ -111,10 +154,12 @@ function ensureBroker(): Broker {
  */
 export function setRuntimeContext(
   partial: Partial<RuntimeContext>,
-  _options?: SetContextOptions,
+  options?: SetContextOptions,
 ): void {
-  // P03 aggiungerà: enforceWrite(broker, _options?.callerMfId, Object.keys(partial), writableKeys)
   const broker = ensureBroker()
+  // ACL pre-check fail-fast (D-V2-F10-06) — throw PRIMA della mutazione storage.
+  // No partial mutation: se denied, setState NON viene chiamato.
+  checkAcl(broker, options?.callerMfId, Object.keys(partial))
   const { previous, current, changedKeys } = setState(partial)
   if (changedKeys.length === 0) return
   fireContextEvents(broker, previous, current, changedKeys)
@@ -138,9 +183,16 @@ export function setRuntimeContext(
  */
 export function replaceRuntimeContext(
   next: RuntimeContext,
-  _options?: SetContextOptions,
+  options?: SetContextOptions,
 ): void {
   const broker = ensureBroker()
+  // ACL check su union(previous keys + next keys) — replace è write operation che
+  // tocca TUTTE le chiavi (anche quelle che sparirebbero da `previous`). Impedisce
+  // bypass via stripping writable keys per scrivere chiavi denied.
+  const currentKeys = Object.keys(getState())
+  const nextKeys = Object.keys(next)
+  const allTouchedKeys = Array.from(new Set([...currentKeys, ...nextKeys]))
+  checkAcl(broker, options?.callerMfId, allTouchedKeys)
   const { previous, current, changedKeys } = replaceState(next)
   if (changedKeys.length === 0) return
   fireContextEvents(broker, previous, current, changedKeys)
@@ -185,9 +237,13 @@ export function getRuntimeContext(): Readonly<RuntimeContext> {
  */
 export function clearRuntimeContext(
   keys?: ReadonlyArray<keyof RuntimeContext>,
-  _options?: SetContextOptions,
+  options?: SetContextOptions,
 ): void {
   const broker = ensureBroker()
+  // ACL check — clear è write operation (D-V2-F10-08 + D-V2-F10-06).
+  // No-args → itera 11 chiavi standard PRD §18.4.
+  const targetKeys = keys ?? RUNTIME_CONTEXT_KEYS
+  checkAcl(broker, options?.callerMfId, targetKeys as ReadonlyArray<string>)
   const { previous, current, changedKeys } = clearState(keys)
   if (changedKeys.length === 0) return
   fireContextEvents(broker, previous, current, changedKeys)
@@ -208,6 +264,7 @@ export { subscribeRuntimeContext }
  */
 export function __resetForTest(): void {
   brokerRef = undefined
+  mfServiceRef = undefined
   __resetStorageForTest()
   __resetSubscribersForTest()
 }

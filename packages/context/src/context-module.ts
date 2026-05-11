@@ -101,7 +101,9 @@ export function contextModule(): BrokerModule {
         )
       }
       // W2 P02: init runtime context broker reference (storage state già module-level).
-      initRuntimeContext(ctx.broker)
+      // W2 P03: estende a 2-args (broker + mfService) per ACL descriptor lookup
+      // (`checkAcl` chiama `mfService.get(callerMfId).descriptor` per resolve writableKeys).
+      initRuntimeContext(ctx.broker, service)
       // W2 P04 aggiungerà: wireLifecycleHooks(ctx.broker, service, contextService) per
       // ctx.context auto-injection LIVE + per-MF MapperEngine Map<mfId, MapperEngine>.
     },
