@@ -1,0 +1,103 @@
+{
+  "name": "@gluezero/microfrontends",
+  "version": "2.0.0-alpha.0",
+  "description": "GlueZero micro-frontend governance layer — Registry, Lifecycle FSM, 4 mount strategies, contracts, standard topics, opt-in module extension runtime",
+  "license": "MIT",
+  "author": "Omar Di Marzio",
+  "type": "module",
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./augment": {
+      "types": "./dist/augment.d.ts",
+      "import": "./dist/augment.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "sideEffects": [
+    "./dist/augment.js",
+    "./src/augment.ts",
+    "**/augment.js",
+    "**/augment.ts"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "publishConfig": {
+    "access": "public",
+    "tag": "experimental"
+  },
+  "scripts": {
+    "build": "tsup",
+    "test": "vitest run",
+    "test:browser": "vitest run -c vitest.browser.config.ts",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
+    "typecheck": "tsc --noEmit",
+    "clean": "rm -rf dist"
+  },
+  "peerDependencies": {
+    "@gluezero/core": "workspace:^"
+  },
+  "peerDependenciesMeta": {
+    "@gluezero/core": {
+      "optional": false
+    }
+  },
+  "dependencies": {
+    "nanoid": "5.1.9",
+    "valibot": "1.3.1"
+  },
+  "devDependencies": {
+    "@gluezero/core": "workspace:*",
+    "tsup": "8.5.1",
+    "typescript": "6.0.3",
+    "vitest": "4.1.5",
+    "@vitest/browser": "4.1.5",
+    "playwright": "1.59.1",
+    "jsdom": "29.1.0"
+  },
+  "size-limit": [
+    {
+      "name": "@gluezero/microfrontends (gzip)",
+      "path": "dist/index.js",
+      "limit": "12 KB",
+      "gzip": true
+    },
+    {
+      "name": "@gluezero/microfrontends/augment (gzip)",
+      "path": "dist/augment.js",
+      "limit": "1 KB",
+      "gzip": true
+    }
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/omardimarzio/GlueZero.git",
+    "directory": "packages/microfrontends"
+  },
+  "homepage": "https://github.com/omardimarzio/GlueZero/tree/main/packages/microfrontends#readme",
+  "bugs": "https://github.com/omardimarzio/GlueZero/issues",
+  "keywords": [
+    "browser",
+    "esm",
+    "frontend",
+    "governance",
+    "javascript",
+    "lifecycle",
+    "micro-frontend",
+    "microfrontend",
+    "registry",
+    "typescript"
+  ]
+}

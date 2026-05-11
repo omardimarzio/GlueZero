@@ -1,0 +1,24 @@
+import { defineConfig } from 'tsup'
+
+export default defineConfig({
+  // `src/augment.ts` è una entry separata per emettere `dist/augment.js` come file
+  // distinto — necessario perché `sideEffects: ["./dist/augment.js"]` nel package.json
+  // referenzia esattamente questo path. Il barrel `src/index.ts` importa il modulo
+  // come side-effect (`import './augment'`); l'augmentation TypeScript declaration
+  // merging si attiva al tipo-livello quando il consumer importa da
+  // `@gluezero/microfrontends`.
+  entry: ['src/index.ts', 'src/augment.ts'],
+  format: ['esm'],
+  dts: true,
+  sourcemap: true,
+  clean: true,
+  treeshake: true,
+  splitting: false,
+  minify: false,
+  target: 'es2022',
+  platform: 'browser',
+  external: [/^node:/, '@gluezero/core'],
+  banner: {
+    js: '/* @gluezero/microfrontends — MIT — https://github.com/omardimarzio/GlueZero */',
+  },
+})
