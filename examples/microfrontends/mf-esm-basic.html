@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="it" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>GlueZero — @gluezero/mf-esm basic demo: ESM dynamic loader</title>
+  <meta name="description" content="Working browser demo: registrazione e mount di un micro-frontend caricato via import() dinamico con @gluezero/mf-esm.">
+  <meta name="theme-color" content="#6366F1">
+  <link rel="canonical" href="https://gluezero.org/examples/microfrontends/mf-esm-basic.html">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><text y='14' font-size='14'>🧩</text></svg>">
+
+  <style>
+    body { font-family: system-ui, sans-serif; max-width: 800px; margin: 2rem auto; padding: 0 1rem; line-height: 1.5; color: #0F172A; }
+    h1 { color: #6366F1; margin-bottom: 0.5rem; }
+    p { color: #475569; }
+    code { background: #F1F5F9; padding: 0.15rem 0.35rem; border-radius: 4px; font-size: 0.9em; }
+    #mf-root { border: 1px solid #E2E8F0; padding: 1rem; margin-top: 1rem; min-height: 80px; border-radius: 8px; background: #FAFAFA; }
+    button { background: #6366F1; color: white; border: 0; padding: 0.5rem 1rem; border-radius: 6px; cursor: pointer; margin-right: 0.5rem; font-weight: 600; }
+    button:hover { background: #4F46E5; }
+    .log { font-family: ui-monospace, "SF Mono", monospace; background: #1E293B; color: #F1F5F9; padding: 0.75rem; margin-top: 1rem; font-size: 0.8rem; border-radius: 6px; white-space: pre-wrap; max-height: 200px; overflow-y: auto; }
+  </style>
+</head>
+<body>
+  <h1>🧩 @gluezero/mf-esm — basic demo</h1>
+  <p>Carica un micro-frontend remoto via <code>import(url)</code> dinamico con <code>@gluezero/mf-esm</code>.</p>
+  <p>Vedi <a href="https://github.com/omardimarzio/GlueZero/blob/main/prd_2.0.0.md">PRD §23</a> per il contratto del loader.</p>
+  <p><em>Prerequisito: esegui <code>pnpm build:packages</code> prima di servire l'esempio (relative paths verso <code>dist/</code> locali — anticipo D-V2-F9-15, F17 GA switch a CDN esm.sh).</em></p>
+
+  <div id="mf-root">Click "Mount MF" per caricare il micro-frontend demo...</div>
+  <div style="margin-top: 1rem;">
+    <button id="btn-mount">Mount MF</button>
+    <button id="btn-unmount">Unmount MF</button>
+  </div>
+
+  <div class="log" id="log">Log eventi lifecycle:</div>
+
+  <script type="module">
+    // Relative paths verso dist locali — prerequisito `pnpm build:packages`.
+    // Quando @gluezero/* sarà pubblicato su npm (F17 GA, D-V2-F8-10 lockato), sostituire con CDN esm.sh.
+    import { createBroker } from '../../packages/core/dist/index.js'
+    import { microfrontendModule } from '../../packages/microfrontends/dist/index.js'
+    import '../../packages/microfrontends/dist/augment.js'  // F8 augment — broker.loadMicroFrontend(id), ecc.
+    import { mfEsmModule } from '../../packages/mf-esm/dist/index.js'
+    import '../../packages/mf-esm/dist/augment.js'  // F9 augment — intent signaling puro
+
+    const broker = createBroker({
+      modules: [microfrontendModule(), mfEsmModule()],
+    })
+
+    const logEl = document.getElementById('log')
+    const log = (msg) => {
+      logEl.textContent += `\n${new Date().toISOString().slice(11, 19)} | ${msg}`
+      logEl.scrollTop = logEl.scrollHeight
+    }
+
+    // Subscribe ai lifecycle events standard (topic naming conform regex core).
+    broker.subscribe('microfrontend.mounted', (evt) => log(`✅ MF mounted: ${evt.payload.id}`))
+    broker.subscribe('microfrontend.unmounted', (evt) => log(`👋 MF unmounted: ${evt.payload.id}`))
+    broker.subscribe('microfrontend.load.failed', (evt) => log(`❌ MF load failed: ${evt.payload.error?.message ?? 'unknown'}`))
+
+    // Register descriptor con loader ESM — demo MF inline via data URL ESM.
+    // In produzione: url punta a CDN o asset hosted (es. https://cdn.example/dashboard.js).
+    const demoMfSource = `
+      export default {
+        async mount(ctx) {
+          const root = document.getElementById('mf-root')
+          root.innerHTML = '<strong>Hello from demo-mf!</strong> Mounted at ' + new Date().toISOString()
+          ctx.publish?.('demo.mounted', { id: ctx.id })
+        },
+        async unmount(_ctx) {
+          document.getElementById('mf-root').innerHTML = 'Click "Mount MF" per caricare il micro-frontend demo...'
+        },
+      }
+    `
+    const demoMfUrl = 'data:application/javascript;base64,' + btoa(demoMfSource)
+
+    await broker.registerMicroFrontend({
+      id: 'demo-mf',
+      name: 'Demo MF',
+      version: '1.0.0',
+      loader: {
+        type: 'esm',
+        url: demoMfUrl,
+        timeoutMs: 5000,
+      },
+    })
+    log('📋 MF registered: demo-mf')
+
+    document.getElementById('btn-mount').addEventListener('click', async () => {
+      try {
+        await broker.loadMicroFrontend('demo-mf')
+        await broker.mountMicroFrontend('demo-mf')
+      } catch (err) {
+        log(`❌ Error: ${err.message}`)
+      }
+    })
+
+    document.getElementById('btn-unmount').addEventListener('click', async () => {
+      try {
+        await broker.unmountMicroFrontend('demo-mf')
+      } catch (err) {
+        log(`❌ Error: ${err.message}`)
+      }
+    })
+  </script>
+</body>
+</html>
