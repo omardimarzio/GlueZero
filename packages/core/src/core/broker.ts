@@ -40,9 +40,11 @@
 import type { BrokerEvent } from '../types/broker-event'
 import type { BrokerConfig } from '../types/config'
 import type { BrokerLogger, LogLevel } from '../types/logger'
+import type { BrokerModule, BrokerModuleContext } from '../types/module'
 import type { PluginDescriptor } from '../types/plugin'
 import type { SubscribeOptions, Subscription } from '../types/subscription'
 import type { EventTap, PipelineStep } from '../types/tap'
+import { createBrokerError } from './broker-error'
 import { EventBus } from './bus'
 import { createBrokerEvent, type PublishParams } from './event-factory'
 import { noopEventTap } from './event-tap'
@@ -90,6 +92,9 @@ export class Broker {
   private debugMode: boolean
   private readonly currentLogLevel: LogLevel
 
+  private readonly services = new Map<string, unknown>()
+  private readonly publishInterceptors: Array<(evt: unknown) => unknown | null> = []
+
   /**
    * Construct a new Broker. Prefer {@link createBroker} factory for consumer code
    * (it adds Valibot config validation).
@@ -121,6 +126,40 @@ export class Broker {
       broker: createPluginScopedBroker(this, this.bus, id),
       signal,
     }))
+
+    const modules = config.modules ?? []
+    if (modules.length > 0) {
+      const ctx: BrokerModuleContext = {
+        broker: this,
+        config,
+        logger: this.logger,
+        registerService: <T>(name: string, instance: T): void => {
+          if (this.services.has(name)) {
+            throw createBrokerError({
+              code: 'service.duplicate',
+              category: 'config',
+              message: `Service "${name}" already registered`,
+            })
+          }
+          this.services.set(name, instance)
+        },
+        getService: <T>(name: string): T | undefined =>
+          this.services.get(name) as T | undefined,
+        publishInterceptors: this.publishInterceptors,
+      }
+      for (const m of modules) {
+        try {
+          void m.install(ctx)
+        } catch (err) {
+          throw createBrokerError({
+            code: 'module.install.failed',
+            category: 'config',
+            message: `Module "${m.id}" install failed`,
+            originalError: err instanceof Error ? err : new Error(String(err)),
+          })
+        }
+      }
+    }
   }
 
   /**
@@ -157,6 +196,12 @@ export class Broker {
     payload: T,
     options: Omit<PublishParams<T>, 'topic' | 'payload'> = {},
   ): void {
+    if (this.publishInterceptors.length === 0) {
+      const event = createBrokerEvent<T>({ topic, payload, ...options }, undefined)
+      this.topics.register(topic)
+      this.bus.publish(event)
+      return
+    }
     const event = createBrokerEvent<T>({ topic, payload, ...options }, undefined)
     this.topics.register(topic)
     this.bus.publish(event)
@@ -283,5 +328,15 @@ export class Broker {
       logLevel: this.currentLogLevel,
       pipelineSteps: F1_PIPELINE_STEPS,
     }
+  }
+
+  /** MIN-2 v2.0 (D-V2-16): cascade unsubscribe by ownerId convention `mf:${id}`. */
+  unsubscribeByOwner(ownerId: string): number {
+    return this.bus.unsubscribeByOwner(ownerId)
+  }
+
+  /** MIN-1 v2.0 (D-V2-02): lookup service registrato da modulo opt-in. */
+  getService<T>(name: string): T | undefined {
+    return this.services.get(name) as T | undefined
   }
 }
