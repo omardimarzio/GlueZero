@@ -67,11 +67,7 @@ export function createMfRuntimeContext(
     descriptor: reg.descriptor,
     broker,
     // Facade publish — enricha metadata + auto-source
-    publish: <T>(
-      topic: string,
-      payload: T,
-      options?: MicroFrontendPublishOptions,
-    ): void => {
+    publish: <T>(topic: string, payload: T, options?: MicroFrontendPublishOptions): void => {
       // F8: lifecycleState read at call-time (eventually consistent — RESEARCH §14.2)
       broker.publish(topic, payload, {
         ...options,
@@ -90,11 +86,15 @@ export function createMfRuntimeContext(
     },
     // Facade subscribe — auto-tag ownerId per cascade D-V2-16
     subscribe: (pattern, handler, options) => {
-      return broker.subscribe(pattern as never, handler as never, {
-        ...options,
-        signal: options?.signal ?? abortSignal,
-        ownerId,
-      } as never)
+      return broker.subscribe(
+        pattern as never,
+        handler as never,
+        {
+          ...options,
+          signal: options?.signal ?? abortSignal,
+          ownerId,
+        } as never,
+      )
     },
     ...(abortSignal !== undefined && { signal: abortSignal }),
     // F8 stub: logger ereditato dal broker (no child scope per ora — RESEARCH OQ-05 deferred)

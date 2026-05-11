@@ -296,7 +296,7 @@ export function createMicroFrontendsService(ctx: BrokerModuleContext): MicroFron
     return promise
   }
 
-  // 08-11: `makeStubRuntimeContext` REPLACED by `createMfRuntimeContext` factory.
+  // 08-11: stub runtime context (08-07) sostituito con `createMfRuntimeContext` factory.
   // Lifecycle ops invocano `createMfRuntimeContext(broker, reg)` direttamente nel body
   // per fornire facade publish/subscribe reale con auto-enrichment metadata (MF-OBS-01)
   // e auto-tag ownerId (D-V2-16 cascade unsubscribe).

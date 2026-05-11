@@ -86,9 +86,13 @@ describe('createMfRuntimeContext — facade publish (MF-OBS-01)', () => {
     const publishSpy = vi.spyOn(broker, 'publish')
     const ctx = createMfRuntimeContext(broker, makeReg())
     // Usa un valore valido della picklist core ('component') per testare override.
-    ctx.publish('test', {}, {
-      source: { type: 'component', id: 'custom-id' },
-    })
+    ctx.publish(
+      'test',
+      {},
+      {
+        source: { type: 'component', id: 'custom-id' },
+      },
+    )
     const options = publishSpy.mock.calls[0]?.[2] as {
       source?: { type: string; id: string }
     }
@@ -97,7 +101,7 @@ describe('createMfRuntimeContext — facade publish (MF-OBS-01)', () => {
 })
 
 describe('createMfRuntimeContext — facade subscribe (D-V2-16)', () => {
-  it('subscribe auto-tag ownerId="mf:${id}"', () => {
+  it('subscribe auto-tag ownerId con prefix "mf:" + id', () => {
     const broker = createBroker({ modules: [microfrontendModule()] })
     const subscribeSpy = vi.spyOn(broker, 'subscribe')
     const ctx = createMfRuntimeContext(broker, makeReg())
