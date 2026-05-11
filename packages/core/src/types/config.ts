@@ -21,6 +21,7 @@
 // attiva deep-freeze runtime + verbose logging + tap snapshot full payload.
 
 import type { BrokerLogger, LogLevel } from './logger'
+import type { BrokerModule } from './module'
 import type { EventTap } from './tap'
 
 /**
@@ -61,4 +62,20 @@ export interface BrokerConfig {
   // (D-56 — packages/mapper/src/augment.ts per canonicalModel/aliasRegistry/transforms).
   // NON dichiarate qui: il declaration merging delle interface richiede che gli
   // augment NON entrino in conflitto con field già dichiarati con tipo diverso.
+
+  /**
+   * Module Extension Runtime opt-in (PRD §6.1, MF-MOD-01 v2.0).
+   *
+   * Array di moduli installati al `Broker` construction. Loop su array vuoto =
+   * bit-exact v1.x (PRD §6.2 MF-MOD-02 — bundle delta 0 byte). Default `[]`.
+   *
+   * @example
+   * ```ts
+   * import { microfrontendModule } from '@gluezero/microfrontends'
+   * const broker = createBroker({ modules: [microfrontendModule()] })
+   * ```
+   *
+   * @see BrokerModule, BrokerModuleContext in `./module`
+   */
+  modules?: readonly BrokerModule[]
 }
