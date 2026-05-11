@@ -21,19 +21,37 @@ import type { Broker } from '@gluezero/core'
 import type { RuntimeContext } from './types/runtime-context'
 
 /**
+ * Source descriptor `@gluezero/context` D-23 — id coerente con `contextModule().id` =
+ * `'context'`. Auto-inject su ogni `broker.publish` chiamato da `fireContextEvents`.
+ *
+ * @see PRD §11 (BrokerEvent shape), D-23 (source descriptor obbligatorio)
+ * @internal
+ */
+const CONTEXT_EVENT_SOURCE = {
+  type: 'plugin',
+  id: 'context',
+  name: '@gluezero/context',
+} as const
+
+/**
  * Tupla di 8 standard topics PRD §18.6 `as const` per type narrowing.
  *
  * Ordering: aggregator first, poi 7 specific in ordine PRD §18.6.
  *
  * @see ContextTopic
  */
+// Topic naming policy F1 broker (D-08 TopicTrie): regex
+// `^[a-z][a-z0-9]*(\.[a-z][a-z0-9*]*)*$` — tutto lowercase per segment, no camelCase.
+// PRD §18.6 elenca "context.featureFlags.changed" ma il broker regex impedisce camelCase
+// → normalizzato a `context.featureflags.changed` (lowercase tutti i segment).
+// Coerente con F8 lowercase-segment convention (`microfrontend.load.failed` ecc.).
 export const CONTEXT_TOPICS = [
   'context.changed',
   'context.user.changed',
   'context.tenant.changed',
   'context.locale.changed',
   'context.permissions.changed',
-  'context.featureFlags.changed',
+  'context.featureflags.changed',
   'context.theme.changed',
   'context.route.changed',
 ] as const
@@ -58,7 +76,7 @@ export const CONTEXT_TOPIC_FOR_KEY: Readonly<Record<string, ContextTopic | undef
   tenantId: 'context.tenant.changed',
   locale: 'context.locale.changed',
   permissions: 'context.permissions.changed',
-  featureFlags: 'context.featureFlags.changed',
+  featureFlags: 'context.featureflags.changed',
   theme: 'context.theme.changed',
   currentRoute: 'context.route.changed',
   // timezone, direction, environment, metadata → undefined (solo aggregator)
@@ -112,21 +130,21 @@ export function fireContextEvents(
   current: Readonly<RuntimeContext>,
   changedKeys: ReadonlyArray<keyof RuntimeContext>,
 ): void {
-  // (1) Aggregator catch-all SEMPRE
-  broker.publish<ContextChangedPayload>('context.changed', {
-    previous,
-    current,
-    changedKeys,
-  })
+  // (1) Aggregator catch-all SEMPRE — source descriptor D-23 + deliveryMode 'sync' (D-V2-F10-14).
+  broker.publish<ContextChangedPayload>(
+    'context.changed',
+    { previous, current, changedKeys },
+    { source: CONTEXT_EVENT_SOURCE, deliveryMode: 'sync' },
+  )
   // (N) Topic-specific per chiave con topic dedicato
   for (const key of changedKeys) {
     const topic = CONTEXT_TOPIC_FOR_KEY[key as string]
     if (topic !== undefined) {
-      broker.publish<ContextChangedPayload>(topic, {
-        previous,
-        current,
-        changedKeys: [key],
-      })
+      broker.publish<ContextChangedPayload>(
+        topic,
+        { previous, current, changedKeys: [key] },
+        { source: CONTEXT_EVENT_SOURCE, deliveryMode: 'sync' },
+      )
     }
   }
 }

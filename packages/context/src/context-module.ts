@@ -29,6 +29,7 @@
 import type { BrokerModule } from '@gluezero/core'
 import { SERVICE_MICROFRONTENDS } from '@gluezero/core'
 import type { MicroFrontendsService } from '@gluezero/microfrontends'
+import { initRuntimeContext } from './runtime-context'
 
 /**
  * Factory `BrokerModule` per `@gluezero/context`.
@@ -99,8 +100,10 @@ export function contextModule(): BrokerModule {
             'Add microfrontendModule() before contextModule() in the modules array.',
         )
       }
-      // W2 P02 + P04 completeranno: storage init + wireLifecycleHooks(broker, service, contextService)
-      // Per ora (W1 Plan 10-01 scaffolding) stub: lookup-validate only.
+      // W2 P02: init runtime context broker reference (storage state già module-level).
+      initRuntimeContext(ctx.broker)
+      // W2 P04 aggiungerà: wireLifecycleHooks(ctx.broker, service, contextService) per
+      // ctx.context auto-injection LIVE + per-MF MapperEngine Map<mfId, MapperEngine>.
     },
   }
 }

@@ -44,19 +44,31 @@ export { __contextAugmentLoaded } from './augment'
 
 // ===== Runtime exports (Wave 1 — scaffolding) =====
 
-// BrokerModule factory install lookup service (W1 — D-V2-F10-18, install stub completato in W2)
+// BrokerModule factory install lookup service (W1 — D-V2-F10-18, install completato in W2 P02 con initRuntimeContext)
 export { contextModule } from './context-module'
 
-// ===== Type exports (Wave 1 — scaffolding) =====
+// ===== Runtime API (W2 P02) — MF-CTX-01 (5 API CRUD) + MF-CTX-05 (selector subscribe) =====
+export {
+  setRuntimeContext,
+  replaceRuntimeContext,
+  getRuntimeContext,
+  subscribeRuntimeContext,
+  clearRuntimeContext,
+} from './runtime-context'
 
-// RuntimeContext shape 11 chiavi PRD §18.4 (MF-CTX-02) + sub-shapes RuntimeUser + RuntimeRouteContext
+export type { SetContextOptions } from './runtime-context'
+
+// ===== Events constants + types (W2 P02) — MF-CTX-03 (8 events fire pattern) =====
+export { CONTEXT_TOPICS, CONTEXT_TOPIC_FOR_KEY } from './events'
+export type { ContextTopic, ContextChangedPayload } from './events'
+
+// ===== Type exports (Wave 1 — scaffolding) — MF-CTX-02 (11 chiavi PRD §18.4) =====
 export type {
   RuntimeContext,
   RuntimeUser,
   RuntimeRouteContext,
 } from './types/runtime-context'
 
-// ===== Runtime exports (Wave 2+ — popolato da P02/P03/P04) =====
-// export { setRuntimeContext, replaceRuntimeContext, getRuntimeContext, subscribeRuntimeContext, clearRuntimeContext } from './runtime-context'  // W2 P02
+// ===== Runtime exports (Wave 2+ — popolato da P03/P04) =====
 // export { wrapInspectorWithMfAttribution } from './inspector-wrapper'  // W2 P04
 // export { type CreateContextErrorParams, createContextError, type ContextErrorCode } from './context-error'  // W2 P03

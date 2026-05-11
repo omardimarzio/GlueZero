@@ -44,7 +44,8 @@ import type { RuntimeContext } from './types/runtime-context'
  */
 interface Subscriber {
   readonly selector: (ctx: Readonly<RuntimeContext>) => unknown
-  readonly handler: (slice: unknown, prev: unknown) => void
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  readonly handler: (slice: any, prev: any) => void
   lastSlice: unknown
 }
 
@@ -106,12 +107,18 @@ export function subscribeRuntimeContext<K extends keyof RuntimeContext>(
 ): () => void
 /**
  * Implementation signature — discriminazione runtime via `Array.isArray`.
+ *
+ * Handler param tipato `any` per bivariance overload TS — TS rifiuta `(slice: unknown,
+ * prev: unknown) => void` come compatibile con Sig 2 generic `(slice: Pick<...,K>) => void`
+ * (contravariance fail TS2394). `any` è il pattern canonico per overload impl signature.
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function subscribeRuntimeContext(
   selectorOrKeys:
     | ((ctx: Readonly<RuntimeContext>) => unknown)
     | ReadonlyArray<keyof RuntimeContext>,
-  handler: (slice: unknown, prev: unknown) => void,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  handler: (slice: any, prev: any) => void,
   options?: { signal?: AbortSignal },
 ): () => void {
   const selector = Array.isArray(selectorOrKeys)
