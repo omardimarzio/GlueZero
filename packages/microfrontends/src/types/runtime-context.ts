@@ -10,12 +10,7 @@
  * @see RESEARCH §8 + PATTERNS §28
  */
 // Forward import del Broker — usa "import type" per evitare ciclo
-import type {
-  Broker,
-  BrokerLogger,
-  SubscribeOptions,
-  Subscription,
-} from '@gluezero/core'
+import type { Broker, BrokerLogger, SubscribeOptions, Subscription } from '@gluezero/core'
 import type { MicroFrontendDescriptor } from './descriptor'
 
 /** Handler subscription event-typed (riuso F1 pattern). */

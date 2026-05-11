@@ -5,27 +5,6 @@
  */
 
 export type {
-  MicroFrontendDescriptor,
-  MicroFrontendLoaderDefinition,
-  MicroFrontendMapping,
-  MicroFrontendOwner,
-  MicroFrontendRegistration,
-} from './descriptor'
-
-export type {
-  MicroFrontendFailurePhase,
-  MicroFrontendFailureReason,
-  MicroFrontendState,
-  MicroFrontendTimings,
-} from './lifecycle'
-export { ALLOWED_TRANSITIONS, transitionAllowed } from './lifecycle'
-
-export type {
-  MicroFrontendMountDefinition,
-  MountStrategy,
-} from './mount'
-
-export type {
   ContextContract,
   ContractDirection,
   ContractValidationPolicy,
@@ -35,15 +14,31 @@ export type {
   TopicContract,
   WorkerContract,
 } from './contracts'
-
+export type {
+  MicroFrontendDescriptor,
+  MicroFrontendLoaderDefinition,
+  MicroFrontendMapping,
+  MicroFrontendOwner,
+  MicroFrontendRegistration,
+} from './descriptor'
+export type {
+  MicroFrontendErrorEventPayload,
+  MicroFrontendLifecycleEventPayload,
+} from './events'
+export type {
+  MicroFrontendFailurePhase,
+  MicroFrontendFailureReason,
+  MicroFrontendState,
+  MicroFrontendTimings,
+} from './lifecycle'
+export { ALLOWED_TRANSITIONS, transitionAllowed } from './lifecycle'
+export type {
+  MicroFrontendMountDefinition,
+  MountStrategy,
+} from './mount'
 export type {
   MicroFrontendEventHandler,
   MicroFrontendPublishOptions,
   MicroFrontendRuntimeContext,
   MicroFrontendRuntimeModule,
 } from './runtime-context'
-
-export type {
-  MicroFrontendErrorEventPayload,
-  MicroFrontendLifecycleEventPayload,
-} from './events'

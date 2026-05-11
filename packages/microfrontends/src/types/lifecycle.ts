@@ -72,10 +72,7 @@ export const ALLOWED_TRANSITIONS: Readonly<
 } as const
 
 /** Helper standalone (riusato da `lifecycle-fsm.ts`). */
-export function transitionAllowed(
-  from: MicroFrontendState,
-  to: MicroFrontendState,
-): boolean {
+export function transitionAllowed(from: MicroFrontendState, to: MicroFrontendState): boolean {
   return ALLOWED_TRANSITIONS[from].has(to)
 }
 

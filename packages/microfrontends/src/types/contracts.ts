@@ -45,10 +45,7 @@ export interface ThemeContract {
 }
 
 /** Policy di validation contratti (MF-CONTRACT-02). */
-export type ContractValidationPolicy =
-  | 'warn'
-  | 'fail-registration'
-  | 'fail-mount'
+export type ContractValidationPolicy = 'warn' | 'fail-registration' | 'fail-mount'
 
 /** Aggregato contratti del descriptor. */
 export interface MicroFrontendContracts {
