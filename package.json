@@ -119,7 +119,8 @@
       "name": "@gluezero/mf-esm (gzip)",
       "path": "packages/mf-esm/dist/index.js",
       "limit": "3 KB",
-      "gzip": true
+      "gzip": true,
+      "ignore": ["@gluezero/core", "@gluezero/microfrontends"]
     },
     {
       "name": "@gluezero/mf-esm/augment (gzip)",
