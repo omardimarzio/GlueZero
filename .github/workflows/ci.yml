@@ -15,6 +15,19 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  core-contamination-guard:
+    name: Core contamination guard (P-01)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # serve per git diff vs main
+
+      - name: Run check-no-mf-imports.sh
+        run: bash scripts/check-no-mf-imports.sh
+        env:
+          BASE_REF: main
+
   bc-replay:
     name: v1-bc-replay (cross-fase F8-F17 BC gate)
     runs-on: ubuntu-latest
