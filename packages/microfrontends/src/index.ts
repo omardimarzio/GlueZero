@@ -28,6 +28,8 @@ import './augment'
 export { __mfAugmentLoaded } from './augment'
 // Helper internal owner-id (audit-friendly grep `mfOwnerId(`)
 export { MF_OWNER_PREFIX, mfOwnerId } from './internal/owner-id'
+// Lifecycle FSM (W3-P06)
+export { type LifecycleFailureContext, LifecycleManager } from './lifecycle-fsm'
 // Loader Registry types
 export {
   type LoadedModule,
