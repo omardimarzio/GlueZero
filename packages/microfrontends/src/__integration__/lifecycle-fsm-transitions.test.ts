@@ -231,7 +231,9 @@ describe('Lifecycle transitions — full sequence MF-INT-LIFE-01', () => {
       caught = err
     }
     expect((caught as { code: string }).code).toBe('MF_LIFECYCLE_IN_FLIGHT')
-    expect((caught as { details: { currentOp: string; requestedOp: string } }).details).toMatchObject({
+    expect(
+      (caught as { details: { currentOp: string; requestedOp: string } }).details,
+    ).toMatchObject({
       currentOp: 'mount',
       requestedOp: 'unmount',
     })

@@ -1,3 +1,4 @@
+import { playwright } from '@vitest/browser-playwright'
 import { defineConfig } from 'vitest/config'
 
 // Tier-3 Playwright Chromium — D-V2-F8-04 minimal targeted: SOLO 3 scenari critici.
@@ -13,7 +14,7 @@ export default defineConfig({
     ],
     browser: {
       enabled: true,
-      provider: 'playwright',
+      provider: playwright(),
       instances: [
         {
           browser: 'chromium',
