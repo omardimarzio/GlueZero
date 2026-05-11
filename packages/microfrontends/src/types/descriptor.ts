@@ -50,6 +50,30 @@ export interface MicroFrontendMapping {
  *
  * Solo `id`/`name`/`version` mandatori (`id` regex `^[a-z0-9._-]+$` PRD §11.4).
  * Tutti gli altri field opzionali per consentire scenari incrementali.
+ *
+ * @example Shape minimale (3 field mandatori)
+ * ```ts
+ * const minimal: MicroFrontendDescriptor = {
+ *   id: 'customer-dashboard',
+ *   name: 'Customer Dashboard',
+ *   version: '1.0.0',
+ * }
+ * ```
+ *
+ * @example Shape con loader + mount (scenario F8 standard)
+ * ```ts
+ * const withMount: MicroFrontendDescriptor = {
+ *   id: 'analytics',
+ *   name: 'Analytics MF',
+ *   version: '2.1.0',
+ *   loader: { type: 'esm', url: '/mfs/analytics.js', timeoutMs: 15000 },
+ *   mount: { strategy: 'direct', selector: '#analytics-root', clearBeforeMount: true },
+ * }
+ * ```
+ *
+ * @see validateDescriptor — Valibot register-time strict
+ * @see PRD §11.2 — 15+ field reference completo
+ * @see PRD §11.4 — id regex spec
  */
 export interface MicroFrontendDescriptor {
   /** Identificatore unico — regex `^[a-z0-9._-]+$` (PRD §11.4). */
@@ -87,7 +111,27 @@ export interface MicroFrontendDescriptor {
   readonly metadata?: Record<string, unknown>
 }
 
-/** Registrazione interna del MF (visibile via `getMicroFrontend`/`getMicroFrontends`). */
+/**
+ * Registrazione interna del MF (visibile via `getMicroFrontend`/`getMicroFrontends`).
+ *
+ * Contiene descriptor (immutable post-validation) + state mutable + tracking
+ * timings/failureReason/loadedModule.
+ *
+ * @example
+ * ```ts
+ * const reg = service.get('my-mf')
+ * if (reg) {
+ *   console.log('Stato:', reg.state)
+ *   console.log('Previous:', reg.previousState)
+ *   if (reg.timings?.mountedAt) {
+ *     console.log('Mounted at:', new Date(reg.timings.mountedAt))
+ *   }
+ * }
+ * ```
+ *
+ * @see MicroFrontendsService.get — accessor pubblico
+ * @see MicroFrontendsService.list — array snapshot
+ */
 export interface MicroFrontendRegistration {
   readonly descriptor: MicroFrontendDescriptor
   state: MicroFrontendState

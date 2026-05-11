@@ -108,14 +108,32 @@ export interface MicroFrontendsService {
  *
  * Riceve `BrokerModuleContext` per accedere a `broker` (per cascade unsubscribe MIN-2).
  *
- * @example
+ * @example Usage interno (microfrontend-module.ts)
  * ```ts
- * // Internal usage (microfrontend-module.ts):
  * install(ctx) {
  *   const service = createMicroFrontendsService(ctx)
  *   ctx.registerService(SERVICE_MICROFRONTENDS, service)
  * }
  * ```
+ *
+ * @example Lifecycle completo via service
+ * ```ts
+ * const mf = broker.getService<MicroFrontendsService>(SERVICE_MICROFRONTENDS)!
+ * await mf.register({ id: 'demo', name: 'Demo', version: '1.0.0', loader: { type: 'mock' } })
+ * await mf.load('demo')
+ * await mf.mount('demo')   // auto-bootstrap D-V2-07
+ * await mf.unmount('demo')
+ * await mf.destroy('demo') // cascade unsubscribeByOwner('mf:demo')
+ * ```
+ *
+ * @throws `MicroFrontendError` con `code: 'MF_DESCRIPTOR_INVALID'` se descriptor invalid (register)
+ * @throws `MicroFrontendError` con `code: 'MF_NOT_REGISTERED'` se id sconosciuto (lifecycle ops)
+ * @throws `MicroFrontendError` con `code: 'MF_LIFECYCLE_IN_FLIGHT'` se op concorrente differente
+ * @throws `MicroFrontendError` con `code: 'MF_STATE_INVALID'` se transition vietata
+ *
+ * @see D-V2-16 — cascade unsubscribe pattern
+ * @see D-V2-07 — auto-bootstrap su mount
+ * @see PRD §10.6 — idempotency policies
  */
 export function createMicroFrontendsService(ctx: BrokerModuleContext): MicroFrontendsService {
   /** Storage descriptor + state per id. */

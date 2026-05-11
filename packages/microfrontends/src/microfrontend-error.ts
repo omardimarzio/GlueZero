@@ -34,7 +34,7 @@ export interface CreateMfErrorParams {
 /**
  * Factory per `MicroFrontendError` (wrapper di `BrokerError` con category fisso).
  *
- * @example
+ * @example Throw error in validator
  * ```ts
  * throw createMfError({
  *   code: 'MF_DESCRIPTOR_INVALID',
@@ -43,7 +43,24 @@ export interface CreateMfErrorParams {
  * })
  * ```
  *
+ * @example Wrap original error in lifecycle op
+ * ```ts
+ * try {
+ *   await loader.load(def, ctx)
+ * } catch (err) {
+ *   throw createMfError({
+ *     code: 'MF_LOADER_INVALID_MODULE',
+ *     message: `Loader ${def.type} failed`,
+ *     details: { mfId: 'demo', type: def.type },
+ *     originalError: err as Error,
+ *   })
+ * }
+ * ```
+ *
  * @throws Mai — la factory ritorna sempre. È chi chiama che `throw createMfError(...)`.
+ *
+ * @see createBrokerError — wrapper sottostante in `@gluezero/core`
+ * @see MicroFrontendErrorCode — 8 codes audit-friendly union
  */
 export function createMfError(params: CreateMfErrorParams): BrokerError {
   return createBrokerError({

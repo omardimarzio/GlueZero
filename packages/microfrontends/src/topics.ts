@@ -94,6 +94,17 @@ export type MfStandardTopic = MfLifecycleTopic | MfErrorTopic | MfGovernanceTopi
  * Usato da `registry.ts` per pubblicare lifecycle events su transition.
  * NOTE: NON tutti gli stati hanno topic 1:1 — `failed` ha topic separato +
  * error topic phase-specific (vedi `MF_ERROR_TOPIC_FOR_PHASE`).
+ *
+ * @example Lookup topic per state corrente
+ * ```ts
+ * const state: MicroFrontendState = 'mounted'
+ * const topic = MF_LIFECYCLE_TOPIC_FOR_STATE[state]
+ * // → 'microfrontend.mounted'
+ * if (topic) broker.publish(topic, payload)
+ * ```
+ *
+ * @see MF_LIFECYCLE_TOPICS — array completo
+ * @see MF_ERROR_TOPIC_FOR_PHASE — mapping phase → error topic
  */
 export const MF_LIFECYCLE_TOPIC_FOR_STATE: Readonly<Record<string, MfLifecycleTopic | undefined>> =
   {
@@ -118,6 +129,16 @@ export const MF_LIFECYCLE_TOPIC_FOR_STATE: Readonly<Record<string, MfLifecycleTo
  *
  * Usato da `registry.ts` per pubblicare error event phase-specific in addition al
  * `microfrontend.failed` lifecycle event.
+ *
+ * @example Lookup error topic da failure phase
+ * ```ts
+ * const phase: MicroFrontendFailurePhase = 'bootstrap'
+ * const errorTopic = MF_ERROR_TOPIC_FOR_PHASE[phase]
+ * // → 'microfrontend.bootstrap.failed'
+ * broker.publish(errorTopic, errorPayload)
+ * ```
+ *
+ * @see MF_ERROR_TOPICS — array dei 7 error topic literals
  */
 export const MF_ERROR_TOPIC_FOR_PHASE: Readonly<Record<string, MfErrorTopic>> = {
   load: 'microfrontend.load.failed',

@@ -28,6 +28,24 @@ export interface MicroFrontendPublishOptions {
  *
  * Placeholder fields (`map`/`routes`/`gateway`/`context`/`permissions`/`theme`)
  * sono `unknown` in F8 — valorizzati da F10-F13.
+ *
+ * @example Uso dentro un hook lifecycle del MF
+ * ```ts
+ * const myMfModule: MicroFrontendRuntimeModule = {
+ *   async mount(ctx) {
+ *     ctx.logger?.info?.(`Montaggio MF ${ctx.id}`)
+ *     // Facade publish — auto-enricha metadata.microFrontendId
+ *     ctx.publish('mf.ready', { id: ctx.id })
+ *     // Facade subscribe — auto-tagga ownerId per cascade D-V2-16
+ *     ctx.subscribe('user.action', (evt) => {
+ *       console.log('Ricevuto user.action da MF context:', evt)
+ *     })
+ *   },
+ * }
+ * ```
+ *
+ * @see createMfRuntimeContext — factory
+ * @see PRD §13 — context spec
  */
 export interface MicroFrontendRuntimeContext {
   readonly id: string
@@ -78,6 +96,30 @@ export interface MicroFrontendRuntimeContext {
  * Modulo runtime del MF — 5 hook opzionali (vs 4 in PluginDescriptor v1.x).
  *
  * Pattern carryover D-25 esteso con `update` (F8) per supportare hot-reload.
+ *
+ * @example Modulo MF custom completo
+ * ```ts
+ * const myModule: MicroFrontendRuntimeModule = {
+ *   async bootstrap(ctx) {
+ *     // Setup-once: warmup risorse, registra theme, ecc.
+ *   },
+ *   async mount(ctx) {
+ *     // Render nel DOM (target risolto da orchestrateMount)
+ *   },
+ *   async update(ctx, changes) {
+ *     // Hot-reload incrementale (F9+)
+ *   },
+ *   async unmount(ctx) {
+ *     // Smonta dal DOM, mantieni stato interno se preserveOnUnmount
+ *   },
+ *   destroy(ctx) {
+ *     // Cleanup finale sincrono
+ *   },
+ * }
+ * ```
+ *
+ * @see LoadedModule — wrapper restituito dal LoaderAdapter
+ * @see PRD §13.2 — runtime module spec
  */
 export interface MicroFrontendRuntimeModule {
   /** Chiamato dopo `loaded`, prima di `mount`. Inizializzazione setup-once. */

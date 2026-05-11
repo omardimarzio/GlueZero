@@ -12,7 +12,26 @@ import type {
   MicroFrontendTimings,
 } from './lifecycle'
 
-/** Payload pubblicato sui 17 lifecycle topics (PRD §31.4). */
+/**
+ * Payload pubblicato sui 17 lifecycle topics (PRD §31.4).
+ *
+ * `descriptor` field popolato SOLO per `registered` event (P-15 retention
+ * mitigation — evita lifetime extension del descriptor su ogni transition).
+ *
+ * @example Subscribe lifecycle event
+ * ```ts
+ * broker.subscribe('microfrontend.mounted', (evt) => {
+ *   const payload = evt.payload as MicroFrontendLifecycleEventPayload
+ *   console.log(`MF ${payload.id} mounted in state ${payload.state}`)
+ *   if (payload.timings?.mountedAt) {
+ *     console.log('mounted at:', new Date(payload.timings.mountedAt))
+ *   }
+ * })
+ * ```
+ *
+ * @see MF_LIFECYCLE_TOPICS — 17 topic literals
+ * @see PRD §31.4 — payload spec
+ */
 export interface MicroFrontendLifecycleEventPayload {
   readonly id: string
   readonly name: string
@@ -26,7 +45,26 @@ export interface MicroFrontendLifecycleEventPayload {
   readonly metadata?: Record<string, unknown>
 }
 
-/** Payload pubblicato sui 7 error topics (PRD §31.5). */
+/**
+ * Payload pubblicato sui 7 error topics (PRD §31.5).
+ *
+ * Safe-serialized `error` (NO `Error` native) per postMessage compat con Worker (F15).
+ *
+ * @example Subscribe error event phase-specific
+ * ```ts
+ * broker.subscribe('microfrontend.bootstrap.failed', (evt) => {
+ *   const payload = evt.payload as MicroFrontendErrorEventPayload
+ *   console.error(`MF ${payload.id} failed in phase ${payload.phase}:`, payload.error.message)
+ *   if (payload.recoverable) {
+ *     console.log('Recovery suggerito: service.load(id) retry')
+ *   }
+ * })
+ * ```
+ *
+ * @see MF_ERROR_TOPICS — 7 phase-specific topic literals
+ * @see PRD §31.5 — payload spec
+ * @see MF_ERROR_TOPIC_FOR_PHASE — helper mapping
+ */
 export interface MicroFrontendErrorEventPayload {
   readonly id: string
   readonly name?: string

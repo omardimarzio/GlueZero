@@ -66,6 +66,20 @@ export class LoaderRegistry {
    *
    * @throws `BrokerError` con `code: 'MF_LOADER_TYPE_DUPLICATE'` se `type` già registrato
    *   (OQ-15: no override silente).
+   *
+   * @example
+   * ```ts
+   * const myEsmLoader: MicroFrontendLoaderAdapter = {
+   *   type: 'esm',
+   *   async load(def, ctx) {
+   *     const module = await import(def.url!)
+   *     return { module, lifecycle: module.default, metadata: {} }
+   *   },
+   * }
+   * loaderRegistry.register(myEsmLoader)
+   * ```
+   *
+   * @see service.registerLoader — wrapper esposto al consumer
    */
   register(adapter: MicroFrontendLoaderAdapter): void {
     if (this.adapters.has(adapter.type)) {
