@@ -63,6 +63,18 @@ export {
   type MicroFrontendsService,
   type MountOptions,
 } from './registry'
+// Standard topics (W5 — D-V2-F8-12)
+export {
+  MF_ERROR_TOPIC_FOR_PHASE,
+  MF_ERROR_TOPICS,
+  MF_GOVERNANCE_TOPICS,
+  MF_LIFECYCLE_TOPIC_FOR_STATE,
+  MF_LIFECYCLE_TOPICS,
+  type MfErrorTopic,
+  type MfGovernanceTopic,
+  type MfLifecycleTopic,
+  type MfStandardTopic,
+} from './topics'
 
 // Tutti i types pubblici (re-export dal barrel types/)
 export {
