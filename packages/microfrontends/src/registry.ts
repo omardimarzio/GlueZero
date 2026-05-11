@@ -234,13 +234,14 @@ export function createMicroFrontendsService(ctx: BrokerModuleContext): MicroFron
    * 3. Wrap `body(reg)` in Promise + `.finally(inFlight.delete(id))` (cleanup naturale)
    * 4. `inFlight.set(id, {op, promise})` → return promise
    */
-  async function runOp(
+  function runOp(
     id: string,
     op: LifecycleOp,
     body: (reg: MicroFrontendRegistration) => Promise<void>,
   ): Promise<void> {
     const reg = registrations.get(id)
     if (!reg) {
+      // Throw sync (avvolto in Promise.reject implicito quando awaited).
       throw createMfError({
         code: 'MF_NOT_REGISTERED',
         message: `MicroFrontend "${id}" not registered`,
@@ -252,7 +253,7 @@ export function createMicroFrontendsService(ctx: BrokerModuleContext): MicroFron
     const existing = inFlight.get(id)
     if (existing) {
       if (existing.op === op) {
-        // Identità stretta: chiamata concorrente identica → stessa Promise.
+        // Identità stretta: chiamata concorrente identica → stessa Promise (P-04).
         return existing.promise
       }
       throw createMfError({
@@ -262,6 +263,9 @@ export function createMicroFrontendsService(ctx: BrokerModuleContext): MicroFron
       })
     }
 
+    // Costruzione promise + tracking ATOMICO: la finally registra il cleanup
+    // PRIMA che la promise venga inserita in inFlight (così quando body sync-throw
+    // il delete è già wired).
     const promise = body(reg).finally(() => {
       // Cleanup naturale Promise resolve/reject (OQ-06: NO TTL, deferred V2.1).
       inFlight.delete(id)
@@ -287,7 +291,7 @@ export function createMicroFrontendsService(ctx: BrokerModuleContext): MicroFron
     }
   }
 
-  async function load(id: string, options?: LoadOptions): Promise<void> {
+  function load(id: string, options?: LoadOptions): Promise<void> {
     return runOp(id, 'load', async (reg) => {
       // Idempotenza: già loaded (o oltre) = no-op (PRD §10.6 + MF-LIFE-07).
       if (
@@ -347,7 +351,7 @@ export function createMicroFrontendsService(ctx: BrokerModuleContext): MicroFron
     })
   }
 
-  async function bootstrap(id: string): Promise<void> {
+  function bootstrap(id: string): Promise<void> {
     return runOp(id, 'bootstrap', async (reg) => {
       // Idempotenza: già bootstrapped o oltre = no-op (PRD §10.6).
       if (
@@ -384,7 +388,7 @@ export function createMicroFrontendsService(ctx: BrokerModuleContext): MicroFron
     })
   }
 
-  async function mount(id: string, options?: MountOptions): Promise<void> {
+  function mount(id: string, options?: MountOptions): Promise<void> {
     return runOp(id, 'mount', async (reg) => {
       // Idempotenza: già mounted = no-op + debug log (PRD §10.6 + MF-LIFE-07).
       if (reg.state === 'mounted') {
@@ -434,7 +438,7 @@ export function createMicroFrontendsService(ctx: BrokerModuleContext): MicroFron
     })
   }
 
-  async function unmount(id: string): Promise<void> {
+  function unmount(id: string): Promise<void> {
     return runOp(id, 'unmount', async (reg) => {
       // Idempotenza: non-mounted = no-op + debug log (PRD §10.6).
       if (reg.state !== 'mounted') {
@@ -458,7 +462,7 @@ export function createMicroFrontendsService(ctx: BrokerModuleContext): MicroFron
     })
   }
 
-  async function destroy(id: string, options?: { force?: boolean }): Promise<void> {
+  function destroy(id: string, options?: { force?: boolean }): Promise<void> {
     return runOp(id, 'destroy', async (reg) => {
       // Idempotenza silente: destroyed = no-op senza warn (PRD §10.6 cleanup multi-path).
       if (reg.state === 'destroyed') return
