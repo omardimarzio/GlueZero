@@ -14,12 +14,7 @@ export default defineConfig({
       provider: 'v8',
       reporter: ['text', 'json', 'html'],
       include: ['src/**/*.ts'],
-      exclude: [
-        'src/**/*.test.ts',
-        'src/index.ts',
-        'src/test-utils/**',
-        'src/__integration__/**',
-      ],
+      exclude: ['src/**/*.test.ts', 'src/index.ts', 'src/test-utils/**', 'src/__integration__/**'],
       thresholds: {
         statements: 90,
         branches: 85,

@@ -1,6 +1,7 @@
 {
   "$schema": "https://biomejs.dev/schemas/2.4.13/schema.json",
-  "extends": ["//"],
+  "root": false,
+  "extends": "//",
   "files": {
     "includes": ["**/*.ts", "**/*.tsx", "**/*.json"]
   }
