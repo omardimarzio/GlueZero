@@ -97,8 +97,10 @@ describe('MicroFrontendsService — CRUD (MF-REG-01..04)', () => {
     await service.register(validDescriptor)
     const spy = vi.spyOn(broker, 'unsubscribeByOwner')
     await service.unregister('test-mf')
-    // Cascade SEMPRE eseguito via finally — anche se nessuna subscription esisteva
-    expect(spy).toHaveBeenCalledTimes(1)
+    // Cascade SEMPRE eseguito via finally — anche se nessuna subscription esisteva.
+    // W3-P07 wiring: unregister chiama destroy internal (che cascade in finally) + cascade
+    // anche in unregister finally → atteso ≥1 chiamata con `mf:test-mf`.
+    expect(spy.mock.calls.length).toBeGreaterThanOrEqual(1)
     expect(spy).toHaveBeenCalledWith('mf:test-mf')
     spy.mockRestore()
   })
@@ -131,19 +133,19 @@ describe('MicroFrontendsService — CRUD (MF-REG-01..04)', () => {
   })
 })
 
-describe('MicroFrontendsService — Lifecycle ops stub W2', () => {
-  it('load throws MF_NOT_REGISTERED con phase W2-stub', async () => {
+describe('MicroFrontendsService — Lifecycle ops W3-P07 wiring (MF-NOT-REGISTERED guard)', () => {
+  it('load throws MF_NOT_REGISTERED con details.op per id non registrato', async () => {
     const { service } = makeBroker()
     try {
-      await service.load('test-mf')
+      await service.load('absent-mf')
       expect.fail('should have thrown')
     } catch (err) {
       expect((err as { code: string }).code).toBe('MF_NOT_REGISTERED')
-      expect((err as { details: { phase: string } }).details.phase).toBe('W2-stub')
+      expect((err as { details: { op: string } }).details.op).toBe('load')
     }
   })
 
-  it('mount/unmount/destroy/bootstrap tutti throw stub W3', async () => {
+  it('bootstrap/mount/unmount/destroy tutti throw MF_NOT_REGISTERED per id non registrato', async () => {
     const { service } = makeBroker()
     for (const op of ['bootstrap', 'mount', 'unmount', 'destroy'] as const) {
       try {
@@ -151,6 +153,7 @@ describe('MicroFrontendsService — Lifecycle ops stub W2', () => {
         expect.fail(`${op} should have thrown`)
       } catch (err) {
         expect((err as { code: string }).code).toBe('MF_NOT_REGISTERED')
+        expect((err as { details: { op: string } }).details.op).toBe(op)
       }
     }
   })

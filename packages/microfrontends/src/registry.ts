@@ -1,22 +1,38 @@
 /**
- * MicroFrontendsService implementation (MF-REG-01..04, MF-LOADER-REG-01..02).
+ * MicroFrontendsService implementation (MF-REG-01..04, MF-LOADER-REG-01..02, MF-LIFE-03..05, MF-LIFE-07).
  *
  * - CRUD complete: register/unregister/get/list/getState/getSnapshot
- * - `inFlight: Map<id, {op, promise}>` prep (P-04 mitigation — pieno wiring W3-P07)
- * - Cascade `unregister → broker.unsubscribeByOwner(mfOwnerId(id))` (D-V2-16)
- * - Lifecycle ops stub (load/bootstrap/mount/unmount/destroy) → throw `MF_NOT_REGISTERED`
- *   con `details.phase = 'W2-stub'` per disambiguare nei test che chiamano lifecycle
- *   prima del wiring FSM W3-P06.
+ * - Lifecycle ops wired (W3-P07): load/bootstrap/mount/unmount/destroy
+ *   - `runOp(id, op, body)` helper centralizza: lookup registration → check `inFlight`
+ *     idempotency → strict identity per stesso op (P-04) → throw `MF_LIFECYCLE_IN_FLIGHT`
+ *     per op diverso concorrente → wrap body con `.finally(inFlight.delete)`
+ *   - Auto-bootstrap D-V2-07: `mount(id)` su `state === 'loaded'` chiama `bootstrap`
+ *     automaticamente; override via `options.skipBootstrap: true`
+ *   - Idempotency (PRD §10.6): `mount` su `mounted` = no-op + debug log;
+ *     `destroy` su `destroyed` = no-op silente
+ * - Cascade `destroy → broker.unsubscribeByOwner(mfOwnerId(id))` SEMPRE in `finally`
+ *   (D-V2-16 + MIN-2)
+ * - Failure: transition → 'failed' con `failureReason.phase` discriminato (D-V2-06)
  *
  * Pattern Registry replica F2 `canonical-registry.ts` (Map interno + idempotent
- * delete) MA con `inFlight` Map preparatorio + cascade unsubscribe (D-V2-16).
+ * delete) MA con `inFlight` Map populated + cascade unsubscribe (D-V2-16).
  *
- * @see RESEARCH §3, §10 + PATTERNS §32 + D-V2-16 + PRD §10
+ * NOTA F8 W3-P07: i lifecycle hook ricevono uno stub minimale `RuntimeContext`
+ * (publish/subscribe no-op) — il RuntimeContext facade completo arriva in W5-P11
+ * (createMfRuntimeContext con auto-tagging + metadata enrichment).
+ *
+ * @see RESEARCH §3, §10 + PATTERNS §32 + D-V2-16 + D-V2-07 + PRD §10
  */
 import type { BrokerModuleContext } from '@gluezero/core'
 import { validateDescriptor } from './descriptor-validator'
 import { mfOwnerId } from './internal/owner-id'
-import { LoaderRegistry, type MicroFrontendLoaderAdapter } from './loader-registry'
+import { LifecycleManager } from './lifecycle-fsm'
+import {
+  type LoadedModule,
+  type LoaderContext,
+  LoaderRegistry,
+  type MicroFrontendLoaderAdapter,
+} from './loader-registry'
 import { createMfError } from './microfrontend-error'
 import type { MicroFrontendDescriptor, MicroFrontendRegistration } from './types/descriptor'
 import type { MicroFrontendState } from './types/lifecycle'
@@ -100,17 +116,19 @@ export function createMicroFrontendsService(ctx: BrokerModuleContext): MicroFron
   const registrations = new Map<string, MicroFrontendRegistration>()
 
   /**
-   * Operazioni in-flight per id (P-04 prep — wiring W3-P07).
+   * Operazioni in-flight per id (P-04 mitigation — wired W3-P07).
    *
-   * Dichiarato in W2 per concretezza del tipo + readiness al wire-up W3.
-   * Nessun set/delete in W2 perché lifecycle ops sono stub. W3-P07 popola
-   * questa Map durante load/bootstrap/mount/etc. per concurrency control.
+   * Map<id, {op, promise}>: stesso op concorrente = stessa Promise strict identity;
+   * op diverso concorrente = throw `MF_LIFECYCLE_IN_FLIGHT`. Cleanup naturale via
+   * `.finally(() => inFlight.delete(id))` (OQ-06: NO TTL, deferred V2.1).
    */
-  // biome-ignore lint/correctness/noUnusedVariables: P-04 prep — wiring W3-P07
   const inFlight = new Map<string, { readonly op: LifecycleOp; readonly promise: Promise<void> }>()
 
   /** Loader Registry interno (delegato da registerLoader/etc.). */
   const loaders = new LoaderRegistry()
+
+  /** Lifecycle FSM instance — writer autoritativo delle transitions (W3-P06). */
+  const fsm = new LifecycleManager()
 
   const broker = ctx.broker
 
@@ -137,19 +155,22 @@ export function createMicroFrontendsService(ctx: BrokerModuleContext): MicroFron
     registrations.set(validated.id, reg)
   }
 
-  async function unregister(id: string, _options?: { force?: boolean }): Promise<void> {
+  async function unregister(id: string, options?: { force?: boolean }): Promise<void> {
     const reg = registrations.get(id)
     if (!reg) return // idempotent no-op (PRD §10.6)
 
     try {
-      // W3-P06+P07 wire-up: chiamare lifecycle.destroy(id) qui prima del cascade.
-      // F8 W2 stub: nessun lifecycle FSM ancora attivo, skip destroy. Cascade
-      // comunque eseguito. Vedi 08-06/08-07 per wire-up completo.
-      if (reg.state === 'mounted') {
-        // F8 stub: lascio l'unregister procedere — il FSM W3 enforcerà la sequence
+      // Se non destroyed, prova a chiamare destroy (cascade transitions FSM-driven).
+      if (reg.state !== 'destroyed') {
+        try {
+          await destroy(id, options?.force ? { force: true } : {})
+        } catch (err) {
+          // Force OR re-throw: se force=true swallow per consentire cleanup anche con destroy fail.
+          if (!options?.force) throw err
+        }
       }
     } finally {
-      // D-V2-16 + MIN-2 cascade — SEMPRE eseguito (anche su error nel destroy futuro).
+      // D-V2-16 + MIN-2 cascade — SEMPRE eseguito (anche su error nel destroy).
       broker.unsubscribeByOwner(mfOwnerId(id))
       registrations.delete(id)
     }
@@ -200,38 +221,290 @@ export function createMicroFrontendsService(ctx: BrokerModuleContext): MicroFron
     return base
   }
 
-  // ===== Lifecycle ops (W3 wired) =====
-  // F8 W2 stub: throw MF_NOT_REGISTERED con `phase: 'W2-stub'` per disambiguare
-  // nei test. Wiring effettivo in 08-06 (FSM transitions) + 08-07 (concurrency).
+  // ===== Lifecycle ops (W3-P07 wired) =====
 
-  function unimplementedW3(op: LifecycleOp): Promise<void> {
-    return Promise.reject(
-      createMfError({
+  /**
+   * Helper centralizzato per esecuzione idempotent + concurrent-safe delle lifecycle ops.
+   *
+   * Pattern P-04 mitigation:
+   * 1. Lookup `registrations.get(id)` → throw `MF_NOT_REGISTERED` se assente
+   * 2. Check `inFlight.get(id)`:
+   *    - stesso `op` → ritorna stessa Promise strict identity (idempotent concurrent)
+   *    - `op` diverso → throw `MF_LIFECYCLE_IN_FLIGHT` con dettaglio currentOp/requestedOp
+   * 3. Wrap `body(reg)` in Promise + `.finally(inFlight.delete(id))` (cleanup naturale)
+   * 4. `inFlight.set(id, {op, promise})` → return promise
+   */
+  async function runOp(
+    id: string,
+    op: LifecycleOp,
+    body: (reg: MicroFrontendRegistration) => Promise<void>,
+  ): Promise<void> {
+    const reg = registrations.get(id)
+    if (!reg) {
+      throw createMfError({
         code: 'MF_NOT_REGISTERED',
-        message: `Lifecycle op "${op}" stubbed in W2; full impl in W3-P06/P07`,
-        details: { op, phase: 'W2-stub' },
-      }),
-    )
+        message: `MicroFrontend "${id}" not registered`,
+        details: { id, op },
+      })
+    }
+
+    // P-04: idempotency + concurrent-safe.
+    const existing = inFlight.get(id)
+    if (existing) {
+      if (existing.op === op) {
+        // Identità stretta: chiamata concorrente identica → stessa Promise.
+        return existing.promise
+      }
+      throw createMfError({
+        code: 'MF_LIFECYCLE_IN_FLIGHT',
+        message: `MicroFrontend "${id}" busy with op "${existing.op}", cannot start "${op}"`,
+        details: { id, currentOp: existing.op, requestedOp: op },
+      })
+    }
+
+    const promise = body(reg).finally(() => {
+      // Cleanup naturale Promise resolve/reject (OQ-06: NO TTL, deferred V2.1).
+      inFlight.delete(id)
+    })
+    inFlight.set(id, { op, promise })
+    return promise
   }
 
-  function load(_id: string, _options?: LoadOptions): Promise<void> {
-    return unimplementedW3('load')
+  /**
+   * Stub runtime context F8 — minimo per soddisfare il chiamato lifecycle hook.
+   *
+   * W5-P11 introdurrà `createMfRuntimeContext` con facade publish/subscribe completo
+   * (auto-enrichment metadata + ownerId auto-tagging D-V2-16).
+   */
+  function makeStubRuntimeContext(reg: MicroFrontendRegistration): unknown {
+    return {
+      id: reg.descriptor.id,
+      descriptor: reg.descriptor,
+      broker,
+      publish: (..._args: unknown[]) => {},
+      subscribe: (..._args: unknown[]) => ({ unsubscribe: () => {} }),
+      logger: ctx.logger,
+    }
   }
 
-  function bootstrap(_id: string): Promise<void> {
-    return unimplementedW3('bootstrap')
+  async function load(id: string, options?: LoadOptions): Promise<void> {
+    return runOp(id, 'load', async (reg) => {
+      // Idempotenza: già loaded (o oltre) = no-op (PRD §10.6 + MF-LIFE-07).
+      if (
+        reg.state === 'loaded' ||
+        reg.state === 'bootstrapping' ||
+        reg.state === 'bootstrapped' ||
+        reg.state === 'mounting' ||
+        reg.state === 'mounted' ||
+        reg.state === 'unmounting' ||
+        reg.state === 'unmounted'
+      ) {
+        return
+      }
+
+      const loaderType = reg.descriptor.loader?.type
+      if (!loaderType) {
+        throw createMfError({
+          code: 'MF_LOADER_NOT_FOUND',
+          message: `MicroFrontend "${id}" has no loader.type in descriptor`,
+          details: { id },
+        })
+      }
+
+      const adapter = loaders.get(loaderType)
+      if (!adapter) {
+        const err = new Error(`Loader type "${loaderType}" not registered`)
+        fsm.transition(reg, 'failed', { phase: 'load', error: err })
+        throw createMfError({
+          code: 'MF_LOADER_NOT_FOUND',
+          message: `Loader type "${loaderType}" not registered`,
+          details: { id, loaderType },
+        })
+      }
+
+      try {
+        fsm.transition(reg, 'resolving')
+        fsm.transition(reg, 'loading')
+
+        const loaderCtx: LoaderContext = {
+          broker,
+          descriptor: reg.descriptor,
+          ...(options?.signal && { signal: options.signal }),
+          ...(ctx.logger && { logger: ctx.logger }),
+        }
+        // biome-ignore lint/style/noNonNullAssertion: loader presente verificato sopra
+        const loaded = await adapter.load(reg.descriptor.loader!, loaderCtx)
+        reg.loadedModule = loaded
+        fsm.transition(reg, 'loaded')
+      } catch (err) {
+        const errorObj = err instanceof Error ? err : new Error(String(err))
+        // Solo se non già 'failed' (e.g. dal check loader non registrato)
+        if (reg.state !== 'failed') {
+          fsm.transition(reg, 'failed', { phase: 'load', error: errorObj })
+        }
+        throw err
+      }
+    })
   }
 
-  function mount(_id: string, _options?: MountOptions): Promise<void> {
-    return unimplementedW3('mount')
+  async function bootstrap(id: string): Promise<void> {
+    return runOp(id, 'bootstrap', async (reg) => {
+      // Idempotenza: già bootstrapped o oltre = no-op (PRD §10.6).
+      if (
+        reg.state === 'bootstrapped' ||
+        reg.state === 'mounting' ||
+        reg.state === 'mounted' ||
+        reg.state === 'unmounting' ||
+        reg.state === 'unmounted'
+      ) {
+        return
+      }
+
+      if (reg.state !== 'loaded') {
+        throw createMfError({
+          code: 'MF_STATE_INVALID',
+          message: `MicroFrontend "${id}" must be in 'loaded' state to bootstrap (current: ${reg.state})`,
+          details: { id, currentState: reg.state, requiredState: 'loaded' },
+        })
+      }
+
+      try {
+        fsm.transition(reg, 'bootstrapping')
+        const loaded = reg.loadedModule as LoadedModule | undefined
+        if (loaded?.lifecycle.bootstrap) {
+          const stubCtx = makeStubRuntimeContext(reg)
+          await loaded.lifecycle.bootstrap(stubCtx as never)
+        }
+        fsm.transition(reg, 'bootstrapped')
+      } catch (err) {
+        const errorObj = err instanceof Error ? err : new Error(String(err))
+        fsm.transition(reg, 'failed', { phase: 'bootstrap', error: errorObj })
+        throw err
+      }
+    })
   }
 
-  function unmount(_id: string): Promise<void> {
-    return unimplementedW3('unmount')
+  async function mount(id: string, options?: MountOptions): Promise<void> {
+    return runOp(id, 'mount', async (reg) => {
+      // Idempotenza: già mounted = no-op + debug log (PRD §10.6 + MF-LIFE-07).
+      if (reg.state === 'mounted') {
+        ctx.logger?.debug?.(`[microfrontends] mount("${id}") no-op (already mounted)`)
+        return
+      }
+
+      // D-V2-07 auto-bootstrap: se state 'loaded' e non skipBootstrap, chiama bootstrap inline.
+      // NB: chiamata interna NON via runOp (siamo già dentro runOp 'mount' wrapping).
+      if (reg.state === 'loaded' && !options?.skipBootstrap) {
+        try {
+          fsm.transition(reg, 'bootstrapping')
+          const loaded = reg.loadedModule as LoadedModule | undefined
+          if (loaded?.lifecycle.bootstrap) {
+            const stubCtx = makeStubRuntimeContext(reg)
+            await loaded.lifecycle.bootstrap(stubCtx as never)
+          }
+          fsm.transition(reg, 'bootstrapped')
+        } catch (err) {
+          const errorObj = err instanceof Error ? err : new Error(String(err))
+          fsm.transition(reg, 'failed', { phase: 'bootstrap', error: errorObj })
+          throw err
+        }
+      }
+
+      if (reg.state !== 'bootstrapped' && reg.state !== 'unmounted') {
+        throw createMfError({
+          code: 'MF_STATE_INVALID',
+          message: `MicroFrontend "${id}" must be 'bootstrapped' or 'unmounted' to mount (current: ${reg.state})`,
+          details: { id, currentState: reg.state },
+        })
+      }
+
+      try {
+        fsm.transition(reg, 'mounting')
+        const loaded = reg.loadedModule as LoadedModule | undefined
+        if (loaded?.lifecycle.mount) {
+          const stubCtx = makeStubRuntimeContext(reg)
+          await loaded.lifecycle.mount(stubCtx as never)
+        }
+        fsm.transition(reg, 'mounted')
+      } catch (err) {
+        const errorObj = err instanceof Error ? err : new Error(String(err))
+        fsm.transition(reg, 'failed', { phase: 'mount', error: errorObj })
+        throw err
+      }
+    })
   }
 
-  function destroy(_id: string, _options?: { force?: boolean }): Promise<void> {
-    return unimplementedW3('destroy')
+  async function unmount(id: string): Promise<void> {
+    return runOp(id, 'unmount', async (reg) => {
+      // Idempotenza: non-mounted = no-op + debug log (PRD §10.6).
+      if (reg.state !== 'mounted') {
+        ctx.logger?.debug?.(`[microfrontends] unmount("${id}") no-op (state: ${reg.state})`)
+        return
+      }
+
+      try {
+        fsm.transition(reg, 'unmounting')
+        const loaded = reg.loadedModule as LoadedModule | undefined
+        if (loaded?.lifecycle.unmount) {
+          const stubCtx = makeStubRuntimeContext(reg)
+          await loaded.lifecycle.unmount(stubCtx as never)
+        }
+        fsm.transition(reg, 'unmounted')
+      } catch (err) {
+        const errorObj = err instanceof Error ? err : new Error(String(err))
+        fsm.transition(reg, 'failed', { phase: 'unmount', error: errorObj })
+        throw err
+      }
+    })
+  }
+
+  async function destroy(id: string, options?: { force?: boolean }): Promise<void> {
+    return runOp(id, 'destroy', async (reg) => {
+      // Idempotenza silente: destroyed = no-op senza warn (PRD §10.6 cleanup multi-path).
+      if (reg.state === 'destroyed') return
+
+      // Force option: skippa transition checks (cleanup forzato).
+      if (options?.force) {
+        try {
+          const loaded = reg.loadedModule as LoadedModule | undefined
+          loaded?.lifecycle.destroy?.(makeStubRuntimeContext(reg) as never)
+        } catch {
+          // Force = swallow errors hook
+        }
+        // Force transition direct (bypass FSM enforcement).
+        reg.previousState = reg.state
+        reg.state = 'destroyed'
+        reg.timings = { ...reg.timings, destroyedAt: Date.now() }
+        // Cascade cleanup.
+        broker.unsubscribeByOwner(mfOwnerId(id))
+        return
+      }
+
+      try {
+        // Se mounted, dobbiamo passare per unmounting prima (FSM enforcement).
+        if (reg.state === 'mounted') {
+          fsm.transition(reg, 'unmounting')
+          const loaded = reg.loadedModule as LoadedModule | undefined
+          if (loaded?.lifecycle.unmount) {
+            await loaded.lifecycle.unmount(makeStubRuntimeContext(reg) as never)
+          }
+          fsm.transition(reg, 'unmounted')
+        }
+
+        fsm.transition(reg, 'destroying')
+        const loaded = reg.loadedModule as LoadedModule | undefined
+        // destroy hook è sync (vs altri async — semantic v1.x carryover).
+        loaded?.lifecycle.destroy?.(makeStubRuntimeContext(reg) as never)
+        fsm.transition(reg, 'destroyed')
+      } catch (err) {
+        const errorObj = err instanceof Error ? err : new Error(String(err))
+        fsm.transition(reg, 'failed', { phase: 'destroy', error: errorObj })
+        throw err
+      } finally {
+        // Cascade SEMPRE eseguito (D-V2-16 + MIN-2) — anche su error destroy hook.
+        broker.unsubscribeByOwner(mfOwnerId(id))
+      }
+    })
   }
 
   // ===== Loader Registry delegate =====
