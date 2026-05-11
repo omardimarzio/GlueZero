@@ -26,6 +26,15 @@ import './augment'
 
 // Augment marker (T-F8-08 tree-shake fail detection)
 export { __mfAugmentLoaded } from './augment'
+// Contracts Validator (W4 — MF-CONTRACT-02)
+export {
+  type ContractValidationContext,
+  type ContractValidationResult,
+  type ContractWarning,
+  type ContractWarningSeverity,
+  type ValidationPhase,
+  validateContracts,
+} from './contracts-validator'
 // Helper internal owner-id (audit-friendly grep `mfOwnerId(`)
 export { MF_OWNER_PREFIX, mfOwnerId } from './internal/owner-id'
 // Lifecycle FSM (W3-P06)
@@ -44,15 +53,6 @@ export { microfrontendModule } from './microfrontend-module'
 // Implementazione in packages/microfrontends/src/mount-orchestrator.ts (creato da 08-08).
 // 08-08 deliberatamente NON modifica index.ts (file ownership disgiunta entro stessa wave).
 export { type MountResult, orchestrateMount } from './mount-orchestrator'
-// Contracts Validator (W4 — MF-CONTRACT-02)
-export {
-  type ContractValidationContext,
-  type ContractValidationResult,
-  type ContractWarning,
-  type ContractWarningSeverity,
-  type ValidationPhase,
-  validateContracts,
-} from './contracts-validator'
 // Registry + Service interface
 export {
   createMicroFrontendsService,

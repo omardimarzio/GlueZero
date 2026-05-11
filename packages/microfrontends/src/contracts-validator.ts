@@ -13,10 +13,7 @@
  * @see RESEARCH §13.W4 + PRD §15 + MF-CONTRACT-02
  */
 import { createMfError } from './microfrontend-error'
-import type {
-  ContractValidationPolicy,
-  MicroFrontendContracts,
-} from './types/contracts'
+import type { ContractValidationPolicy, MicroFrontendContracts } from './types/contracts'
 
 /** Phase di trigger della validation (per error message context). */
 export type ValidationPhase = 'register' | 'mount'
@@ -107,11 +104,7 @@ export function validateContracts(
             details: { mfId: ctx.mfId, provided: tt },
           })
         }
-        if (
-          tt.direction !== 'publish' &&
-          tt.direction !== 'subscribe' &&
-          tt.direction !== 'both'
-        ) {
+        if (tt.direction !== 'publish' && tt.direction !== 'subscribe' && tt.direction !== 'both') {
           warnings.push({
             severity: 'warning',
             contractType: 'topics',
