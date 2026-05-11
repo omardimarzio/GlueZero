@@ -141,16 +141,31 @@ function ensureBroker(): Broker {
  *
  * Storage spread-copy on update (D-V2-F10-07). NO publish + NO dispatch se `changedKeys.length === 0`.
  *
- * @param partial Partial map di chiavi `keyof RuntimeContext` → valore.
- * @param _options Opt `{callerMfId?}` (P03 placeholder).
+ * ACL pre-check fail-fast (D-V2-F10-06): se `callerMfId` defined, verifica che tutte le
+ * chiavi in `partial` siano in `descriptor.context.writableKeys` allowlist. App shell
+ * (`callerMfId === undefined`) pass-through.
  *
- * @example
+ * @param partial Partial map di chiavi `keyof RuntimeContext` → valore.
+ * @param options Opt `{callerMfId?}` (P03 ACL enforcement).
+ *
+ * @example Set multiple keys
  * ```ts
  * setRuntimeContext({ tenantId: 'acme', user: { id: 'u1' } })
  * // Pubblica: context.changed + context.tenant.changed + context.user.changed
  * ```
  *
+ * @example Da MF facade con ACL check
+ * ```ts
+ * setRuntimeContext({ currentRoute: { path: '/home' } }, { callerMfId: 'mf-x' })
+ * // Verifica descriptor.context.writableKeys → throw MF_CONTEXT_WRITE_DENIED se denied
+ * ```
+ *
+ * @throws `BrokerError` con `code: 'MF_CONTEXT_WRITE_DENIED'` se callerMfId tenta
+ *   scrittura di chiavi NOT in descriptor.context.writableKeys (D-V2-F10-06)
+ *
  * @see MF-CTX-01, PRD §18.5
+ * @see D-V2-F10-06 (enforcement mode)
+ * @see D-V2-F10-13 (events fire pattern 1+N)
  */
 export function setRuntimeContext(
   partial: Partial<RuntimeContext>,
@@ -171,15 +186,29 @@ export function setRuntimeContext(
  *
  * Le chiavi presenti in `previous` ma NON in `next` appaiono in `changedKeys` (rimosse).
  *
- * @param next Nuovo state completo.
- * @param _options Opt `{callerMfId?}` (P03 placeholder).
+ * ACL check su union(previous keys + next keys) — replace tocca TUTTE le chiavi (anche
+ * quelle che spariscono da `previous`). Impedisce bypass via stripping writable keys
+ * per scrivere chiavi denied.
  *
- * @example
+ * @param next Nuovo state completo.
+ * @param options Opt `{callerMfId?}` (P03 ACL enforcement).
+ *
+ * @example Cancella intero state
  * ```ts
- * replaceRuntimeContext({}) // cancella intero state, emette events su tutte chiavi previous
+ * replaceRuntimeContext({}) // emette events su tutte chiavi previous
  * ```
  *
+ * @example Da MF facade con ACL check
+ * ```ts
+ * replaceRuntimeContext({ currentRoute: { path: '/home' } }, { callerMfId: 'mf-x' })
+ * // Verifica writableKeys vs union(previous keys + new keys) → throw se denied
+ * ```
+ *
+ * @throws `BrokerError` con `code: 'MF_CONTEXT_WRITE_DENIED'` se callerMfId tenta
+ *   scrittura su chiavi NOT in descriptor.context.writableKeys (D-V2-F10-06)
+ *
  * @see MF-CTX-01, PRD §18.5
+ * @see D-V2-F10-06 (ACL enforcement)
  */
 export function replaceRuntimeContext(
   next: RuntimeContext,
@@ -224,16 +253,28 @@ export function getRuntimeContext(): Readonly<RuntimeContext> {
  *
  * No-args → itera 11 chiavi standard PRD §18.4 + delete ognuna.
  *
- * @param keys Chiavi da rimuovere. Default = 11 chiavi standard PRD §18.4.
- * @param _options Opt `{callerMfId?}` (P03 placeholder).
+ * ACL check (D-V2-F10-08 + D-V2-F10-06): clear è write operation. Le chiavi target
+ * (esplicite o default 11 standard) DEVONO essere in `descriptor.context.writableKeys`
+ * se `callerMfId` defined.
  *
- * @example
+ * @param keys Chiavi da rimuovere. Default = 11 chiavi standard PRD §18.4.
+ * @param options Opt `{callerMfId?}` (P03 ACL enforcement).
+ *
+ * @example Clear specifico
  * ```ts
  * clearRuntimeContext(['tenantId'])   // rimuove solo tenantId
+ * ```
+ *
+ * @example Clear totale
+ * ```ts
  * clearRuntimeContext()                // rimuove tutte le 11 chiavi standard
  * ```
  *
+ * @throws `BrokerError` con `code: 'MF_CONTEXT_WRITE_DENIED'` se callerMfId tenta
+ *   clear di chiavi NOT in descriptor.context.writableKeys (D-V2-F10-06)
+ *
  * @see MF-CTX-01, PRD §18.5
+ * @see D-V2-F10-08 (delete vs assign undefined)
  */
 export function clearRuntimeContext(
   keys?: ReadonlyArray<keyof RuntimeContext>,
