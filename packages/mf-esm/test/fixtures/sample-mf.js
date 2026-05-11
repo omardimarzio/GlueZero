@@ -20,7 +20,7 @@ export default {
   async mount(ctx) {
     const marker = { id: ctx.id, mountedAt: performance.now() }
     globalThis.__mfEsmFixtureMarker.push(marker)
-    ctx.publish?.('sample-mf.mounted', { id: ctx.id })
+    ctx.publish?.('samplemf.mounted', { id: ctx.id })
   },
   async unmount(ctx) {
     const idx = globalThis.__mfEsmFixtureMarker.findIndex((m) => m.id === ctx.id)
