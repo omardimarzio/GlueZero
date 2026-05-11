@@ -40,7 +40,7 @@
 import type { BrokerEvent } from '../types/broker-event'
 import type { BrokerConfig } from '../types/config'
 import type { BrokerLogger, LogLevel } from '../types/logger'
-import type { BrokerModule, BrokerModuleContext } from '../types/module'
+import type { BrokerModuleContext } from '../types/module'
 import type { PluginDescriptor } from '../types/plugin'
 import type { SubscribeOptions, Subscription } from '../types/subscription'
 import type { EventTap, PipelineStep } from '../types/tap'
@@ -143,8 +143,7 @@ export class Broker {
           }
           this.services.set(name, instance)
         },
-        getService: <T>(name: string): T | undefined =>
-          this.services.get(name) as T | undefined,
+        getService: <T>(name: string): T | undefined => this.services.get(name) as T | undefined,
         publishInterceptors: this.publishInterceptors,
       }
       for (const m of modules) {
