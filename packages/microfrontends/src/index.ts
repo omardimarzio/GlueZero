@@ -63,6 +63,8 @@ export {
   type MicroFrontendsService,
   type MountOptions,
 } from './registry'
+// Runtime Context Factory (W5-P11 — MF-LIFE-03 + MF-OBS-01 + D-V2-16)
+export { createMfRuntimeContext } from './runtime-context-factory'
 // Standard topics (W5 — D-V2-F8-12)
 export {
   MF_ERROR_TOPIC_FOR_PHASE,

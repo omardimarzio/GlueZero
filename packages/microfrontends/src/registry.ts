@@ -17,9 +17,9 @@
  * Pattern Registry replica F2 `canonical-registry.ts` (Map interno + idempotent
  * delete) MA con `inFlight` Map populated + cascade unsubscribe (D-V2-16).
  *
- * NOTA F8 W3-P07: i lifecycle hook ricevono uno stub minimale `RuntimeContext`
- * (publish/subscribe no-op) — il RuntimeContext facade completo arriva in W5-P11
- * (createMfRuntimeContext con auto-tagging + metadata enrichment).
+ * NOTA F8 W5-P11: i lifecycle hook ricevono `RuntimeContext` reale via
+ * `createMfRuntimeContext(broker, reg)` factory — facade publish/subscribe con
+ * auto-enrichment metadata (MF-OBS-01) + auto-tag ownerId (D-V2-16 cascade).
  *
  * @see RESEARCH §3, §10 + PATTERNS §32 + D-V2-16 + D-V2-07 + PRD §10
  */
@@ -34,6 +34,7 @@ import {
   type MicroFrontendLoaderAdapter,
 } from './loader-registry'
 import { createMfError } from './microfrontend-error'
+import { createMfRuntimeContext } from './runtime-context-factory'
 import { MF_ERROR_TOPIC_FOR_PHASE, MF_LIFECYCLE_TOPIC_FOR_STATE } from './topics'
 import type { MicroFrontendDescriptor, MicroFrontendRegistration } from './types/descriptor'
 import type {
@@ -295,26 +296,13 @@ export function createMicroFrontendsService(ctx: BrokerModuleContext): MicroFron
     return promise
   }
 
-  /**
-   * Stub runtime context F8 — minimo per soddisfare il chiamato lifecycle hook.
-   *
-   * W5-P11 introdurrà `createMfRuntimeContext` con facade publish/subscribe completo
-   * (auto-enrichment metadata + ownerId auto-tagging D-V2-16).
-   */
-  function makeStubRuntimeContext(reg: MicroFrontendRegistration): unknown {
-    return {
-      id: reg.descriptor.id,
-      descriptor: reg.descriptor,
-      broker,
-      publish: (..._args: unknown[]) => {},
-      subscribe: (..._args: unknown[]) => ({ unsubscribe: () => {} }),
-      logger: ctx.logger,
-    }
-  }
-
-  // 08-10 helper PRESERVED — 08-11 will replace makeStubRuntimeContext with
-  // createMfRuntimeContext but MUST keep publishLifecycleEvent + publishErrorEvent
-  // publishing instrumentation intact (fix B2 sequential preservation guidance).
+  // 08-11: `makeStubRuntimeContext` REPLACED by `createMfRuntimeContext` factory.
+  // Lifecycle ops invocano `createMfRuntimeContext(broker, reg)` direttamente nel body
+  // per fornire facade publish/subscribe reale con auto-enrichment metadata (MF-OBS-01)
+  // e auto-tag ownerId (D-V2-16 cascade unsubscribe).
+  //
+  // 08-10 helper PRESERVED — `publishLifecycleEvent` + `publishErrorEvent` instrumentation
+  // committed da 08-10 RIMANGONO INTATTI (chain seriale W5 fix B2 Option A).
 
   /**
    * Helper publish lifecycle event dopo transition (MF-EVT-01 + MF-EVT-04).
@@ -473,8 +461,8 @@ export function createMicroFrontendsService(ctx: BrokerModuleContext): MicroFron
 
         const loaded = reg.loadedModule as LoadedModule | undefined
         if (loaded?.lifecycle.bootstrap) {
-          const stubCtx = makeStubRuntimeContext(reg)
-          await loaded.lifecycle.bootstrap(stubCtx as never)
+          const runtimeCtx = createMfRuntimeContext(broker, reg)
+          await loaded.lifecycle.bootstrap(runtimeCtx)
         }
         fsm.transition(reg, 'bootstrapped')
         publishLifecycleEvent(reg) // 'microfrontend.bootstrapped'
@@ -505,8 +493,8 @@ export function createMicroFrontendsService(ctx: BrokerModuleContext): MicroFron
 
           const loaded = reg.loadedModule as LoadedModule | undefined
           if (loaded?.lifecycle.bootstrap) {
-            const stubCtx = makeStubRuntimeContext(reg)
-            await loaded.lifecycle.bootstrap(stubCtx as never)
+            const runtimeCtx = createMfRuntimeContext(broker, reg)
+            await loaded.lifecycle.bootstrap(runtimeCtx)
           }
           fsm.transition(reg, 'bootstrapped')
           publishLifecycleEvent(reg) // 'microfrontend.bootstrapped'
@@ -533,8 +521,8 @@ export function createMicroFrontendsService(ctx: BrokerModuleContext): MicroFron
 
         const loaded = reg.loadedModule as LoadedModule | undefined
         if (loaded?.lifecycle.mount) {
-          const stubCtx = makeStubRuntimeContext(reg)
-          await loaded.lifecycle.mount(stubCtx as never)
+          const runtimeCtx = createMfRuntimeContext(broker, reg)
+          await loaded.lifecycle.mount(runtimeCtx)
         }
         fsm.transition(reg, 'mounted')
         publishLifecycleEvent(reg) // 'microfrontend.mounted'
@@ -562,8 +550,8 @@ export function createMicroFrontendsService(ctx: BrokerModuleContext): MicroFron
 
         const loaded = reg.loadedModule as LoadedModule | undefined
         if (loaded?.lifecycle.unmount) {
-          const stubCtx = makeStubRuntimeContext(reg)
-          await loaded.lifecycle.unmount(stubCtx as never)
+          const runtimeCtx = createMfRuntimeContext(broker, reg)
+          await loaded.lifecycle.unmount(runtimeCtx)
         }
         fsm.transition(reg, 'unmounted')
         publishLifecycleEvent(reg) // 'microfrontend.unmounted'
@@ -586,7 +574,7 @@ export function createMicroFrontendsService(ctx: BrokerModuleContext): MicroFron
       if (options?.force) {
         try {
           const loaded = reg.loadedModule as LoadedModule | undefined
-          loaded?.lifecycle.destroy?.(makeStubRuntimeContext(reg) as never)
+          loaded?.lifecycle.destroy?.(createMfRuntimeContext(broker, reg))
         } catch {
           // Force = swallow errors hook
         }
@@ -608,7 +596,7 @@ export function createMicroFrontendsService(ctx: BrokerModuleContext): MicroFron
 
           const loaded = reg.loadedModule as LoadedModule | undefined
           if (loaded?.lifecycle.unmount) {
-            await loaded.lifecycle.unmount(makeStubRuntimeContext(reg) as never)
+            await loaded.lifecycle.unmount(createMfRuntimeContext(broker, reg))
           }
           fsm.transition(reg, 'unmounted')
           publishLifecycleEvent(reg) // 'microfrontend.unmounted'
@@ -619,7 +607,7 @@ export function createMicroFrontendsService(ctx: BrokerModuleContext): MicroFron
 
         const loaded = reg.loadedModule as LoadedModule | undefined
         // destroy hook è sync (vs altri async — semantic v1.x carryover).
-        loaded?.lifecycle.destroy?.(makeStubRuntimeContext(reg) as never)
+        loaded?.lifecycle.destroy?.(createMfRuntimeContext(broker, reg))
         fsm.transition(reg, 'destroyed')
         publishLifecycleEvent(reg) // 'microfrontend.destroyed'
       } catch (err) {
