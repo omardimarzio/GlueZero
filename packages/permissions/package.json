@@ -1,0 +1,103 @@
+{
+  "name": "@gluezero/permissions",
+  "version": "2.0.0-alpha.0",
+  "description": "GlueZero permission engine sincrono + Capability Registry + Pipeline §28 extension via composition esterna — pattern matching 4 modes + LRU cache 500 + 10 enforcement points facade",
+  "license": "MIT",
+  "author": "Omar Di Marzio",
+  "type": "module",
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./augment": {
+      "types": "./dist/augment.d.ts",
+      "import": "./dist/augment.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "sideEffects": [
+    "./dist/augment.js",
+    "./src/augment.ts",
+    "**/augment.js",
+    "**/augment.ts"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "publishConfig": {
+    "access": "public",
+    "tag": "experimental"
+  },
+  "scripts": {
+    "build": "tsup",
+    "test": "vitest run",
+    "test:integration": "vitest run -c vitest.integration.config.ts",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
+    "typecheck": "tsc --noEmit",
+    "clean": "rm -rf dist"
+  },
+  "peerDependencies": {
+    "@gluezero/core": "workspace:^",
+    "@gluezero/microfrontends": "workspace:^",
+    "@gluezero/context": "workspace:^"
+  },
+  "peerDependenciesMeta": {
+    "@gluezero/core": {
+      "optional": false
+    },
+    "@gluezero/microfrontends": {
+      "optional": false
+    },
+    "@gluezero/context": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "@gluezero/core": "workspace:*",
+    "@gluezero/microfrontends": "workspace:*",
+    "@gluezero/context": "workspace:*",
+    "tsup": "8.5.1",
+    "typescript": "6.0.3",
+    "vitest": "4.1.5",
+    "jsdom": "29.1.0"
+  },
+  "size-limit": [
+    {
+      "name": "@gluezero/permissions (gzip)",
+      "path": "dist/index.js",
+      "limit": "5 KB",
+      "gzip": true
+    },
+    {
+      "name": "@gluezero/permissions/augment (gzip)",
+      "path": "dist/augment.js",
+      "limit": "1 KB",
+      "gzip": true
+    }
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/omardimarzio/GlueZero.git",
+    "directory": "packages/permissions"
+  },
+  "homepage": "https://github.com/omardimarzio/GlueZero/tree/main/packages/permissions#readme",
+  "bugs": "https://github.com/omardimarzio/GlueZero/issues",
+  "keywords": [
+    "gluezero",
+    "permissions",
+    "capabilities",
+    "acl",
+    "governance",
+    "microfrontend"
+  ]
+}
