@@ -45,11 +45,33 @@ import './augment'
 // Augment marker (audit-grep tree-shake fail detection).
 export { __permissionsAugmentLoaded } from './augment'
 
-// ===== Runtime exports (W2 P02-P04 — stub W1) =====
+// ===== Topics (W2 P02 — D-V2-F11-04 literal locale + Pitfall 7) =====
+export { MF_CAPABILITY_TOPICS, MF_PERMISSION_TOPICS } from './topics'
+export type { CapabilityTopic, PermissionTopic } from './topics'
+
+// ===== Error factory locale (W2 P02 — D-V2-F11-08) =====
+export {
+  createPermissionError,
+  type CreatePermissionErrorParams,
+  type PermissionDeniedPayload,
+  type PermissionDeniedRequest,
+  type PermissionErrorCode,
+  publishDeniedTopics,
+} from './permission-error'
+
+// ===== Engine API (W2 P02 — D-V2-F11-03 single engine 10 actions) =====
+export {
+  createPermissionEngine,
+  type PermissionAction,
+  type PermissionCheckRequest,
+  type PermissionEngine,
+  type PermissionMode,
+} from './permission-engine'
+
+// ===== Runtime exports (W2 P03-P04) =====
 // `permissionsModule` factory implemented W2-P03 — re-export aggiunto allora.
 
-// ===== Topics (W2 P02 — stub W1) =====
-// `MF_PERMISSION_TOPICS` + `MF_CAPABILITY_TOPICS` populated W2-P02.
+// ===== Internal helpers NOT exported (D-V2-F9-11 carryover stretto: pattern-matcher, lru-cache, internal/ privati) =====
 
 // ===== Setup options =====
 export type { PermissionsModuleOptions } from './types'
