@@ -18,14 +18,15 @@
     "lint": "biome check .",
     "format": "biome format --write .",
     "typecheck": "pnpm -r --filter='./packages/*' --if-present run typecheck",
-    "ci:publint": "pnpm --filter @gluezero/core --filter @gluezero/mapper --filter @gluezero/routing --filter @gluezero/gateway --filter @gluezero/worker --filter @gluezero/cache --filter @gluezero/theme --filter @gluezero/devtools --filter @gluezero/gluezero --filter @gluezero/microfrontends --filter @gluezero/mf-esm --filter @gluezero/context exec publint",
-    "ci:attw": "pnpm --filter @gluezero/core --filter @gluezero/mapper --filter @gluezero/routing --filter @gluezero/gateway --filter @gluezero/worker --filter @gluezero/cache --filter @gluezero/theme --filter @gluezero/devtools --filter @gluezero/gluezero --filter @gluezero/microfrontends --filter @gluezero/mf-esm --filter @gluezero/context exec attw --pack --profile=esm-only",
+    "ci:publint": "pnpm --filter @gluezero/core --filter @gluezero/mapper --filter @gluezero/routing --filter @gluezero/gateway --filter @gluezero/worker --filter @gluezero/cache --filter @gluezero/theme --filter @gluezero/devtools --filter @gluezero/gluezero --filter @gluezero/microfrontends --filter @gluezero/mf-esm --filter @gluezero/context --filter @gluezero/permissions exec publint",
+    "ci:attw": "pnpm --filter @gluezero/core --filter @gluezero/mapper --filter @gluezero/routing --filter @gluezero/gateway --filter @gluezero/worker --filter @gluezero/cache --filter @gluezero/theme --filter @gluezero/devtools --filter @gluezero/gluezero --filter @gluezero/microfrontends --filter @gluezero/mf-esm --filter @gluezero/context --filter @gluezero/permissions exec attw --pack --profile=esm-only",
     "ci:size": "size-limit",
     "ci:gate:f3": "pnpm ci:publint && pnpm ci:attw && pnpm ci:size",
     "ci:gate:f6": "pnpm ci:publint && pnpm ci:attw && pnpm ci:size",
     "ci:gate:f8": "pnpm ci:publint && pnpm ci:attw && pnpm ci:size",
     "ci:gate:f9": "pnpm exec playwright install --with-deps chromium && pnpm ci:publint && pnpm ci:attw && pnpm --filter @gluezero/mf-esm test:browser && pnpm ci:size",
     "ci:gate:f10": "pnpm ci:publint && pnpm ci:attw && pnpm --filter @gluezero/context test && pnpm --filter @gluezero/context test:integration && pnpm ci:size",
+    "ci:gate:f11": "pnpm ci:publint && pnpm ci:attw && pnpm --filter @gluezero/permissions test && pnpm --filter @gluezero/permissions test:integration && pnpm ci:size && bash -c 'test -z \"$(git diff main...HEAD -- packages/core/src/)\" && test -z \"$(git diff main...HEAD -- packages/microfrontends/src/)\" && test -z \"$(git diff main...HEAD -- packages/mapper/src/)\"' && pnpm --filter @gluezero/core test -- pipeline-harness",
     "changeset": "changeset",
     "release": "pnpm build && changeset publish",
     "docs:build": "typedoc",
@@ -139,6 +140,19 @@
     {
       "name": "@gluezero/context/augment (gzip)",
       "path": "packages/context/dist/augment.js",
+      "limit": "1 KB",
+      "gzip": true
+    },
+    {
+      "name": "@gluezero/permissions (gzip)",
+      "path": "packages/permissions/dist/index.js",
+      "limit": "5 KB",
+      "gzip": true,
+      "ignore": ["@gluezero/core", "@gluezero/microfrontends", "@gluezero/context"]
+    },
+    {
+      "name": "@gluezero/permissions/augment (gzip)",
+      "path": "packages/permissions/dist/augment.js",
       "limit": "1 KB",
       "gzip": true
     }
