@@ -68,8 +68,21 @@ export {
   type PermissionMode,
 } from './permission-engine'
 
+// ===== Capability Registry API (W2 P04 — D-V2-F11-09 global SoT) =====
+export {
+  type CapabilityRegistry,
+  computeCapabilityResult,
+  createCapabilityRegistry,
+} from './capability-registry'
+
+// ===== Capability policy enforcer (W2 P04 — MF-CAP-04 dispatch 4 valori) =====
+// Typically consumato via lifecycle hooks, ma exposed per consumer custom.
+export { enforceCapabilityPolicy } from './capability-checker'
+
 // ===== Runtime exports (W2 P03-P04) =====
 // `permissionsModule` factory implemented W2-P03 — re-export aggiunto allora.
+// `wireLifecycleHooks` (W2 P04) è internal — NON re-exportato (D-V2-F9-11
+// carryover stretto: invocato solo da `permissionsModule().install`).
 
 // ===== Internal helpers NOT exported (D-V2-F9-11 carryover stretto: pattern-matcher, lru-cache, internal/ privati) =====
 
