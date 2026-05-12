@@ -1,6 +1,8 @@
 /**
  * F11 Capability Checker — policy dispatch 4 valori PRD §17.6 (MF-CAP-04).
  *
+ * Cover REQ-IDs: MF-CAP-04 (policy dispatch 4 valori off/warn/block-load/block-mount).
+ *
  * - `'off'`: skip — no topic, no throw, no warn (per-MF override pattern: developer
  *   disabilita check selettivamente).
  * - `'warn'`: topic publish + `console.warn` — NO throw (DX onboarding-friendly).
@@ -81,6 +83,16 @@ export { computeCapabilityResult }
  * const effectivePolicy = caps?.policy ?? installPolicy
  * enforceCapabilityPolicy(broker, 'mf1', result, effectivePolicy)
  * ```
+ *
+ * @example Policy block-mount throws CAPABILITY_MISSING
+ * ```ts
+ * enforceCapabilityPolicy(broker, 'analytics-widget', { ok: false, missing: ['theme.v1'], ...},
+ *   'block-mount')
+ * // → BrokerError { code: 'CAPABILITY_MISSING', category: 'microfrontend' }
+ * ```
+ *
+ * @see prd_2.0.0.md §17.6 — capabilityPolicy 4 valori
+ * @see ROADMAP linea 288 — SC2 block-mount esempio MF-CAP-04
  */
 export function enforceCapabilityPolicy(
   broker: Broker,

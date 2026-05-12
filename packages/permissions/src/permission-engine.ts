@@ -2,6 +2,9 @@
  * F11 Permission Engine sincrono single + action discriminator 10 actions
  * (D-V2-F11-03 lockato: NO 8 engine separati per categoria).
  *
+ * Cover REQ-IDs: MF-PERM-03 (PermissionEngine API check/enforce) + MF-PERM-05 (LRU
+ * cache integration) + MF-PIPE-01 (pipeline §28 logical step 4.5 facade chain).
+ *
  * Pipeline:
  *
  * 1. `check(req)` sync: lookup LRU → cache hit return; miss → load patterns from
@@ -21,6 +24,7 @@
  * @see prd_2.0.0.md §19.5 — 10 enforcement points
  * @see prd_2.0.0.md §19.6 — PermissionError + topics
  * @see prd_2.0.0.md §19.7 — modes off/warn/enforce
+ * @see ROADMAP linea 290 — SC4 facade injection only
  * @see D-V2-F11-03 (single engine + 10 actions discriminator)
  * @see D-V2-F11-14 (fail-secure default deny-all)
  * @see D-V2-F11-15 (warn mode telemetry)
@@ -108,6 +112,27 @@ function actionToCategory(action: PermissionAction): PermissionCategory {
  * @param mfService MicroFrontendsService reference per `getPermissions(reg.descriptor)`.
  * @param mode Mode enforcement globale `'off' | 'warn' | 'enforce'`.
  * @returns `PermissionEngine` con `check` sync + `enforce` mode dispatch + `clearCacheByMfId`.
+ *
+ * @throws {BrokerError} `PERMISSION_DENIED` (categoria `microfrontend`) propagato da
+ *   `engine.enforce` quando `mode === 'enforce'` e il check pattern fallisce. Bundle
+ *   target ≤ 5 KB (D-V2-F11-19).
+ *
+ * @example Setup engine standalone (test scope)
+ * ```typescript
+ * const broker = createBroker({})
+ * const mfService = broker.getService('microfrontends')
+ * const engine = createPermissionEngine(broker, mfService, 'enforce')
+ * engine.check({ mfId: 'mf-x', action: 'publish', resource: 'customer.order' }) // true | false
+ * ```
+ *
+ * @example Enforce throws on denied resource (mode enforce)
+ * ```typescript
+ * engine.enforce({ mfId: 'mf-x', action: 'publish', resource: 'customer.pii.email' })
+ * // → BrokerError { code: 'PERMISSION_DENIED', category: 'microfrontend' }
+ * ```
+ *
+ * @see prd_2.0.0.md §19.5 — 10 enforcement points
+ * @see prd_2.0.0.md §19.6 — PermissionError shape + topics
  */
 export function createPermissionEngine(
   broker: Broker,

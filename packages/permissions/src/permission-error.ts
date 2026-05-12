@@ -1,6 +1,9 @@
 /**
  * F11 PermissionError factory + publishDeniedTopics helper (MF-PERM-04).
  *
+ * Cover REQ-IDs: MF-PERM-04 (PermissionError factory shape PRD §19.6) + MF-PERM-06
+ * (publishDeniedTopics — 2 topic emit PRIMA del throw).
+ *
  * Pattern coerente F10 `context-error.ts:27-101` + denied flow F10
  * `acl-enforcer.ts:172-185` (publish topic PRIMA del throw).
  *
@@ -67,6 +70,19 @@ export interface CreatePermissionErrorParams {
  *   details: { microFrontendId: 'mf-x', action: 'publish', resource: 'customer.pii.email' },
  * })
  * ```
+ *
+ * @example Throw CAPABILITY_MISSING nel `capability-checker.enforceCapabilityPolicy`
+ * ```ts
+ * throw createPermissionError({
+ *   code: 'CAPABILITY_MISSING',
+ *   message: 'MicroFrontend "analytics-widget" missing capabilities: [theme.v1]',
+ *   details: { microFrontendId: 'analytics-widget', missing: ['theme.v1'] },
+ * })
+ * ```
+ *
+ * Nota W-04 FIX: questa è una FACTORY (ritorna BrokerError), NON throws — usare
+ * `@returns` invece di `@throws`. La distribuzione `@throws` è redirigata ai
+ * propagator (engine.enforce, enforceCapabilityPolicy, wrapContextWithPermissions).
  */
 export function createPermissionError(params: CreatePermissionErrorParams): BrokerError {
   return createBrokerError({
@@ -126,6 +142,13 @@ export interface PermissionDeniedPayload {
  *
  * @param broker Broker reference per publish denied topics.
  * @param req Request denied: `mfId`, `action`, `resource`, opzionale `requiredPermission`.
+ *
+ * @example Publish 2 denied topics PRIMA del throw (MF-PERM-06)
+ * ```ts
+ * publishDeniedTopics(broker, { mfId: 'mf-x', action: 'publish', resource: 'customer.pii.email' })
+ * // → broker.publish('permission.denied', {...}) — locale F11
+ * // → broker.publish('microfrontend.permission.denied', {...}) — F8 governance riuso
+ * ```
  *
  * @see prd_2.0.0.md §19.6 — 2 topics standard PermissionError
  * @see D-V2-F11-08 (payload + timestamp additive)

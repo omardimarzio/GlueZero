@@ -1,6 +1,10 @@
 /**
  * F11 Capability Registry — global single source-of-truth (D-V2-F11-09).
  *
+ * Cover REQ-IDs: MF-CAP-02 (registerCapability + first-wins) + MF-CAP-03 (hasCapability +
+ * checkMicroFrontendCapabilities) + MF-CAP-05 (cleanup cascade D-V2-16 + invalidation
+ * event-driven).
+ *
  * Map storage: `Map<"name::version", providerMfId>` + reverse index
  * `Map<mfId, Set<key>>` per cleanup cascade D-V2-16 su unregister MF.
  *
@@ -92,6 +96,17 @@ export interface CapabilityRegistry {
  * registry.registerCapability({ name: 'theme.v1', version: '1.0.0' }, 'mf-shell')
  * registry.hasCapability('theme.v1', '1.0.0') // true
  * ```
+ *
+ * @example Check MF capabilities — strict shape PRD §17.5 (6-field result)
+ * ```ts
+ * const result = registry.checkMicroFrontendCapabilities('analytics-widget', {
+ *   requires: [{ name: 'theme.v1', version: '1.0.0' }],
+ * })
+ * // result: { ok, missing, incompatible, optionalMissing, provided, warnings }
+ * ```
+ *
+ * @see prd_2.0.0.md §17.4 — Registry API 5 methods MF-CAP-02
+ * @see prd_2.0.0.md §17.5 — CapabilityCheckResult shape MF-CAP-03
  */
 export function createCapabilityRegistry(
   broker: Broker,

@@ -1,6 +1,10 @@
 /**
  * `permissionsModule()` factory — `BrokerModule` opt-in per `@gluezero/permissions`
- * (D-V2-F11-13, D-V2-F11-16, D-V2-F11-18, D-V2-F11-22).
+ * (D-V2-F11-01 scaffolding + D-V2-F11-13 + D-V2-F11-16 + D-V2-F11-18 + D-V2-F11-22).
+ *
+ * Cover REQ-IDs: MF-PERM-01 (10 enforcement points install) + MF-INT-LIFE-03
+ * (wire lifecycle hooks 7 topics) + MF-PIPE-01 (D-V2-20 pipeline §28 BLOCKING chiusura
+ * PRD §47.11 — proprietà logica facade chain step 4.5).
  *
  * ## Pattern install — Service Locator F8 LOOKUP
  *
@@ -31,6 +35,12 @@
  *
  * Ogni call ritorna NUOVO `BrokerModule`. Supporta scenario 2-broker indipendenti
  * con permission service separati senza shared state.
+ *
+ * ## D-V2-F11-20 — capability registry exposure (PRD §17.4 5 methods public)
+ *
+ * Tutti i 5 metodi della Capability Registry (registerCapability, unregisterCapability,
+ * hasCapability, getCapabilities, checkMicroFrontendCapabilities) sono esposti via il
+ * service combinato `SERVICE_PERMISSIONS` (composition con permission engine API).
  *
  * ## D-V2-F11-22 STRICT triple
  *
@@ -106,6 +116,11 @@ export interface PermissionsModuleOptions {
  * const broker2 = createBroker({ modules: [microfrontendModule(), permissionsModule()] })
  * // broker1 e broker2 hanno permission service separati con state isolato.
  * ```
+ *
+ * @throws {Error} install error path — `@gluezero/permissions requires @gluezero/microfrontends`
+ *   se microfrontendModule() NON registrato PRIMA di permissionsModule() nell'array modules.
+ *
+ * @see ROADMAP linea 456 — MF-PIPE-01 cross-fase obligation BLOCKING.
  */
 export function permissionsModule(options: PermissionsModuleOptions = {}): BrokerModule {
   const mode: PermissionMode = options.permissionMode ?? 'warn'
@@ -129,6 +144,7 @@ export function permissionsModule(options: PermissionsModuleOptions = {}): Broke
 
       // OQ-5 — runtime mutation API (D-V2-F11-07 invalidation via topic).
       // L'effective LRU clear è delegato al lifecycle-hook che subscribe il topic.
+      // @see OQ-5 resolution research §6 — API esplicita per cache invalidation event-driven.
       function setMicroFrontendPermissions(mfId: string, _perms: unknown): void {
         ctx.broker.publish(
           'microfrontend.permissions.updated',

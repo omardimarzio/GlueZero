@@ -1,6 +1,10 @@
 /**
  * F11 Lifecycle hooks — subscribe 7 topics (4 F8 lifecycle + 3 F11 locali) per:
  *
+ * Cover REQ-IDs: MF-INT-LIFE-03 (MF lifecycle integration capability check + LRU
+ * invalidation event-driven + cleanup cascade D-V2-16) + MF-CAP-05 (event-driven
+ * invalidation D-V2-F11-07).
+ *
  * 1. Capability check pre-mount best-effort (OQ-2 — dual subscribe scenario).
  * 2. LRU cache invalidation event-driven (D-V2-F11-07).
  * 3. Cleanup cascade D-V2-16 (registry capabilities + LRU permissions).
@@ -96,6 +100,13 @@ function getMfId(event: BrokerEvent<unknown>): string | undefined {
  * ```ts
  * wireLifecycleHooks(ctx.broker, mfService, engine, registry, installPolicy)
  * ```
+ *
+ * @throws {BrokerError} `CAPABILITY_MISSING` propagato da `enforceCapabilityPolicy`
+ *   quando policy effettiva === `'block-mount'` o `'block-load'` (OQ-2 alias) e capability
+ *   check del MF fallisce. Best-effort post-hoc: il throw NON re-throws via broker.publish
+ *   (F1 pub/sub pattern handler errors swallowed).
+ *
+ * @see prd_2.0.0.md §17.7 — lifecycle integration MF-INT-LIFE-03
  */
 export function wireLifecycleHooks(
   broker: Broker,

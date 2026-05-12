@@ -32,7 +32,7 @@ import { matchesPattern as matchesSingle } from './internal/topic-pattern-match'
  * @returns `true` se almeno un allow matcha E nessun deny matcha; `false`
  *   altrimenti (deny-wins o no allow match).
  *
- * @example
+ * @example Pattern matching base — wildcard finale multi-segment + deny-wins
  * ```typescript
  * matchPatterns(['customer.*', '!customer.pii.*'], 'customer.order.created') // true
  * matchPatterns(['customer.*', '!customer.pii.*'], 'customer.pii.email')     // false (deny-wins)
@@ -40,6 +40,14 @@ import { matchesPattern as matchesSingle } from './internal/topic-pattern-match'
  * matchPatterns(['*'], 'anything.deep.path')                                 // true (global)
  * matchPatterns([], 'customer.order')                                        // false (fail-secure D-V2-F11-14)
  * ```
+ *
+ * @example Multi-segment wildcard diverge F1 single-segment (D-V2-F11-06)
+ * ```typescript
+ * matchPatterns(['customer.*'], 'customer.order.detail.created') // true (multi-segment)
+ * // In F1 broker topic-matcher single-segment, 'customer.*' matcha SOLO 'customer.X'.
+ * ```
+ *
+ * @see prd_2.0.0.md §19.4 — pattern matching 4 modes
  */
 export function matchPatterns(patterns: readonly string[], topic: string): boolean {
   let allowed = false

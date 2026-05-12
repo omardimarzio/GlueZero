@@ -16,6 +16,9 @@
  * indipendenti condividerebbero pero questa cache: tradeoff accettato F11
  * (defer V2.1 per cache scoped-per-broker se community demand).
  *
+ * Cover REQ-IDs: MF-PERM-05 (LRU cache 500 entries event-driven invalidation, P-02
+ * publish overhead mitigation Pitfall HIGH).
+ *
  * @see prd_2.0.0.md §19.7 — cache LRU permissions
  * @see packages/cache/src/memory-cache-adapter.ts (F6 D-158 — F11 SEMPLIFICA)
  * @see D-V2-F11-07 (LRU + clearByMfId, no expiration policy)

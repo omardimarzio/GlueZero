@@ -2,6 +2,9 @@
  * F11 enforcement points — facade composition esterna pura (OQ-1) + service
  * monkey-patch idempotent (OQ-3).
  *
+ * Cover REQ-IDs: MF-PERM-02 (10 enforcement points action discriminator) +
+ * MF-PIPE-01 (pipeline §28 D-V2-20 BLOCKING — proprietà logica facade chain step 4.5).
+ *
  * ## OQ-1 RESOLUTION (research §1 — facade-only enforcement)
  *
  * **`broker.publish` raw NON è intercettato.** Il seam `publishInterceptors`
@@ -14,7 +17,7 @@
  * EventTap multiplex senza diff core, e D-V2-F11-22 D-83 strict triple vieta
  * qualunque diff `packages/{core,microfrontends,mapper}/src/`.
  *
- * **Soluzione adottata (D-V2-F11-02 amended A1):** `wrapContextWithPermissions`
+ * **Soluzione adottata (D-V2-F11-01 scaffolding + D-V2-F11-02 amended A1 — `publishInterceptors` NOT invocato dal core):** `wrapContextWithPermissions`
  * wrappa il facade output di `createMfRuntimeContext` F8 con composition esterna
  * pura. Ogni call `ctx.publish(...)`/`ctx.subscribe(...)` invoca prima
  * `engine.enforce({mfId, action, resource})`. Se enforce non throw → invocazione
@@ -94,7 +97,7 @@ import type { PermissionAction, PermissionEngine } from './permission-engine'
  * @throws {BrokerError} `PERMISSION_DENIED` se `engine.mode === 'enforce'` e il
  *   check pattern fallisce (forwardato da `engine.enforce`).
  *
- * @example
+ * @example Wrap publish — denied check ANTE-action
  * ```typescript
  * const baseCtx = createMfRuntimeContext(broker, reg)
  * const wrappedCtx = wrapContextWithPermissions(baseCtx, engine)
@@ -106,6 +109,19 @@ import type { PermissionAction, PermissionEngine } from './permission-engine'
  *
  * wrappedCtx.broker === baseCtx.broker // true — raw passthrough preserved
  * ```
+ *
+ * @example Wrap subscribe — denied pattern ANTE-action
+ * ```typescript
+ * const wrappedCtx = wrapContextWithPermissions(baseCtx, engine)
+ * wrappedCtx.subscribe('analytics.*', handler)
+ * // → engine.enforce({mfId, action:'subscribe', resource:'analytics.*'})
+ * // → baseCtx.subscribe('analytics.*', handler)
+ * ```
+ *
+ * @throws {BrokerError} `PERMISSION_DENIED` (categoria `microfrontend`) — propagato da
+ *   `engine.enforce` se subscribe pattern denied dal descriptor MF in mode enforce.
+ *
+ * @see ROADMAP linea 456 — MF-PIPE-01 cross-fase obligation pipeline §28 BLOCKING.
  */
 export function wrapContextWithPermissions(
   baseCtx: MicroFrontendRuntimeContext,
