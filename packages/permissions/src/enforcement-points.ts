@@ -61,10 +61,13 @@
  * @see D-V2-F11-02 amendment A1 — facade-only (NO EventTap multiplex)
  * @see D-V2-F11-22 — strict triple zero diff upstream
  */
-import type { MicroFrontendRuntimeContext } from '@gluezero/microfrontends'
-import type { MicroFrontendsService } from '@gluezero/microfrontends'
 import type { Subscription } from '@gluezero/core'
-import type { PermissionEngine, PermissionAction } from './permission-engine'
+import type {
+  MicroFrontendEventHandler,
+  MicroFrontendRuntimeContext,
+  MicroFrontendsService,
+} from '@gluezero/microfrontends'
+import type { PermissionAction, PermissionEngine } from './permission-engine'
 
 /**
  * Wrappa il `MicroFrontendRuntimeContext` F8 con permission check ANTE-azione
@@ -116,7 +119,11 @@ export function wrapContextWithPermissions(
       engine.enforce({ mfId, action: 'publish' as PermissionAction, resource: topic })
       baseCtx.publish(topic, payload, options as never)
     },
-    subscribe(pattern: string, handler: (event: never) => void, options?: unknown): Subscription {
+    subscribe(
+      pattern: string,
+      handler: MicroFrontendEventHandler,
+      options?: unknown,
+    ): Subscription {
       engine.enforce({ mfId, action: 'subscribe' as PermissionAction, resource: pattern })
       return baseCtx.subscribe(pattern, handler, options as never)
     },
@@ -193,7 +200,7 @@ export function wrapServiceWithPermissions(
 
   const lifecycleMethods = ['bootstrap', 'mount', 'unmount', 'destroy'] as const
   for (const method of lifecycleMethods) {
-    const original = (tagged as Record<string, unknown>)[method]
+    const original = (tagged as unknown as Record<string, unknown>)[method]
     if (typeof original !== 'function') continue
     const originalFn = (original as (...args: unknown[]) => unknown).bind(tagged)
     Object.defineProperty(tagged, method, {

@@ -79,14 +79,19 @@ export {
 // Typically consumato via lifecycle hooks, ma exposed per consumer custom.
 export { enforceCapabilityPolicy } from './capability-checker'
 
-// ===== Runtime exports (W2 P03-P04) =====
-// `permissionsModule` factory implemented W2-P03 — re-export aggiunto allora.
-// `wireLifecycleHooks` (W2 P04) è internal — NON re-exportato (D-V2-F9-11
-// carryover stretto: invocato solo da `permissionsModule().install`).
+// ===== BrokerModule factory + install (W2 P03 — D-V2-F11-18 2 setup-time options) =====
+export { permissionsModule } from './permissions-module'
+
+// ===== Enforcement helpers (W2 P03 — typically NON consumati direttamente; exposed per consumer custom) =====
+export { wrapContextWithPermissions, wrapServiceWithPermissions } from './enforcement-points'
 
 // ===== Internal helpers NOT exported (D-V2-F9-11 carryover stretto: pattern-matcher, lru-cache, internal/ privati) =====
+// `wireLifecycleHooks` (W2 P04) è internal — invocato solo da `permissionsModule().install`.
 
 // ===== Setup options =====
+// `PermissionsModuleOptions` viene re-exportata anche da `./permissions-module`
+// per coerenza con il modulo che lo definisce (single source of truth W2 P03).
+// `./types` mantiene un alias di compat per consumer pre-W2-P03.
 export type { PermissionsModuleOptions } from './types'
 
 // ===== Types public — PRD §17/§19 interfaces =====
