@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="it" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GlueZero — @gluezero/permissions demo: 4-mode pattern + Capability Registry</title>
+  <meta name="description" content="Demo standalone @gluezero/permissions: pattern matching deny-wins + 3 modes off/warn/enforce + Capability Registry 2-MF customer-dashboard scenario (SC1 + SC2 ROADMAP).">
+  <meta name="theme-color" content="#dc2626">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><text y='14' font-size='14'>🛡️</text></svg>">
+  <style>
+    * { box-sizing: border-box; }
+    body { font-family: system-ui, -apple-system, sans-serif; max-width: 960px; margin: 2rem auto; padding: 0 1rem; line-height: 1.5; color: #0F172A; }
+    h1 { color: #dc2626; margin-bottom: 0.5rem; }
+    h3 { margin-top: 0; color: #1e293b; font-size: 1rem; }
+    p { color: #475569; }
+    code { background: #F1F5F9; padding: 0.15rem 0.35rem; border-radius: 4px; font-size: 0.9em; }
+    .panel { background: #f3f4f6; padding: 1rem; border-radius: 8px; margin: 1rem 0; }
+    .panel-mf-a { border-left: 4px solid #10b981; }
+    .panel-mf-b { border-left: 4px solid #ef4444; }
+    .panel-warn { background: #fef3c7; border-left: 4px solid #f59e0b; }
+    button { background: #dc2626; color: white; border: 0; padding: 0.5rem 1rem; border-radius: 6px; cursor: pointer; margin: 0.25rem; font-weight: 600; }
+    button:hover { background: #b91c1c; }
+    button.ok { background: #10b981; }
+    button.ok:hover { background: #059669; }
+    pre { background: #1f2937; color: #f3f4f6; padding: 1rem; border-radius: 6px; overflow-x: auto; font-size: 0.85rem; margin: 0; }
+    .log { font-family: ui-monospace, "SF Mono", monospace; font-size: 0.8rem; max-height: 280px; overflow-y: auto; background: #1E293B; color: #F1F5F9; padding: 0.75rem; border-radius: 6px; }
+    .log-entry { padding: 0.15rem 0; border-bottom: 1px solid #334155; word-break: break-all; }
+    .log-entry:last-child { border-bottom: 0; }
+    .ok-log { color: #34d399; }
+    .denied { color: #f87171; }
+    .warn { color: #fbbf24; }
+    .cap { color: #60a5fa; }
+    .mode-selector { display: flex; gap: 0.5rem; align-items: center; margin-bottom: 1rem; }
+    .mode-selector label { font-weight: 600; }
+    .mode-selector select { padding: 0.4rem; border-radius: 4px; border: 1px solid #cbd5e1; }
+    .security-warning { background: #fef2f2; border: 1px solid #fecaca; padding: 0.75rem; border-radius: 6px; margin: 1rem 0; font-size: 0.85rem; color: #991b1b; }
+  </style>
+</head>
+<body>
+  <h1>🛡️ @gluezero/permissions — customer-dashboard demo</h1>
+  <p>Esempio standalone scenario PRD §37 con 2 micro-frontend:</p>
+  <ul>
+    <li><strong>MF-A (customer-form):</strong> <code>permissions.publish: ['customer.*', '!customer.pii.*']</code> + <code>capabilities.provides: ['customer.read.v1']</code></li>
+    <li><strong>MF-B (payment-widget):</strong> <code>permissions.publish: ['payment.*']</code> + <code>capabilities.requires: ['nonexistent.v1']</code> → block-mount fallisce (SC2)</li>
+  </ul>
+  <p><em>Prerequisito: esegui <code>pnpm build:packages</code> dalla root del repo prima di aprire questa pagina (relative paths verso <code>dist/</code> locali — D-V2-F8-10 carryover, NO publish fino F17 GA).</em></p>
+
+  <div class="security-warning">
+    ⚠️ <strong>Modello di sicurezza (P-13):</strong> <code>@gluezero/permissions</code> è un layer di <strong>governance</strong>, NON una sandbox crittografica. Un MF malevolo può bypassare la facade chiamando <code>broker.publish</code> raw direttamente. Per isolamento robusto contro plugin untrusted, usare <code>@gluezero/mf-iframe</code> (F15) o Shadow DOM (F13).
+  </div>
+
+  <div class="panel">
+    <h3>Configurazione globale</h3>
+    <div class="mode-selector">
+      <label for="mode">permissionMode:</label>
+      <select id="mode">
+        <option value="warn" selected>warn (default — log + topic, no throw)</option>
+        <option value="enforce">enforce (throw + topic)</option>
+        <option value="off">off (no-op skip check)</option>
+      </select>
+      <button id="btn-mount" class="ok">Mount 2-MF scenario</button>
+    </div>
+  </div>
+
+  <div class="panel panel-mf-a">
+    <h3>MF-A (customer-form) — publish actions</h3>
+    <button id="btn-mfa-allow">publish('customer.order.created') ✓</button>
+    <button id="btn-mfa-deny-explicit">publish('customer.pii.email') ✗ (deny-wins)</button>
+    <button id="btn-mfa-deny-default">publish('payment.charged') ✗ (not allowed)</button>
+  </div>
+
+  <div class="panel panel-mf-b">
+    <h3>MF-B (payment-widget) — capability check</h3>
+    <button id="btn-mfb-precheck">checkCapabilitiesPreMount('payment-widget') (SC2 hard block)</button>
+  </div>
+
+  <div class="panel panel-warn">
+    <h3>⚠️ Bypass demo (P-13 governance NOT crypto sandbox)</h3>
+    <button id="btn-bypass">broker.publish('payment.charged') raw — bypassa facade</button>
+    <p style="margin-top: 0.5rem; font-size: 0.85rem;">SC4 ROADMAP linea 290: <code>broker.publish</code> raw v1.x NON instrumented; solo <code>ctx.publish</code> facade applica check. v1-bc-replay PASS.</p>
+  </div>
+
+  <div class="panel">
+    <h3>Log eventi</h3>
+    <div id="log" class="log"></div>
+  </div>
+
+  <script type="module">
+    // Relative paths — D-V2-F8-10 carryover, NO publish fino F17 GA.
+    import { createBroker } from '../../packages/core/dist/index.js'
+    import { microfrontendModule } from '../../packages/microfrontends/dist/index.js'
+    import '../../packages/microfrontends/dist/augment.js'
+    import { permissionsModule } from '../../packages/permissions/dist/index.js'
+    import '../../packages/permissions/dist/augment.js'
+
+    const logEl = document.getElementById('log')
+    function appendLog(text, kind) {
+      const entry = document.createElement('div')
+      entry.className = 'log-entry ' + (kind || '')
+      entry.textContent = `[${new Date().toLocaleTimeString()}] ${text}`
+      logEl.insertBefore(entry, logEl.firstChild)
+      while (logEl.children.length > 40) logEl.removeChild(logEl.lastChild)
+    }
+
+    let broker = null
+    let permissionService = null
+    let mfaCtx = null
+
+    document.getElementById('btn-mount').addEventListener('click', () => {
+      const mode = document.getElementById('mode').value
+      // Ordine OBBLIGATORIO: microfrontendModule() PRIMA di permissionsModule() (Service Locator F8).
+      broker = createBroker({
+        modules: [
+          microfrontendModule(),
+          permissionsModule({ permissionMode: mode, capabilityPolicy: 'block-mount' }),
+        ],
+      })
+      permissionService = broker.getService('permissions')
+
+      // Subscribe topics governance F8 + F11 locali
+      broker.subscribe('permission.denied', (e) => {
+        appendLog(`[DENIED] ${e.payload.microFrontendId} action=${e.payload.action} resource=${e.payload.resource}`, 'denied')
+      })
+      broker.subscribe('microfrontend.permission.denied', (e) => {
+        appendLog(`[MF-DENIED governance] ${e.payload.microFrontendId} resource=${e.payload.resource}`, 'denied')
+      })
+      broker.subscribe('microfrontend.capability.missing', (e) => {
+        appendLog(`[CAP-MISSING] ${e.payload.microFrontendId} missing=${JSON.stringify(e.payload.missing)}`, 'cap')
+      })
+
+      // Register MF-A (customer-form) — autorizzato customer.*, deny customer.pii.*
+      broker.registerMicroFrontend({
+        id: 'customer-form',
+        version: '1.0.0',
+        loader: { type: 'mock' },
+        permissions: {
+          publish: ['customer.*', '!customer.pii.*'],
+          subscribe: ['customer.*'],
+        },
+        capabilities: {
+          provides: [{ name: 'customer.read', version: 'v1' }],
+        },
+      })
+
+      // Register MF-B (payment-widget) — richiede capability missing
+      broker.registerMicroFrontend({
+        id: 'payment-widget',
+        version: '1.0.0',
+        loader: { type: 'mock' },
+        permissions: {
+          publish: ['payment.*'],
+        },
+        capabilities: {
+          requires: [{ name: 'nonexistent.feature', version: 'v1' }],
+        },
+      })
+
+      appendLog(`Broker mounted: permissionMode=${mode}, capabilityPolicy=block-mount`, 'ok-log')
+      appendLog('Registered MF-A (customer-form) + MF-B (payment-widget).', 'ok-log')
+    })
+
+    document.getElementById('btn-mfa-allow').addEventListener('click', () => {
+      if (!permissionService) return appendLog('Mount first.', 'warn')
+      try {
+        permissionService.checkPermission({ mfId: 'customer-form', action: 'publish', resource: 'customer.order.created', mode: 'enforce' })
+        appendLog('✓ customer-form publish customer.order.created — ALLOWED (matches "customer.*").', 'ok-log')
+      } catch (err) {
+        appendLog(`✗ customer-form publish customer.order.created — ${err.message}`, 'denied')
+      }
+    })
+
+    document.getElementById('btn-mfa-deny-explicit').addEventListener('click', () => {
+      if (!permissionService) return appendLog('Mount first.', 'warn')
+      try {
+        permissionService.checkPermission({ mfId: 'customer-form', action: 'publish', resource: 'customer.pii.email', mode: 'enforce' })
+        appendLog('✓ customer-form publish customer.pii.email — UNEXPECTED (should be denied).', 'ok-log')
+      } catch (err) {
+        appendLog(`✗ customer-form publish customer.pii.email — DENIED (deny-wins "!customer.pii.*" prevale): ${err.message}`, 'denied')
+      }
+    })
+
+    document.getElementById('btn-mfa-deny-default').addEventListener('click', () => {
+      if (!permissionService) return appendLog('Mount first.', 'warn')
+      try {
+        permissionService.checkPermission({ mfId: 'customer-form', action: 'publish', resource: 'payment.charged', mode: 'enforce' })
+        appendLog('✓ customer-form publish payment.charged — UNEXPECTED (should be denied).', 'ok-log')
+      } catch (err) {
+        appendLog(`✗ customer-form publish payment.charged — DENIED (no allow pattern matches): ${err.message}`, 'denied')
+      }
+    })
+
+    document.getElementById('btn-mfb-precheck').addEventListener('click', () => {
+      if (!permissionService) return appendLog('Mount first.', 'warn')
+      try {
+        permissionService.checkCapabilitiesPreMount('payment-widget')
+        appendLog('✓ payment-widget capabilities OK — UNEXPECTED (should fail).', 'ok-log')
+      } catch (err) {
+        appendLog(`✗ payment-widget block-mount: ${err.message}`, 'cap')
+      }
+    })
+
+    document.getElementById('btn-bypass').addEventListener('click', () => {
+      if (!broker) return appendLog('Mount first.', 'warn')
+      // ⚠️ SC4 + P-13 demo: broker.publish raw NON instrumented dalla facade.
+      // Questo è il bypass governance: dimostra che il layer è governance NOT crypto sandbox.
+      broker.publish({
+        topic: 'payment.charged',
+        payload: { amount: 100 },
+        source: { type: 'plugin', id: 'malicious-mf' },
+      })
+      appendLog('⚠️ broker.publish RAW "payment.charged" — bypassed permissions facade (P-13 governance NOT crypto sandbox demo).', 'warn')
+    })
+
+    appendLog('Demo @gluezero/permissions ready. Click "Mount 2-MF scenario" per inizializzare.', 'ok-log')
+  </script>
+</body>
+</html>

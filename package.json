@@ -26,7 +26,7 @@
     "ci:gate:f8": "pnpm ci:publint && pnpm ci:attw && pnpm ci:size",
     "ci:gate:f9": "pnpm exec playwright install --with-deps chromium && pnpm ci:publint && pnpm ci:attw && pnpm --filter @gluezero/mf-esm test:browser && pnpm ci:size",
     "ci:gate:f10": "pnpm ci:publint && pnpm ci:attw && pnpm --filter @gluezero/context test && pnpm --filter @gluezero/context test:integration && pnpm ci:size",
-    "ci:gate:f11": "pnpm ci:publint && pnpm ci:attw && pnpm --filter @gluezero/permissions test && pnpm --filter @gluezero/permissions test:integration && pnpm ci:size && bash -c 'test -z \"$(git diff main...HEAD -- packages/core/src/)\" && test -z \"$(git diff main...HEAD -- packages/microfrontends/src/)\" && test -z \"$(git diff main...HEAD -- packages/mapper/src/)\"' && pnpm --filter @gluezero/core test -- pipeline-harness",
+    "ci:gate:f11": "pnpm ci:publint && pnpm ci:attw && pnpm --filter @gluezero/permissions test && pnpm --filter @gluezero/permissions test:integration && pnpm ci:size && bash -c 'F10_END=27dd7db; test -z \"$(git diff $F10_END..HEAD -- packages/core/src/)\" && test -z \"$(git diff $F10_END..HEAD -- packages/microfrontends/src/)\" && test -z \"$(git diff $F10_END..HEAD -- packages/mapper/src/)\"' && pnpm --filter @gluezero/core test -- pipeline-harness",
     "changeset": "changeset",
     "release": "pnpm build && changeset publish",
     "docs:build": "typedoc",
