@@ -14,6 +14,7 @@ export default defineConfig({
     name: '@gluezero/permissions/integration',
     environment: 'jsdom',
     globals: false,
+    passWithNoTests: true,
     include: ['src/__integration__/**/*.test.ts'],
     typecheck: {
       enabled: false,

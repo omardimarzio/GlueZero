@@ -125,7 +125,7 @@ importers:
         version: 6.0.3
       vitest:
         specifier: 4.1.5
-        version: 4.1.5(@types/node@25.6.0)(@vitest/browser-playwright@4.1.5)(@vitest/coverage-v8@4.1.5)(happy-dom@20.9.0)(jsdom@29.1.0)(msw@2.13.6(@types/node@25.6.0)(typescript@6.0.3))(vite@8.0.10(@types/node@25.6.0)(esbuild@0.27.7)(yaml@2.8.3))
+        version: 4.1.5(@types/node@25.6.0)(@vitest/browser-playwright@4.1.5)(@vitest/coverage-v8@4.1.5)(happy-dom@20.9.0)(jsdom@29.1.0)(msw@2.13.6(@types/node@25.6.0)(typescript@6.0.3))(vite@8.0.10(@types/node@25.6.0)(esbuild@0.28.0)(yaml@2.8.3))
 
   packages/core:
     dependencies:
@@ -366,6 +366,30 @@ importers:
       vitest:
         specifier: 4.1.5
         version: 4.1.5(@types/node@25.6.0)(@vitest/browser-playwright@4.1.5)(@vitest/coverage-v8@4.1.5)(happy-dom@20.9.0)(jsdom@29.1.0)(msw@2.13.6(@types/node@25.6.0)(typescript@6.0.3))(vite@8.0.10(@types/node@25.6.0)(esbuild@0.28.0)(yaml@2.8.3))
+
+  packages/permissions:
+    devDependencies:
+      '@gluezero/context':
+        specifier: workspace:*
+        version: link:../context
+      '@gluezero/core':
+        specifier: workspace:*
+        version: link:../core
+      '@gluezero/microfrontends':
+        specifier: workspace:*
+        version: link:../microfrontends
+      jsdom:
+        specifier: 29.1.0
+        version: 29.1.0
+      tsup:
+        specifier: 8.5.1
+        version: 8.5.1(postcss@8.5.12)(typescript@6.0.3)(yaml@2.8.3)
+      typescript:
+        specifier: 6.0.3
+        version: 6.0.3
+      vitest:
+        specifier: 4.1.5
+        version: 4.1.5(@types/node@25.6.0)(@vitest/browser-playwright@4.1.5)(@vitest/coverage-v8@4.1.5)(happy-dom@20.9.0)(jsdom@29.1.0)(msw@2.13.6(@types/node@25.6.0)(typescript@6.0.3))(vite@8.0.10(@types/node@25.6.0)(esbuild@0.27.7)(yaml@2.8.3))
 
   packages/routing:
     dependencies:
