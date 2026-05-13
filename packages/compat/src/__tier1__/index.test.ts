@@ -1,21 +1,19 @@
 /**
- * F12 W2 Task 3 — Tier-1 barrel sanity test per `@gluezero/compat` index.ts.
+ * F12 W3 — Tier-1 barrel sanity test per `@gluezero/compat` index.ts.
  *
- * Wiring sanity W2: verifica che il barrel `src/index.ts` esponga solo le surface
- * pubbliche W1 (`__compatAugmentLoaded`, `getCompatibility`, `GLUEZERO_VERSION`) e
- * NON re-esponga i symbol privati W2 (engine/registry/policy-dispatch/compat-error).
+ * Wiring sanity W3 (plan 12-03 closure): verifica che il barrel `src/index.ts`
+ * esponga la surface completa public (compatModule factory + types + engine +
+ * registry + error + topics) e NON re-esponga i internal helpers
+ * (`wrapServiceWithCompat`, `wireLifecycleHooks`, `enforceCompatPolicy`,
+ * `createSemverChecker`).
  *
- * NOTA: questo test sarà aggiornato in plan 12-03 quando il barrel completerà i
- * re-export pubblici (compatModule factory + createCompatError + createCheckEngine
- * etc.). Per ora il barrel resta minimale (placeholder W2 commentati in index.ts:80-86).
- *
- * @see plan 12-02 Task 3 Step B
- * @see packages/compat/src/index.ts (barrel W1 minimale)
+ * @see plan 12-03 Task 3 closure
+ * @see packages/compat/src/index.ts (barrel W3 completo)
  */
 import { describe, expect, it } from 'vitest'
 import * as compatBarrel from '../index'
 
-describe('@gluezero/compat barrel surface W2 sanity', () => {
+describe('@gluezero/compat barrel surface W3 sanity (plan 12-03 closure)', () => {
   it('exports __compatAugmentLoaded marker (audit-grep gate Pattern S1)', () => {
     expect(compatBarrel.__compatAugmentLoaded).toBe(true)
   })
@@ -29,12 +27,23 @@ describe('@gluezero/compat barrel surface W2 sanity', () => {
     expect(compatBarrel.GLUEZERO_VERSION).toMatch(/^\d+\.\d+\.\d+/)
   })
 
-  it('does NOT re-export internal helpers W2 (engine/registry/policy/compat-error)', () => {
-    // W2 placeholder — barrel completato in plan 12-03 (compatModule factory etc.).
-    // Verifica corrente: solo augment marker + types + helper W1.
+  it('exports W2 public surface (engine + registry + error + topics)', () => {
+    expect(typeof (compatBarrel as any).createCheckEngine).toBe('function')
+    expect(typeof (compatBarrel as any).createVersionRegistry).toBe('function')
+    expect(typeof (compatBarrel as any).createCompatError).toBe('function')
+    expect(typeof (compatBarrel as any).publishCompatTopics).toBe('function')
+    expect(Array.isArray((compatBarrel as any).MF_COMPAT_TOPICS)).toBe(true)
+  })
+
+  it('exports W3 compatModule factory + types (plan 12-03)', () => {
+    expect(typeof (compatBarrel as any).compatModule).toBe('function')
+  })
+
+  it('does NOT re-export internal helpers (enforcement-points / lifecycle-hooks / policy-dispatch / semver-checker)', () => {
     const keys = Object.keys(compatBarrel)
-    expect(keys.some((k) => k.includes('Registry') || k.includes('Engine'))).toBe(false)
-    expect(keys.some((k) => k.includes('createCompatError'))).toBe(false)
-    expect(keys.some((k) => k.includes('enforceCompatPolicy'))).toBe(false)
+    expect(keys.some((k) => k === 'wrapServiceWithCompat')).toBe(false)
+    expect(keys.some((k) => k === 'wireLifecycleHooks')).toBe(false)
+    expect(keys.some((k) => k === 'enforceCompatPolicy')).toBe(false)
+    expect(keys.some((k) => k === 'createSemverChecker')).toBe(false)
   })
 })
