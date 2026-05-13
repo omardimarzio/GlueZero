@@ -60,6 +60,23 @@ export type {
 
 export { getCompatibility } from './types'
 
+// ===== Build-time version constant (OQ-5 resolution) =====
+// Re-export del literal injection `__GLUEZERO_VERSION__` (esbuild `define`) via alias
+// pubblico `GLUEZERO_VERSION`. esbuild sostituisce letteralmente l'identifier
+// `__GLUEZERO_VERSION__` al build-time con la stringa JSON-escaped (default `"2.0.0"`,
+// override via env var GLUEZERO_VERSION in CI/changesets).
+// Verifica empirica W1: `grep '"2.0.0"' packages/compat/dist/index.js` PASS.
+import { GLUEZERO_BUILD_VERSION } from './internal/gluezero-version'
+
+/**
+ * Versione corrente di `@gluezero/core` runtime — constant build-time iniettata da tsup
+ * `define`. Usata da `check-engine.ts` (W2) per la dim `gluezero` semver satisfies check.
+ *
+ * @see RESEARCH.md §3 — OQ-5 resolution rationale (tsup define vs runtime read)
+ * @see prd_2.0.0.md §20.3 — dim `gluezero` semver range
+ */
+export const GLUEZERO_VERSION: string = GLUEZERO_BUILD_VERSION
+
 // ===== W2 placeholder (completato in plan 12-02 + 12-03) =====
 // export { MF_COMPAT_TOPICS, type CompatTopic } from './topics'
 // export { createCompatError, publishCompatTopics } from './compat-error'

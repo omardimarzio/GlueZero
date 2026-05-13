@@ -27,6 +27,17 @@
  * @see prd_2.0.0.md §20.3 — dim `gluezero` (scalar range vs build-time version)
  * @see RESEARCH.md §3 — OQ-5 resolution rationale
  */
+
+// Ambient declaration — esbuild sostituisce l'identifier al build-time via tsup `define`.
 declare const __GLUEZERO_VERSION__: string
 
-export { __GLUEZERO_VERSION__ }
+/**
+ * Snapshot della versione GlueZero al build-time (immutable).
+ *
+ * Pattern: legge l'ambient `__GLUEZERO_VERSION__` (sostituito da esbuild `define`)
+ * e lo espone come `const` named export. Consumer interno `check-engine.ts` (W2)
+ * importa questo identifier per dim `gluezero` semver satisfies.
+ *
+ * @internal
+ */
+export const GLUEZERO_BUILD_VERSION: string = __GLUEZERO_VERSION__
