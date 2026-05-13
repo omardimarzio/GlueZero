@@ -4,6 +4,14 @@ import { defineConfig } from 'vitest/config'
 // NO Tier-3 Playwright/browser provider — F12 = logica pura JS (semver checker + version registry
 // + check engine + policy dispatch) senza DOM-heavy concern.
 export default defineConfig({
+  // Rule 3 fix W2: replicate tsup `define` per `__GLUEZERO_VERSION__` ambient const
+  // (build-time literal sostituito da esbuild — vedere tsup.config.ts). In test mode
+  // vitest non passa attraverso tsup, quindi serve `define` esplicito (vitest/vite usa
+  // esbuild-substitution lo stesso pattern). Senza questo, `gluezero-version.ts:43`
+  // ritorna `ReferenceError: __GLUEZERO_VERSION__ is not defined` runtime.
+  define: {
+    __GLUEZERO_VERSION__: JSON.stringify(process.env.GLUEZERO_VERSION ?? '2.0.0'),
+  },
   test: {
     name: '@gluezero/compat',
     environment: 'jsdom',
