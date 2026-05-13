@@ -113,8 +113,21 @@ export { isolationModule, type IsolationModuleOptions } from './isolation-module
 // ===== Service Locator binding (riuso F8 SERVICE_ISOLATION + IsolationService signature) =====
 export { SERVICE_ISOLATION, type IsolationService } from './service-locator.js'
 
+// ===== W2 P03 — DOM/CSS isolation handlers + scopeCss helper + iframe stub + lifecycle mount hook =====
+export { applyDomIsolation, type MountTarget } from './dom-isolation.js'
+export { applyCssIsolation } from './css-isolation.js'
+export { scopeCss } from './scope-css.js'
+export { applyIframeStub, type IframeAdapter } from './iframe-stub.js'
+export {
+  installMountHook,
+  applyMountIsolation,
+  type MountHookOptions,
+  type MountHookHandle,
+  type PolicyCache,
+  type BrokerSubscribeApi,
+} from './lifecycle-mount-hook.js'
+
 // ===== W2/W3 placeholders (popolati nei prossimi plan):
-// - scopeCss helper (D-V2-F13-06)
-// - wrapContextWithIsolation factory (D-V2-F13-10)
-// - resolveIsolationPolicy resolver (W2 P02)
-// - applyDomIsolation/applyCssIsolation/applyStorageIsolation handlers (W2 P03)
+// - wrapContextWithIsolation factory (D-V2-F13-10) — W2 P04
+// - resolveIsolationPolicy resolver (W2 P02) — wave parallel
+// - applyStorageIsolation handler (W2 P04 — facades layer)
