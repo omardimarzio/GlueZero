@@ -35,6 +35,11 @@
  * // 3 topics emit: started → completed (con durationMs ≥ 0)
  * ```
  *
+ * @throws `Error` con `code='PERMISSION_DENIED'` se permission service rileva denied
+ *   in mode='enforce'.
+ * @throws `Error` se `resolvers.worker?.()` ritorna `undefined` (worker service not
+ *   available — emit `microfrontend.worker.task.error` + re-throw).
+ *
  * @see prd_2.0.0.md §34 — Worker integration
  * @see D-V2-F13-04-AMENDED — Factory 2-opt resolver pattern
  * @see D-V2-F13-12 — Topic emit observability

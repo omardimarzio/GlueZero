@@ -46,6 +46,10 @@
  * console.log(storage) // undefined — MF code NON può accedere via ctx.storage
  * ```
  *
+ * @throws `DOMException` (QuotaExceededError) propagata da `window.localStorage.setItem`
+ *   se storage quota browser esaurito (~5-10 MB). Facade NON cattura — il MF gestisce
+ *   con try/catch lato MF code.
+ *
  * @see prd_2.0.0.md §21.7 — StorageFacade contract
  * @see D-V2-F13-11 — Storage backing window.localStorage direct (NO cache)
  * @see D-V2-F13-12 — Topic emit observability

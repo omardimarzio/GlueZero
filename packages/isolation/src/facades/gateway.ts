@@ -43,6 +43,11 @@
  * // gatewayService.request invocato con metadata.microFrontendId = 'mf-1' (auto-injected)
  * ```
  *
+ * @throws `Error` con `code='PERMISSION_DENIED'` se permission service rileva denied
+ *   in mode='enforce'.
+ * @throws `Error` se `resolvers.gateway?.()` ritorna `undefined` (gateway service not
+ *   available — host deve fornire resolvers.gateway).
+ *
  * @see prd_2.0.0.md §33 — Gateway integration
  * @see D-V2-F13-04-AMENDED — Factory 2-opt resolver pattern
  * @see D-V2-F13-12 — Topic emit observability
