@@ -1,4 +1,5 @@
 import { defineConfig } from 'vitest/config'
+import { playwright } from '@vitest/browser-playwright'
 
 /**
  * F13 W2/W3 browser suite Tier-3 Playwright Chromium (D-V2-F13-14 + D-V2-F13-23).
@@ -10,6 +11,10 @@ import { defineConfig } from 'vitest/config'
  * che jsdom NON modella accuratamente (es. ShadowRoot.adoptedStyleSheets, iframe sandbox
  * cross-origin policy, document fragment focus delegation, computed CSS containment).
  * 6 scenari obbligatori W3 (D-V2-F13-23).
+ *
+ * Rule 1 fix W3 P05: vitest 4.x cambia `browser.provider` da string a factory import
+ * (vedi https://vitest.dev/config/browser/provider) — usa `playwright()` da
+ * `@vitest/browser-playwright`.
  */
 export default defineConfig({
   test: {
@@ -17,7 +22,7 @@ export default defineConfig({
     include: ['src/__browser__/**/*.test.ts'],
     browser: {
       enabled: true,
-      provider: 'playwright',
+      provider: playwright(),
       headless: true,
       instances: [{ browser: 'chromium' }],
     },
