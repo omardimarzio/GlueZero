@@ -103,6 +103,13 @@ export interface CreateCompatErrorParams {
  * @param params Parametri input: `code`, `message`, `phase`, `microFrontendId`, `report`, opzionale `details`.
  * @returns `BrokerError` immutabile con `category: 'microfrontend'` + `code` preservato + `details: {microFrontendId, phase, report, ...}`.
  *
+ * @throws Mai direttamente. Questa factory **ritorna** `BrokerError` senza mai
+ *   throwarlo — il throw è responsabilità del caller (vedi `enforceCompatPolicy`
+ *   in `policy-dispatch.ts` e `wrapServiceWithCompat` in `enforcement-points.ts`).
+ *   Pattern intenzionale per consentire emit-before-throw (D-12-05): il caller
+ *   prima emette `microfrontend.compatibility.failed` topic, poi throwa il
+ *   `BrokerError` ritornato.
+ *
  * @example Throw incompat error nel `policy-dispatch.enforceCompatPolicy`
  * ```ts
  * throw createCompatError({
@@ -126,9 +133,25 @@ export interface CreateCompatErrorParams {
  * })
  * ```
  *
+ * @example Pattern emit-before-throw (D-12-05 plan 12-05 closure)
+ * ```ts
+ * if (!report.ok && policy === 'block-mount' && phase === 'mount') {
+ *   publishCompatTopics(broker, report, 'failed') // emit FIRST
+ *   throw createCompatError({                      // then throw
+ *     code: 'COMPAT_INCOMPATIBLE',
+ *     message: `MF "${id}" incompatible at mount`,
+ *     phase: 'mount',
+ *     microFrontendId: id,
+ *     report,
+ *   })
+ * }
+ * ```
+ *
  * @see prd_2.0.0.md §20 — CompatibilityError shape
  * @see D-V2-F11-22 (F11 carryover direct-cast)
  * @see plan 12-02 OQ-4 AMENDMENT D-12-03
+ * @see D-12-05 emit-before-throw pattern (plan 12-05 closure)
+ * @see OQ-4 — category 'microfrontend' direct-cast (NOT 'compatibility')
  */
 export function createCompatError(params: CreateCompatErrorParams): BrokerError {
   return createBrokerError({

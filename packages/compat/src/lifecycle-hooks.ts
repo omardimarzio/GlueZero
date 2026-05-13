@@ -110,13 +110,33 @@ function getMfId(event: BrokerEvent<unknown>): string | undefined {
  * wireLifecycleHooks(ctx.broker, mfService, engine, registry, installPolicy)
  * ```
  *
+ * @example Defensive race-condition (MF unregistered tra emit e handler)
+ * ```ts
+ * // Scenario: MF emit 'loaded' poi viene rapidamente unregister-ato.
+ * // Quando il subscribe handler eseguito → mfService.get(mfId) === undefined
+ * // → return early, no throw, no leak.
+ * wireLifecycleHooks(broker, mfService, engine, registry, 'warn')
+ * // Robusto vs lifecycle race nei test parallel (jsdom + vitest concurrent).
+ * ```
+ *
+ * @example Cache invalidation event-driven (D-12-08)
+ * ```ts
+ * // Quando host invoca register*Version() con valore diverso:
+ * compatService.registerCanonicalModelVersion('customer', '2.0.0')
+ * // → emit 'microfrontend.compatibility.version.changed'
+ * // → subscribe handler invoca engine.invalidateReportCache()
+ * // → prossimo getCompatibilityReport(id) ricalcola fresh
+ * ```
+ *
  * @throws {BrokerError} `COMPAT_INCOMPATIBLE` propagato da `enforceCompatPolicy`
  *   quando policy=`'block-mount'` o `'block-load'` e il check fallisce — MA il
  *   throw è swallowed dal broker pub/sub layer (handler errors NON re-throws
  *   via broker.publish). Best-effort post-hoc.
  *
  * @see OQ-2 dual subscribe (research §6 carryover F11 + auto-bootstrap inline coverage)
+ * @see D-12-08 — version-changed invalidate cache
  * @see D-V2-16 cleanup cascade carryover F11
+ * @see plan 12-04 SC4 — cache invalidation empirical verification
  */
 export function wireLifecycleHooks(
   broker: Broker,

@@ -108,6 +108,15 @@ type PatchableService = MicroFrontendsService & {
  * @param broker Broker reference per emit topic governance via `enforceCompatPolicy`.
  * @param installPolicy Policy di install-time (D-12-11 minimal single option).
  *
+ * @throws Mai direttamente da `wrapServiceWithCompat()`. La funzione installa wrapper
+ *   idempotenti sui metodi `register`/`load`/`mount` del service: gli wrapper, al
+ *   momento dell'invocazione, possono throwware tramite `enforceCompatPolicy()`:
+ *   - `register` → sync throw `BrokerError` con `code: 'COMPAT_INCOMPATIBLE'` +
+ *     `details.phase: 'registration'` se policy=`block-registration` e
+ *     `report.ok===false` (D-12-03).
+ *   - `load` / `mount` → async Promise rejection con stesso shape `BrokerError`,
+ *     `phase: 'load'` o `'mount'` rispettivamente (D-12-04).
+ *
  * @example Audit-grep idempotent marker
  * ```sh
  * grep "__compatServicePatched" packages/compat/dist/index.js
@@ -129,8 +138,25 @@ type PatchableService = MicroFrontendsService & {
  * // → Promise rejection con BrokerError code='COMPAT_INCOMPATIBLE' phase='registration'
  * ```
  *
+ * @example Install ordering F11+F12 (cross-fase plan 12-05 SC5)
+ * ```typescript
+ * // F12 installato DOPO F11 → F12 wrap = layer ESTERNO
+ * const broker = createBroker({
+ *   modules: [
+ *     microfrontendModule(),
+ *     permissionsModule(),
+ *     compatModule({ compatibilityPolicy: 'block-mount' }),
+ *   ],
+ * })
+ * // mount call: F12 compat check FIRST → if throw COMPAT_INCOMPATIBLE,
+ * //             F11 permission check NEVER reached.
+ * ```
+ *
  * @see OQ-1 carryover F11 service-wrap pattern (extended scope F12)
  * @see OQ-2 ordering F11+F12 (documentation cross-ref in module JSDoc above)
+ * @see D-12-03 — block-registration sync throw
+ * @see D-12-04 — block-load/block-mount FSM failed transition
+ * @see plan 12-05 SC5 Test 1 — install ordering empirical verification
  */
 export function wrapServiceWithCompat(
   mfService: MicroFrontendsService,

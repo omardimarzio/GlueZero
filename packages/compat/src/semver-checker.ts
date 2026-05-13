@@ -54,22 +54,35 @@ export interface SemverChecker {
  *
  * @returns `SemverChecker` con 2 metodi defensive (try-catch su throw interni).
  *
- * @example Standard satisfies check
+ * @example Caret range match (più comune)
  * ```ts
  * const checker = createSemverChecker()
- * checker.satisfies('2.1.0', '^2.0.0') // true (caret range)
- * checker.satisfies('3.0.0', '^2.0.0') // false
+ * checker.satisfies('2.1.0', '^2.0.0') // true (caret range — semver minor compatible)
+ * checker.satisfies('3.0.0', '^2.0.0') // false (major breaking)
+ * ```
+ *
+ * @example Defensive invalid range (T-12-02 mitigation)
+ * ```ts
  * checker.satisfies('1.0.0', 'invalid-range') // false (defensive try-catch)
+ * checker.satisfies('garbage', '^1.0.0')       // false (invalid actual)
+ * ```
+ *
+ * @example OR range + prerelease
+ * ```ts
+ * checker.satisfies('2.0.0', '^1 || ^2')       // true (OR alternation)
+ * checker.satisfies('2.0.0-rc.1', '^2.0.0')    // false (prerelease default excluded)
  * ```
  *
  * @example Valid version check
  * ```ts
- * checker.isValidVersion('1.2.3') // true
+ * checker.isValidVersion('1.2.3')   // true
  * checker.isValidVersion('garbage') // false
  * ```
  *
+ * @see MF-COMPAT-05 — bundle ≤ 9 KB con semver 7.7.4 subpath tree-shake
  * @see prd_2.0.0.md §20.3 — dim `gluezero` scalar range check
  * @see RESEARCH.md §3 — subpath import bundle math
+ * @see PITFALLS.md T-12-02 — ReDoS mitigation defensive try-catch
  */
 export function createSemverChecker(): SemverChecker {
   return {
