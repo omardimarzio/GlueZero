@@ -127,7 +127,17 @@ export {
   type BrokerSubscribeApi,
 } from './lifecycle-mount-hook.js'
 
-// ===== W2/W3 placeholders (popolati nei prossimi plan):
-// - wrapContextWithIsolation factory (D-V2-F13-10) — W2 P04
-// - resolveIsolationPolicy resolver (W2 P02) — wave parallel
-// - applyStorageIsolation handler (W2 P04 — facades layer)
+// ===== W3 P05 FINAL exports — barrel public API completa =====
+export { wrapContextWithIsolation } from './wrap-context.js'
+export { resolvePolicy } from './policy-resolver.js'
+export {
+  detectInconsistentCombinations,
+  type IsolationWarning,
+  type IsolationWarningCode,
+} from './warning-matrix.js'
+export {
+  installRegisterHook,
+  type RegisterHookBroker,
+  type RegisterHookOptions,
+  type RegisterHookHandle,
+} from './lifecycle-register-hook.js'
