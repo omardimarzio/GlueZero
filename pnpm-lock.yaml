@@ -115,6 +115,9 @@ importers:
       '@gluezero/microfrontends':
         specifier: workspace:*
         version: link:../microfrontends
+      '@gluezero/permissions':
+        specifier: workspace:*
+        version: link:../permissions
       '@gluezero/theme':
         specifier: workspace:*
         version: link:../theme
