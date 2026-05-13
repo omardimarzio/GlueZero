@@ -8,8 +8,16 @@ import { defineConfig } from 'vitest/config'
  *
  * Pattern F11-style split unit vs integration — separa suite veloce default (unit)
  * dal closure E2E suite (integration cross-cumulativa W2+W3).
+ *
+ * **W4 Rule 3 fix**: replicato `define: __GLUEZERO_VERSION__` dal `vitest.config.ts`
+ * (vitest non passa attraverso tsup → necessario esbuild-substitution esplicito per
+ * `gluezero-version.ts:43`). Senza questo, integration test throw
+ * `ReferenceError: __GLUEZERO_VERSION__ is not defined`.
  */
 export default defineConfig({
+  define: {
+    __GLUEZERO_VERSION__: JSON.stringify(process.env.GLUEZERO_VERSION ?? '2.0.0'),
+  },
   test: {
     name: '@gluezero/compat/integration',
     environment: 'jsdom',
