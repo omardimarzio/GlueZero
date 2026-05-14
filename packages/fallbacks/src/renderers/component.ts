@@ -63,10 +63,15 @@ export function renderComponentFallback(
   component: unknown,
   error: MicroFrontendError | { message: string },
 ): ComponentRenderResult {
-  const getSvc = broker.getService as
-    | (<T>(name: string) => T | undefined)
-    | undefined
-  const adapter = getSvc?.<FrameworkAdapterLike>(SERVICE_FRAMEWORK_ADAPTER)
+  // W3-P05 Rule 1 fix: bind `broker` come `this` per evitare TypeError quando
+  // `broker.getService` viene chiamato come funzione standalone (Broker class
+  // method `this.services.get`). Carryover safety pattern call/bind.
+  const getSvc = (broker as { getService?: <T>(name: string) => T | undefined })
+    .getService
+  const adapter =
+    getSvc !== undefined
+      ? (getSvc.call(broker, SERVICE_FRAMEWORK_ADAPTER) as FrameworkAdapterLike | undefined)
+      : undefined
 
   if (adapter !== undefined && typeof adapter.renderFallbackComponent === 'function') {
     adapter.renderFallbackComponent(component, target, error)

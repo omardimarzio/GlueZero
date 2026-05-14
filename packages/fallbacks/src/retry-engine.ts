@@ -168,6 +168,10 @@ export interface RetryEngine {
  * (supporta scenario multi-broker test fixture isolato, ogni broker ha proprio engine).
  *
  * @returns Nuovo `RetryEngine` con counter Map vuoto.
+ *
+ * @throws Mai. La factory è pure — costruisce solo state interno e ritorna l'API.
+ *   Eventuali errori di policy invalida (es. `attempts < 0`) sono governance-time
+ *   responsability del descriptor consumer (NON enforced runtime per micro-perf).
  */
 export function createRetryEngine(): RetryEngine {
   const counters = new Map<RetryKey, number>()

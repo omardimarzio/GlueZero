@@ -84,11 +84,16 @@ export function renderHtmlFallback(
     return { applied: false, fallbackType: 'html-skipped', reason: 'target-not-found' }
   }
 
-  // F13 isolation respect: shadow-dom detection via Service Locator
-  const getSvc = broker.getService as
-    | (<T>(name: string) => T | undefined)
-    | undefined
-  const isolation = getSvc?.<IsolationServiceLike>(SERVICE_ISOLATION)
+  // F13 isolation respect: shadow-dom detection via Service Locator.
+  // W3-P05 Rule 1 fix: bind `broker` come `this` per evitare TypeError quando
+  // `broker.getService` viene chiamato come funzione standalone (Broker class
+  // method `this.services.get`). Carryover safety pattern call/bind.
+  const getSvc = (broker as { getService?: <T>(name: string) => T | undefined })
+    .getService
+  const isolation =
+    getSvc !== undefined
+      ? (getSvc.call(broker, SERVICE_ISOLATION) as IsolationServiceLike | undefined)
+      : undefined
   if (isolation !== undefined) {
     const policy = isolation.getResolvedPolicy(mfId)
     if (

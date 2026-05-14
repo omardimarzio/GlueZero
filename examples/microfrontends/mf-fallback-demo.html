@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="it" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GlueZero — @gluezero/fallbacks demo: 4 MF scenari (html / component-stub / event / custom + retry + circuit)</title>
+  <meta name="description" content="Demo standalone @gluezero/fallbacks v2.0: 4 MF (product-grid html + analytics-widget component-stub + notifications event + legacy-checkout custom + retry + circuit) + dropdown interattiva trigger + retry counter + circuit state badge + P-13 disclaimer governance NOT crypto.">
+  <meta name="theme-color" content="#0066cc">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><text y='14' font-size='14'>🛡️</text></svg>">
+  <style>
+    * { box-sizing: border-box; }
+    body { font-family: system-ui, -apple-system, sans-serif; max-width: 1100px; margin: 2rem auto; padding: 0 1rem; line-height: 1.5; color: #0F172A; }
+    h1 { color: #0066cc; margin-bottom: 0.5rem; }
+    h2 { color: #1e293b; margin-top: 0; }
+    h3 { margin-top: 0; color: #1e293b; font-size: 1rem; }
+    p { color: #475569; }
+    code { background: #F1F5F9; padding: 0.15rem 0.35rem; border-radius: 4px; font-size: 0.9em; }
+    section { border: 1px solid #e2e8f0; padding: 1rem; margin: 1rem 0; border-radius: 8px; background: #fafbfc; }
+    .mf-mount { min-height: 80px; border: 2px dashed #cbd5e1; padding: 0.5rem; margin-top: 0.5rem; background: white; border-radius: 4px; }
+    .mf-product-grid { background: #fff7ed; border-color: #f59e0b; }
+    .mf-analytics { background: #faf5ff; border-color: #a855f7; }
+    .mf-notifications { background: #ecfdf5; border-color: #10b981; }
+    .mf-checkout { background: #eff6ff; border-color: #3b82f6; }
+    .grid-error { background: #fee2e2; padding: 0.75rem; color: #991b1b; border-radius: 4px; font-weight: 600; }
+    [data-gz-fallback-stub] { background: #faf5ff; padding: 0.75rem; color: #6b21a8; border: 1px dashed #a855f7; border-radius: 4px; font-style: italic; }
+    .bell-badge { display: inline-block; padding: 0.25rem 0.6rem; background: #f97316; color: white; border-radius: 12px; font-size: 0.85rem; font-weight: 600; }
+    .controls { background: #f1f5f9; padding: 1rem; border-radius: 8px; margin-bottom: 1rem; display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; }
+    .controls button { background: #0066cc; color: white; border: 0; padding: 0.5rem 1rem; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 0.9rem; }
+    .controls button:hover { background: #0052a3; }
+    .controls strong { font-family: ui-monospace, monospace; font-size: 1rem; padding: 0.25rem 0.5rem; background: white; border-radius: 4px; }
+    .circuit-badge { font-weight: 700; padding: 0.25rem 0.6rem; border-radius: 4px; font-size: 0.85rem; }
+    .circuit-badge.closed { background: #d1fae5; color: #065f46; }
+    .circuit-badge.open { background: #fee2e2; color: #991b1b; }
+    .circuit-badge.half-open { background: #fef3c7; color: #92400e; }
+    .event-log { background: #fffbe6; border-left: 4px solid #faad14; padding: 0.75rem; font-family: ui-monospace, monospace; font-size: 0.82rem; max-height: 240px; overflow-y: auto; border-radius: 4px; margin-top: 0.5rem; }
+    .event-entry { padding: 0.2rem 0; border-bottom: 1px solid #fde68a; }
+    .event-entry:last-child { border-bottom: 0; }
+    pre { background: #0f172a; color: #e2e8f0; padding: 0.75rem; border-radius: 4px; overflow-x: auto; font-size: 0.8rem; max-height: 200px; }
+    .security-disclaimer { background: #fef2f2; border: 1px solid #fecaca; padding: 0.75rem; border-radius: 6px; margin: 1rem 0; font-size: 0.85rem; color: #991b1b; }
+  </style>
+</head>
+<body>
+  <h1>🛡️ @gluezero/fallbacks — 4 MF scenari demo</h1>
+  <p>Demo Phase 14 standalone: <code>fallbacksModule()</code> orchestrator chain
+    <strong>circuit → retry → fallback render</strong> con 4 rendering modes
+    (<code>html</code> / <code>component</code> / <code>event</code> / <code>custom</code>) +
+    <code>RetryPolicy</code> backoff + jitter + <code>CircuitBreakerPolicy</code> 3-state FSM.</p>
+  <p><em>Prerequisito: esegui <code>pnpm build:packages</code> dalla root del repo prima di
+    aprire questa pagina (relative paths verso <code>../../packages/*/dist/</code> locali —
+    D-V2-F8-10 carryover D-V2-F14-16, NO publish fino F17 GA).</em></p>
+
+  <div class="security-disclaimer">
+    <strong>⚠️ P-13 governance disclaimer:</strong> Il rendering <code>type:'html'</code>
+    applica <code>target.innerHTML</code> <strong>senza sanitization runtime</strong>.
+    La policy <code>fallback</code> è descriptor-time config <em>host-controlled</em>
+    (parte del manifest, non runtime input). DOMPurify deferred V2.1. Trade-off bundle
+    vs sicurezza ratificato per minimal cap 6 KB.
+  </div>
+
+  <div class="controls">
+    <strong>Controlli interattivi:</strong>
+    <button id="trigger-product-grid">A. Trigger product-grid load</button>
+    <button id="trigger-analytics">B. Trigger analytics-widget bootstrap</button>
+    <button id="trigger-notifications">C. Trigger notifications mount</button>
+    <button id="trigger-checkout">D. Trigger legacy-checkout runtime</button>
+    <span>Retry counter: <strong id="retry-counter">0</strong></span>
+    <span>Circuit (legacy-checkout): <strong id="circuit-state" class="circuit-badge closed">closed</strong></span>
+  </div>
+
+  <section class="mf-mount mf-product-grid">
+    <h2>A. <code>product-grid</code> (html fallback)</h2>
+    <p><em>Setup:</em> <code>onLoadError.type='html'</code>, target chain <code>#product-grid</code>.
+       <em>Expected:</em> innerHTML applicato a target su trigger.</p>
+    <div id="product-grid"></div>
+  </section>
+
+  <section class="mf-mount mf-analytics">
+    <h2>B. <code>analytics-widget</code> (component-stub, no F15 adapter)</h2>
+    <p><em>Setup:</em> <code>onBootstrapError.type='component'</code>, SERVICE_FRAMEWORK_ADAPTER assente.
+       <em>Expected:</em> graceful HTML stub <code>data-gz-fallback-stub</code> + console.warn.</p>
+    <div id="analytics-widget"></div>
+  </section>
+
+  <section class="mf-mount mf-notifications">
+    <h2>C. <code>notifications</code> (event fallback → Bell badge)</h2>
+    <p><em>Setup:</em> <code>onMountError.type='event'</code>, topic <code>app.fallback.notifications</code>.
+       <em>Expected:</em> subscriber custom riceve <code>fallbackApplied:true</code> + Bell badge mostrato.</p>
+    <div id="notifications"></div>
+    <div id="notification-status" style="margin-top: 0.5rem;"></div>
+  </section>
+
+  <section class="mf-mount mf-checkout">
+    <h2>D. <code>legacy-checkout</code> (custom async + retry + circuit)</h2>
+    <p><em>Setup:</em> <code>onRuntimeError.type='custom'</code> async handler + retry 3 attempts
+       exponential+jitter + circuit threshold 3 / resetAfterMs 5s.
+       <em>Expected:</em> custom log + retry counter incrementa + circuit open dopo 3 fail.</p>
+    <div id="legacy-checkout"></div>
+    <pre id="custom-log"></pre>
+  </section>
+
+  <section>
+    <h3>Event log (topic emit)</h3>
+    <div class="event-log" id="event-log"></div>
+  </section>
+
+  <script type="module">
+    // D-V2-F8-10 relative paths — NO CDN fino F17 GA (D-V2-F14-16 carryover).
+    import { createBroker } from '../../packages/core/dist/index.js'
+    import { microfrontendModule } from '../../packages/microfrontends/dist/index.js'
+    import { fallbacksModule } from '../../packages/fallbacks/dist/index.js'
+    import '../../packages/fallbacks/dist/augment.js' // type-only narrowing locale
+
+    const eventLog = document.getElementById('event-log')
+    function log(msg) {
+      const entry = document.createElement('div')
+      entry.className = 'event-entry'
+      entry.textContent = `[${new Date().toISOString().slice(11, 23)}] ${msg}`
+      eventLog.prepend(entry)
+    }
+
+    // Crea broker con microfrontendModule + fallbacksModule
+    const broker = createBroker({
+      modules: [microfrontendModule(), fallbacksModule()],
+    })
+
+    // Subscribe topic governance per UI updates
+    broker.subscribe('microfrontend.fallback.rendered', (event) => {
+      const p = event.payload
+      log(`fallback.rendered: ${p.microFrontendId} phase=${p.lifecyclePhase} type=${p.fallbackType}`)
+    })
+    broker.subscribe('microfrontend.circuit.opened', (event) => {
+      const p = event.payload
+      log(`circuit.opened: ${p.microFrontendId} (consecutiveFailures=${p.consecutiveFailures})`)
+      if (p.microFrontendId === 'legacy-checkout') {
+        const badge = document.getElementById('circuit-state')
+        badge.textContent = 'open'
+        badge.className = 'circuit-badge open'
+      }
+    })
+    broker.subscribe('microfrontend.circuit.closed', (event) => {
+      const p = event.payload
+      log(`circuit.closed: ${p.microFrontendId}`)
+      if (p.microFrontendId === 'legacy-checkout') {
+        const badge = document.getElementById('circuit-state')
+        badge.textContent = 'closed'
+        badge.className = 'circuit-badge closed'
+      }
+    })
+    broker.subscribe('microfrontend.recovered', (event) => {
+      const p = event.payload
+      log(`recovered: ${p.microFrontendId} phase=${p.lifecyclePhase} attempts=${p.attempts}`)
+    })
+
+    // Subscriber custom topic — scenario C
+    broker.subscribe('app.fallback.notifications', (event) => {
+      const p = event.payload
+      log(`app.fallback.notifications: fallbackApplied=${p.fallbackApplied}`)
+      const status = document.getElementById('notification-status')
+      status.innerHTML = '<span class="bell-badge">🔔 service degraded</span>'
+    })
+
+    const mfService = broker.getService('microfrontends')
+
+    // (A) product-grid html fallback (onLoadError)
+    await mfService.register({
+      id: 'product-grid',
+      name: 'product-grid',
+      version: '1.0.0',
+      mount: { selector: '#product-grid' },
+      fallback: {
+        onLoadError: {
+          type: 'html',
+          html: '<div class="grid-error">Catalog unavailable — please retry later</div>',
+        },
+      },
+    })
+    log('Registered MF: product-grid')
+
+    // (B) analytics-widget component fallback (onBootstrapError) — no F15 adapter
+    await mfService.register({
+      id: 'analytics-widget',
+      name: 'analytics-widget',
+      version: '1.0.0',
+      mount: { selector: '#analytics-widget' },
+      fallback: {
+        onBootstrapError: { type: 'component', component: { _mock: 'MockReactComp' } },
+      },
+    })
+    log('Registered MF: analytics-widget')
+
+    // (C) notifications event fallback (onMountError)
+    await mfService.register({
+      id: 'notifications',
+      name: 'notifications',
+      version: '1.0.0',
+      mount: { selector: '#notifications' },
+      fallback: {
+        onMountError: { type: 'event', topic: 'app.fallback.notifications' },
+      },
+    })
+    log('Registered MF: notifications')
+
+    // (D) legacy-checkout custom + retry + circuit (onRuntimeError)
+    let retryCounter = 0
+    await mfService.register({
+      id: 'legacy-checkout',
+      name: 'legacy-checkout',
+      version: '1.0.0',
+      mount: { selector: '#legacy-checkout' },
+      fallback: {
+        onRuntimeError: {
+          type: 'custom',
+          handler: async (err, ctx) => {
+            retryCounter += 1
+            document.getElementById('retry-counter').textContent = String(retryCounter)
+            const log = document.getElementById('custom-log')
+            log.textContent += `[custom] ${new Date().toISOString().slice(11, 23)} mfId=${err.microFrontendId} msg=${err.message}\n`
+          },
+        },
+        retry: { attempts: 3, delayMs: 200, backoff: 'exponential', jitter: true },
+        circuitBreaker: { enabled: true, failureThreshold: 3, resetAfterMs: 5000 },
+      },
+    })
+    log('Registered MF: legacy-checkout (with retry + circuit)')
+
+    // Wire trigger buttons
+    function fakeFail(mfId, phase, recoverable, msg) {
+      broker.publish(
+        `microfrontend.${phase}.failed`,
+        {
+          id: mfId,
+          phase,
+          error: { message: msg },
+          recoverable,
+          timestamp: Date.now(),
+        },
+        {
+          source: { type: 'plugin', id: 'demo-trigger', name: 'demo-trigger' },
+          deliveryMode: 'sync',
+        },
+      )
+    }
+    document.getElementById('trigger-product-grid').onclick = () =>
+      fakeFail('product-grid', 'load', false, 'simulate loader rejected')
+    document.getElementById('trigger-analytics').onclick = () =>
+      fakeFail('analytics-widget', 'bootstrap', false, 'simulate bootstrap throw')
+    document.getElementById('trigger-notifications').onclick = () =>
+      fakeFail('notifications', 'mount', false, 'simulate mount throw')
+    document.getElementById('trigger-checkout').onclick = () =>
+      fakeFail('legacy-checkout', 'runtime', true, 'simulate runtime hook throw')
+
+    log('Demo ready. Click i bottoni per triggerare ogni MF.')
+  </script>
+</body>
+</html>

@@ -177,6 +177,10 @@ export interface CircuitBreaker {
  * @param broker Broker su cui emettere topic `circuit.opened` / `circuit.closed`.
  * @returns Nuovo `CircuitBreaker`.
  *
+ * @throws Mai direttamente. `broker.publish` invocata internamente NON propaga errori
+ *   sync (governance topic emit è fire-and-forget per design F1). Eventuali errori di
+ *   policy invalida sono governance-time responsability del descriptor consumer.
+ *
  * @example Usage da fallbacksModule.install (W2 P04 pseudo-code)
  * ```ts
  * const circuit = createCircuitBreaker(broker)
