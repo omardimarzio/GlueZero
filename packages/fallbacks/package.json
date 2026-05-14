@@ -46,8 +46,8 @@
     "typecheck": "tsc --noEmit",
     "clean": "rm -rf dist",
     "ci:publint": "publint",
-    "ci:attw": "attw --pack .",
-    "ci:gate:f14": "pnpm run typecheck && pnpm run build && pnpm run test && pnpm run ci:publint && pnpm run ci:attw && size-limit"
+    "ci:attw": "attw --pack . --profile esm-only",
+    "ci:gate:f14": "pnpm run typecheck && pnpm run build && pnpm run test && pnpm run ci:publint && pnpm run ci:attw && size-limit && node ../../scripts/check-d83-f14.mjs && pnpm --filter @gluezero/core test -- --run v1-bc-replay && pnpm --filter @gluezero/core test -- --run pipeline-harness"
   },
   "peerDependencies": {
     "@gluezero/context": "workspace:^",
