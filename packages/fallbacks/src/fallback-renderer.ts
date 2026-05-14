@@ -101,6 +101,11 @@ export interface DispatchArgs {
  *
  * @param args Vedi {@link DispatchArgs}.
  * @returns Promise<RenderResult>. Async perché custom handler può essere Promise.
+ *
+ * @throws Mai direttamente. I 5 renderer interni (`html`/`component`/`event`/`custom`/`none`)
+ *   incapsulano errori applicativi via `try/catch` + `console.warn|error` + ritorno
+ *   `fallbackType: '*-skipped' | '*-failed'`. Anche un handler `custom` che throw NON
+ *   propaga al dispatcher (catturato in `renderers/custom.ts`).
  */
 export async function dispatchFallback(args: DispatchArgs): Promise<RenderResult> {
   let result: RenderResult
