@@ -19,7 +19,7 @@ import { playwright } from '@vitest/browser-playwright'
 export default defineConfig({
   test: {
     name: '@gluezero/fallbacks/browser',
-    include: ['src/__browser__/**/*.test.ts'],
+    include: ['src/__browser__/**/*.test.ts', '__tier3__/**/*.spec.ts'],
     browser: {
       enabled: true,
       provider: playwright(),
