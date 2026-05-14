@@ -89,6 +89,14 @@ export {
   type CreateMicroFrontendErrorParams,
 } from './microfrontend-error.js'
 
+// ===== Error subscribe hook (W2 P02 — D-V2-F14-01 + D-V2-F14-08 + D-V2-F14-12) =====
+export {
+  installErrorSubscribe,
+  type ErrorChainArgs,
+  type ErrorSubscribeContext,
+  type ErrorSubscribeHandle,
+} from './lifecycle-error-subscribe.js'
+
 // ===== BrokerModule factory (W1 stub — W2 P04 real impl — D-V2-F14-04 3-opt) =====
 export {
   fallbacksModule,

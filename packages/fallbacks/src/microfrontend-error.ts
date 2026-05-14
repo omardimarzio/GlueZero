@@ -1,30 +1,60 @@
 /**
  * `MicroFrontendError` — Class error custom per scope `@gluezero/fallbacks` (F14).
  *
- * Coverage REQ-ID: MF-FALLBACK-04 (MicroFrontendError shape + 5 codici hint type).
+ * Coverage REQ-ID: MF-FALLBACK-04 (MicroFrontendError shape + 5 codici hint type +
+ * cause ES2022 + duck-typing compat + toBrokerError helper). W2 P02 closure post W1
+ * scaffolding (body identico al W1; JSDoc esteso a maturity level F11
+ * `permission-error.ts` 100+ LoC).
  *
- * Pattern divergente dai factory F11/F12/F13 (carryover):
- * - F11 `permission-error.ts`: factory `createPermissionError(params): BrokerError`
- * - F12 `compat-error.ts`: factory analogo
- * - F13 `types/errors.ts`: factory analogo
- * - **F14 `microfrontend-error.ts`: CLASS `extends Error`** (D-V2-F14-05) per supportare
- *   `instanceof MicroFrontendError` type narrowing devtools-friendly + cause ES2022
- *   propagation native.
+ * ## D-V2-F14-05-RATIFIED — Limitation TS + work-around verificato
  *
- * **BrokerError compat duck-typing**: `isBrokerError(value)` di core verifica
- * `value instanceof Error && code !== undefined && category !== undefined`. La class
- * `MicroFrontendError extends Error` con `readonly code` + `readonly category =
- * 'microfrontend'` passa nativamente il guard. Helper opt `toBrokerError()`
- * converte a plain shape (D-V2-F14-07).
+ * `BrokerError` in `@gluezero/core/types/error.ts` è `interface` (NON class). Una
+ * class TS **non può** `extends interface` (`Class extends value ... interface` →
+ * TS2507). Soluzione ratificata in W1 e ri-validata in W2: la class
+ * `MicroFrontendError extends Error implements BrokerError` soddisfa il contract
+ * `MF-FALLBACK-04` via **shape compatibility** anziché ereditarietà:
  *
- * **D-83 strict septuple**: F14 NON modifica `packages/microfrontends/src/microfrontend-error.ts`
- * (F8 `createMfError` factory + 8-code union resta intoccato). F14 aggiunge class
- * opt-in in `@gluezero/fallbacks/src/`.
+ *  - `isBrokerError(err)` di core (duck-typing `code !== undefined && category !== undefined`)
+ *    ritorna `true` per ogni istanza (verificato empiricamente in `microfrontend-error.test.ts`).
+ *  - Tutti i campi richiesti (`category`, `code`, `message`, `details?`, `originalError?`,
+ *    `cause?`) sono `readonly` sull'istanza.
+ *  - `asBrokerError` non necessario — carryover ratificato F11 `PermissionError` /
+ *    F12 `CompatError` / F13 `IsolationPolicyError` (3 fasi precedenti stesso pattern).
+ *
+ * Documentazione formale: `14-VERIFICATION.md` matrix row 14-05-T04 (W3 P05 closure).
+ *
+ * ## Pattern divergente dai factory F11/F12/F13 (carryover)
+ *
+ *  - F11 `permission-error.ts`: factory `createPermissionError(params): BrokerError`
+ *  - F12 `compat-error.ts`: factory analogo
+ *  - F13 `types/errors.ts`: factory analogo
+ *  - **F14 `microfrontend-error.ts`: CLASS `extends Error`** (D-V2-F14-05) per supportare
+ *    `instanceof MicroFrontendError` type narrowing devtools-friendly + cause ES2022
+ *    propagation native.
+ *
+ * ## BrokerError compat duck-typing
+ *
+ * `isBrokerError(value)` di core verifica `value instanceof Error && code !==
+ * undefined && category !== undefined`. La class `MicroFrontendError extends Error`
+ * con `readonly code` + `readonly category = 'microfrontend'` passa nativamente il
+ * guard. Helper opt `toBrokerError()` converte a plain shape (D-V2-F14-07).
+ *
+ * ## D-83 strict septuple
+ *
+ * F14 NON modifica `packages/microfrontends/src/microfrontend-error.ts` (F8
+ * `createMfError` factory + 8-code union resta intoccato). F14 aggiunge class
+ * opt-in in `@gluezero/fallbacks/src/`. Stessa proibizione per `packages/core/`,
+ * `packages/mapper/`, `packages/context/`, `packages/permissions/`, `packages/compat/`,
+ * `packages/isolation/` (7 protected packages).
  *
  * @see prd_2.0.0.md §29.5 — MicroFrontendError shape
  * @see D-V2-F14-05 — Class divergente da factory carryover
+ * @see D-V2-F14-05-RATIFIED — TS limitation interface-extension + shape compatibility verificato
+ * @see D-V2-F14-06 — code:string aperto + MfFallbackErrorCode hint
  * @see D-V2-F14-07 — toBrokerError helper opt
  * @see packages/core/src/core/broker-error.ts (isBrokerError duck-typing reference)
+ * @see packages/permissions/src/permission-error.ts (F11 factory carryover analog)
+ * @packageDocumentation
  */
 import type { BrokerError, ErrorCategory } from '@gluezero/core'
 import type {
@@ -102,6 +132,29 @@ export interface CreateMicroFrontendErrorParams {
  *   })
  * }
  * ```
+ *
+ * @example Type narrowing devtools-friendly per dispatcher
+ * ```ts
+ * function handleErr(err: unknown): void {
+ *   if (err instanceof MicroFrontendError) {
+ *     // Type narrowing: tutti i campi F14-specific accessibili
+ *     console.log(
+ *       `MF=${err.microFrontendId} phase=${err.lifecyclePhase} ` +
+ *       `recoverable=${err.recoverable} code=${err.code}`,
+ *     )
+ *     if (err.recoverable && err.lifecyclePhase === 'load') {
+ *       retryEngine.scheduleRetry(err.microFrontendId)
+ *     }
+ *   } else if (isBrokerError(err)) {
+ *     // Fallback duck-typing per altri BrokerError shape
+ *     console.log(`Generic BrokerError category=${err.category} code=${err.code}`)
+ *   }
+ * }
+ * ```
+ *
+ * @see D-V2-F14-05-RATIFIED — class extends Error implements BrokerError via shape compat
+ * @see packages/core/src/core/broker-error.ts:81-87 — isBrokerError duck-typing source
+ * @see toBrokerError — helper opt-in plain shape ritorno
  */
 export class MicroFrontendError extends Error implements BrokerError {
   override readonly name = 'MicroFrontendError' as const
@@ -113,6 +166,12 @@ export class MicroFrontendError extends Error implements BrokerError {
   readonly details?: Record<string, unknown>
   readonly originalError?: Error
 
+  /**
+   * Crea una istanza `MicroFrontendError` con shape `BrokerError`-compatible.
+   *
+   * @param params Constructor params — vedi {@link CreateMicroFrontendErrorParams}.
+   * @throws Mai (constructor è pure — non lancia eccezioni runtime, costruisce solo l'istanza).
+   */
   constructor(params: CreateMicroFrontendErrorParams) {
     super(
       params.message,
