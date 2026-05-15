@@ -41,6 +41,18 @@ import * as v from 'valibot'
  *
  * @internal
  */
+/**
+ * Common envelope shape comune a tutti i 9 message types.
+ *
+ * @internal
+ */
+interface CommonEnvelope {
+  readonly id: string
+  readonly microFrontendId: string
+  readonly timestamp: number
+  readonly correlationId?: string | undefined
+}
+
 const baseEnvelopeEntries = {
   id: v.pipe(v.string(), v.minLength(1)),
   microFrontendId: v.pipe(v.string(), v.minLength(1)),
@@ -62,14 +74,22 @@ const baseEnvelopeEntries = {
  *
  * @see D-V2-F15-01
  */
-export const HandshakeSchema = v.strictObject({
+interface HandshakeMessage extends CommonEnvelope {
+  readonly type: 'gz:handshake'
+  readonly payload: {
+    readonly protocolVersion: 'gz:bridge/1.0'
+    readonly expectedHostOrigin: string
+  }
+}
+
+const HandshakeSchema = v.strictObject({
   ...baseEnvelopeEntries,
   type: v.literal('gz:handshake'),
   payload: v.strictObject({
     protocolVersion: v.literal('gz:bridge/1.0'),
     expectedHostOrigin: v.pipe(v.string(), v.minLength(1)),
   }),
-})
+}) as unknown as v.GenericSchema<HandshakeMessage>
 
 /**
  * `gz:ready` — Iframe → host — ACK handshake (post-init code in-iframe).
@@ -83,14 +103,22 @@ export const HandshakeSchema = v.strictObject({
  * }
  * ```
  */
-export const ReadySchema = v.strictObject({
+interface ReadyMessage extends CommonEnvelope {
+  readonly type: 'gz:ready'
+  readonly payload: {
+    readonly protocolVersion: 'gz:bridge/1.0'
+    readonly capabilities?: readonly string[]
+  }
+}
+
+const ReadySchema = v.strictObject({
   ...baseEnvelopeEntries,
   type: v.literal('gz:ready'),
   payload: v.strictObject({
     protocolVersion: v.literal('gz:bridge/1.0'),
     capabilities: v.optional(v.array(v.string())),
   }),
-})
+}) as unknown as v.GenericSchema<ReadyMessage>
 
 /**
  * `gz:publish` — Iframe → host — publish broker event (canonical envelope).
@@ -101,64 +129,110 @@ export const ReadySchema = v.strictObject({
  *   payload: { topic: 'user.action', data: { action: 'click' } } }
  * ```
  */
-export const PublishSchema = v.strictObject({
+interface PublishMessage extends CommonEnvelope {
+  readonly type: 'gz:publish'
+  readonly payload: {
+    readonly topic: string
+    readonly data: unknown
+  }
+}
+
+const PublishSchema = v.strictObject({
   ...baseEnvelopeEntries,
   type: v.literal('gz:publish'),
   payload: v.strictObject({
     topic: v.pipe(v.string(), v.minLength(1)),
     data: v.unknown(),
   }),
-})
+}) as unknown as v.GenericSchema<PublishMessage>
 
 /**
  * `gz:subscribe` — Iframe → host — subscribe topic pattern.
  */
-export const SubscribeSchema = v.strictObject({
+interface SubscribeMessage extends CommonEnvelope {
+  readonly type: 'gz:subscribe'
+  readonly payload: {
+    readonly topic: string
+    readonly subscriptionId: string
+  }
+}
+
+const SubscribeSchema = v.strictObject({
   ...baseEnvelopeEntries,
   type: v.literal('gz:subscribe'),
   payload: v.strictObject({
     topic: v.pipe(v.string(), v.minLength(1)),
     subscriptionId: v.pipe(v.string(), v.minLength(1)),
   }),
-})
+}) as unknown as v.GenericSchema<SubscribeMessage>
 
 /**
  * `gz:unsubscribe` — Iframe → host — unsubscribe topic pattern.
  */
-export const UnsubscribeSchema = v.strictObject({
+interface UnsubscribeMessage extends CommonEnvelope {
+  readonly type: 'gz:unsubscribe'
+  readonly payload: {
+    readonly subscriptionId: string
+  }
+}
+
+const UnsubscribeSchema = v.strictObject({
   ...baseEnvelopeEntries,
   type: v.literal('gz:unsubscribe'),
   payload: v.strictObject({
     subscriptionId: v.pipe(v.string(), v.minLength(1)),
   }),
-})
+}) as unknown as v.GenericSchema<UnsubscribeMessage>
 
 /**
  * `gz:context:get` — Iframe → host — request snapshot RuntimeContext (F10).
  */
-export const ContextGetSchema = v.strictObject({
+interface ContextGetMessage extends CommonEnvelope {
+  readonly type: 'gz:context:get'
+  readonly payload: {
+    readonly keys?: readonly string[]
+  }
+}
+
+const ContextGetSchema = v.strictObject({
   ...baseEnvelopeEntries,
   type: v.literal('gz:context:get'),
   payload: v.strictObject({
     keys: v.optional(v.array(v.string())),
   }),
-})
+}) as unknown as v.GenericSchema<ContextGetMessage>
 
 /**
  * `gz:context:update` — Host → iframe — push update RuntimeContext snapshot.
  */
-export const ContextUpdateSchema = v.strictObject({
+interface ContextUpdateMessage extends CommonEnvelope {
+  readonly type: 'gz:context:update'
+  readonly payload: {
+    readonly partial: Record<string, unknown>
+  }
+}
+
+const ContextUpdateSchema = v.strictObject({
   ...baseEnvelopeEntries,
   type: v.literal('gz:context:update'),
   payload: v.strictObject({
     partial: v.record(v.string(), v.unknown()),
   }),
-})
+}) as unknown as v.GenericSchema<ContextUpdateMessage>
 
 /**
  * `gz:error` — Bidirectional — error propagation cross-frame.
  */
-export const ErrorSchema = v.strictObject({
+interface ErrorMessage extends CommonEnvelope {
+  readonly type: 'gz:error'
+  readonly payload: {
+    readonly code: string
+    readonly message: string
+    readonly details?: Record<string, unknown>
+  }
+}
+
+const ErrorSchema = v.strictObject({
   ...baseEnvelopeEntries,
   type: v.literal('gz:error'),
   payload: v.strictObject({
@@ -166,12 +240,21 @@ export const ErrorSchema = v.strictObject({
     message: v.pipe(v.string(), v.minLength(1)),
     details: v.optional(v.record(v.string(), v.unknown())),
   }),
-})
+}) as unknown as v.GenericSchema<ErrorMessage>
 
 /**
  * `gz:lifecycle` — Bidirectional — lifecycle phase transition events.
  */
-export const LifecycleSchema = v.strictObject({
+interface LifecycleMessage extends CommonEnvelope {
+  readonly type: 'gz:lifecycle'
+  readonly payload: {
+    readonly phase: 'bootstrap' | 'mount' | 'unmount' | 'destroy'
+    readonly status: 'started' | 'completed' | 'failed'
+    readonly reason?: string
+  }
+}
+
+const LifecycleSchema = v.strictObject({
   ...baseEnvelopeEntries,
   type: v.literal('gz:lifecycle'),
   payload: v.strictObject({
@@ -179,7 +262,7 @@ export const LifecycleSchema = v.strictObject({
     status: v.picklist(['started', 'completed', 'failed']),
     reason: v.optional(v.string()),
   }),
-})
+}) as unknown as v.GenericSchema<LifecycleMessage>
 
 /**
  * `BridgeMessageSchema` — Variant discriminated union sui 9 message types literal
@@ -200,21 +283,35 @@ export const LifecycleSchema = v.strictObject({
  *
  * @see D-V2-F15-01
  */
-export const BridgeMessageSchema = v.variant('type', [
-  HandshakeSchema,
-  ReadySchema,
-  PublishSchema,
-  SubscribeSchema,
-  UnsubscribeSchema,
-  ContextGetSchema,
-  ContextUpdateSchema,
-  ErrorSchema,
-  LifecycleSchema,
-])
-
 /**
- * Type union inferito dai 9 schemas via `v.InferOutput`.
+ * Type union dei 9 message types literal `type` discriminator.
  *
  * Permette type narrowing per `msg.type === 'gz:handshake'` dentro `dispatch(msg)`.
  */
-export type IframeBridgeMessage = v.InferOutput<typeof BridgeMessageSchema>
+export type IframeBridgeMessage =
+  | HandshakeMessage
+  | ReadyMessage
+  | PublishMessage
+  | SubscribeMessage
+  | UnsubscribeMessage
+  | ContextGetMessage
+  | ContextUpdateMessage
+  | ErrorMessage
+  | LifecycleMessage
+
+// Wrapper local typed variant — cast finale single-step (v.variant accept VariantOption
+// strict, ma il narrowing è correct per il narrow runtime check del bridge dispatcher).
+const _BridgeMessageSchemaInternal = v.variant('type', [
+  HandshakeSchema as never,
+  ReadySchema as never,
+  PublishSchema as never,
+  SubscribeSchema as never,
+  UnsubscribeSchema as never,
+  ContextGetSchema as never,
+  ContextUpdateSchema as never,
+  ErrorSchema as never,
+  LifecycleSchema as never,
+])
+
+export const BridgeMessageSchema: v.GenericSchema<IframeBridgeMessage> =
+  _BridgeMessageSchemaInternal as unknown as v.GenericSchema<IframeBridgeMessage>
