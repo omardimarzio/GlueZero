@@ -32,6 +32,13 @@
     "ci:attw:isolation": "pnpm --filter @gluezero/isolation exec attw --pack --profile=esm-only",
     "ci:check:d83:f13": "node scripts/check-d83-f13.mjs",
     "ci:gate:f13": "pnpm ci:publint && pnpm ci:attw && pnpm --filter @gluezero/isolation build && pnpm --filter @gluezero/isolation test && pnpm --filter @gluezero/isolation test:integration && pnpm ci:size && pnpm --filter @gluezero/core test -- v1-bc-replay && pnpm --filter @gluezero/core test -- pipeline-harness && pnpm ci:check:d83:f13",
+    "test:tier1:f15": "pnpm --filter @gluezero/mf-web-component --filter @gluezero/mf-iframe --filter @gluezero/mf-module-federation --filter @gluezero/mf-single-spa run test",
+    "test:tier3:f15": "pnpm --filter @gluezero/mf-web-component --filter @gluezero/mf-iframe --filter @gluezero/mf-module-federation --filter @gluezero/mf-single-spa run test:browser",
+    "test:publint:f15": "pnpm --filter @gluezero/mf-web-component --filter @gluezero/mf-iframe --filter @gluezero/mf-module-federation --filter @gluezero/mf-single-spa exec publint",
+    "test:attw:esm-only:f15": "pnpm --filter @gluezero/mf-web-component --filter @gluezero/mf-iframe --filter @gluezero/mf-module-federation --filter @gluezero/mf-single-spa exec attw --pack --profile=esm-only",
+    "test:check-d83-f15": "node scripts/check-d83-f15.mjs",
+    "size-limit:f15": "size-limit",
+    "ci:gate:f15": "pnpm --filter @gluezero/mf-web-component --filter @gluezero/mf-iframe --filter @gluezero/mf-module-federation --filter @gluezero/mf-single-spa run build && pnpm test:tier1:f15 && pnpm test:tier3:f15 && pnpm --filter @gluezero/core test -- v1-bc-replay && pnpm --filter @gluezero/core test -- pipeline-harness && pnpm test:check-d83-f15 && pnpm test:publint:f15 && pnpm test:attw:esm-only:f15 && pnpm size-limit:f15",
     "changeset": "changeset",
     "release": "pnpm build && changeset publish",
     "docs:build": "typedoc",
@@ -193,6 +200,74 @@
     {
       "name": "@gluezero/isolation/augment (gzip)",
       "path": "packages/isolation/dist/augment.js",
+      "limit": "1 KB",
+      "gzip": true
+    },
+    {
+      "name": "@gluezero/mf-web-component (gzip)",
+      "path": "packages/mf-web-component/dist/index.js",
+      "limit": "3 KB",
+      "gzip": true,
+      "ignore": ["@gluezero/core", "@gluezero/microfrontends", "@gluezero/context"]
+    },
+    {
+      "name": "@gluezero/mf-web-component/augment (gzip)",
+      "path": "packages/mf-web-component/dist/augment.js",
+      "limit": "1 KB",
+      "gzip": true
+    },
+    {
+      "name": "@gluezero/mf-iframe (gzip)",
+      "path": "packages/mf-iframe/dist/index.js",
+      "limit": "10 KB",
+      "gzip": true,
+      "ignore": [
+        "@gluezero/core",
+        "@gluezero/microfrontends",
+        "@gluezero/context",
+        "@gluezero/isolation",
+        "valibot"
+      ]
+    },
+    {
+      "name": "@gluezero/mf-iframe/augment (gzip)",
+      "path": "packages/mf-iframe/dist/augment.js",
+      "limit": "1 KB",
+      "gzip": true
+    },
+    {
+      "name": "@gluezero/mf-iframe/client (gzip)",
+      "path": "packages/mf-iframe/dist/client.js",
+      "limit": "3 KB",
+      "gzip": true
+    },
+    {
+      "name": "@gluezero/mf-module-federation (gzip)",
+      "path": "packages/mf-module-federation/dist/index.js",
+      "limit": "5 KB",
+      "gzip": true,
+      "ignore": [
+        "@gluezero/core",
+        "@gluezero/microfrontends",
+        "@module-federation/runtime"
+      ]
+    },
+    {
+      "name": "@gluezero/mf-module-federation/augment (gzip)",
+      "path": "packages/mf-module-federation/dist/augment.js",
+      "limit": "1 KB",
+      "gzip": true
+    },
+    {
+      "name": "@gluezero/mf-single-spa (gzip)",
+      "path": "packages/mf-single-spa/dist/index.js",
+      "limit": "3 KB",
+      "gzip": true,
+      "ignore": ["@gluezero/core", "@gluezero/microfrontends", "single-spa"]
+    },
+    {
+      "name": "@gluezero/mf-single-spa/augment (gzip)",
+      "path": "packages/mf-single-spa/dist/augment.js",
       "limit": "1 KB",
       "gzip": true
     }
