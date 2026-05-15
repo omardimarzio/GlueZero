@@ -116,3 +116,30 @@ export class MfWebComponentError extends Error implements BrokerError {
     Object.setPrototypeOf(this, MfWebComponentError.prototype)
   }
 }
+
+/**
+ * Factory wrapper per `MfWebComponentError` — sugar API allineata al pattern F9
+ * `createMfEsmError` e F14 `createMfError` per consistency cross-package.
+ *
+ * Identico a `new MfWebComponentError(params)` — preferire la factory in nuovo codice
+ * F15 per uniformità con i fratelli F9/F14, mantenere `new MfWebComponentError(...)`
+ * funzionante per istanze custom o subclassing futuri.
+ *
+ * @example Throw via factory
+ * ```ts
+ * throw createMfWebComponentError({
+ *   code: 'MF_WC_DEFINE_TIMEOUT',
+ *   message: `customElements.whenDefined("${name}") timeout dopo ${timeoutMs} ms`,
+ *   microFrontendId: ctx.descriptor.id,
+ *   details: { elementName: name, timeoutMs },
+ * })
+ * ```
+ *
+ * @see MfWebComponentError — class diretta
+ * @see D-V2-F15-12 — Custom error class per-package
+ */
+export function createMfWebComponentError(
+  params: CreateMfWebComponentErrorParams,
+): MfWebComponentError {
+  return new MfWebComponentError(params)
+}

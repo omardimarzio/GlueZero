@@ -50,9 +50,10 @@ export { __mfWcAugmentLoaded } from './augment'
 // LoaderAdapter (Plan 15-02 W2 fill: body D-V2-F15-05..08 implementation)
 export { webComponentLoader } from './wc-loader'
 
-// Error class + types pubblici (Plan 15-02 W2 fill: completeness)
+// Error class + factory + types pubblici (Plan 15-02 W2 fill: completeness)
 export {
   type CreateMfWebComponentErrorParams,
+  createMfWebComponentError,
   MfWebComponentError,
   type MfWebComponentErrorCode,
 } from './errors'
