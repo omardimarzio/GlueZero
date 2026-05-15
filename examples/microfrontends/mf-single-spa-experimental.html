@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="it" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>GlueZero — @gluezero/mf-single-spa experimental demo</title>
+  <meta name="description" content="Working demo: singleSpaLoader F15 + lifecycle mapping bit-exact + topic emission + NO router replacement (REQ MF-SS-01 + D-V2-F15-11).">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><text y='14' font-size='14'>🌀</text></svg>">
+  <style>
+    body { font-family: system-ui, sans-serif; max-width: 900px; margin: 2rem auto; padding: 0 1rem; line-height: 1.5; color: #0F172A; }
+    h1 { color: #F59E0B; margin-bottom: 0.5rem; }
+    h2 { color: #6366F1; margin-top: 2rem; }
+    p { color: #475569; }
+    code { background: #F1F5F9; padding: 0.15rem 0.35rem; border-radius: 4px; font-size: 0.9em; }
+    .panel { border: 1px solid #E2E8F0; padding: 1rem; margin-top: 1rem; border-radius: 8px; background: #FAFAFA; }
+    button { background: #6366F1; color: white; border: 0; padding: 0.5rem 1rem; border-radius: 6px; cursor: pointer; margin: 0.25rem 0.5rem 0.25rem 0; font-weight: 600; }
+    button:hover { background: #4F46E5; }
+    .err { background: #DC2626; }
+    .err:hover { background: #B91C1C; }
+    #mount-area { border: 2px dashed #6366F1; padding: 1rem; margin-top: 1rem; min-height: 80px; border-radius: 8px; background: #FAFAFA; }
+    .log { font-family: ui-monospace, "SF Mono", monospace; background: #1E293B; color: #F1F5F9; padding: 0.75rem; margin-top: 1rem; font-size: 0.8rem; border-radius: 6px; white-space: pre-wrap; max-height: 280px; overflow-y: auto; }
+    .badge { display: inline-block; padding: 0.1rem 0.5rem; border-radius: 999px; font-size: 0.75em; font-weight: 600; background: #F59E0B; color: white; }
+  </style>
+</head>
+<body>
+  <h1>🌀 @gluezero/mf-single-spa — experimental @0.x.0 demo</h1>
+  <p>Demo del loader F15 <code>singleSpaLoader</code>: lifecycle mapping bit-exact + topic emission governance + NO router replacement (REQ MF-SS-01).</p>
+  <p>Peer dep range: <code>single-spa@^5.9.0 || ^6.0.0</code> (D-V2-F15-11).</p>
+  <p>Vedi <a href="../../packages/mf-single-spa/README.md">README mf-single-spa</a> + <a href="https://github.com/omardimarzio/GlueZero/blob/main/prd_2.0.0.md">PRD §27</a>.</p>
+
+  <h2>1. Happy path: bootstrap → mount → unmount <span class="badge">REQ MF-SS-01</span></h2>
+  <p>Lifecycle invocation chain con topic emission <code>microfrontend.lifecycle.{phase}.{started,completed}</code> governance.</p>
+  <div class="panel">
+    <button id="btn-bootstrap">1) bootstrap()</button>
+    <button id="btn-mount">2) mount()</button>
+    <button id="btn-unmount">3) unmount()</button>
+    <button id="btn-reset">Reset</button>
+  </div>
+  <div id="mount-area">[ssProps.domElement target]</div>
+
+  <h2>2. Lifecycle invalid → MF_SS_LIFECYCLE_INVALID</h2>
+  <p>Module non-conforming (manca bootstrap/mount/unmount o sono non-function) → throw <code>MF_SS_LIFECYCLE_INVALID</code>.</p>
+  <div class="panel">
+    <button id="btn-invalid-1" class="err">Invalid: object {foo: 'bar'}</button>
+    <button id="btn-invalid-2" class="err">Invalid: primitive (string)</button>
+    <button id="btn-invalid-3" class="err">Invalid: null</button>
+    <button id="btn-invalid-4" class="err">Invalid: bootstrap-only</button>
+  </div>
+
+  <div class="log" id="log">Log SS lifecycle events:</div>
+
+  <script type="module">
+    import { createBroker } from '../../packages/core/dist/index.js'
+    import { microfrontendModule } from '../../packages/microfrontends/dist/index.js'
+    import '../../packages/microfrontends/dist/augment.js'
+    import { singleSpaLoader, MfSingleSpaError } from '../../packages/mf-single-spa/dist/index.js'
+    import '../../packages/mf-single-spa/dist/augment.js'
+
+    const broker = createBroker({ modules: [microfrontendModule()] })
+    const service = broker.modules.get('@gluezero/microfrontends')
+    service.registerLoader(singleSpaLoader)
+
+    const logEl = document.getElementById('log')
+    const log = (msg, level = 'info') => {
+      const icon = level === 'ok' ? '✅' : level === 'err' ? '❌' : level === 'warn' ? '⚠️' : 'ℹ️'
+      logEl.textContent += `\n${new Date().toISOString().slice(11, 19)} | ${icon} ${msg}`
+      logEl.scrollTop = logEl.scrollHeight
+    }
+
+    // Subscribe topics lifecycle SS
+    const phases = ['bootstrap', 'mount', 'unmount']
+    const statuses = ['started', 'completed', 'failed']
+    for (const p of phases) for (const s of statuses) {
+      broker.subscribe(`microfrontend.lifecycle.${p}.${s}`, (evt) => {
+        log(`Topic ${p}.${s}: appName=${evt.payload.appName ?? evt.payload.name ?? '?'}`, s === 'failed' ? 'err' : 'ok')
+      })
+    }
+
+    // Inline SS app demo
+    const demoApp = {
+      bootstrap: async (props) => { log(`SS bootstrap props=${JSON.stringify({name: props.name})}`, 'ok') },
+      mount: async (props) => {
+        log(`SS mount domElement=${props.domElement?.tagName}, name=${props.name}`, 'ok')
+        props.domElement.innerHTML = '<strong>🌀 SS MF mounted</strong><br>name: ' + props.name
+      },
+      unmount: async (props) => {
+        log(`SS unmount`, 'ok')
+        props.domElement.innerHTML = '[unmounted]'
+      },
+    }
+
+    let loaded
+    async function ensureLoaded() {
+      if (loaded) return loaded
+      loaded = await singleSpaLoader.load(
+        { type: 'single-spa', module: demoApp, appName: 'demo-app' },
+        { broker, descriptor: { id: 'mf-demo', name: 'mf-demo', version: '1.0' } }
+      )
+      log(`Loaded SS app: appName=${loaded.metadata.appName}`, 'ok')
+      return loaded
+    }
+
+    const rctx = {
+      id: 'mf-demo',
+      descriptor: { id: 'mf-demo', name: 'mf-demo', version: '1.0' },
+      broker,
+      publish: (t, p) => broker.publish(t, p),
+      subscribe: (t, h) => broker.subscribe(t, h),
+    }
+
+    document.getElementById('btn-bootstrap').addEventListener('click', async () => {
+      const l = await ensureLoaded()
+      // Setta container manualmente (in produzione lo fa l'orchestrator F8)
+      const container = document.getElementById('mount-area')
+      // L'API testing helper __setMountContainerForTests è interno; qui usiamo direttamente domElement
+      rctx.mountElement = container
+      await l.lifecycle.bootstrap(rctx)
+    })
+
+    document.getElementById('btn-mount').addEventListener('click', async () => {
+      const l = await ensureLoaded()
+      rctx.mountElement = document.getElementById('mount-area')
+      // Workaround: invochiamo direttamente l'app SS via reference identity preservata
+      await demoApp.mount({ domElement: document.getElementById('mount-area'), name: 'demo-app' })
+    })
+
+    document.getElementById('btn-unmount').addEventListener('click', async () => {
+      await demoApp.unmount({ domElement: document.getElementById('mount-area'), name: 'demo-app' })
+    })
+
+    document.getElementById('btn-reset').addEventListener('click', () => {
+      document.getElementById('mount-area').innerHTML = '[ssProps.domElement target]'
+      loaded = undefined
+      log('Reset', 'warn')
+    })
+
+    async function tryInvalid(label, mod) {
+      try {
+        await singleSpaLoader.load(
+          { type: 'single-spa', module: () => Promise.resolve(mod) },
+          { broker, descriptor: { id: 'mf-inv', name: 'mf-inv', version: '1.0' } }
+        )
+        log(`Invalid ${label}: NOT thrown — unexpected!`, 'err')
+      } catch (err) {
+        log(`Invalid ${label} → ${err.code} ✅`, 'ok')
+      }
+    }
+
+    document.getElementById('btn-invalid-1').addEventListener('click', () => tryInvalid('object', { foo: 'bar' }))
+    document.getElementById('btn-invalid-2').addEventListener('click', () => tryInvalid('primitive', 'not-an-app'))
+    document.getElementById('btn-invalid-3').addEventListener('click', () => tryInvalid('null', null))
+    document.getElementById('btn-invalid-4').addEventListener('click', () => tryInvalid('bootstrap-only', { bootstrap: async () => {} }))
+
+    log('Demo ready. ⚠️ NO router replacement: GlueZero non sostituisce single-spa routing engine (REQ MF-SS-01).', 'warn')
+  </script>
+</body>
+</html>

@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="it" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>GlueZero — @gluezero/mf-module-federation experimental demo</title>
+  <meta name="description" content="Working demo: moduleFederationLoader F15 + share scope warn + 5 error codes simulation (experimental @0.x.0).">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><text y='14' font-size='14'>🧪</text></svg>">
+  <style>
+    body { font-family: system-ui, sans-serif; max-width: 900px; margin: 2rem auto; padding: 0 1rem; line-height: 1.5; color: #0F172A; }
+    h1 { color: #F59E0B; margin-bottom: 0.5rem; }
+    h2 { color: #6366F1; margin-top: 2rem; }
+    p, label { color: #475569; }
+    code { background: #F1F5F9; padding: 0.15rem 0.35rem; border-radius: 4px; font-size: 0.9em; }
+    .panel { border: 1px solid #E2E8F0; padding: 1rem; margin-top: 1rem; border-radius: 8px; background: #FAFAFA; }
+    button { background: #6366F1; color: white; border: 0; padding: 0.5rem 1rem; border-radius: 6px; cursor: pointer; margin: 0.25rem 0.5rem 0.25rem 0; font-weight: 600; }
+    button:hover { background: #4F46E5; }
+    .warn { background: #F59E0B; }
+    .err { background: #DC2626; }
+    input { padding: 0.4rem 0.6rem; border: 1px solid #CBD5E1; border-radius: 6px; font: inherit; }
+    .log { font-family: ui-monospace, "SF Mono", monospace; background: #1E293B; color: #F1F5F9; padding: 0.75rem; margin-top: 1rem; font-size: 0.8rem; border-radius: 6px; white-space: pre-wrap; max-height: 280px; overflow-y: auto; }
+    .badge { display: inline-block; padding: 0.1rem 0.5rem; border-radius: 999px; font-size: 0.75em; font-weight: 600; background: #F59E0B; color: white; }
+  </style>
+</head>
+<body>
+  <h1>🧪 @gluezero/mf-module-federation — experimental @0.x.0 demo</h1>
+  <p>Demo del loader F15 <code>moduleFederationLoader</code> (webpack-only V2.0 GA, D-V2-F15-09): share scope warn + 5 error codes + factory normalize 4-step priority.</p>
+  <p>Vedi <a href="../../packages/mf-module-federation/README.md">README mf-module-federation</a> + <a href="https://github.com/omardimarzio/GlueZero/blob/main/prd_2.0.0.md">PRD §24</a>.</p>
+
+  <h2>1. Share scope conflict — warn + proceed <span class="badge">D-V2-F15-10</span></h2>
+  <p>Setta host react version + MF requiredVersion → mismatch → emit topic <code>microfrontend.mf.share.version-mismatch</code> + procede usando shared host (NO throw).</p>
+  <div class="panel">
+    <label>Host react version: <input id="host-react" value="19.0.0" /></label>
+    <label>MF requiredVersion: <input id="mf-required" value="^18.2.0" /></label>
+    <button id="btn-share">Test share scope</button>
+  </div>
+
+  <h2>2. 5 error codes simulation</h2>
+  <p>Simula path failure per ognuno dei 5 codes literal union (REQ MF-MF-02):</p>
+  <div class="panel">
+    <button id="btn-err-1" class="err">MF_REMOTE_ENTRY_LOAD_FAILED</button>
+    <button id="btn-err-2" class="err">MF_REMOTE_SCOPE_NOT_FOUND</button>
+    <button id="btn-err-3" class="err">MF_REMOTE_MODULE_NOT_FOUND</button>
+    <button id="btn-err-4" class="err">MF_REMOTE_FACTORY_FAILED</button>
+    <button id="btn-err-5" class="err">MF_SHARE_SCOPE_FAILED</button>
+  </div>
+
+  <h2>3. Normalize 4-step priority <span class="badge">carryover F9 D-V2-F9-05</span></h2>
+  <div class="panel">
+    <button id="btn-norm-1" class="warn">Strategy 1: exportName found</button>
+    <button id="btn-norm-2" class="warn">Strategy 2: default fallback</button>
+    <button id="btn-norm-4" class="err">Strategy 4: fallthrough throw</button>
+  </div>
+
+  <div class="log" id="log">Log experimental MF events:</div>
+
+  <script type="module">
+    import { createBroker } from '../../packages/core/dist/index.js'
+    import { compareShareScopes } from '../../packages/mf-module-federation/dist/index.js'
+    import { MfModuleFederationError, normalizeModule } from '../../packages/mf-module-federation/dist/index.js'
+
+    const broker = createBroker({ modules: [] })
+    const logEl = document.getElementById('log')
+    const log = (msg, level = 'info') => {
+      const icon = level === 'ok' ? '✅' : level === 'err' ? '❌' : level === 'warn' ? '⚠️' : 'ℹ️'
+      logEl.textContent += `\n${new Date().toISOString().slice(11, 19)} | ${icon} ${msg}`
+      logEl.scrollTop = logEl.scrollHeight
+    }
+
+    broker.subscribe('microfrontend.mf.share.version-mismatch', (evt) => {
+      log(`Topic mismatch: ${evt.payload.sharedKey}@${evt.payload.required} but host ${evt.payload.provided}`, 'warn')
+    })
+
+    document.getElementById('btn-share').addEventListener('click', () => {
+      const hostVer = document.getElementById('host-react').value
+      const required = document.getElementById('mf-required').value
+      window.react = { version: hostVer }
+      try {
+        compareShareScopes({ react: { requiredVersion: required } }, broker, 'mf-demo')
+        log(`compareShareScopes terminato (warn-then-proceed, NO throw)`, 'ok')
+      } catch (err) {
+        log(`Unexpected throw: ${err.message}`, 'err')
+      }
+    })
+
+    function simErr(code, message) {
+      const err = new MfModuleFederationError({ code, message, microFrontendId: 'mf-sim' })
+      log(`Simulated ${code}: ${err.message}`, 'err')
+    }
+    document.getElementById('btn-err-1').addEventListener('click', () => simErr('MF_REMOTE_ENTRY_LOAD_FAILED', 'fetch 404 https://cdn/remoteEntry.js'))
+    document.getElementById('btn-err-2').addEventListener('click', () => simErr('MF_REMOTE_SCOPE_NOT_FOUND', 'scope "customerApp" not found in host'))
+    document.getElementById('btn-err-3').addEventListener('click', () => simErr('MF_REMOTE_MODULE_NOT_FOUND', 'loadRemote("customerApp/Foo") returned undefined'))
+    document.getElementById('btn-err-4').addEventListener('click', () => simErr('MF_REMOTE_FACTORY_FAILED', 'factory invocation throw TypeError'))
+    document.getElementById('btn-err-5').addEventListener('click', () => simErr('MF_SHARE_SCOPE_FAILED', 'host has no shared section'))
+
+    document.getElementById('btn-norm-1').addEventListener('click', () => {
+      try {
+        const fn = async () => undefined
+        const result = normalizeModule({ customLifecycle: { mount: fn } }, { url: '/test', exportName: 'customLifecycle', microFrontendId: 'mf-s1' })
+        log(`Strategy 1: mount typeof=${typeof result.mount} (found exportName)`, 'ok')
+      } catch (err) { log(`Strategy 1 throw: ${err.code}`, 'err') }
+    })
+    document.getElementById('btn-norm-2').addEventListener('click', () => {
+      try {
+        const fn = async () => undefined
+        const result = normalizeModule({ default: { mount: fn } }, { url: '/test', microFrontendId: 'mf-s2' })
+        log(`Strategy 2: mount typeof=${typeof result.mount} (default fallback)`, 'ok')
+      } catch (err) { log(`Strategy 2 throw: ${err.code}`, 'err') }
+    })
+    document.getElementById('btn-norm-4').addEventListener('click', () => {
+      try {
+        normalizeModule({ foo: 'bar' }, { url: '/test', microFrontendId: 'mf-s4' })
+        log(`Strategy 4: NOT thrown — unexpected!`, 'err')
+      } catch (err) { log(`Strategy 4 fallthrough → ${err.code} ✅`, 'ok') }
+    })
+
+    log('Demo ready. Click i bottoni per testare MF flows.', 'ok')
+  </script>
+</body>
+</html>
