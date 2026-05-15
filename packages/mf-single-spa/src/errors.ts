@@ -93,3 +93,29 @@ export class MfSingleSpaError extends Error implements BrokerError {
     Object.setPrototypeOf(this, MfSingleSpaError.prototype)
   }
 }
+
+/**
+ * Factory helper per costruire `MfSingleSpaError` con shape coerente (carryover
+ * F11/F12/F13/F14 + F15 mf-iframe `createMfIframeError`).
+ *
+ * Equivalente semantico di `new MfSingleSpaError(params)` ma comoda per chiamate inline
+ * dentro `ss-loader.ts` senza `new`.
+ *
+ * @example
+ * ```ts
+ * throw createMfSingleSpaError({
+ *   code: 'MF_SS_MOUNT_FAILED',
+ *   message: `single-spa mount() invocation failed`,
+ *   microFrontendId: mfId,
+ *   appName,
+ *   originalError: err,
+ * })
+ * ```
+ *
+ * @see D-V2-F15-12 — Custom error class per-package factory carryover
+ */
+export function createMfSingleSpaError(
+  params: CreateMfSingleSpaErrorParams,
+): MfSingleSpaError {
+  return new MfSingleSpaError(params)
+}
