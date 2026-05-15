@@ -100,3 +100,30 @@ export class MfModuleFederationError extends Error implements BrokerError {
     Object.setPrototypeOf(this, MfModuleFederationError.prototype)
   }
 }
+
+/**
+ * Factory helper per costruire `MfModuleFederationError` con shape coerente (carryover
+ * F11/F12/F13/F14 + F15 mf-iframe `createMfIframeError`).
+ *
+ * Equivalente semantico di `new MfModuleFederationError(params)` ma comoda per chiamate
+ * inline dentro `mf-loader.ts` / `share-scope-conflict.ts` senza `new`.
+ *
+ * @example
+ * ```ts
+ * throw createMfModuleFederationError({
+ *   code: 'MF_REMOTE_FACTORY_FAILED',
+ *   message: `Factory invocation failed for ${scope}/${module}`,
+ *   microFrontendId: mfId,
+ *   scope,
+ *   module,
+ *   originalError: err,
+ * })
+ * ```
+ *
+ * @see D-V2-F15-12 — Custom error class per-package factory carryover
+ */
+export function createMfModuleFederationError(
+  params: CreateMfModuleFederationErrorParams,
+): MfModuleFederationError {
+  return new MfModuleFederationError(params)
+}

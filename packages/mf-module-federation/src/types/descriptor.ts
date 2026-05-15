@@ -15,6 +15,23 @@ import type { MicroFrontendLoaderDefinition } from '@gluezero/microfrontends'
  * Loader definition narrowing per `type: 'module-federation'`.
  *
  * W2 P04 fill: contract completo + JSDoc per ognuno dei field.
+ *
+ * @example Descriptor MF webpack 5
+ * ```ts
+ * await broker.registerMicroFrontend({
+ *   id: 'analytics-mf',
+ *   name: 'Analytics (Module Federation)',
+ *   version: '1.0.0',
+ *   loader: {
+ *     type: 'module-federation',
+ *     scope: 'analytics_app',
+ *     module: './AnalyticsWidget',
+ *     url: 'https://cdn.example.com/analytics/remoteEntry.js',
+ *     shared: { react: { requiredVersion: '^18.2', singleton: true } },
+ *     timeoutMs: 10000,
+ *   } satisfies ModuleFederationLoaderDefinition,
+ * })
+ * ```
  */
 export interface ModuleFederationLoaderDefinition extends MicroFrontendLoaderDefinition {
   /** Discriminator literal — narrowing TS. */
@@ -43,4 +60,15 @@ export interface ModuleFederationLoaderDefinition extends MicroFrontendLoaderDef
       readonly eager?: boolean
     }
   >
+
+  /**
+   * Override export name esplicito per Strategy 1 (D-V2-F9-05 carryover F9). Se omesso,
+   * priority degrade a `default` export → named exports flat.
+   */
+  readonly exportName?: string
+
+  /**
+   * Timeout `loadRemote` race in millisecondi (default 15000 — carryover F9 PRD §23.4).
+   */
+  readonly timeoutMs?: number
 }
