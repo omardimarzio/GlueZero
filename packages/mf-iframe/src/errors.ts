@@ -116,3 +116,27 @@ export class MfIframeError extends Error implements BrokerError {
     Object.setPrototypeOf(this, MfIframeError.prototype)
   }
 }
+
+/**
+ * Factory helper per costruire `MfIframeError` con shape coerente (carryover F11/F12/F13/F14
+ * factory pattern + F15 mf-web-component `createMfWebComponentError`).
+ *
+ * Equivalente semantico di `new MfIframeError(params)` ma comoda per chiamate inline
+ * dentro deep-handler `bridge.ts` / `iframe-loader.ts` senza `new`.
+ *
+ * @example
+ * ```ts
+ * throw createMfIframeError({
+ *   code: 'MF_IFRAME_REPLAY_DETECTED',
+ *   message: `Replay detected per mfId='${mfId}' messageId='${id}'`,
+ *   microFrontendId: mfId,
+ *   origin,
+ *   details: { messageId: id },
+ * })
+ * ```
+ *
+ * @see D-V2-F15-12 — Custom error class per-package factory carryover
+ */
+export function createMfIframeError(params: CreateMfIframeErrorParams): MfIframeError {
+  return new MfIframeError(params)
+}

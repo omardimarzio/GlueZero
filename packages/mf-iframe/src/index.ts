@@ -64,9 +64,13 @@ export { iframeLoader } from './iframe-loader'
 // Error class + types pubblici (Plan 15-03 W2 fill: completeness)
 export {
   type CreateMfIframeErrorParams,
+  createMfIframeError,
   MfIframeError,
   type MfIframeErrorCode,
 } from './errors'
+
+// Bridge message runtime types (Plan 15-03 W2 fill — Valibot 9 schemas + variant union)
+export type { IframeBridgeMessage } from './bridge-schemas'
 
 // Type narrowing LoaderDefinition + bridge message types
 export type { IframeLoaderDefinition } from './types/descriptor'
