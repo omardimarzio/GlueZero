@@ -69,7 +69,14 @@ export interface CreateMfModuleFederationErrorParams {
  * })
  * ```
  *
+ * @throws Il constructor non throw; popula i field `code/microFrontendId/scope/module/details/originalError`
+ *   e setta `cause` ES2022 se `params.cause` definito o auto-alias `originalError`.
+ * @throws Tipicamente il caller fa `throw new MfModuleFederationError(...)` direttamente
+ *   (vedi `mf-loader.ts` error mapping regex post-loadRemote).
+ *
  * @see D-V2-F15-12 — Custom error class per-package
+ * @see createMfModuleFederationError — factory helper coerente
+ * @see REQ MF-MF-02 — 5 literal codes union
  */
 export class MfModuleFederationError extends Error implements BrokerError {
   override readonly name = 'MfModuleFederationError' as const
@@ -108,7 +115,7 @@ export class MfModuleFederationError extends Error implements BrokerError {
  * Equivalente semantico di `new MfModuleFederationError(params)` ma comoda per chiamate
  * inline dentro `mf-loader.ts` / `share-scope-conflict.ts` senza `new`.
  *
- * @example
+ * @example Throw remote entry load failure
  * ```ts
  * throw createMfModuleFederationError({
  *   code: 'MF_REMOTE_FACTORY_FAILED',
@@ -120,7 +127,25 @@ export class MfModuleFederationError extends Error implements BrokerError {
  * })
  * ```
  *
+ * @example Throw share scope failed (host senza shared section)
+ * ```ts
+ * throw createMfModuleFederationError({
+ *   code: 'MF_SHARE_SCOPE_FAILED',
+ *   message: 'Host has no shared section for required package',
+ *   microFrontendId: mfId,
+ *   scope: 'react',
+ * })
+ * ```
+ *
+ * @throws La factory stessa NON throw; ritorna l'istanza di errore — il caller deve
+ *   poi `throw` esplicito secondo necessità nel suo flow (D-V2-F15-12 pattern).
+ * @throws `MfModuleFederationError` ritornata può a sua volta essere rilanciata dal
+ *   chiamante; cinque code literal `MF_REMOTE_ENTRY_LOAD_FAILED`, `MF_REMOTE_SCOPE_NOT_FOUND`,
+ *   `MF_REMOTE_MODULE_NOT_FOUND`, `MF_REMOTE_FACTORY_FAILED`, `MF_SHARE_SCOPE_FAILED`.
+ *
  * @see D-V2-F15-12 — Custom error class per-package factory carryover
+ * @see MfModuleFederationError — class constructor identico
+ * @see REQ MF-MF-02 — 5 error codes literal union
  */
 export function createMfModuleFederationError(
   params: CreateMfModuleFederationErrorParams,

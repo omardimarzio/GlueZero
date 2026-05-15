@@ -64,7 +64,31 @@ export interface CreateMfSingleSpaErrorParams {
  * })
  * ```
  *
+ * @example Throw mount failed con cause chain ES2022
+ * ```ts
+ * try {
+ *   await app.mount(props)
+ * } catch (err) {
+ *   throw new MfSingleSpaError({
+ *     code: 'MF_SS_MOUNT_FAILED',
+ *     message: `single-spa mount() invocation failed for ${appName}`,
+ *     microFrontendId: mfId,
+ *     appName,
+ *     cause: err,
+ *   })
+ * }
+ * ```
+ *
+ * @throws Il constructor non throw; popula `code/microFrontendId/appName/details/originalError`
+ *   e setta `cause` ES2022 se `params.cause` definito o auto-alias `originalError`.
+ * @throws Tipicamente il caller fa `throw new MfSingleSpaError(...)` direttamente
+ *   (vedi `ss-loader.ts` lifecycle wrapper error mapping per ognuno dei 4 codes).
+ * @throws `MfSingleSpaError` istanza è marker per `isBrokerError(err)` duck-typing
+ *   compat (D-V2-F15-12 BrokerError shape inline preserved).
+ *
  * @see D-V2-F15-12 — Custom error class per-package
+ * @see createMfSingleSpaError — factory helper coerente
+ * @see REQ MF-SS-01 — Lifecycle mapping + 4 phase error codes
  */
 export class MfSingleSpaError extends Error implements BrokerError {
   override readonly name = 'MfSingleSpaError' as const
@@ -101,7 +125,7 @@ export class MfSingleSpaError extends Error implements BrokerError {
  * Equivalente semantico di `new MfSingleSpaError(params)` ma comoda per chiamate inline
  * dentro `ss-loader.ts` senza `new`.
  *
- * @example
+ * @example Throw mount failed
  * ```ts
  * throw createMfSingleSpaError({
  *   code: 'MF_SS_MOUNT_FAILED',
@@ -112,7 +136,27 @@ export class MfSingleSpaError extends Error implements BrokerError {
  * })
  * ```
  *
+ * @example Throw lifecycle invalid (no bootstrap function)
+ * ```ts
+ * throw createMfSingleSpaError({
+ *   code: 'MF_SS_LIFECYCLE_INVALID',
+ *   message: 'Module does not export valid bootstrap/mount/unmount functions',
+ *   microFrontendId: mfId,
+ *   appName,
+ *   details: { hasBootstrap: false, hasMount: true, hasUnmount: false },
+ * })
+ * ```
+ *
+ * @throws La factory stessa NON throw; ritorna l'istanza di errore — il caller deve
+ *   poi `throw` esplicito secondo necessità nel flow lifecycle (4 codes: LIFECYCLE_INVALID,
+ *   BOOTSTRAP_FAILED, MOUNT_FAILED, UNMOUNT_FAILED).
+ * @throws `MfSingleSpaError` ritornata può a sua volta essere rilanciata dal chiamante;
+ *   istanza preserva `code` literal + `microFrontendId` + `appName` + `details` rich
+ *   diagnostic.
+ *
  * @see D-V2-F15-12 — Custom error class per-package factory carryover
+ * @see MfSingleSpaError — class constructor identico
+ * @see REQ MF-SS-01 — Lifecycle mapping + 4 error codes
  */
 export function createMfSingleSpaError(
   params: CreateMfSingleSpaErrorParams,
