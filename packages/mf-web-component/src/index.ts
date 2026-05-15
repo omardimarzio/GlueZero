@@ -60,3 +60,9 @@ export {
 
 // Type narrowing LoaderDefinition (Plan 15-02 W2 fill: discriminated union)
 export type { WebComponentLoaderDefinition } from './types/descriptor'
+
+// ContextMode union literal (Plan 15-02 W2 fill: 3-mode dispatcher D-V2-F15-05)
+export type { ContextMode } from './context-dispatch'
+
+// applyContext 3-mode dispatcher (Plan 15-02 W2 fill: standalone export per consumer/test)
+export { applyContext } from './context-dispatch'
