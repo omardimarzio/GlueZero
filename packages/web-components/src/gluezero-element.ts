@@ -259,9 +259,27 @@ export class GlueZeroElement extends HTMLElement {
     if (broker === null) {
       throw new Error('GlueZeroElement.subscribe() chiamato prima che `glueZeroBroker` sia settato.')
     }
-    return broker.subscribe(pattern, handler, {
-      ...options,
-      signal: options?.signal ?? this._abortController.signal,
-    })
+    const signal = options?.signal ?? this._abortController.signal
+    // Rule 2 (defensive): se signal è già aborted al momento del subscribe (anti-pattern:
+    // subscribe DOPO disconnect), il broker F1 non auto-unsubscribe perché 'abort' event
+    // non re-fires su listener attached dopo abort. Ritorniamo subscription handle no-op
+    // per evitare memory leak silenzioso.
+    if (signal.aborted) {
+      return {
+        get id() {
+          return ''
+        },
+        get topic() {
+          return pattern
+        },
+        get active() {
+          return false
+        },
+        unsubscribe(): void {
+          /* no-op */
+        },
+      } as Subscription
+    }
+    return broker.subscribe(pattern, handler, { ...options, signal })
   }
 }
