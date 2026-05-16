@@ -455,6 +455,212 @@ console.log(delta.changed) // { 'color-primary': { from: '...', to: '#FF6B35' } 
 | T-F7-02 LiveTokenEditor in production bundle | InformationDisclosure | NODE_ENV !== 'production' inline detect (D-160); production no-op editor — bundler tree-shake del body. |
 | T-F7-03 Ring buffer overflow | DoS | Cap 500 entries (D-167); shift FIFO su exceed; buffer cleared su disable. |
 
+---
+
+## MF Inspector — Subpath `@gluezero/devtools/mf-inspector` (v2.0)
+
+Subpath additivo opt-in per observability micro-frontend (D-V2-05 BLOCKING — NON nuovo package standalone). Bundle 8 KB gzipped cap; zero overhead se non importato (tree-shaken). Pattern carryover diretto da F11/F12/F13/F14/F15 (13 sezioni standard).
+
+### 1. Quick start
+
+```ts
+import { createDevtoolsBroker } from '@gluezero/devtools'
+import { microfrontendModule } from '@gluezero/microfrontends'
+import { mfInspectorModule, SERVICE_MF_INSPECTOR, type MfInspectorService }
+  from '@gluezero/devtools/mf-inspector'
+
+// Install custom: DevtoolsBroker + microfrontendModule + mfInspectorModule via plugin pattern.
+const broker = createDevtoolsBroker({})
+// (Vedi packages/microfrontends/README.md per il bootstrap microfrontendModule.)
+// mfInspectorModule().install(ctx) viene invocato dal plugin loader F8.
+
+// Inspector snapshot — 17 fields per MF attivo via SnapshotProvider Registry (MF-DEVTOOLS-01/02)
+const snap = broker.getDebugSnapshot()
+console.log(snap.external?.mf?.microFrontends)
+
+// Metrics — 14 metriche per-MF (MF-OBS-02 + D-V2-19)
+const metrics = broker.getMetrics()
+console.log(metrics.microFrontends) // Array<MfMetricsEntry>
+
+// Service Locator API — pause/resume/flush
+const inspector = broker.getService<MfInspectorService>(SERVICE_MF_INSPECTOR)
+inspector?.pause()
+const drained = inspector?.flush()
+inspector?.resume()
+```
+
+### 2. Install
+
+Il subpath è incluso in `@gluezero/devtools` v2.0+ — nessun package separato da installare. Importare via subpath specifico `@gluezero/devtools/mf-inspector` (tree-shake aggressive: il barrel core NON include il subpath; il subpath NON è raggiungibile da `import { ... } from '@gluezero/devtools'`).
+
+```bash
+npm install @gluezero/devtools@^2.0.0 @gluezero/microfrontends@^2.0.0
+```
+
+### 3. Inspector — 17 campi PRD §30.3
+
+Per ogni MF registrato, `getDebugSnapshot().external?.mf?.microFrontends[i]` espone 17 campi (vedi type `MicroFrontendDebugSnapshot`). Strategia hybrid pull (descriptor via Service Locator graceful degradation) + push (eventi aggregati via subscribe 29 topics F8 lifecycle/error/governance).
+
+| # | Campo | Tipo | Sorgente |
+|---|---|---|---|
+| 1 | `id` | string | Pull `mfService.list()` |
+| 2 | `state` | string | Pull `reg.state` FSM |
+| 3 | `version` | string | Pull `reg.descriptor.version` |
+| 4 | `owner` | unknown? | Pull `reg.descriptor.owner` |
+| 5 | `loaderType` | string? | Pull `reg.descriptor.loader.type` |
+| 6 | `mountTarget` | unknown? | Pull `reg.descriptor.mount` |
+| 7 | `isolation` | unknown? | Pull `SERVICE_ISOLATION.getResolvedPolicy(id)` (F13 opt) |
+| 8 | `permissions` | unknown? | Pull `SERVICE_PERMISSIONS.getCapabilities(id)` (F11 opt) |
+| 9 | `capabilities` | unknown? | Pull `reg.descriptor.capabilities` |
+| 10 | `compatibility` | unknown? | Pull `SERVICE_COMPAT.getCompatibilityReport(id)` (F12 opt) |
+| 11 | `theme` | unknown? | Pull `reg.descriptor.theme` |
+| 12 | `topicsPublished` | readonly string[] | Push wildcard `metadata.microFrontendId` MF-OBS-01 |
+| 13 | `topicsSubscribed` | readonly string[] | Reserved V2.1 (Set vuoto baseline V2) |
+| 14 | `routeCallsCount` | number | Push topic match (placeholder data attribution) |
+| 15 | `workerTasksCount` | number | Push topic match (placeholder data attribution) |
+| 16 | `errors` | readonly unknown[] | Push topic `*.failed`/`*.failure` |
+| 17 | `fallbacksApplied` | readonly unknown[] | Push topic `microfrontend.fallback.rendered` (F14) |
+
+Più 5 ancillari: `contextReadCount`, `contextWriteCount`, `subscriptionsCreated`, `cleanupResources`, `timings`, `fallbackPolicy`.
+
+### 4. 11 Timings lifecycle (PRD §30.5)
+
+Inspector subscribe ai 11 lifecycle topics F8 e popola `MicroFrontendTimings` con 11 fields (first-write-wins D-V2-F16-09):
+
+```ts
+{
+  registeredAt?: number       // microfrontend.registered
+  loadStartedAt?: number      // microfrontend.loading
+  loadedAt?: number           // microfrontend.loaded
+  bootstrapStartedAt?: number // microfrontend.bootstrapping
+  bootstrappedAt?: number     // microfrontend.bootstrapped
+  mountStartedAt?: number     // microfrontend.mounting
+  mountedAt?: number          // microfrontend.mounted
+  unmountStartedAt?: number   // microfrontend.unmounting
+  unmountedAt?: number        // microfrontend.unmounted
+  destroyStartedAt?: number   // microfrontend.destroying
+  destroyedAt?: number        // microfrontend.destroyed
+}
+```
+
+**Composition esterna pura:** ZERO diff `packages/microfrontends/src/` (D-83 strict septuple esteso preserved). Topic gerund `*ing` mappa al field `*StartedAt`; topic past tense mappa al field `*At`. RESEARCH §7.2 RESOLVED conferma empirical: tutti 11 topic emessi da `publishLifecycleEvent()` in `registry.ts`.
+
+### 5. Ring buffer 500 + pause/resume/flush
+
+Per-MF ring buffer `Map<mfId, RingBuffer<MfEvent>(500)>` (D-V2-F16-09):
+
+- **FIFO drop-oldest** quando buffer pieno (`shift()` su exceed). Cap 500 per-MF — isolamento garantito (overflow di un MF non droppa eventi di altri).
+- **Pause API globale** (D-V2-F16-10):
+  - `inspector.pause()` — sospende il flusso al gate `intercept(event)` → queued
+  - `inspector.resume()` — riprende il passthrough verso aggregator/timings
+  - `inspector.flush()` — drena pause queue + ring buffer aggregator (concat ritorno `readonly MfEvent[]`)
+- **Semantica diversa F6**: NON re-emette gli eventi al resume (snapshot-retention, non replay-broker — vedi RESEARCH §2.3 + Pitfall §3.4).
+- **Memoria O(N_MF × 500)** accettabile debug-time. Cardinality cap globale N_MF reserved V2.1 (D-V2-F16-12).
+
+### 6. 14 metriche per-MF (MF-OBS-02)
+
+Namespace `gluezero.mfs.*` dot.case (D-163 carryover F6). Semantica B2 fix chiarita:
+
+**6 counter GLOBALI** (no label `mfId` — totale across tutti i MF, replicati IDENTICI in ogni entry):
+
+| Counter | Topic source |
+|---|---|
+| `registered` | `microfrontend.registered` |
+| `mounted` | `microfrontend.mounted` |
+| `failed` | `microfrontend.failed` |
+| `permissionDenied` | `microfrontend.permission.denied` |
+| `compatFailures` | `microfrontend.compatibility.failed` |
+| `capMissing` | `microfrontend.capability.missing` |
+
+**5 counter PER-MF** (label `{mfId}` strict — scoped per entry):
+
+| Counter | Topic source |
+|---|---|
+| `mountFailures` | `microfrontend.mount.failed` |
+| `events` | wildcard `*` + `metadata.microFrontendId` MF-OBS-01 |
+| `routeCalls` | `route.*` / `routing.dispatched` (forward-compat) |
+| `workerTasks` | `worker.*` / `worker.task` (forward-compat) |
+| `contextWrites` | `context.write` / `context.updated` (forward-compat) |
+
+**1 gauge PER-MF** (label `{mfId}` strict — last-write-wins): `activeSubs`.
+
+**2 histogram PER-MF** (label `{mfId}` strict — reservoir Algorithm R Vitter F6 D-165, percentili `{p50, p95, p99, count}`): `timeAvgLoad`, `timeAvgMount`.
+
+Output via `getMetrics().microFrontends[]: MfMetricsEntry[]` — D-V2-19 shape preservation (BC §42 API #14: `microFrontends` field ABSENT su DevtoolsBroker baseline senza provider; `[]` quando provider registrato con 0 MF).
+
+### 7. SnapshotProvider Registry MIN-3
+
+API plug-in pattern (MF-DEVTOOLS-05 + D-V2-F16-01/02/03) per estensibilità multi-provider:
+
+```ts
+const broker = createDevtoolsBroker({})
+broker.registerSnapshotProvider('custom', () => ({ customField: 'value' }))
+const snap = broker.getDebugSnapshot()
+console.log(snap.external?.custom) // { customField: 'value' }
+```
+
+Sync invocation a ogni `getDebugSnapshot()` call (D-V2-F16-03 — NO caching, NO async). External field assente quando zero provider registrati (BC §42 API #13 bit-exact v1.x preservation). Provider che throw vengono saltati silenziosamente (try/catch swallow pattern F1 D-20 `safeTapStep` carryover).
+
+Convention F16: `mfInspectorModule()` registra automaticamente il provider `'mf'` su DevtoolsBroker quando rileva `broker.registerSnapshotProvider` come function (graceful guard su plain Broker → skip silenzioso).
+
+### 8. Examples
+
+Vedi `examples/microfrontends/mf-devtools-inspector.html` per demo interattiva standalone — 3 MF dichiarati (ESM + WebComponent + iframe) + Inspector UI panel + ring buffer pause/resume visualization + metrics dashboard live + dropdown selettore MF + tabella 17 campi snapshot + counter 14 metriche live update + pause/resume/flush button bar.
+
+```bash
+pnpm build:packages
+open examples/microfrontends/mf-devtools-inspector.html
+```
+
+### 9. Q&A
+
+- **Posso usare il subpath senza DevtoolsBroker?** Sì, ma niente `external.mf` in `getDebugSnapshot()` né `microFrontends` in `getMetrics()`. Solo Service Locator API esposta via `broker.getService(SERVICE_MF_INSPECTOR)`.
+- **Il subpath modifica i miei MF?** No, composition esterna pura via subscribe + Service Locator pull. ZERO diff `packages/microfrontends/src/` (D-83 strict septuple esteso preserved).
+- **Cardinality protection?** Sì, `createCardinalityTracker({cap: 100})` su wildcard `eventsPerMfId` evita label explosion. Default cap 100 distinct `mfId` per metric base.
+- **Plain Broker (non DevtoolsBroker)?** Graceful skip — `mfInspectorModule` controlla `typeof broker.registerSnapshotProvider === 'function'` prima di registrare. Su plain Broker `SERVICE_MF_INSPECTOR` resta accessibile via `broker.getService()`.
+- **Idempotent install?** Sì, re-install rileva `SERVICE_MF_INSPECTOR` already registered → `console.warn` + early return (carryover F14 fallbacks-module pattern).
+
+### 10. Migration v1.x → v2.0 mf-inspector opt-in
+
+Il subpath è opt-in: consumer v1.x continua a funzionare bit-exact (BC §42 14 API preserved — `getDebugSnapshot()` 5 fields baseline + `getMetrics()` 3 fields baseline). Per attivare in v2.0:
+
+```diff
++ import { mfInspectorModule } from '@gluezero/devtools/mf-inspector'
+
+  const broker = createDevtoolsBroker({})
++ // Plugin loader F8: chiama mfInspectorModule().install(ctx)
+```
+
+Snapshot/Metrics shape automaticamente esteso con `external.mf` e `microFrontends` field. Consumer narrowing TypeScript:
+
+```ts
+const snap = broker.getDebugSnapshot()
+const mfSnap = snap.external?.mf as
+  | { microFrontends: ReadonlyArray<MicroFrontendDebugSnapshot> }
+  | undefined
+```
+
+### 11. Limitations
+
+- **Inspector è observability/governance, NON crypto sandbox** (PRD §44.1). I dati sono read-only — Inspector non blocca operazioni MF. Per enforcement runtime usare F11 permissions/F13 isolation/F14 fallbacks.
+- **`cleanupResources` field — placeholder `[]` in V2.0** (data quality limitation; full attribution V2.1 quando F8 registry emetterà payload `cleanupResources` su `microfrontend.destroyed`). Popolazione richiederebbe diff `packages/microfrontends/src/runtime-context-factory.ts` — VIOLA D-83 strict septuple esteso. Vedi RESEARCH §7.1 RESOLVED.
+- **Route/Worker/Context counter** (`routeCalls`/`workerTasks`/`contextWrites`) — pattern matching liberale forward-compat: in F16 V2.0 baseline restano a `0` perché F3/F5/F10 NON emettono topic `gluezero.routing.*`/`gluezero.worker.*`/`gluezero.context.*` esplicito. V2.1 wiring quando F3/F5/F10 emetteranno topic con `metadata.microFrontendId` standardizzato. Vedi RESEARCH §7.5 RESOLVED.
+- **4 intermediate `*StartedAt` timings** (loadStartedAt, bootstrapStartedAt, mountStartedAt, unmountStartedAt, destroyStartedAt) sono opzionali — mappati ai topic `*ing` gerund. RESEARCH §7.2 RESOLVED conferma tutti 11 topic SONO emessi da F8 in lifecycle baseline. Quando un MF salta una phase (es. failed in load), i field intermedi corrispondenti restano `undefined`.
+
+### 12. Performance
+
+- **`buildSnapshot()` complexity**: O(N_MF × M_lookups) per call — tipico 50 MF × 5 lookups ~250 ops < 10ms. Hot path consumer (`getDebugSnapshot()` ogni 500ms) → check empirical via Inspector UI panel.
+- **Pause API zero-overhead debug-time**: `inspector.pause()` short-circuita il subscribe handler chain via gate `intercept(event)` — l'aggregator/timings NON viene invocato. Queue accumulata in memoria fino a `flush()`.
+- **`structuredClone` snapshot output**: cost O(snap.size). D-162 carryover F6 — caller responsibility garantire payload POJO-compatible (no function/WeakMap/Proxy).
+- **`registerSnapshotProvider` sync invocation**: NO caching, NO async — D-V2-F16-03. Provider che throw → skip silenzioso (NO propagation upstream).
+
+### 13. Bundle
+
+- **`@gluezero/devtools/mf-inspector` ≤ 8 KB gzipped** (D-V2-F16-15 lockato — empirical 6.27 KB W4 closure).
+- **Devtools core invariato**: ~150 B Registry methods delta (`registerSnapshotProvider` + `registerMetricsProvider`).
+- **Subpath tree-shaken**: importing dal subpath `@gluezero/devtools/mf-inspector` NON include core devtools internals (Event/Route Inspector, MetricsCollector base) — bundler resolution via `package.json#exports`.
+- **Pattern S1 stretto** (D-V2-F16-19): `augment.ts` no-op marker — NO declaration merging upstream, NO runtime prototype patching, NO side-effect runtime. Solo detection tree-shake-fail.
+
 ## Licenza
 
 MIT.
@@ -462,3 +668,5 @@ MIT.
 *Phase 6 closure date: 2026-05-05. Milestone v1.0 chiusa. PRD §39 #10 (TOOL-05) → CLOSED.*
 
 *Phase 7 W5a closure date: 2026-05-09. Subpath `@gluezero/devtools/theme-inspector` chiuso (UI-DEVTOOLS-01..05 + DOC-05 ext F7). Ready for parallel W5b (aggregate) e W6 (final gate).*
+
+*Phase 16 closure date: 2026-05-16. Subpath `@gluezero/devtools/mf-inspector` chiuso (MF-DEVTOOLS-01..05 + MF-OBS-02..03 + D-V2-05 + D-V2-19 BLOCKING). 4/4 plans + 7/7 REQ-IDs + 20/20 decisioni traceabili. Bundle 6.27 KB ≤ 8 KB cap.*

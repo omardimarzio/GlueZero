@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="it" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GlueZero — @gluezero/devtools/mf-inspector demo: 3 MF + Inspector UI + ring buffer + metrics dashboard</title>
+  <meta name="description" content="Demo standalone @gluezero/devtools/mf-inspector v2.0: 3 MF (mf-a esm + mf-b web-component + mf-c iframe) registrati + 17-fields snapshot table + 11 timings + ring buffer 500 pause/resume/flush + 14 metriche dashboard live + dropdown MF selector + lifecycle simulator (round-robin 2s).">
+  <meta name="theme-color" content="#0066cc">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><text y='14' font-size='14'>🔍</text></svg>">
+  <style>
+    * { box-sizing: border-box; }
+    body { font-family: system-ui, -apple-system, sans-serif; max-width: 1280px; margin: 1.5rem auto; padding: 0 1rem; line-height: 1.5; color: #0F172A; }
+    h1 { color: #0066cc; margin-bottom: 0.25rem; }
+    h2 { color: #1e293b; margin-top: 0; font-size: 1.1rem; }
+    h3 { margin: 0.5rem 0; color: #1e293b; font-size: 0.95rem; }
+    p { color: #475569; font-size: 0.92rem; }
+    code { background: #F1F5F9; padding: 0.15rem 0.35rem; border-radius: 4px; font-size: 0.88em; }
+    section { border: 1px solid #e2e8f0; padding: 1rem; margin: 0.75rem 0; border-radius: 8px; background: #fafbfc; }
+    .layout { display: grid; grid-template-columns: 1fr 1.4fr; gap: 1rem; }
+    .mf-mount { min-height: 60px; border: 2px dashed #cbd5e1; padding: 0.5rem; margin-top: 0.5rem; background: white; border-radius: 4px; font-family: ui-monospace, monospace; font-size: 0.85rem; }
+    .mf-a { background: #fff7ed; border-color: #f59e0b; }
+    .mf-b { background: #faf5ff; border-color: #a855f7; }
+    .mf-c { background: #ecfdf5; border-color: #10b981; }
+    .inspector-panel { background: #0f172a; color: #e2e8f0; padding: 1rem; border-radius: 8px; }
+    .inspector-panel h2 { color: #38bdf8; }
+    .inspector-panel h3 { color: #94a3b8; }
+    .inspector-panel select, .inspector-panel button { background: #1e293b; color: #e2e8f0; border: 1px solid #475569; padding: 0.4rem 0.7rem; border-radius: 4px; font-size: 0.85rem; }
+    .inspector-panel button { cursor: pointer; font-weight: 600; }
+    .inspector-panel button.primary { background: #0066cc; border-color: #0066cc; }
+    .inspector-panel button:hover { background: #334155; }
+    .inspector-panel pre { background: #020617; color: #cbd5e1; padding: 0.6rem; border-radius: 4px; overflow-x: auto; font-size: 0.78rem; max-height: 280px; margin: 0.4rem 0; border: 1px solid #1e293b; }
+    .button-bar { display: flex; gap: 0.5rem; margin: 0.5rem 0; flex-wrap: wrap; }
+    .controls { background: #f1f5f9; padding: 0.75rem; border-radius: 8px; margin-bottom: 0.75rem; display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; font-size: 0.9rem; }
+    .controls strong { font-family: ui-monospace, monospace; padding: 0.2rem 0.45rem; background: white; border-radius: 4px; }
+    .badge { display: inline-block; padding: 0.15rem 0.5rem; border-radius: 12px; font-size: 0.8rem; font-weight: 600; }
+    .badge.paused { background: #fee2e2; color: #991b1b; }
+    .badge.running { background: #d1fae5; color: #065f46; }
+    table { border-collapse: collapse; width: 100%; font-size: 0.82rem; }
+    table th, table td { border: 1px solid #334155; padding: 0.35rem 0.5rem; text-align: left; }
+    table th { background: #1e293b; color: #38bdf8; font-weight: 600; }
+    table td { background: #020617; color: #cbd5e1; font-family: ui-monospace, monospace; }
+    .timing-bar { background: #1e293b; height: 14px; border-radius: 3px; position: relative; margin: 0.15rem 0; }
+    .timing-bar-fill { background: #38bdf8; height: 100%; border-radius: 3px; }
+    .event-log { background: #fffbe6; color: #78350f; border-left: 4px solid #faad14; padding: 0.5rem; font-family: ui-monospace, monospace; font-size: 0.78rem; max-height: 160px; overflow-y: auto; border-radius: 4px; margin-top: 0.5rem; }
+    .event-entry { padding: 0.15rem 0; border-bottom: 1px solid #fde68a; }
+    .event-entry:last-child { border-bottom: 0; }
+    .governance-disclaimer { background: #fef2f2; border: 1px solid #fecaca; padding: 0.6rem; border-radius: 6px; margin: 0.75rem 0; font-size: 0.85rem; color: #991b1b; }
+  </style>
+</head>
+<body>
+  <h1>🔍 @gluezero/devtools/mf-inspector — demo 3 MF + Inspector UI</h1>
+  <p>Demo Phase 16 standalone: <code>mfInspectorModule()</code> subpath
+    <strong>17-fields snapshot + 11 timings + ring buffer 500 + pause/resume/flush + 14 metriche per-MF</strong>
+    via DevtoolsBroker plug-in <code>SnapshotProvider/MetricsProvider</code> Registry MIN-3
+    (D-V2-F16-01..03 + MF-DEVTOOLS-05).</p>
+  <p><em>Prerequisito: esegui <code>pnpm build:packages</code> dalla root del repo prima di
+    aprire questa pagina (relative paths verso <code>../../packages/*/dist/</code> locali —
+    D-V2-F8-10 carryover D-V2-F14-16, NO publish fino F17 GA).</em></p>
+
+  <div class="governance-disclaimer">
+    <strong>⚠️ PRD §44.1 governance disclaimer:</strong> Inspector è
+    <strong>observability/governance, NON crypto sandbox</strong>. I dati sono read-only —
+    Inspector non blocca operazioni MF. Per enforcement runtime usare F11 permissions/F13 isolation/F14 fallbacks.
+  </div>
+
+  <div class="controls">
+    <strong>Inspector state:</strong>
+    <span id="state-badge" class="badge running">running</span>
+    <span>Tot eventi processati: <strong id="event-count">0</strong></span>
+    <span>Ring buffer total (sum across MFs): <strong id="buffer-total">0</strong></span>
+  </div>
+
+  <div class="layout">
+    <div>
+      <section class="mf-mount mf-a">
+        <h2>A. <code>mf-a</code> (loader esm)</h2>
+        <p><em>Setup:</em> <code>version=1.0.0</code>, <code>loader.type=esm</code>.</p>
+        <div id="mf-a">mount root (mf-a)</div>
+      </section>
+
+      <section class="mf-mount mf-b">
+        <h2>B. <code>mf-b</code> (loader web-component)</h2>
+        <p><em>Setup:</em> <code>version=2.0.0</code>, <code>loader.type=web-component</code>.</p>
+        <div id="mf-b">mount root (mf-b)</div>
+      </section>
+
+      <section class="mf-mount mf-c">
+        <h2>C. <code>mf-c</code> (loader iframe)</h2>
+        <p><em>Setup:</em> <code>version=0.9.0</code>, <code>loader.type=iframe</code>.</p>
+        <div id="mf-c">mount root (mf-c)</div>
+      </section>
+
+      <section>
+        <h3>Lifecycle event log (live emit topic F8)</h3>
+        <div class="event-log" id="event-log"></div>
+      </section>
+    </div>
+
+    <div class="inspector-panel">
+      <h2>Inspector Panel — broker.getDebugSnapshot().external.mf</h2>
+
+      <h3>MF selector</h3>
+      <select id="mf-selector">
+        <option value="mf-a">mf-a</option>
+        <option value="mf-b">mf-b</option>
+        <option value="mf-c">mf-c</option>
+      </select>
+
+      <h3>Button bar — pause-btn / resume-btn / flush-btn</h3>
+      <div class="button-bar">
+        <button id="pause-btn">⏸ Pause</button>
+        <button id="resume-btn" class="primary">▶ Resume</button>
+        <button id="flush-btn">⏬ Flush</button>
+      </div>
+
+      <h3>17-fields snapshot (table)</h3>
+      <table id="snap-table">
+        <thead><tr><th>Campo</th><th>Valore</th></tr></thead>
+        <tbody id="snap-tbody"></tbody>
+      </table>
+
+      <h3>11 Timings lifecycle (visualizzazione)</h3>
+      <div id="timings-vis"></div>
+
+      <h3>14 Metriche per-MF — broker.getMetrics().microFrontends[]</h3>
+      <pre id="metrics-output">(loading...)</pre>
+
+      <h3>Raw snapshot JSON</h3>
+      <pre id="snap-output">(loading...)</pre>
+    </div>
+  </div>
+
+  <script type="module">
+    // D-V2-F8-10 relative paths — NO CDN fino F17 GA (D-V2-F14-16 carryover).
+    import { createDevtoolsBroker } from '../../packages/devtools/dist/index.js'
+    import { microfrontendModule } from '../../packages/microfrontends/dist/index.js'
+    import { mfInspectorModule, SERVICE_MF_INSPECTOR } from '../../packages/devtools/dist/mf-inspector/index.js'
+
+    const eventLog = document.getElementById('event-log')
+    let eventCount = 0
+    function log(msg) {
+      eventCount++
+      document.getElementById('event-count').textContent = String(eventCount)
+      const entry = document.createElement('div')
+      entry.className = 'event-entry'
+      entry.textContent = `[${new Date().toISOString().slice(11, 23)}] ${msg}`
+      eventLog.prepend(entry)
+      while (eventLog.children.length > 40) eventLog.removeChild(eventLog.lastChild)
+    }
+
+    // (1) Crea DevtoolsBroker — espone registerSnapshotProvider + registerMetricsProvider
+    const broker = createDevtoolsBroker({})
+
+    // (2) Manually instantiate microfrontendModule + mfInspectorModule via plugin install pattern
+    // (DevtoolsBroker non accetta `modules` option — vedi public-factory.ts; il bootstrap reale
+    //  avviene via plugin loader F8. Per la demo simulate ctx con register + getService).
+    const services = new Map()
+    const handlers = new Map()
+    const subscribe = (pattern, handler) => {
+      if (!handlers.has(pattern)) handlers.set(pattern, new Set())
+      handlers.get(pattern).add(handler)
+      return { id: 'sub-' + Math.random(), topic: pattern, active: true, unsubscribe: () => handlers.get(pattern)?.delete(handler) }
+    }
+    const publish = (topic, payload, options) => {
+      const event = { topic, payload, ...(options?.metadata && { metadata: options.metadata }) }
+      handlers.get(topic)?.forEach((h) => h(event))
+      handlers.get('*')?.forEach((h) => h(event))
+      // Forward to real broker for SnapshotProvider/MetricsProvider real registration paths
+      try { broker.publish?.(topic, payload, options) } catch {}
+    }
+    const getService = (name) => services.get(name)
+    const ctx = {
+      broker: {
+        publish,
+        subscribe,
+        getService,
+        registerSnapshotProvider: (name, fn) => broker.registerSnapshotProvider(name, fn),
+        registerMetricsProvider: (name, fn) => broker.registerMetricsProvider(name, fn),
+      },
+      registerService: (name, impl) => services.set(name, impl),
+    }
+
+    // (3) Register SERVICE_MICROFRONTENDS mock con 3 MF
+    const mfRegistrations = [
+      { id: 'mf-a', state: 'mounted', version: '1.0.0', loaderType: 'esm' },
+      { id: 'mf-b', state: 'mounted', version: '2.0.0', loaderType: 'web-component' },
+      { id: 'mf-c', state: 'mounted', version: '0.9.0', loaderType: 'iframe' },
+    ]
+    ctx.registerService('microfrontends', {
+      list: () => mfRegistrations.map((r) => ({
+        descriptor: { id: r.id, name: r.id, version: r.version, loader: { type: r.loaderType } },
+        state: r.state,
+        timings: { registeredAt: Date.now() },
+      })),
+      get: (id) => mfRegistrations.find((r) => r.id === id),
+    })
+
+    // (4) Install mfInspectorModule
+    mfInspectorModule().install(ctx)
+    const inspector = ctx.broker.getService(SERVICE_MF_INSPECTOR)
+    log('mfInspectorModule installato — 3 MF registrati (mf-a/mf-b/mf-c)')
+
+    // (5) Initial register events per popolare timings.registeredAt
+    for (const reg of mfRegistrations) {
+      publish('microfrontend.registered', { id: reg.id, version: reg.version }, {
+        metadata: { microFrontendId: reg.id, timestamp: Date.now() }
+      })
+    }
+
+    // (6) Lifecycle simulator round-robin sui 3 MF (ogni 2 secondi)
+    const phases = ['loading', 'loaded', 'bootstrapping', 'bootstrapped', 'mounting', 'mounted']
+    let i = 0
+    const simInterval = setInterval(() => {
+      const reg = mfRegistrations[i % 3]
+      const phase = phases[Math.floor(i / 3) % phases.length]
+      const topic = `microfrontend.${phase}`
+      publish(topic, { id: reg.id }, {
+        metadata: { microFrontendId: reg.id, timestamp: Date.now() }
+      })
+      log(`${topic}: ${reg.id}`)
+      i++
+    }, 2000)
+
+    // (7) UI refresh — snapshot + metrics + timings vis ogni 500ms
+    function refreshUI() {
+      const selectedMfId = document.getElementById('mf-selector').value
+      const snap = broker.getDebugSnapshot()
+      const metrics = broker.getMetrics()
+      const mfSnap = snap.external?.mf
+      const entry = mfSnap?.microFrontends?.find((e) => e.id === selectedMfId)
+      const metricsEntry = metrics.microFrontends?.find((e) => e.id === selectedMfId)
+
+      // 17-fields snapshot table
+      const tbody = document.getElementById('snap-tbody')
+      tbody.innerHTML = ''
+      if (entry) {
+        for (const [k, v] of Object.entries(entry)) {
+          const tr = document.createElement('tr')
+          const tdK = document.createElement('td')
+          const tdV = document.createElement('td')
+          tdK.textContent = k
+          tdV.textContent = Array.isArray(v) ? `[${v.length}]` : typeof v === 'object' ? JSON.stringify(v).slice(0, 60) : String(v)
+          tr.appendChild(tdK); tr.appendChild(tdV)
+          tbody.appendChild(tr)
+        }
+      }
+
+      // Timings visualization (placeholder bars)
+      const timingsVis = document.getElementById('timings-vis')
+      timingsVis.innerHTML = ''
+      const t = entry?.timings || {}
+      const fields = ['registeredAt','loadStartedAt','loadedAt','bootstrapStartedAt','bootstrappedAt','mountStartedAt','mountedAt','unmountStartedAt','unmountedAt','destroyStartedAt','destroyedAt']
+      for (const f of fields) {
+        const has = typeof t[f] === 'number'
+        const row = document.createElement('div')
+        row.style.cssText = 'display:flex;gap:0.5rem;align-items:center;font-size:0.78rem;color:#94a3b8'
+        row.innerHTML = `<span style="min-width:120px">${f}</span><div class="timing-bar" style="flex:1"><div class="timing-bar-fill" style="width:${has ? '100%' : '0%'}"></div></div><span style="min-width:50px;text-align:right">${has ? '✓' : '—'}</span>`
+        timingsVis.appendChild(row)
+      }
+
+      // 14 metriche
+      document.getElementById('metrics-output').textContent = metricsEntry
+        ? JSON.stringify(metricsEntry, null, 2)
+        : '(no entries yet)'
+
+      // Raw snapshot JSON
+      document.getElementById('snap-output').textContent = JSON.stringify(mfSnap || { microFrontends: [] }, null, 2)
+
+      // Buffer total — sum size across MFs (proxy via topicsPublished count from snap)
+      const total = mfSnap?.microFrontends?.reduce((acc, m) => acc + (m.topicsPublished?.length || 0), 0) || 0
+      document.getElementById('buffer-total').textContent = String(total)
+    }
+    setInterval(refreshUI, 500)
+    refreshUI()
+
+    // (8) Pause/Resume/Flush handlers
+    document.getElementById('pause-btn').onclick = () => {
+      inspector?.pause()
+      document.getElementById('state-badge').textContent = 'paused'
+      document.getElementById('state-badge').className = 'badge paused'
+      log('inspector.pause() — eventi accodati in queue')
+    }
+    document.getElementById('resume-btn').onclick = () => {
+      inspector?.resume()
+      document.getElementById('state-badge').textContent = 'running'
+      document.getElementById('state-badge').className = 'badge running'
+      log('inspector.resume() — passthrough riattivato')
+    }
+    document.getElementById('flush-btn').onclick = () => {
+      const events = inspector?.flush() || []
+      log(`inspector.flush() — drained ${events.length} events`)
+      alert(`Flushed ${events.length} events`)
+    }
+
+    document.getElementById('mf-selector').onchange = () => refreshUI()
+
+    log('Demo init OK — lifecycle simulator avviato (round-robin 2s)')
+  </script>
+</body>
+</html>
