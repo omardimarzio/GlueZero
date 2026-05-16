@@ -1,11 +1,31 @@
 ---
 last_updated: 2026-05-17
-status: phase_17_w4_p05_complete_ready_for_w5_p06
+status: phase_17_w5_p06_complete_ready_for_w7_p07
 project: GlueZero
 milestone: v2.0.0
 current_phase: 17
 current_phase_name: Framework Adapters (React + WC) + Migration + Docs + GA Release
-current_phase_status: w4_complete_p05_docs_typedoc_ready_for_w5_p06_examples_customer_dashboard
+current_phase_status: w5_complete_p06_examples_customer_dashboard_ready_for_w7_p07_ga_release
+
+phase_17_w5_p06_complete:
+  date: "2026-05-17"
+  summary_file: .planning/phases/17-framework-adapters-react-wc-migration-docs-ga-release/17-06-SUMMARY.md
+  commits:
+    - 04094c7: "feat(17-06): mf-react-adapter.html — Cart MF React via createReactMicroFrontendLifecycle + Provider + 2 hooks (PRD §40.4 file #4)"
+    - 05e182f: "feat(17-06): mf-compat-matrix.html — matrice compat F12 host v2.0 + 3 MF misti + policy block-mount/warn/allow (PRD §40.4 file #6 — MF-DOC-04 6/6 closure)"
+    - 2698d3e: "feat(17-06): customer-dashboard host shell + 3 MF mixed (React + WC + iframe) + 9 modules (5 governance) — MF-DOC-03 golden showcase end-to-end"
+    - 9dcb8d6: "docs(17-06): customer-dashboard README italiano + walkthrough A→B→C migration evolution (3 livelli adoption D-V2-F17-09)"
+  req_ids_closed: [MF-DOC-03, MF-DOC-04]
+  files_created: 10
+  files_modified: 0
+  examples_breakdown:
+    customer_dashboard_files: 8   # index.html + host.js + 4 MF files + README + walkthrough
+    new_html_standalone: 2        # mf-react-adapter.html + mf-compat-matrix.html
+    mf_doc_04_html_total: 6       # 4 carryover (F9/F11/F13/F15) + 2 NEW F17
+  governance_features_active: 5    # permissionsModule + compatModule + isolationModule + fallbacksModule + mfInspectorModule
+  loaders_active: 3                # mf-esm + mf-web-component + mf-iframe
+  adapters_active: 2               # @gluezero/react + @gluezero/web-components
+  d83_strict_diff: 0               # ZERO diff in packages/*/src/
 
 phase_17_w4_p05_complete:
   date: "2026-05-17"
@@ -971,12 +991,12 @@ W3 plan 07-05 (RoleRegistry) può partire in parallelo con 07-04 — file owners
 
 ## Parte A cleanup pre-release — 2026-05-06 ✅ COMPLETE
 
-> **Sezione manuale** (NON gestita dall'hook auto-update di `## Ultimo step completato (auto-update 2026-05-16T22:40:39Z)
+> **Sezione manuale** (NON gestita dall'hook auto-update di `## Ultimo step completato (auto-update 2026-05-16T23:04:19Z)
 
-- Plan: **17-04** → SUMMARY.md committed
-- Commit: `c095375 docs(17-04): SUMMARY 17-04 W3 P04 + STATE + TRACKER closure W3`
-- Phase progress: **4/7** plan completati con SUMMARY.md
-- Project progress: 56/65 plan (86%)
+- Plan: **17-05** → SUMMARY.md committed
+- Commit: `04094c7 feat(17-06): mf-react-adapter.html — Cart MF React via createReactMicroFrontendLifecycle + Provider + 2 hooks (PRD §40.4 file #4)`
+- Phase progress: **5/7** plan completati con SUMMARY.md
+- Project progress: 54/58 plan (93%)
 
 
 ## Ultimo step completato (auto-update 2026-05-06T21:29:30Z)
