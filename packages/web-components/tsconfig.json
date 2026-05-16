@@ -5,7 +5,8 @@
     "rootDir": "./src",
     "lib": ["ES2022", "DOM", "DOM.Iterable"],
     "experimentalDecorators": false,
-    "useDefineForClassFields": true
+    "useDefineForClassFields": true,
+    "ignoreDeprecations": "6.0"
   },
   "include": ["src/**/*", "test/**/*"],
   "exclude": ["dist", "node_modules"]
