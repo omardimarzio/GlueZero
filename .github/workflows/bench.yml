@@ -1,0 +1,41 @@
+name: bench
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+# CI hard gate (D-V2-F17-15 + MF-TEST-04).
+# Esegue lo scenario A (createBroker({}) + 1000 publish, cap regression 5%) e
+# lo scenario B (createBroker({ modules: [microfrontendModule()] }) + 1000 publish,
+# cap regression 10%) contro `packages/_bench/src/baseline-v1.json`.
+# Exit 1 se regression > cap → PR bloccata.
+#
+# P-02 mitigation: tinybench 3.x t-test built-in + warmup iterations + 10 samples.
+
+jobs:
+  bench:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.33.2
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build core + microfrontends (required by bench workspace)
+        run: |
+          pnpm --filter @gluezero/core build
+          pnpm --filter @gluezero/microfrontends build
+
+      - name: Run benchmarks (hard gate)
+        run: pnpm --filter @gluezero/_bench bench
