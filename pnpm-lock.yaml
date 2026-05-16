@@ -80,10 +80,10 @@ importers:
     devDependencies:
       '@vitest/browser':
         specifier: 4.1.5
-        version: 4.1.5(msw@2.13.6(@types/node@25.6.0)(typescript@6.0.3))(vite@8.0.10(@types/node@25.6.0)(esbuild@0.28.0)(yaml@2.8.3))(vitest@4.1.5)
+        version: 4.1.5(msw@2.13.6(@types/node@25.6.0)(typescript@6.0.3))(vite@8.0.10(@types/node@25.6.0)(esbuild@0.27.7)(yaml@2.8.3))(vitest@4.1.5)
       '@vitest/browser-playwright':
         specifier: ^4.1.5
-        version: 4.1.5(msw@2.13.6(@types/node@25.6.0)(typescript@6.0.3))(playwright@1.59.1)(vite@8.0.10(@types/node@25.6.0)(esbuild@0.28.0)(yaml@2.8.3))(vitest@4.1.5)
+        version: 4.1.5(msw@2.13.6(@types/node@25.6.0)(typescript@6.0.3))(playwright@1.59.1)(vite@8.0.10(@types/node@25.6.0)(esbuild@0.27.7)(yaml@2.8.3))(vitest@4.1.5)
       '@vitest/coverage-v8':
         specifier: 4.1.5
         version: 4.1.5(@vitest/browser@4.1.5)(vitest@4.1.5)
@@ -101,7 +101,7 @@ importers:
         version: 6.0.3
       vitest:
         specifier: 4.1.5
-        version: 4.1.5(@types/node@25.6.0)(@vitest/browser-playwright@4.1.5)(@vitest/coverage-v8@4.1.5)(happy-dom@20.9.0)(jsdom@29.1.0)(msw@2.13.6(@types/node@25.6.0)(typescript@6.0.3))(vite@8.0.10(@types/node@25.6.0)(esbuild@0.28.0)(yaml@2.8.3))
+        version: 4.1.5(@types/node@25.6.0)(@vitest/browser-playwright@4.1.5)(@vitest/coverage-v8@4.1.5)(happy-dom@20.9.0)(jsdom@29.1.0)(msw@2.13.6(@types/node@25.6.0)(typescript@6.0.3))(vite@8.0.10(@types/node@25.6.0)(esbuild@0.27.7)(yaml@2.8.3))
 
   packages/compat:
     dependencies:
@@ -170,6 +170,9 @@ importers:
         specifier: 1.3.1
         version: 1.3.1(typescript@6.0.3)
     devDependencies:
+      '@gluezero/devtools':
+        specifier: workspace:*
+        version: link:../devtools
       jsdom:
         specifier: 29.1.0
         version: 29.1.0
@@ -201,9 +204,15 @@ importers:
         specifier: 1.3.1
         version: 1.3.1(typescript@6.0.3)
     devDependencies:
+      '@arethetypeswrong/cli':
+        specifier: 0.18.2
+        version: 0.18.2
       '@gluezero/theme':
         specifier: workspace:*
         version: link:../theme
+      '@size-limit/preset-small-lib':
+        specifier: 12.1.0
+        version: 12.1.0(size-limit@12.1.0)
       '@vitest/browser':
         specifier: 4.1.5
         version: 4.1.5(msw@2.13.6(@types/node@25.6.0)(typescript@6.0.3))(vite@8.0.10(@types/node@25.6.0)(esbuild@0.28.0)(yaml@2.8.3))(vitest@4.1.5)
@@ -219,6 +228,12 @@ importers:
       playwright:
         specifier: 1.59.1
         version: 1.59.1
+      publint:
+        specifier: 0.3.18
+        version: 0.3.18
+      size-limit:
+        specifier: 12.1.0
+        version: 12.1.0
       tsup:
         specifier: 8.5.1
         version: 8.5.1(postcss@8.5.12)(typescript@6.0.3)(yaml@2.8.3)
@@ -470,10 +485,10 @@ importers:
         version: link:../microfrontends
       '@vitest/browser':
         specifier: 4.1.5
-        version: 4.1.5(msw@2.13.6(@types/node@25.6.0)(typescript@6.0.3))(vite@8.0.10(@types/node@25.6.0)(esbuild@0.27.7)(yaml@2.8.3))(vitest@4.1.5)
+        version: 4.1.5(msw@2.13.6(@types/node@25.6.0)(typescript@6.0.3))(vite@8.0.10(@types/node@25.6.0)(esbuild@0.28.0)(yaml@2.8.3))(vitest@4.1.5)
       '@vitest/browser-playwright':
         specifier: 4.1.5
-        version: 4.1.5(msw@2.13.6(@types/node@25.6.0)(typescript@6.0.3))(playwright@1.59.1)(vite@8.0.10(@types/node@25.6.0)(esbuild@0.27.7)(yaml@2.8.3))(vitest@4.1.5)
+        version: 4.1.5(msw@2.13.6(@types/node@25.6.0)(typescript@6.0.3))(playwright@1.59.1)(vite@8.0.10(@types/node@25.6.0)(esbuild@0.28.0)(yaml@2.8.3))(vitest@4.1.5)
       jsdom:
         specifier: 29.1.0
         version: 29.1.0
@@ -491,7 +506,7 @@ importers:
         version: 1.1.0(typescript@6.0.3)
       vitest:
         specifier: 4.1.5
-        version: 4.1.5(@types/node@25.6.0)(@vitest/browser-playwright@4.1.5)(@vitest/coverage-v8@4.1.5)(happy-dom@20.9.0)(jsdom@29.1.0)(msw@2.13.6(@types/node@25.6.0)(typescript@6.0.3))(vite@8.0.10(@types/node@25.6.0)(esbuild@0.27.7)(yaml@2.8.3))
+        version: 4.1.5(@types/node@25.6.0)(@vitest/browser-playwright@4.1.5)(@vitest/coverage-v8@4.1.5)(happy-dom@20.9.0)(jsdom@29.1.0)(msw@2.13.6(@types/node@25.6.0)(typescript@6.0.3))(vite@8.0.10(@types/node@25.6.0)(esbuild@0.28.0)(yaml@2.8.3))
 
   packages/mf-module-federation:
     dependencies:
@@ -3950,9 +3965,9 @@ snapshots:
       obug: 2.1.1
       std-env: 4.1.0
       tinyrainbow: 3.1.0
-      vitest: 4.1.5(@types/node@25.6.0)(@vitest/browser-playwright@4.1.5)(@vitest/coverage-v8@4.1.5)(happy-dom@20.9.0)(jsdom@29.1.0)(msw@2.13.6(@types/node@25.6.0)(typescript@6.0.3))(vite@8.0.10(@types/node@25.6.0)(esbuild@0.28.0)(yaml@2.8.3))
+      vitest: 4.1.5(@types/node@25.6.0)(@vitest/browser-playwright@4.1.5)(@vitest/coverage-v8@4.1.5)(happy-dom@20.9.0)(jsdom@29.1.0)(msw@2.13.6(@types/node@25.6.0)(typescript@6.0.3))(vite@8.0.10(@types/node@25.6.0)(esbuild@0.27.7)(yaml@2.8.3))
     optionalDependencies:
-      '@vitest/browser': 4.1.5(msw@2.13.6(@types/node@25.6.0)(typescript@6.0.3))(vite@8.0.10(@types/node@25.6.0)(esbuild@0.28.0)(yaml@2.8.3))(vitest@4.1.5)
+      '@vitest/browser': 4.1.5(msw@2.13.6(@types/node@25.6.0)(typescript@6.0.3))(vite@8.0.10(@types/node@25.6.0)(esbuild@0.27.7)(yaml@2.8.3))(vitest@4.1.5)
 
   '@vitest/expect@4.1.5':
     dependencies:

@@ -17,6 +17,10 @@
       "types": "./dist/theme-inspector/index.d.ts",
       "import": "./dist/theme-inspector/index.js"
     },
+    "./mf-inspector": {
+      "types": "./dist/mf-inspector/index.d.ts",
+      "import": "./dist/mf-inspector/index.js"
+    },
     "./package.json": "./package.json"
   },
   "files": [
@@ -43,7 +47,11 @@
     "test:browser": "vitest run --config vitest.browser.config.ts --passWithNoTests",
     "test:coverage": "vitest run --coverage",
     "typecheck": "tsc --noEmit",
-    "clean": "rm -rf dist"
+    "clean": "rm -rf dist",
+    "ci:publint": "publint",
+    "ci:attw": "attw --pack . --profile esm-only",
+    "size-limit": "size-limit",
+    "ci:gate:f16": "pnpm run typecheck && pnpm run build && pnpm run test && pnpm run ci:publint && pnpm run ci:attw && pnpm run size-limit && node ../../scripts/check-d83-f16.mjs"
   },
   "dependencies": {
     "@gluezero/core": "workspace:*",
@@ -61,16 +69,40 @@
     }
   },
   "devDependencies": {
+    "@arethetypeswrong/cli": "0.18.2",
     "@gluezero/theme": "workspace:*",
+    "@size-limit/preset-small-lib": "12.1.0",
     "@vitest/browser": "4.1.5",
     "@vitest/browser-playwright": "^4.1.5",
     "@vitest/coverage-v8": "4.1.5",
     "jsdom": "29.1.0",
     "playwright": "1.59.1",
+    "publint": "0.3.18",
+    "size-limit": "12.1.0",
     "tsup": "8.5.1",
     "typescript": "6.0.3",
     "vitest": "4.1.5"
   },
+  "size-limit": [
+    {
+      "name": "@gluezero/devtools (gzip)",
+      "path": "dist/index.js",
+      "limit": "27 KB",
+      "gzip": true
+    },
+    {
+      "name": "@gluezero/devtools/theme-inspector (gzip)",
+      "path": "dist/theme-inspector/index.js",
+      "limit": "7 KB",
+      "gzip": true
+    },
+    {
+      "name": "@gluezero/devtools/mf-inspector (gzip)",
+      "path": "dist/mf-inspector/index.js",
+      "limit": "8 KB",
+      "gzip": true
+    }
+  ],
   "repository": {
     "type": "git",
     "url": "git+https://github.com/omardimarzio/GlueZero.git",
