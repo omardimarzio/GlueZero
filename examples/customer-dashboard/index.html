@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="it" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>GlueZero — Customer Dashboard (Livello C governance — golden showcase)</title>
+  <meta name="description" content="Demo end-to-end GlueZero v2.0: 1 host shell + 3 MF mixed (React + WC + iframe) + 5 governance feature attivi." />
+  <meta name="theme-color" content="#1a73e8" />
+  <link rel="canonical" href="https://gluezero.org/examples/customer-dashboard/" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><text y='14' font-size='14'>🛒</text></svg>" />
+
+  <style>
+    * { box-sizing: border-box; }
+    body { font-family: system-ui, sans-serif; margin: 0; padding: 0; background: #F8FAFC; color: #0F172A; line-height: 1.5; }
+    header { background: #1a73e8; color: white; padding: 1rem 2rem; }
+    header h1 { margin: 0 0 0.25rem; font-size: 1.5rem; }
+    header p { margin: 0; opacity: 0.92; font-size: 0.9rem; }
+    .governance-badge { display: inline-block; padding: 2px 10px; border-radius: 12px; background: #2ecc40; color: white; font-size: 0.7rem; margin-left: 8px; vertical-align: middle; font-weight: 600; }
+
+    .layout { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; padding: 1rem 2rem; }
+    .mf-slot { background: white; border-radius: 8px; padding: 1rem; box-shadow: 0 1px 4px rgba(0,0,0,0.08); }
+    .mf-slot h2 { margin-top: 0; color: #475569; font-size: 1.1rem; }
+    .mf-slot.full { grid-column: 1 / -1; }
+
+    .inspector { background: #1E293B; color: #E2E8F0; padding: 12px; font-family: ui-monospace, "SF Mono", monospace; font-size: 11px; max-height: 260px; overflow-y: auto; border-radius: 6px; white-space: pre-wrap; }
+
+    iframe { width: 100%; min-height: 220px; border: 1px solid #E2E8F0; border-radius: 6px; }
+    button { background: #6366F1; color: white; border: 0; padding: 0.4rem 0.9rem; border-radius: 6px; cursor: pointer; font-weight: 600; }
+    button:hover { background: #4F46E5; }
+
+    footer { padding: 1rem 2rem; color: #64748B; font-size: 0.85rem; text-align: center; }
+    footer a { color: #6366F1; }
+  </style>
+
+  <!-- Importmap pinato esm.sh — T-17-06-01 mitigation. -->
+  <script type="importmap">
+    {
+      "imports": {
+        "@gluezero/core": "https://esm.sh/@gluezero/core@2.0.0?bundle",
+        "@gluezero/microfrontends": "https://esm.sh/@gluezero/microfrontends@2.0.0?bundle",
+        "@gluezero/mf-esm": "https://esm.sh/@gluezero/mf-esm@2.0.0?bundle",
+        "@gluezero/mf-web-component": "https://esm.sh/@gluezero/mf-web-component@2.0.0?bundle",
+        "@gluezero/mf-iframe": "https://esm.sh/@gluezero/mf-iframe@2.0.0?bundle",
+        "@gluezero/permissions": "https://esm.sh/@gluezero/permissions@2.0.0?bundle",
+        "@gluezero/compat": "https://esm.sh/@gluezero/compat@2.0.0?bundle",
+        "@gluezero/isolation": "https://esm.sh/@gluezero/isolation@2.0.0?bundle",
+        "@gluezero/fallbacks": "https://esm.sh/@gluezero/fallbacks@2.0.0?bundle",
+        "@gluezero/devtools": "https://esm.sh/@gluezero/devtools@2.0.0?bundle",
+        "@gluezero/devtools/mf-inspector": "https://esm.sh/@gluezero/devtools@2.0.0/mf-inspector?bundle",
+        "@gluezero/react": "https://esm.sh/@gluezero/react@2.0.0?bundle&deps=react@19.2.0,react-dom@19.2.0",
+        "@gluezero/web-components": "https://esm.sh/@gluezero/web-components@2.0.0?bundle",
+        "react": "https://esm.sh/react@19.2.0",
+        "react-dom": "https://esm.sh/react-dom@19.2.0",
+        "react-dom/client": "https://esm.sh/react-dom@19.2.0/client",
+        "react/jsx-runtime": "https://esm.sh/react@19.2.0/jsx-runtime"
+      }
+    }
+  </script>
+</head>
+<body>
+  <header>
+    <h1>🛒 Customer Dashboard
+      <span class="governance-badge">Livello C — Full Governance</span>
+    </h1>
+    <p>Demo end-to-end GlueZero v2.0 — host shell + 3 MF mixed (React + Web Component + iframe sandbox) con 5 governance feature attivi.</p>
+  </header>
+
+  <main class="layout">
+    <section class="mf-slot">
+      <h2>🛒 Cart MF (React)</h2>
+      <div id="mf-cart"></div>
+    </section>
+
+    <section class="mf-slot">
+      <h2>⭐ Recommendations MF (Web Component)</h2>
+      <div id="mf-recs"></div>
+    </section>
+
+    <section class="mf-slot full">
+      <h2>📊 Analytics MF (iframe sandbox)</h2>
+      <div id="mf-analytics"></div>
+    </section>
+
+    <section class="mf-slot full">
+      <h2>🔍 MF Inspector (Devtools live)</h2>
+      <div id="inspector" class="inspector">Loading inspector…</div>
+    </section>
+  </main>
+
+  <footer>
+    <p>Vedi <a href="./README.md">README</a> + <a href="./walkthrough-A-B-C.md">walkthrough A→B→C</a> per dettagli migration.</p>
+  </footer>
+
+  <script type="module" src="./host.js"></script>
+</body>
+</html>

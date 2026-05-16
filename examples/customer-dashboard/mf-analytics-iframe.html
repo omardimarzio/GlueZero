@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Analytics MF (iframe sandbox)</title>
+  <style>
+    body { font-family: system-ui, sans-serif; padding: 8px; margin: 0; background: #FAFAFA; color: #0F172A; }
+    h3 { margin: 0 0 8px; color: #475569; font-size: 1rem; }
+    #events { background: white; padding: 8px; border: 1px solid #E2E8F0; border-radius: 6px; max-height: 180px; overflow-y: auto; font-size: 11px; font-family: ui-monospace, "SF Mono", monospace; }
+    .empty { color: #94A3B8; font-style: italic; }
+  </style>
+</head>
+<body>
+  <h3>📊 Analytics — eventi ricevuti via iframe bridge (F15)</h3>
+  <div id="events"><span class="empty">In attesa di eventi…</span></div>
+  <script type="module" src="./mf-analytics-iframe.js"></script>
+</body>
+</html>
