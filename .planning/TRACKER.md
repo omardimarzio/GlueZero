@@ -1,11 +1,41 @@
 ---
 last_updated: 2026-05-17
-status: phase_17_w3_p04_complete_ready_for_w5_p05
+status: phase_17_w4_p05_complete_ready_for_w5_p06
 project: GlueZero
 milestone: v2.0.0
 current_phase: 17
 current_phase_name: Framework Adapters (React + WC) + Migration + Docs + GA Release
-current_phase_status: w3_complete_p02_react_p03_wc_p04_test_bench_ready_for_w5_p05_docs
+current_phase_status: w4_complete_p05_docs_typedoc_ready_for_w5_p06_examples_customer_dashboard
+
+phase_17_w4_p05_complete:
+  date: "2026-05-17"
+  summary_file: .planning/phases/17-framework-adapters-react-wc-migration-docs-ga-release/17-05-SUMMARY.md
+  commits:
+    - 3baa24c: "docs(17-05): 8 markdown docs/v2/ gruppo 1 NEW — architettura + 4 esempi + performance + descriptor (MF-DOC-01 Task 1)"
+    - d685999: "docs(17-05): 10 markdown docs/v2/ gruppo 2 — reference-style 04-12 + migration guide A/B/C principale (MF-DOC-01 + MF-DOC-03 Task 2)"
+    - ddb5448: "docs(17-05): 2 README adapter italiano 13 sezioni + docs/v2/index.md landing page (MF-DOC-02 Task 3)"
+    - d33969c: "chore(17-05): TypeDoc 0.28 + typedoc-plugin-markdown 4.9 + workflow docs/v2/ GitHub Pages auto-deploy (MF-DOC-05 Task 4)"
+  req_ids_closed: [MF-DOC-01, MF-DOC-02, MF-DOC-03, MF-DOC-05]
+  files_created: 21
+  files_modified: 5
+  docs_breakdown:
+    docs_v2_markdown: 18  # PRD §41 18 documenti completi
+    landing_page: 1  # docs/v2/index.md
+    readme_adapter: 2  # packages/react/README.md + packages/web-components/README.md
+    typedoc_api_generated: 704  # docs/v2/api/ TypeDoc plugin-markdown output (gitignored, rigenerabile)
+  validation_passed:
+    typedoc_build: "PASS (pnpm docs:build exit 0, 0 errors, 43 warnings non-bloccanti)"
+    docs_structure: "PASS (18 markdown + index.md + 22 packages api/ generated)"
+    readme_loc: "PASS (react 284 LoC + web-components 286 LoC, entrambi >= 250 target)"
+    migration_guide_loc: "PASS (17-migration-guide.md 255 LoC, target >= 200)"
+    d83_strict_octuple: "PASS (git diff F16_END=3ca6373..HEAD packages/{20 pkg}/src/ = 0)"
+  decisions_locked:
+    - "D-V2-F17-11 docs hybrid strategy: 18 markdown standalone + 21 README single-source-of-truth + TypeDoc auto-deploy"
+    - "typedoc.json entryPointStrategy expand (vs packages) per cross-package affidabilità con plugin-markdown 4.9"
+    - "Workflow docs.yml upload path docs/v2 unified (no separate prepare step)"
+    - ".gitignore raffinato /docs/* + !/docs/v2/ + /docs/v2/api/ (source committed, TypeDoc output rigenerabile)"
+  url_target: "https://omardimarzio.github.io/GlueZero/v2/"
+  next_plan: "17-06-examples-customer-dashboard-PLAN.md (W5 P06 — host React shell + 3 MF mixed)"
 
 phase_17_w3_p04_complete:
   date: "2026-05-17"
@@ -941,12 +971,12 @@ W3 plan 07-05 (RoleRegistry) può partire in parallelo con 07-04 — file owners
 
 ## Parte A cleanup pre-release — 2026-05-06 ✅ COMPLETE
 
-> **Sezione manuale** (NON gestita dall'hook auto-update di `## Ultimo step completato (auto-update 2026-05-13T17:31:55Z)
+> **Sezione manuale** (NON gestita dall'hook auto-update di `## Ultimo step completato (auto-update 2026-05-16T22:40:39Z)
 
-- Plan: **13-04** → SUMMARY.md committed
-- Commit: `d7f9ad8 docs(13-02): SUMMARY.md plan W2 policy resolver + warning matrix + lifecycle-register`
-- Phase progress: **3/5** plan completati con SUMMARY.md
-- Project progress: 33/37 plan (89%)
+- Plan: **17-04** → SUMMARY.md committed
+- Commit: `c095375 docs(17-04): SUMMARY 17-04 W3 P04 + STATE + TRACKER closure W3`
+- Phase progress: **4/7** plan completati con SUMMARY.md
+- Project progress: 56/65 plan (86%)
 
 
 ## Ultimo step completato (auto-update 2026-05-06T21:29:30Z)

@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v2.0.0
 milestone_name: Microfrontend Governance + Extensible Module Runtime
 status: executing
-last_updated: "2026-05-17T00:35:00Z"
-last_activity: "2026-05-17 — Plan 17-04 W3 P04 closure (tinybench scenario A 1.091ms cap 5% + scenario B 1.180ms cap 10% + 6 test Tier-3 Playwright Chromium React + audit MF-TEST-01..04 + CI bench.yml hard gate + BC §42 + MF-PIPE-01 pre-flight 273/273 PASS)"
+last_updated: "2026-05-16T22:57:55.154Z"
+last_activity: 2026-05-16
 progress:
   total_phases: 10
   completed_phases: 8
-  total_plans: 65
-  completed_plans: 56
-  percent: 86
+  total_plans: 58
+  completed_plans: 54
+  percent: 93
 ---
 
 # Project State: GlueZero
@@ -40,9 +40,9 @@ Items acknowledged and deferred at milestone v1.0 close on 2026-05-08:
 ## Current Position
 
 Phase: 17 (Framework Adapters React + WC + Migration + GA Release) — 🚧 IN PROGRESS (W3 complete)
-Plan: 4 of 7 ✅ COMPLETE — 17-04 W3 P04 closure (bench tinybench harness + Tier-3 React Playwright + audit MF-TEST-01..04 + CI hard gate)
-Status: Phase 17 W1 (P01) + W2 (P02 React) + W3 (P03 WC + P04 test/bench) COMPLETE. Next: W5 P05 (docs/v2 18 markdown + TypeDoc + 2 README adapter italiano).
-Last activity: 2026-05-17 — Plan 17-04 W3 P04 closure (tinybench scenario A 1.091ms cap 5% + scenario B 1.180ms cap 10% + 6 test Tier-3 Playwright Chromium React + audit MF-TEST-01..04 + CI bench.yml + BC §42 + MF-PIPE-01 pre-flight 273/273 PASS, D-83 strict octuple esteso F17 ZERO diff verified)
+Plan: 5 of 7 ✅ COMPLETE — 17-04 W3 P04 closure (bench tinybench harness + Tier-3 React Playwright + audit MF-TEST-01..04 + CI hard gate)
+Status: Ready to execute
+Last activity: 2026-05-16
 Branching: `milestone` strategy (D-V2-F8-09); long-lived branch `gsd/v2.0.0-microfrontend-governance`; `main` resta intoccato fino a GA F17
 Next command: `/gsd-execute-phase 17 --chain` (W5 P05 docs 18 markdown + TypeDoc auto-deploy + 2 README adapter italiano)
 
@@ -140,6 +140,7 @@ Next command: `/gsd-execute-phase 17 --chain` (W5 P05 docs 18 markdown + TypeDoc
 | Phase 11 P04 | 489 | 3 tasks | 6 files |
 | Phase 11 P11-03 | 6 | 2 tasks | 5 files |
 | Phase 13 P13-03 | 9 | 2 tasks | 11 files |
+| Phase 17 P05 | 18 | 4 tasks | 26 files |
 
 ## Accumulated Context
 
