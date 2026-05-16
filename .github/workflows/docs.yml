@@ -32,13 +32,28 @@ jobs:
 
       - run: pnpm install --frozen-lockfile
       - run: pnpm build
+
+      # Build TypeDoc API reference (genera markdown da JSDoc dei 22 packages → docs/v2/api/)
       - run: pnpm docs:build
+
+      # Verifica struttura docs/v2/ unified site (markdown PRD §41 + TypeDoc API reference)
+      - name: Verify docs/v2/ structure
+        run: |
+          test -f docs/v2/index.md
+          test -f docs/v2/01-architecture.md
+          test -f docs/v2/17-migration-guide.md
+          test -f docs/v2/18-performance-bundle.md
+          test -d docs/v2/api
+          echo "docs/v2/ structure verified — 18 markdown + TypeDoc API reference"
 
       - uses: actions/configure-pages@v5
 
+      # Deploy unified site docs/v2/ (18 markdown source + docs/v2/api/ TypeDoc output)
+      # URL target: https://omardimarzio.github.io/GlueZero/v2/
+      # NB: GitHub Pages serve markdown raw. Per HTML rendering automatic, aggiungere mkdocs/docusaurus V2.1.
       - uses: actions/upload-pages-artifact@v3
         with:
-          path: docs
+          path: docs/v2
 
   deploy:
     needs: build

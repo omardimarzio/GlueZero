@@ -42,7 +42,8 @@
     "changeset": "changeset",
     "release": "pnpm build && changeset publish",
     "docs:build": "typedoc",
-    "docs:serve": "npx http-server docs -p 8080"
+    "docs:serve": "npx http-server docs/v2 -p 8080",
+    "docs:clean": "rm -rf docs/v2/api"
   },
   "devDependencies": {
     "typescript": "6.0.3",
@@ -57,6 +58,7 @@
     "msw": "2.13.6",
     "tsup": "8.5.1",
     "typedoc": "0.28.19",
+    "typedoc-plugin-markdown": "4.9.0",
     "publint": "0.3.18",
     "@arethetypeswrong/cli": "0.18.2",
     "size-limit": "12.1.0",
