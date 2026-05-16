@@ -115,6 +115,8 @@ export class GlueZeroErrorBoundary extends Component<
     }
 
     // 1. Publish topic F8 standard `microfrontend.runtime.failed`
+    // Delivery sync per garantire che eventuali subscriber siano notificati prima
+    // del prossimo render React (consistency con error topic semantica F8/F14).
     try {
       broker.publish(
         'microfrontend.runtime.failed',
@@ -129,6 +131,7 @@ export class GlueZeroErrorBoundary extends Component<
               ? `gluezero-error-boundary:${microFrontendId}`
               : 'gluezero-error-boundary',
           },
+          deliveryMode: 'sync',
         },
       )
     } catch {
