@@ -61,6 +61,10 @@ const DEFAULT_CAPACITY = 500
  *   dopo `push()`, viene rimosso l'item più vecchio via `shift()`.
  * @returns Una nuova istanza `MfRingBuffer<T>`.
  *
+ * @throws `TypeError` quando `structuredClone` viene chiamato su `T` non-cloneable
+ *   (es. function, WeakMap, oggetti con proxy non-cloneable). Risoluzione: usare
+ *   `T` strutturalmente clonabile (POJO, primitive, Array di POJO).
+ *
  * @example FIFO drop-oldest oltre capacity
  * ```ts
  * const buf = createMfRingBuffer<number>(2)

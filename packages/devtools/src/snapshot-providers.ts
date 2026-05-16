@@ -140,6 +140,11 @@ export interface SnapshotProviderRegistry {
  * // → { ok: { value: 1 } } — 'broken' skipped silently
  * ```
  *
+ * @throws Nessuna eccezione propagata dal Registry — i provider che `throw` durante
+ *   `collect()` invocation vengono saltati silenziosamente (try/catch swallow pattern
+ *   F1 D-20 `safeTapStep` carryover + F6 `devtools-broker.ts:230-232`). Consumer NON
+ *   riceve mai eccezione da `collect()`.
+ *
  * @see D-V2-F16-01
  * @see D-V2-F16-02
  * @see D-V2-F16-03

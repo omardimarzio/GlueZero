@@ -108,6 +108,11 @@ export interface TimingsCollector {
  * console.log(timings.get('mf1')) // undefined
  * ```
  *
+ * @throws Nessuna eccezione propagata dal collector — `recordIfLifecycle` no-op
+ *   silenzioso quando `topic` non è in `TOPIC_TO_FIELD` (11 lifecycle), e first-write-wins
+ *   evita race su retry path (D-V2-F16-09). `get(mfId)` ritorna `undefined` quando
+ *   nessun evento registrato (no throw).
+ *
  * @see D-V2-F16-09
  * @see RESEARCH §7.2 RESOLVED
  */

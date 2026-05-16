@@ -128,6 +128,11 @@ export interface MfMetricsDispatch {
  * console.log(entries[0].registered) // 2
  * console.log(entries[1].registered) // 2
  * ```
+ *
+ * @throws Nessuna eccezione propagata dal dispatch — `handleTopicEvent` skip silenzioso
+ *   quando `event.payload.id`/`microFrontendId` non è una stringa (no-op), e gli
+ *   `observe*Time` rispettano il cardinality cap (skip oltre threshold). I sotto-call a
+ *   `MetricsCollector.increment/observe/setGauge` di F6 NON throw (cumulative-only D-164).
  */
 export function createMfMetricsDispatch(opts: MfMetricsDispatchOptions = {}): MfMetricsDispatch {
   const collector: MetricsCollector = opts.collector ?? createMetricsCollector()

@@ -107,6 +107,12 @@ export interface MfAggregator {
  * console.log(snap.microFrontends[0].permissions) // undefined (no throw)
  * ```
  *
+ * @throws `TypeError` se `structuredClone` viene chiamato su payload contenente
+ *   tipi non-cloneable (function, WeakMap, Proxy). Mitigation: garantire che i
+ *   payload event siano POJO-compatible (caller responsibility — coerente F8
+ *   `publishLifecycleEvent` baseline). `mfService.list()` throw propagato — il
+ *   chiamante (`module.ts`) decide se gestire (default: catch upstream).
+ *
  * @see D-V2-F16-05
  * @see D-V2-F16-06
  * @see D-V2-F16-09
