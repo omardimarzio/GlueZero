@@ -161,3 +161,55 @@ export interface MicroFrontendDebugSnapshot {
   readonly cleanupResources: readonly string[]
   readonly fallbackPolicy?: unknown
 }
+
+/**
+ * D-V2-F16-15 — 14 metriche per-MF projection shape (alimenta `getMetrics().microFrontends[]`).
+ *
+ * **Semantica counter (B2 fix):**
+ * - **6 counter GLOBALI** (`registered`, `mounted`, `failed`, `permissionDenied`,
+ *   `compatFailures`, `capMissing`): incrementati SENZA label `mfId` → totale across
+ *   tutti i MF → REPLICATI IDENTICI in ogni entry per shape consistency.
+ * - **5 counter PER-MF** (`mountFailures`, `events`, `routeCalls`, `workerTasks`,
+ *   `contextWrites`): incrementati con label `{mfId="..."}` strict → proiezione scoped
+ *   per entry.
+ * - **1 gauge PER-MF** (`activeSubs`): label `{mfId}` strict — last-write-wins.
+ * - **2 histogram PER-MF** (`timeAvgLoad`, `timeAvgMount`): label `{mfId}` strict
+ *   — reservoir Algorithm R Vitter F6 (D-165). Mapping `p95 → p90` carryover F6
+ *   reservoir summary expose.
+ *
+ * **Totale 14 metriche shape esposta** = 6 (globali) + 5 (per-MF counter) + 1 (gauge)
+ * + 2 (histogram).
+ *
+ * **B3 data quality limit V2.0** (RESEARCH §7.5 RESOLVED): i counter
+ * `routeCalls`, `workerTasks`, `contextWrites` POSSONO restare a 0 in F16 v2.0
+ * baseline — i topic `gluezero.{routing,worker,context}.*` NON sono attualmente
+ * emessi da F3/F5/F10 in v1.x baseline. Pattern matching liberale forward-compat
+ * V2.1+ documentato in `metrics.ts` header.
+ *
+ * @see D-V2-F16-13 — inline metrics single module
+ * @see D-V2-F16-14 — D-V2-19 shape preservation (microFrontends absent/[] lifecycle)
+ * @see D-V2-F16-15 — projection MfMetricsEntry 14-field shape
+ * @see MF-OBS-02 — REQ frozen contract (14 metric shape)
+ * @see RESEARCH §7.5 RESOLVED — empirical route/worker/context findings
+ */
+export interface MfMetricsEntry {
+  readonly id: string
+  // 6 counter GLOBALI — replicati IDENTICI in ogni entry (totale across MFs)
+  readonly registered: number
+  readonly mounted: number
+  readonly failed: number
+  readonly permissionDenied: number
+  readonly compatFailures: number
+  readonly capMissing: number
+  // 2 histogram PER-MF (label {mfId}) — reservoir Algorithm R Vitter F6
+  readonly timeAvgLoad: { readonly p50: number; readonly p95: number; readonly p99: number; readonly count: number }
+  readonly timeAvgMount: { readonly p50: number; readonly p95: number; readonly p99: number; readonly count: number }
+  // 5 counter PER-MF (label {mfId})
+  readonly mountFailures: number
+  readonly events: number
+  readonly routeCalls: number
+  readonly workerTasks: number
+  readonly contextWrites: number
+  // 1 gauge PER-MF (label {mfId}) — last-write-wins
+  readonly activeSubs: number
+}
