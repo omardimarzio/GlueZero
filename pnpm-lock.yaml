@@ -207,6 +207,9 @@ importers:
       '@arethetypeswrong/cli':
         specifier: 0.18.2
         version: 0.18.2
+      '@gluezero/microfrontends':
+        specifier: workspace:*
+        version: link:../microfrontends
       '@gluezero/theme':
         specifier: workspace:*
         version: link:../theme
