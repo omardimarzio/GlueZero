@@ -40,8 +40,10 @@ export { mfInspectorModule, type MfInspectorModuleOptions } from './module'
 export { SERVICE_MF_INSPECTOR, type MfInspectorService } from './service-locator'
 
 // Public types — consumer narrowing su `DebugSnapshot.external?.mf`
+// W3 P03 — `MfMetricsEntry` per consumer narrowing su `getMetrics().microFrontends`
 export type {
   MfEvent,
+  MfMetricsEntry,
   MfState,
   MicroFrontendDebugSnapshot,
   MicroFrontendTimings,

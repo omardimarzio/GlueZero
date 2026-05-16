@@ -52,10 +52,12 @@ export {
   flatLabels,
 } from './cardinality-cap'
 // ---------- W4 plan 06-08b — composition wrapper Opzione B + factory ----------
+// ---------- W3 P03 F16 — MetricsProvider Registry type (D-V2-19) ----------
 export {
   type DebugSnapshot,
   DevtoolsBroker,
   type DevtoolsBrokerConfig,
+  type MetricsProviderFn,
 } from './devtools-broker'
 // ---------- W3 plan 06-05 — event-inspector + route-inspector (D-167) ----------
 export {

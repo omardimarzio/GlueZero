@@ -43,6 +43,7 @@ import {
 } from '@gluezero/core'
 import type { MicroFrontendsService } from '@gluezero/microfrontends'
 import { createMfAggregator } from './aggregator'
+import { createMfMetricsDispatch, type MfMetricsDispatch } from './metrics'
 import { createMfPause } from './pause'
 import { SERVICE_MF_INSPECTOR, type MfInspectorService } from './service-locator'
 import { createTimingsCollector } from './timings'
@@ -75,12 +76,17 @@ export interface MfInspectorModuleOptions {
 }
 
 /**
- * Type-helper per probe `DevtoolsBroker.registerSnapshotProvider` (W1 P01 API).
+ * Type-helper per probe `DevtoolsBroker.registerSnapshotProvider` (W1 P01 API)
+ * + `registerMetricsProvider` (W3 P03 API).
  *
  * Guard `typeof === 'function'` su plain Broker (F1 core) → skip silenzioso.
  */
 interface DevtoolsBrokerLike {
   readonly registerSnapshotProvider?: (name: string, fn: () => unknown) => void
+  readonly registerMetricsProvider?: (
+    name: string,
+    fn: () => Record<string, unknown[]>,
+  ) => void
 }
 
 /**
@@ -201,11 +207,16 @@ export function mfInspectorModule(options: MfInspectorModuleOptions = {}): Broke
         timingsLookup: (id: string) => timings.get(id),
       })
 
+      // (4b) W3 P03 — MfMetricsDispatch composition F6 createMetricsCollector
+      //      (14 metriche gluezero.mfs.* — D-V2-F16-13/14/15 + MF-OBS-02).
+      const metricsDispatch: MfMetricsDispatch = createMfMetricsDispatch()
+
       // (5) AbortController D-V2-16 cleanup cascade
       const ctrl = new AbortController()
       const subs: Subscription[] = []
 
       // (6) Subscribe 29 standard topics F8 — pauseCtrl gate + aggregator dispatch + timings record
+      //     + W3 P03 metricsDispatch (counter dispatch + histogram observe load/mount).
       for (const topic of ALL_MF_TOPICS) {
         const sub = broker.subscribe(
           topic,
@@ -227,6 +238,27 @@ export function mfInspectorModule(options: MfInspectorModuleOptions = {}): Broke
             if (typeof mfId === 'string') {
               timings.recordIfLifecycle(mfId, topic, ts)
             }
+            // W3 P03 — counter dispatch (6 globali + 1 per-MF tagged + forward-compat B3)
+            metricsDispatch.handleTopicEvent(topic, event)
+            // W3 P03 — histogram observe load/mount durations su lifecycle transition completate
+            // (D-V2-F16-15 — F6 reservoir Algorithm R; RESEARCH §7.2 RESOLVED 11/11 topic emessi)
+            if (typeof mfId === 'string') {
+              const t = timings.get(mfId)
+              if (
+                topic === 'microfrontend.loaded' &&
+                t?.loadStartedAt !== undefined &&
+                t?.loadedAt !== undefined
+              ) {
+                metricsDispatch.observeLoadTime(mfId, t.loadedAt - t.loadStartedAt)
+              }
+              if (
+                topic === 'microfrontend.mounted' &&
+                t?.mountStartedAt !== undefined &&
+                t?.mountedAt !== undefined
+              ) {
+                metricsDispatch.observeMountTime(mfId, t.mountedAt - t.mountStartedAt)
+              }
+            }
           },
           { deliveryMode: 'sync' },
         )
@@ -235,6 +267,7 @@ export function mfInspectorModule(options: MfInspectorModuleOptions = {}): Broke
 
       // (7) Wildcard subscribe — eventsPerMfId attribution (D-V2-F16-07 + MF-OBS-01)
       // Filtra via metadata.microFrontendId (auto-popolato da MfRuntimeContext facade F8)
+      // + W3 P03 metricsDispatch.incrementEventCounter (counter PER-MF eventsPerMfId)
       const wildcardSub = broker.subscribe(
         '*',
         (event) => {
@@ -244,6 +277,8 @@ export function mfInspectorModule(options: MfInspectorModuleOptions = {}): Broke
           if (typeof mfId !== 'string') return
           const topic = typeof ev.topic === 'string' ? ev.topic : 'unknown'
           aggregator.recordTopic(mfId, topic)
+          // W3 P03 — counter PER-MF eventsPerMfId (B2 fix scoped per mfId via tagged)
+          metricsDispatch.incrementEventCounter(mfId)
         },
         { deliveryMode: 'sync' },
       )
@@ -268,12 +303,22 @@ export function mfInspectorModule(options: MfInspectorModuleOptions = {}): Broke
       if (typeof dvtBroker.registerSnapshotProvider === 'function') {
         dvtBroker.registerSnapshotProvider('mf', () => aggregator.buildSnapshot())
       }
+      // (9b) W3 P03 — Register as MetricsProvider su DevtoolsBroker (D-V2-19 BLOCKING).
+      //     Convention F16: provider 'mf' ritorna `{ microFrontends: MfMetricsEntry[] }`.
+      //     Graceful guard typeof su plain Broker (F1 core) → skip silenzioso.
+      if (typeof dvtBroker.registerMetricsProvider === 'function') {
+        dvtBroker.registerMetricsProvider('mf', () => ({
+          microFrontends: metricsDispatch.buildEntries() as unknown as unknown[],
+        }))
+      }
 
       // (10) Cleanup cascade D-V2-16 — broker shutdown → ctrl.abort() → unsubscribe + state clear
+      //      + W3 P03 metricsDispatch.clear() (seenMfs tracking reset).
       const onAbort = (): void => {
         for (const sub of subs) sub.unsubscribe()
         aggregator.clear()
         timings.clear()
+        metricsDispatch.clear()
       }
       if (ctrl.signal.aborted) {
         onAbort()

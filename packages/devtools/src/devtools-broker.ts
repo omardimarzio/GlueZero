@@ -88,6 +88,20 @@ export interface DevtoolsBrokerConfig extends RouterBrokerConfig {
 }
 
 /**
+ * W3 P03 F16 — MetricsProvider plug-in registry function signature (D-V2-F16-13).
+ *
+ * Provider invocato sync a ogni `getMetrics()` call. Output (record di array)
+ * è spread nel risultato finale via `Object.assign`. Convention F16: provider
+ * `'mf'` ritorna `{ microFrontends: MfMetricsEntry[] }` per popolare il field
+ * D-V2-19 BLOCKING. Provider che `throw` → skip silenzioso (pattern F1 D-20).
+ *
+ * @see D-V2-F16-13 (inline metrics single module)
+ * @see D-V2-F16-14 (D-V2-19 shape preservation absent/[] lifecycle)
+ * @see D-V2-19 BLOCKING (microFrontends field in getMetrics shape)
+ */
+export type MetricsProviderFn = () => Record<string, unknown[]>
+
+/**
  * F6 DebugSnapshot — output di `getDebugSnapshot()` (D-162 deep-clone via
  * structuredClone).
  *
@@ -218,6 +232,8 @@ export class DevtoolsBroker {
   private readonly aggregateTap: EventTap
   // F16 W1 P01 — MIN-3 SnapshotProvider Registry (D-V2-F16-01)
   private readonly snapshotProviders: SnapshotProviderRegistry
+  // F16 W3 P03 — MetricsProvider Registry (D-V2-F16-13 + D-V2-19 BLOCKING)
+  private readonly metricsProviders: Map<string, MetricsProviderFn>
 
   constructor(config: DevtoolsBrokerConfig = {}) {
     const dt = config.devtools ?? {}
@@ -302,6 +318,12 @@ export class DevtoolsBroker {
     //    popola snapshot.external[name]. ASSENTE quando size()===0 (preserve
     //    BC §42 API #13 shape).
     this.snapshotProviders = createSnapshotProviderRegistry()
+
+    // 7. F16 W3 P03 — MetricsProvider Registry (D-V2-F16-13). Storage interno
+    //    Map<string, MetricsProviderFn>; invocazione sync in `getMetrics()`
+    //    popola il risultato via `Object.assign`. ASSENTE quando size === 0
+    //    (preserve BC §42 API #14 D-V2-19 shape bit-exact v1.x).
+    this.metricsProviders = new Map()
   }
 
   // ============================================================================
@@ -499,9 +521,67 @@ export class DevtoolsBroker {
     this.snapshotProviders.register(name, fn)
   }
 
-  /** TOOL-05 — cumulative MetricsSnapshot (D-164). */
+  /**
+   * TOOL-05 — cumulative MetricsSnapshot (D-164) + F16 W3 P03 MetricsProvider
+   * extension (D-V2-F16-13 + D-V2-19 BLOCKING).
+   *
+   * **F16 W3 P03 extension:** quando `metricsProviders.size > 0` invoca sync
+   * tutti i provider e spread output via `Object.assign(result, fn())`. Convention
+   * F16: provider `'mf'` ritorna `{ microFrontends: MfMetricsEntry[] }` per
+   * popolare il field D-V2-19. Quando `size === 0` il base `MetricsSnapshot`
+   * ritorna unmodified → BC §42 API #14 shape preserve bit-exact (microFrontends?
+   * field ASSENTE, NON undefined explicit).
+   *
+   * Provider che `throw` → skip silenzioso (pattern F1 D-20 safeTapStep).
+   *
+   * @see D-V2-F16-13 (inline metrics single module)
+   * @see D-V2-F16-14 (D-V2-19 shape preservation)
+   * @see D-V2-19 BLOCKING (microFrontends field)
+   */
   getMetrics(): MetricsSnapshot {
-    return this.metrics.getMetrics()
+    const base = this.metrics.getMetrics()
+    // D-V2-F16-14: BC §42 API #14 preserve — ritorna base inalterato quando
+    // nessun provider registrato (shape v1.x bit-exact).
+    if (this.metricsProviders.size === 0) return base
+    const result: Record<string, unknown> = { ...base }
+    for (const [, fn] of this.metricsProviders) {
+      try {
+        Object.assign(result, fn())
+      } catch {
+        /* idempotent — pattern F1 D-20 safeTapStep inline */
+      }
+    }
+    return result as unknown as MetricsSnapshot
+  }
+
+  /**
+   * F16 W3 P03 — MetricsProvider plug-in registration (D-V2-F16-13).
+   *
+   * Provider invocato sync a ogni `getMetrics()` call. Output (`Record<string, unknown[]>`)
+   * è spread nel risultato finale via `Object.assign`. Convention F16: provider `'mf'`
+   * ritorna `{ microFrontends: MfMetricsEntry[] }` per popolare il field D-V2-19 BLOCKING.
+   * Quando nessun provider registrato → BC §42 API #14 shape preserved bit-exact v1.x.
+   *
+   * Re-register stesso name → overwrite idempotent. Provider che `throw` durante
+   * invocazione → skip silenzioso (pattern F1 D-20).
+   *
+   * @example Quick start (anticipo W3 mfInspectorModule)
+   * ```ts
+   * const broker = createDevtoolsBroker({})
+   * broker.registerMetricsProvider('mf', () => ({ microFrontends: [...] }))
+   * const metrics = broker.getMetrics() as { microFrontends?: MfMetricsEntry[] }
+   * console.log(metrics.microFrontends) // → MfMetricsEntry[]
+   * ```
+   *
+   * @param name - Identifier univoco del provider (es. `'mf'`). Re-register overwrite.
+   * @param fn - Funzione sync invocata a ogni `getMetrics()`. Output spread nel result.
+   *
+   * @see D-V2-F16-13 (inline metrics single module)
+   * @see D-V2-F16-14 (shape preservation absent/[] lifecycle)
+   * @see D-V2-19 BLOCKING (microFrontends field in getMetrics)
+   */
+  registerMetricsProvider(name: string, fn: MetricsProviderFn): void {
+    this.metricsProviders.set(name, fn)
   }
 
   /** TOOL-04 — pauseTopic (D-168). Idempotent. */
