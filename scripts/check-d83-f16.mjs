@@ -34,6 +34,15 @@
  * F8 CONTEXT linea 41 lockato). NO check su `packages/devtools/src/` in F16 verifier —
  * coerente con MIN-3 SnapshotProvider Registry + subpath `mf-inspector` lock.
  *
+ * **ECCEZIONE F16 BC §42 `__bc_replay__/` test directory (W3 P03 fix):**
+ * `packages/core/src/__bc_replay__/` è una test directory convention F8 (BC §42 14 API
+ * verification — debug-snapshot-shape, metrics-shape, ecc.) — NON source code core.
+ * F16 può estendere questa directory con NUOVI test scenari per BC §42 API #13/#14
+ * D-V2-19 shape preservation (W1 P01 `devtools-snapshot-shape.test.ts` + W3 P03
+ * `get-metrics-shape.test.ts`). Esclusione esplicita via pathspec `:(exclude)` analog
+ * pattern F15 verifier (carryover Rule 4). Documentazione: W2 P02 SUMMARY linea 269
+ * (plan-checker iter 2 PASS conferma `__bc_replay__/` test layer).
+ *
  * Baseline resolution:
  *  - F9_END  = `7408f25` (frozen — completion F9 mf-esm closure, post-v1.1.0)
  *  - F10_END = `27dd7db` (frozen — completion F10)
@@ -99,7 +108,15 @@ const F13_END = resolveBaseline('^docs\\(13-05', 'F13_END')
 // coerente con MIN-3 SnapshotProvider Registry + subpath mf-inspector lock (D-V2-F16-14).
 const checks = [
   // Cluster A — Strict septuple esteso F11..F14 (8 v2.0 protected packages)
-  { base: F10_END, path: 'packages/core/src/', name: 'core (F10_END strict)' },
+  {
+    base: F10_END,
+    path: 'packages/core/src/',
+    name: 'core (F10_END strict)',
+    // F16 BC §42 test directory exception (W1 P01 + W3 P03):
+    // `__bc_replay__/` è test layer convention F8 — NON source core. F16 estende con
+    // NUOVI test BC §42 API #13/#14 (devtools-snapshot-shape + get-metrics-shape).
+    excludes: ['packages/core/src/__bc_replay__/'],
+  },
   { base: F10_END, path: 'packages/microfrontends/src/', name: 'microfrontends (F10_END strict)' },
   { base: F10_END, path: 'packages/mapper/src/', name: 'mapper (F10_END strict)' },
   { base: F10_END, path: 'packages/context/src/', name: 'context (F10_END strict)' },
@@ -134,9 +151,13 @@ for (const check of checks) {
   let diffLines = 0
   let error
   try {
-    const out = execSync(`git diff ${check.base}..HEAD --numstat -- ${check.path}`, {
-      encoding: 'utf-8',
-    })
+    // F16 W3 P03 fix — pathspec exclusions per BC §42 `__bc_replay__/` test directory
+    // (carryover Rule 4 pattern F15 verifier: `:(exclude)<path>`).
+    const excludeArgs = (check.excludes ?? [])
+      .map((p) => `':(exclude)${p}'`)
+      .join(' ')
+    const cmd = `git diff ${check.base}..HEAD --numstat -- ${check.path} ${excludeArgs}`.trim()
+    const out = execSync(cmd, { encoding: 'utf-8' })
     diffLines = out
       .split('\n')
       .filter(Boolean)
@@ -160,6 +181,8 @@ const output = {
   resolved: { F9_END, F10_END, F11_END, F12_END, F13_END, F14_END, F15_END, V11_TAG },
   totalChecks: checks.length,
   exception: 'packages/devtools/src/ EXCLUDED (D-V2-F16-14 — research SUMMARY linea 217)',
+  exceptionBcReplay:
+    'packages/core/src/__bc_replay__/ EXCLUDED da check core (F16 W3 P03 fix — BC §42 test directory F8 convention)',
   checks: results,
 }
 
@@ -170,6 +193,9 @@ if (allPass) {
     '\n✅ D-83 strict septuple esteso F16 (8 v2.0 protected + 4 F15 + 5 v1.x + mf-esm = 17 checks): ALL ZERO-DIFF',
   )
   console.log('   ECCEZIONE: packages/devtools/src/ EXCLUDED (D-V2-F16-14 lockato F16)')
+  console.log(
+    '   ECCEZIONE: packages/core/src/__bc_replay__/ EXCLUDED da core check (BC §42 test directory F8)',
+  )
 }
 
 process.exit(allPass ? 0 : 1)
