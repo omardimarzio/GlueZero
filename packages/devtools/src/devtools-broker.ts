@@ -40,6 +40,11 @@ import { createMetricsCollector, type MetricsCollector } from './metrics-collect
 import { createMultiplexTap } from './multiplex-tap'
 import { createPauseController, type PauseController } from './pause-controller'
 import { createRouteInspector, type RouteInspector } from './route-inspector'
+import {
+  createSnapshotProviderRegistry,
+  type SnapshotProviderFn,
+  type SnapshotProviderRegistry,
+} from './snapshot-providers'
 import { wrapLegacyTap } from './tap-registry'
 import type { DevtoolsConfig } from './types/devtools-config'
 import type { MetricsSnapshot } from './types/metrics'
@@ -85,6 +90,11 @@ export interface DevtoolsBrokerConfig extends RouterBrokerConfig {
 /**
  * F6 DebugSnapshot — output di `getDebugSnapshot()` (D-162 deep-clone via
  * structuredClone).
+ *
+ * **F16 W1 P01 extension (D-V2-F16-02):** campo `external?` opzionale popolato
+ * sync dai `SnapshotProvider` registrati via `registerSnapshotProvider()`.
+ * ASSENTE quando nessun provider registrato (BC §42 API #13 preserve bit-exact
+ * v1.x — DevtoolsBroker shape post-F6 invariata + extension MIN-3 trasparente).
  */
 export interface DebugSnapshot {
   readonly recentEvents: readonly unknown[]
@@ -92,6 +102,20 @@ export interface DebugSnapshot {
   readonly currentMetrics: MetricsSnapshot
   readonly pausedTopics: readonly string[]
   readonly enabled: boolean
+  /**
+   * D-V2-F16-02 — `external` field popolato dai SnapshotProvider registrati
+   * (es. `mfInspectorModule` registra `'mf' → MicroFrontendDebugSnapshot`).
+   * Multi-provider name-keyed shape `Record<string, unknown>`. Consumer fa
+   * narrowing locale (es. `external?.mf as MicroFrontendDebugSnapshot`) per
+   * preservare D-83 strict (no type coupling devtools→microfrontends).
+   *
+   * Quando `size() === 0` (nessun provider) il field è ASSENTE dal return
+   * value (NON `undefined` explicit) — verifica BC §42 API #13 enforcement.
+   *
+   * @see D-V2-F16-01 (Registry sede)
+   * @see D-V2-F16-02 (shape multi-provider name-keyed)
+   */
+  readonly external?: Readonly<Record<string, unknown>>
 }
 
 const STEP_EVENT_OBSERVED = 'event.observed' // D-161 step 14 §28 reale
@@ -192,6 +216,8 @@ export class DevtoolsBroker {
   private readonly metrics: MetricsCollector
   private readonly pauseController: PauseController
   private readonly aggregateTap: EventTap
+  // F16 W1 P01 — MIN-3 SnapshotProvider Registry (D-V2-F16-01)
+  private readonly snapshotProviders: SnapshotProviderRegistry
 
   constructor(config: DevtoolsBrokerConfig = {}) {
     const dt = config.devtools ?? {}
@@ -270,6 +296,12 @@ export class DevtoolsBroker {
       ...config,
       runtime: { ...(config.runtime ?? {}), tap: this.aggregateTap },
     })
+
+    // 6. F16 W1 P01 — MIN-3 SnapshotProvider Registry (D-V2-F16-01). Storage
+    //    interno Map<string, () => unknown>; invocazione sync in getDebugSnapshot
+    //    popola snapshot.external[name]. ASSENTE quando size()===0 (preserve
+    //    BC §42 API #13 shape).
+    this.snapshotProviders = createSnapshotProviderRegistry()
   }
 
   // ============================================================================
@@ -404,20 +436,67 @@ export class DevtoolsBroker {
 
   /**
    * TOOL-04 — snapshot debug deep-clone (D-162 structuredClone) di
-   * `{ recentEvents, recentRoutes, currentMetrics, pausedTopics, enabled }`.
+   * `{ recentEvents, recentRoutes, currentMetrics, pausedTopics, enabled }`
+   * + opzionalmente `external` quando ≥1 SnapshotProvider registrato (F16
+   * D-V2-F16-01/02/03).
    *
    * Mutazione del valore ritornato NON corrompe lo state interno
    * (T-06-08b-02 mitigation).
+   *
+   * **F16 W1 P01 extension:** se `snapshotProviders.size() > 0` invoca sync
+   * tutti i provider e popola `external[name] = providerFn()`. Provider che
+   * `throw` → skip silenzioso (try/catch swallow nel `collect()`). Quando
+   * `size() === 0` il campo `external` è ASSENTE dal raw object (NON aggiunto
+   * come `undefined`) → BC §42 API #13 shape preserve.
+   *
+   * @see D-V2-F16-01 (Registry sede)
+   * @see D-V2-F16-02 (external shape multi-provider name-keyed)
+   * @see D-V2-F16-03 (sync invocation on-demand)
    */
   getDebugSnapshot(): DebugSnapshot {
-    const raw = {
+    const raw: Record<string, unknown> = {
       recentEvents: this.inspector.getBuffer(),
       recentRoutes: this.routeInspector.getBuffer(),
       currentMetrics: this.metrics.getMetrics(),
       pausedTopics: this.pauseController.getSnapshot().pausedTopics,
       enabled: this.inspector.getSnapshot().enabled,
     }
-    return structuredClone(raw) as DebugSnapshot
+    // D-V2-F16-02: external? field ASSENTE quando nessun provider (BC §42 API #13 preserve).
+    if (this.snapshotProviders.size() > 0) {
+      raw['external'] = this.snapshotProviders.collect()
+    }
+    return structuredClone(raw) as unknown as DebugSnapshot
+  }
+
+  /**
+   * F16 W1 P01 — MIN-3 SnapshotProvider plug-in registration (D-V2-F16-01).
+   *
+   * Provider invocato sync a ogni `getDebugSnapshot()` call. Output assegnato
+   * a `snapshot.external[name]`. Quando nessun provider registrato → `external?`
+   * field assente (bit-exact BC §42 API #13 preserve).
+   *
+   * Re-register stesso name → overwrite idempotent (D-V2-F16-01). Provider
+   * che `throw` durante invocazione → skip silenzioso (pattern F1 D-20).
+   *
+   * @example Quick start (anticipo W2 mfInspectorModule)
+   * ```ts
+   * const broker = createDevtoolsBroker({})
+   * broker.registerSnapshotProvider('mf', () => ({ microFrontends: [...] }))
+   * const snap = broker.getDebugSnapshot()
+   * console.log(snap.external?.mf)
+   * ```
+   *
+   * @param name - Identifier univoco del provider (es. `'mf'`, `'theme'`).
+   *   Re-register overwrite il provider esistente per lo stesso name.
+   * @param fn - Funzione sync invocata a ogni snapshot. Output assegnato a
+   *   `external[name]`. Provider che `throw` → skip silenzioso.
+   *
+   * @see D-V2-F16-01 (Registry sede)
+   * @see D-V2-F16-03 (sync invocation)
+   * @see {@link createSnapshotProviderRegistry}
+   */
+  registerSnapshotProvider(name: string, fn: SnapshotProviderFn): void {
+    this.snapshotProviders.register(name, fn)
   }
 
   /** TOOL-05 — cumulative MetricsSnapshot (D-164). */

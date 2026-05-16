@@ -90,6 +90,12 @@ export {
   type RouteInspector,
   type RouteInspectorOptions,
 } from './route-inspector'
+// ---------- W1 P01 F16 — MIN-3 SnapshotProvider Registry (D-V2-F16-01) ----------
+export {
+  createSnapshotProviderRegistry,
+  type SnapshotProviderFn,
+  type SnapshotProviderRegistry,
+} from './snapshot-providers'
 export {
   createTapRegistry,
   type TapHandle,
