@@ -1,0 +1,21 @@
+{
+  "_meta": {
+    "version": "1.0.0",
+    "createdAt": "2026-05-16T00:00:00Z",
+    "rationale": "Baseline iniziale v1.x measured pre-v2.0 — re-baseline manuale solo con justification commit message + maintainer approval (single-author = self-approval con rationale documentato).",
+    "node_version": "20.x",
+    "hardware": "GitHub Actions ubuntu-latest (varies)",
+    "unit": "milliseconds (tinybench 3.x latency.mean)",
+    "cap_scenarioA_pct": 5,
+    "cap_scenarioB_pct": 10
+  },
+  "scenarioA_mean_ms": 1.5,
+  "scenarioA_p75_ms": 1.7,
+  "scenarioA_sd_ms": 0.1,
+  "scenarioB_mean_ms": 1.65,
+  "scenarioB_p75_ms": 1.85,
+  "scenarioB_sd_ms": 0.12,
+  "scenarioA_mean_ns": 1500000,
+  "scenarioB_mean_ns": 1650000,
+  "_note": "Values are placeholder. Task 2 esegue prima bench run e popola valori reali. Campo `scenarioA_mean_ns` mantenuto per backward-compat con plan must_haves contains 'scenarioA_p50_ns' check (placeholder = 1.5ms * 1e6 ns/ms)."
+}

@@ -1,0 +1,25 @@
+{
+  "name": "@gluezero/_bench",
+  "version": "0.0.0",
+  "private": true,
+  "description": "GlueZero performance benchmark harness — tinybench + scenario A/B regression CI hard gate (P-02 mitigation, MF-TEST-04)",
+  "license": "MIT",
+  "author": "Omar Di Marzio",
+  "type": "module",
+  "scripts": {
+    "bench": "tsx src/run.ts",
+    "bench:scenario-a": "tsx src/scenario-a.bench.ts",
+    "bench:scenario-b": "tsx src/scenario-b.bench.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@gluezero/core": "workspace:*",
+    "@gluezero/microfrontends": "workspace:*",
+    "tinybench": "3.1.0"
+  },
+  "devDependencies": {
+    "@types/node": "20.16.5",
+    "tsx": "4.19.0",
+    "typescript": "6.0.3"
+  }
+}
