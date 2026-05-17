@@ -1,6 +1,6 @@
 {
   "name": "@gluezero/microfrontends",
-  "version": "2.0.0-rc.0",
+  "version": "2.0.0",
   "description": "GlueZero micro-frontend governance layer — Registry, Lifecycle FSM, 4 mount strategies, contracts, standard topics, opt-in module extension runtime",
   "license": "MIT",
   "author": "Omar Di Marzio",

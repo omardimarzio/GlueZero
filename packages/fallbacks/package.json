@@ -1,6 +1,6 @@
 {
   "name": "@gluezero/fallbacks",
-  "version": "2.0.0-rc.0",
+  "version": "2.0.0",
   "description": "GlueZero fallback policies + error boundary opt-in per MicroFrontend — 4 rendering modes (html/component/event/custom) + RetryPolicy backoff+jitter + CircuitBreakerPolicy 3-state + MicroFrontendError class + Pattern S1 augment stretto + zero hard deps + 5 peer optional + bundle cap 6 KB",
   "license": "MIT",
   "author": "Omar Di Marzio",

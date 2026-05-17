@@ -1,6 +1,6 @@
 {
   "name": "@gluezero/compat",
-  "version": "2.0.0-rc.0",
+  "version": "2.0.0",
   "description": "GlueZero compatibility/versioning module — semver multi-dimensione 9 dim + 5+4 broker API + lifecycle FSM hook integration via composition esterna (opt-in BrokerModule)",
   "license": "MIT",
   "author": "Omar Di Marzio",

@@ -1,6 +1,6 @@
 {
   "name": "@gluezero/mf-iframe",
-  "version": "2.0.0-rc.0",
+  "version": "2.0.0",
   "description": "GlueZero iframe sandbox loader + bridge postMessage (9 message types Valibot strict + LRU dedup 500 + rate-limit 100/s + replay mitigation + expectedOrigin MANDATORY) — D-V2-09 closure",
   "license": "MIT",
   "author": "Omar Di Marzio",
