@@ -1,0 +1,107 @@
+{
+  "name": "@gluezero/react",
+  "version": "2.0.0",
+  "description": "GlueZero React adapter \u2014 GlueZeroProvider + 6 hooks + createReactMicroFrontendLifecycle factory + ErrorBoundary built-in + React 19 StrictMode safe",
+  "license": "MIT",
+  "author": "Omar Di Marzio",
+  "type": "module",
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "sideEffects": false,
+  "engines": {
+    "node": ">=20"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "build": "tsup",
+    "test": "vitest run",
+    "test:browser": "vitest run -c vitest.browser.config.ts",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
+    "typecheck": "tsc --noEmit",
+    "clean": "rm -rf dist",
+    "ci:publint": "publint",
+    "ci:attw": "attw --pack . --profile esm-only",
+    "ci:gate:react": "pnpm run typecheck && pnpm run build && pnpm run test && pnpm run ci:publint && pnpm run ci:attw && size-limit"
+  },
+  "peerDependencies": {
+    "@gluezero/core": "workspace:^",
+    "@gluezero/microfrontends": "workspace:^",
+    "@gluezero/fallbacks": "workspace:^",
+    "react": ">=18.2.0 <20.0.0",
+    "react-dom": ">=18.2.0 <20.0.0"
+  },
+  "peerDependenciesMeta": {
+    "@gluezero/core": {
+      "optional": false
+    },
+    "@gluezero/microfrontends": {
+      "optional": false
+    },
+    "@gluezero/fallbacks": {
+      "optional": true
+    },
+    "react": {
+      "optional": true
+    },
+    "react-dom": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "@gluezero/core": "workspace:*",
+    "@gluezero/fallbacks": "workspace:*",
+    "@gluezero/microfrontends": "workspace:*",
+    "@testing-library/react": "16.1.0",
+    "@types/react": "19.0.0",
+    "@types/react-dom": "19.0.0",
+    "@vitest/browser": "4.1.5",
+    "@vitest/browser-playwright": "4.1.5",
+    "jsdom": "29.1.0",
+    "playwright": "1.59.1",
+    "react": "19.2.0",
+    "react-dom": "19.2.0",
+    "tsup": "8.5.1",
+    "typescript": "6.0.3",
+    "vitest": "4.1.5"
+  },
+  "size-limit": [
+    {
+      "name": "@gluezero/react (gzip)",
+      "path": "dist/index.js",
+      "limit": "10 KB",
+      "gzip": true
+    }
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/omardimarzio/GlueZero.git",
+    "directory": "packages/react"
+  },
+  "homepage": "https://github.com/omardimarzio/GlueZero/tree/main/packages/react#readme",
+  "bugs": "https://github.com/omardimarzio/GlueZero/issues",
+  "keywords": [
+    "gluezero",
+    "react",
+    "react-19",
+    "microfrontend",
+    "adapter",
+    "hooks",
+    "esm"
+  ]
+}

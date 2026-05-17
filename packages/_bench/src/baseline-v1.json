@@ -1,0 +1,26 @@
+{
+  "_meta": {
+    "version": "1.1.0",
+    "createdAt": "2026-05-17T15:25:00Z",
+    "rationale": "Re-baseline v2.0 pre-GA (F17 W6 P07 closure). 5-run median empirical su dev machine macOS Darwin 25.4.0 — sostituisce baseline 1.0.0 (single fortunate run con SD A 2.7%/B 3.2%, cap 5%/10% troppo aggressivi data variabilità single-author machine ~12% A / ~4% B). 1000 publish per iteration, tinybench 3.1.0 con warmup + 10 samples. CI ubuntu-latest follow-up commit prevista nel post-soak window per re-baseline con hardware uniforme. P-02 mitigation D-V2-F17-15 — baseline aggiornata con justification commit message (single-author self-approval CLAUDE.md autonomy). Cap mantenuti a 5%/10% — restano significativi vs median empirical su dev machine.",
+    "node_version": "v24.1.0",
+    "hardware": "local-dev macOS Darwin 25.4.0 (dev machine median; CI ubuntu-latest produrrà numeri differenti al first run main — re-commit follow-up con CI hardware nel post-soak window)",
+    "unit": "milliseconds (tinybench 3.x latency.mean)",
+    "cap_scenarioA_pct": 5,
+    "cap_scenarioB_pct": 10,
+    "empirical_runs_used": 5,
+    "empirical_runs_scenarioA_means": [1.1401, 1.1512, 1.2711, 1.2236, 1.1953],
+    "empirical_runs_scenarioB_means": [1.1944, 1.2038, 1.1740, 1.2133, 1.2214],
+    "method": "median of 5 consecutive runs"
+  },
+  "scenarioA_mean_ms": 1.1953,
+  "scenarioA_p75_ms": 1.2338,
+  "scenarioA_sd_ms": 0.0292,
+  "scenarioB_mean_ms": 1.2038,
+  "scenarioB_p75_ms": 1.2405,
+  "scenarioB_sd_ms": 0.0377,
+  "scenarioA_mean_ns": 1195300,
+  "scenarioB_mean_ns": 1203800,
+  "scenarioA_p50_ns": 1195300,
+  "scenarioB_p50_ns": 1203800
+}

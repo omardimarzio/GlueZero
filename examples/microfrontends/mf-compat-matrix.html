@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="it" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>GlueZero — @gluezero/compat matrix demo (PRD §40.4 file #6)</title>
+  <meta name="description" content="Working browser demo: matrice compat F12 host v2.0 + 3 MF versioni miste con policy block-mount/warn/allow." />
+  <meta name="theme-color" content="#6366F1" />
+  <link rel="canonical" href="https://gluezero.org/examples/microfrontends/mf-compat-matrix.html" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><text y='14' font-size='14'>🧮</text></svg>" />
+
+  <style>
+    body { font-family: system-ui, sans-serif; max-width: 960px; margin: 2rem auto; padding: 0 1rem; line-height: 1.5; color: #0F172A; }
+    h1 { color: #6366F1; margin-bottom: 0.5rem; }
+    h3 { color: #475569; margin-top: 1.25rem; }
+    p { color: #475569; }
+    code { background: #F1F5F9; padding: 0.15rem 0.35rem; border-radius: 4px; font-size: 0.9em; }
+
+    .controls { display: flex; align-items: center; gap: 12px; margin-top: 1rem; }
+    select { padding: 6px 10px; border-radius: 6px; border: 1px solid #CBD5E1; font-size: 14px; }
+
+    table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
+    th, td { border: 1px solid #E2E8F0; padding: 8px 10px; text-align: left; font-size: 13px; }
+    th { background: #F1F5F9; color: #0F172A; font-weight: 600; }
+    td.status { font-weight: 700; text-transform: uppercase; }
+    td.status.ok { color: #16A34A; }
+    td.status.warn { color: #EA580C; }
+    td.status.block { color: #DC2626; }
+
+    .grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-top: 1rem; }
+    .mf-card { border: 1px solid #E2E8F0; border-radius: 8px; padding: 12px; background: #FAFAFA; }
+    .mf-card h4 { margin: 0 0 6px; color: #0F172A; }
+    .mf-card.ok { border-color: #16A34A; background: #F0FDF4; }
+    .mf-card.warn { border-color: #EA580C; background: #FFF7ED; }
+    .mf-card.block { border-color: #DC2626; background: #FEF2F2; }
+    .mf-card .status { font-weight: 700; text-transform: uppercase; font-size: 12px; }
+    .mf-card small { color: #64748B; }
+
+    .log { font-family: ui-monospace, "SF Mono", monospace; background: #1E293B; color: #F1F5F9; padding: 0.75rem; margin-top: 1rem; font-size: 0.8rem; border-radius: 6px; white-space: pre-wrap; max-height: 200px; overflow-y: auto; }
+  </style>
+</head>
+<body>
+  <h1>🧮 @gluezero/compat — Compatibility Matrix Demo (F12)</h1>
+  <p>Esempio standalone PRD §40.4 file #6: host v2.0 valuta compatibilità con 3 MF di versioni miste
+  (<code>1.5.2</code>, <code>2.0.0</code>, <code>2.1.0-beta.1</code>) applicando una policy semver.</p>
+  <p>Cambia la policy attiva per vedere come la decisione passa da <code>BLOCK</code> a <code>WARN</code> ad
+  <code>ALLOW</code>. Riferimento PRD §15 — MF-COMPAT-01..09.</p>
+
+  <div class="controls">
+    <label for="policy-select"><strong>Policy attiva:</strong></label>
+    <select id="policy-select">
+      <option value="block-mount">block-mount</option>
+      <option value="warn">warn</option>
+      <option value="allow">allow</option>
+    </select>
+    <span><strong>Host version:</strong> <code id="host-version-label">2.0.0</code></span>
+  </div>
+
+  <h3>Tabella compat (MF × policy)</h3>
+  <table>
+    <thead>
+      <tr>
+        <th>MF id</th>
+        <th>MF version</th>
+        <th>Host version</th>
+        <th>Reason</th>
+        <th>Esito</th>
+      </tr>
+    </thead>
+    <tbody id="matrix-tbody"></tbody>
+  </table>
+
+  <h3>Status MF mount</h3>
+  <div class="grid" id="grid"></div>
+
+  <h3>Log decisioni</h3>
+  <div id="log" class="log"></div>
+
+  <script type="module">
+    // ============================================================
+    // Demo locale "decisional matrix" — nessuna dipendenza CDN.
+    // Replica la logica core di @gluezero/compat F12 (PRD §15) per
+    // scopo dimostrativo educativo. La libreria reale usa semver
+    // full + Service Locator SERVICE_COMPAT — qui semantica sintetica.
+    // ============================================================
+
+    const HOST_VERSION = '2.0.0'
+    const MFS = [
+      { id: 'legacy-mf', version: '1.5.2', label: 'Legacy v1.x' },
+      { id: 'current-mf', version: '2.0.0', label: 'Current v2.0' },
+      { id: 'future-mf', version: '2.1.0-beta.1', label: 'Future v2.1-beta' },
+    ]
+
+    document.getElementById('host-version-label').textContent = HOST_VERSION
+
+    const isMajorMatch = (mfV) => mfV.split('.')[0] === HOST_VERSION.split('.')[0]
+    const isMinorMatch = (mfV) => {
+      const [mfMaj, mfMin] = mfV.split('.')
+      const [hMaj, hMin] = HOST_VERSION.split('.')
+      return mfMaj === hMaj && parseInt(mfMin, 10) <= parseInt(hMin, 10)
+    }
+
+    /**
+     * evaluate(policy, mfVersion) — decisione compat sintetica.
+     *
+     * Regole semplificate (vs F12 full semver):
+     * - Major mismatch + block-mount → BLOCK
+     * - Major mismatch + warn → WARN
+     * - Major mismatch + allow → OK (allow override)
+     * - Major match, minor avanti (future) → WARN sempre (escluso allow → OK)
+     * - Major + minor match → OK
+     */
+    function evaluate(policy, mfV) {
+      const majMatch = isMajorMatch(mfV)
+      const minMatch = isMinorMatch(mfV)
+      if (!majMatch) {
+        if (policy === 'block-mount') return { status: 'block', reason: 'major mismatch (host vs mf)' }
+        if (policy === 'warn') return { status: 'warn', reason: 'major mismatch (warned, mount allowed)' }
+        return { status: 'ok', reason: 'major mismatch (allow policy override)' }
+      }
+      if (!minMatch) {
+        if (policy === 'allow') return { status: 'ok', reason: 'future minor (allow override)' }
+        return { status: 'warn', reason: 'future minor (compat lookahead)' }
+      }
+      return { status: 'ok', reason: 'compatible (major + minor match)' }
+    }
+
+    const logEl = document.getElementById('log')
+    function log(msg) {
+      const line = document.createElement('div')
+      const ts = new Date().toISOString().substring(11, 19)
+      line.textContent = `[${ts}] ${msg}`
+      logEl.appendChild(line)
+      logEl.scrollTop = logEl.scrollHeight
+    }
+
+    function render() {
+      const policy = document.getElementById('policy-select').value
+      const tbody = document.getElementById('matrix-tbody')
+      const grid = document.getElementById('grid')
+      tbody.innerHTML = ''
+      grid.innerHTML = ''
+
+      log(`Policy attiva: ${policy} — valuto ${MFS.length} MF.`)
+
+      for (const mf of MFS) {
+        const r = evaluate(policy, mf.version)
+        // Tabella row.
+        const tr = document.createElement('tr')
+        tr.innerHTML =
+          `<td><code>${mf.id}</code></td>` +
+          `<td>${mf.version}</td>` +
+          `<td>${HOST_VERSION}</td>` +
+          `<td>${r.reason}</td>` +
+          `<td class="status ${r.status}">${r.status}</td>`
+        tbody.appendChild(tr)
+
+        // Grid card.
+        const card = document.createElement('div')
+        card.className = `mf-card ${r.status}`
+        card.innerHTML =
+          `<h4>${mf.label}</h4>` +
+          `<div class="status">${r.status}</div>` +
+          `<small>${r.id} @ ${mf.version}</small><br>` +
+          `<small>${r.reason}</small>`
+        grid.appendChild(card)
+
+        log(`  ${mf.id}@${mf.version} → ${r.status.toUpperCase()} (${r.reason})`)
+      }
+    }
+
+    document.getElementById('policy-select').addEventListener('change', render)
+    render()
+  </script>
+</body>
+</html>

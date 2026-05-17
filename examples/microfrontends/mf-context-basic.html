@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="it" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GlueZero — @gluezero/context basic demo: RuntimeContext + fire pattern 1+N</title>
+  <meta name="description" content="Demo standalone: setRuntimeContext + subscribeRuntimeContext + fire pattern 1 aggregator + N specific events con @gluezero/context.">
+  <meta name="theme-color" content="#2563eb">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><text y='14' font-size='14'>🧩</text></svg>">
+  <style>
+    * { box-sizing: border-box; }
+    body { font-family: system-ui, -apple-system, sans-serif; max-width: 900px; margin: 2rem auto; padding: 0 1rem; line-height: 1.5; color: #0F172A; }
+    h1 { color: #2563eb; margin-bottom: 0.5rem; }
+    h3 { margin-top: 0; color: #1e293b; font-size: 1rem; }
+    p { color: #475569; }
+    code { background: #F1F5F9; padding: 0.15rem 0.35rem; border-radius: 4px; font-size: 0.9em; }
+    .panel { background: #f3f4f6; padding: 1rem; border-radius: 8px; margin: 1rem 0; }
+    button { background: #2563eb; color: white; border: 0; padding: 0.5rem 1rem; border-radius: 6px; cursor: pointer; margin: 0.25rem; font-weight: 600; }
+    button:hover { background: #1d4ed8; }
+    pre { background: #1f2937; color: #f3f4f6; padding: 1rem; border-radius: 6px; overflow-x: auto; font-size: 0.85rem; margin: 0; }
+    .log { font-family: ui-monospace, "SF Mono", monospace; font-size: 0.8rem; max-height: 240px; overflow-y: auto; background: #1E293B; color: #F1F5F9; padding: 0.75rem; border-radius: 6px; }
+    .log-entry { padding: 0.15rem 0; border-bottom: 1px solid #334155; word-break: break-all; }
+    .log-entry:last-child { border-bottom: 0; }
+    .agg { color: #fbbf24; }
+    .spec { color: #34d399; }
+    .sel { color: #60a5fa; }
+  </style>
+</head>
+<body>
+  <h1>🧩 @gluezero/context — basic demo</h1>
+  <p>Esempio standalone che dimostra <code>setRuntimeContext</code> + <code>subscribeRuntimeContext</code> con fire pattern <strong>1 aggregator + N specific</strong> events (D-V2-F10-13).</p>
+  <p><em>Prerequisito: esegui <code>pnpm build:packages</code> dalla root del repo prima di aprire questa pagina (relative paths verso <code>dist/</code> locali — D-V2-F8-10 carryover, NO publish fino F17 GA).</em></p>
+
+  <div class="panel">
+    <h3>Azioni</h3>
+    <button id="btn-set-user">setRuntimeContext({ user })</button>
+    <button id="btn-set-tenant">setRuntimeContext({ tenantId })</button>
+    <button id="btn-set-locale">setRuntimeContext({ locale })</button>
+    <button id="btn-set-theme">setRuntimeContext({ theme })</button>
+    <button id="btn-clear">clearRuntimeContext()</button>
+  </div>
+
+  <div class="panel">
+    <h3>Stato corrente (getRuntimeContext)</h3>
+    <pre id="state">{}</pre>
+  </div>
+
+  <div class="panel">
+    <h3>Log eventi (subscribe context.changed [AGG] + context.X.changed [SPEC] + selector subscribe [SEL])</h3>
+    <div id="log" class="log"></div>
+  </div>
+
+  <script type="module">
+    // Relative paths verso dist locali — prerequisito `pnpm build:packages`.
+    // D-V2-F8-10 carryover: NO npm publish fino F17 GA, post-GA sostituire con CDN esm.sh.
+    import { createBroker } from '../../packages/core/dist/index.js'
+    import { microfrontendModule } from '../../packages/microfrontends/dist/index.js'
+    import '../../packages/microfrontends/dist/augment.js'
+    import {
+      contextModule,
+      setRuntimeContext,
+      getRuntimeContext,
+      subscribeRuntimeContext,
+      clearRuntimeContext,
+    } from '../../packages/context/dist/index.js'
+    import '../../packages/context/dist/augment.js'
+
+    // Ordine OBBLIGATORIO: microfrontendModule() PRIMA di contextModule() (D-V2-F10-18 lookup).
+    const broker = createBroker({
+      modules: [microfrontendModule(), contextModule()],
+    })
+
+    const stateEl = document.getElementById('state')
+    const logEl = document.getElementById('log')
+
+    function renderState() {
+      stateEl.textContent = JSON.stringify(getRuntimeContext(), null, 2)
+    }
+
+    function appendLog(text, kind) {
+      const entry = document.createElement('div')
+      entry.className = 'log-entry ' + (kind || '')
+      entry.textContent = `[${new Date().toLocaleTimeString()}] ${text}`
+      logEl.insertBefore(entry, logEl.firstChild)
+      while (logEl.children.length > 30) logEl.removeChild(logEl.lastChild)
+    }
+
+    // Source descriptor obbligatorio D-23 per ogni broker.publish — qui usato solo
+    // come consumer subscribe (no publish manuale: setRuntimeContext lo fa internamente).
+
+    // Subscribe topic aggregator + specific (dimostra fire pattern 1+N D-V2-F10-13)
+    broker.subscribe('context.changed', (event) => {
+      appendLog(`[AGG] context.changed — changedKeys: ${JSON.stringify(event.payload.changedKeys)}`, 'agg')
+    })
+    broker.subscribe('context.user.changed', (event) => {
+      appendLog(`[SPEC] context.user.changed — user: ${JSON.stringify(event.payload.current.user)}`, 'spec')
+    })
+    broker.subscribe('context.tenant.changed', (event) => {
+      appendLog(`[SPEC] context.tenant.changed — tenantId: ${event.payload.current.tenantId}`, 'spec')
+    })
+    broker.subscribe('context.locale.changed', (event) => {
+      appendLog(`[SPEC] context.locale.changed — locale: ${event.payload.current.locale}`, 'spec')
+    })
+    broker.subscribe('context.theme.changed', (event) => {
+      appendLog(`[SPEC] context.theme.changed — theme: ${event.payload.current.theme}`, 'spec')
+    })
+
+    // Subscribe selector function — reference identity preserved (D-V2-F10-02 shallowEqual gate)
+    subscribeRuntimeContext(
+      (ctx) => ctx.user,
+      (user, _prev) => {
+        appendLog(`[SEL user] new ref: ${JSON.stringify(user)}`, 'sel')
+      },
+    )
+
+    // Button handlers — random values per ogni click dimostrano fire pattern + shallow gate.
+    document.getElementById('btn-set-user').addEventListener('click', () => {
+      setRuntimeContext({ user: { id: `u${Math.floor(Math.random() * 100)}`, name: 'Demo' } })
+      renderState()
+    })
+    document.getElementById('btn-set-tenant').addEventListener('click', () => {
+      setRuntimeContext({ tenantId: `tenant-${Math.floor(Math.random() * 100)}` })
+      renderState()
+    })
+    document.getElementById('btn-set-locale').addEventListener('click', () => {
+      const locales = ['it', 'en', 'de', 'fr', 'es']
+      setRuntimeContext({ locale: locales[Math.floor(Math.random() * locales.length)] })
+      renderState()
+    })
+    document.getElementById('btn-set-theme').addEventListener('click', () => {
+      const themes = ['light', 'dark', 'system']
+      setRuntimeContext({ theme: themes[Math.floor(Math.random() * themes.length)] })
+      renderState()
+    })
+    document.getElementById('btn-clear').addEventListener('click', () => {
+      clearRuntimeContext()
+      renderState()
+    })
+
+    renderState()
+    appendLog('Broker initialized with contextModule(). Click buttons per aggiornare state.', 'agg')
+  </script>
+</body>
+</html>

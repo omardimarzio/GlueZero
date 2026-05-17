@@ -1,0 +1,119 @@
+{
+  "name": "@gluezero/fallbacks",
+  "version": "2.0.0",
+  "description": "GlueZero fallback policies + error boundary opt-in per MicroFrontend \u2014 4 rendering modes (html/component/event/custom) + RetryPolicy backoff+jitter + CircuitBreakerPolicy 3-state + MicroFrontendError class + Pattern S1 augment stretto + zero hard deps + 5 peer optional + bundle cap 6 KB",
+  "license": "MIT",
+  "author": "Omar Di Marzio",
+  "type": "module",
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./augment": {
+      "types": "./dist/augment.d.ts",
+      "import": "./dist/augment.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "sideEffects": [
+    "./dist/augment.js",
+    "./src/augment.ts",
+    "**/augment.js",
+    "**/augment.ts"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "build": "tsup",
+    "test": "vitest run",
+    "test:browser": "vitest run -c vitest.browser.config.ts",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
+    "typecheck": "tsc --noEmit",
+    "clean": "rm -rf dist",
+    "ci:publint": "publint",
+    "ci:attw": "attw --pack . --profile esm-only",
+    "ci:gate:f14": "pnpm run typecheck && pnpm run build && pnpm run test && pnpm run ci:publint && pnpm run ci:attw && size-limit && node ../../scripts/check-d83-f14.mjs && pnpm --filter @gluezero/core test -- --run v1-bc-replay && pnpm --filter @gluezero/core test -- --run pipeline-harness"
+  },
+  "peerDependencies": {
+    "@gluezero/context": "workspace:^",
+    "@gluezero/core": "workspace:^",
+    "@gluezero/isolation": "workspace:^",
+    "@gluezero/microfrontends": "workspace:^",
+    "@gluezero/permissions": "workspace:^"
+  },
+  "peerDependenciesMeta": {
+    "@gluezero/core": {
+      "optional": false
+    },
+    "@gluezero/microfrontends": {
+      "optional": false
+    },
+    "@gluezero/context": {
+      "optional": true
+    },
+    "@gluezero/permissions": {
+      "optional": true
+    },
+    "@gluezero/isolation": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "@gluezero/context": "workspace:*",
+    "@gluezero/core": "workspace:*",
+    "@gluezero/isolation": "workspace:*",
+    "@gluezero/microfrontends": "workspace:*",
+    "@gluezero/permissions": "workspace:*",
+    "@vitest/browser": "4.1.5",
+    "@vitest/browser-playwright": "4.1.5",
+    "jsdom": "29.1.0",
+    "playwright": "1.59.1",
+    "tsup": "8.5.1",
+    "typescript": "6.0.3",
+    "vitest": "4.1.5"
+  },
+  "size-limit": [
+    {
+      "name": "@gluezero/fallbacks (gzip)",
+      "path": "dist/index.js",
+      "limit": "6 KB",
+      "gzip": true
+    },
+    {
+      "name": "@gluezero/fallbacks/augment (gzip)",
+      "path": "dist/augment.js",
+      "limit": "1 KB",
+      "gzip": true
+    }
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/omardimarzio/GlueZero.git",
+    "directory": "packages/fallbacks"
+  },
+  "homepage": "https://github.com/omardimarzio/GlueZero/tree/main/packages/fallbacks#readme",
+  "bugs": "https://github.com/omardimarzio/GlueZero/issues",
+  "keywords": [
+    "gluezero",
+    "fallback",
+    "error-boundary",
+    "retry",
+    "circuit-breaker",
+    "governance",
+    "microfrontend"
+  ]
+}

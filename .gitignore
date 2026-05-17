@@ -7,7 +7,11 @@ dist
 *.tsbuildinfo
 
 # typedoc output (rigenerato dal workflow .github/workflows/docs.yml su gh-pages)
-docs
+# NB: solo /docs/* a livello 1 → preserva docs/v2/ source markdown PRD §41 committed
+/docs/*
+!/docs/v2/
+# typedoc output dentro docs/v2/api/ è rigenerato (escluso)
+/docs/v2/api/
 
 # test
 coverage

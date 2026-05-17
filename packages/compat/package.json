@@ -1,0 +1,108 @@
+{
+  "name": "@gluezero/compat",
+  "version": "2.0.0",
+  "description": "GlueZero compatibility/versioning module \u2014 semver multi-dimensione 9 dim + 5+4 broker API + lifecycle FSM hook integration via composition esterna (opt-in BrokerModule)",
+  "license": "MIT",
+  "author": "Omar Di Marzio",
+  "type": "module",
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./augment": {
+      "types": "./dist/augment.d.ts",
+      "import": "./dist/augment.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "sideEffects": [
+    "./dist/augment.js",
+    "./src/augment.ts",
+    "**/augment.js",
+    "**/augment.ts"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "build": "tsup",
+    "test": "vitest run",
+    "test:integration": "vitest run -c vitest.integration.config.ts",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
+    "typecheck": "tsc --noEmit",
+    "clean": "rm -rf dist"
+  },
+  "peerDependencies": {
+    "@gluezero/core": "workspace:^",
+    "@gluezero/microfrontends": "workspace:^",
+    "@gluezero/theme": "workspace:^"
+  },
+  "peerDependenciesMeta": {
+    "@gluezero/core": {
+      "optional": false
+    },
+    "@gluezero/microfrontends": {
+      "optional": false
+    },
+    "@gluezero/theme": {
+      "optional": true
+    }
+  },
+  "dependencies": {
+    "semver": "^7.7.4"
+  },
+  "devDependencies": {
+    "@gluezero/core": "workspace:*",
+    "@gluezero/microfrontends": "workspace:*",
+    "@gluezero/permissions": "workspace:*",
+    "@gluezero/theme": "workspace:*",
+    "@types/semver": "^7.5",
+    "jsdom": "29.1.0",
+    "tsup": "8.5.1",
+    "typescript": "6.0.3",
+    "vitest": "4.1.5"
+  },
+  "size-limit": [
+    {
+      "name": "@gluezero/compat (gzip)",
+      "path": "dist/index.js",
+      "limit": "9 KB",
+      "gzip": true
+    },
+    {
+      "name": "@gluezero/compat/augment (gzip)",
+      "path": "dist/augment.js",
+      "limit": "1 KB",
+      "gzip": true
+    }
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/omardimarzio/GlueZero.git",
+    "directory": "packages/compat"
+  },
+  "homepage": "https://github.com/omardimarzio/GlueZero/tree/main/packages/compat#readme",
+  "bugs": "https://github.com/omardimarzio/GlueZero/issues",
+  "keywords": [
+    "gluezero",
+    "compat",
+    "compatibility",
+    "semver",
+    "versioning",
+    "governance",
+    "microfrontend"
+  ]
+}

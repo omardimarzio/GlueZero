@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="it" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>GlueZero — @gluezero/mf-web-component demo: Custom Elements + Shadow DOM</title>
+  <meta name="description" content="Working demo: webComponentLoader F15 + customElements.whenDefined + contextMode property/attribute/event + reuse-on-collision warning.">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><text y='14' font-size='14'>🧩</text></svg>">
+  <style>
+    body { font-family: system-ui, sans-serif; max-width: 900px; margin: 2rem auto; padding: 0 1rem; line-height: 1.5; color: #0F172A; }
+    h1 { color: #6366F1; margin-bottom: 0.5rem; }
+    p, label { color: #475569; }
+    code { background: #F1F5F9; padding: 0.15rem 0.35rem; border-radius: 4px; font-size: 0.9em; }
+    #mf-root, #mf-root-2 { border: 1px solid #E2E8F0; padding: 1rem; margin-top: 1rem; min-height: 80px; border-radius: 8px; background: #FAFAFA; }
+    button { background: #6366F1; color: white; border: 0; padding: 0.5rem 1rem; border-radius: 6px; cursor: pointer; margin-right: 0.5rem; font-weight: 600; }
+    button:hover { background: #4F46E5; }
+    select, input { padding: 0.4rem 0.6rem; border: 1px solid #CBD5E1; border-radius: 6px; font: inherit; }
+    .log { font-family: ui-monospace, "SF Mono", monospace; background: #1E293B; color: #F1F5F9; padding: 0.75rem; margin-top: 1rem; font-size: 0.8rem; border-radius: 6px; white-space: pre-wrap; max-height: 200px; overflow-y: auto; }
+    .badge { display: inline-block; background: #10B981; color: white; padding: 0.1rem 0.5rem; border-radius: 999px; font-size: 0.75em; font-weight: 600; }
+  </style>
+</head>
+<body>
+  <h1>🧩 @gluezero/mf-web-component — Custom Elements + Shadow DOM demo</h1>
+  <p>Demo del loader F15 <code>webComponentLoader</code>: ESM dynamic import + <code>customElements.whenDefined</code> race + <code>contextMode</code> 3-mode dispatcher + reuse-on-collision warning.</p>
+  <p>Vedi <a href="https://github.com/omardimarzio/GlueZero/blob/main/prd_2.0.0.md">PRD §25</a> + <a href="../../packages/mf-web-component/README.md">README mf-web-component</a>.</p>
+
+  <h2>1. Mount con contextMode <span class="badge">property (default D-V2-F15-05)</span></h2>
+  <p>Setter <code>element.glueZeroContext = ctx</code> — reference identity preserved.</p>
+  <label>contextMode:
+    <select id="context-mode">
+      <option value="property" selected>property (default)</option>
+      <option value="attribute">attribute (JSON subset)</option>
+      <option value="event">event (CustomEvent)</option>
+    </select>
+  </label>
+  <label>locale:
+    <input id="locale-input" value="it-IT" />
+  </label>
+  <div style="margin-top: 0.5rem;">
+    <button id="btn-mount">Mount MF</button>
+    <button id="btn-unmount">Unmount MF</button>
+  </div>
+  <div id="mf-root">Click "Mount MF" per caricare...</div>
+
+  <h2>2. Reuse-on-collision <span class="badge">D-V2-F15-08</span></h2>
+  <p>Multi-MF stesso <code>elementName</code> → seconda call emette <code>console.warn</code> + riusa classe esistente.</p>
+  <button id="btn-mount-reuse">Mount Reuse Demo</button>
+  <div id="mf-root-2">Click "Mount Reuse Demo" per simulare due MF su stesso elementName...</div>
+
+  <div class="log" id="log">Log eventi lifecycle:</div>
+
+  <script type="module">
+    import { createBroker } from '../../packages/core/dist/index.js'
+    import { microfrontendModule } from '../../packages/microfrontends/dist/index.js'
+    import '../../packages/microfrontends/dist/augment.js'
+    import { webComponentLoader } from '../../packages/mf-web-component/dist/index.js'
+    import '../../packages/mf-web-component/dist/augment.js'
+
+    const broker = createBroker({ modules: [microfrontendModule()] })
+    const service = broker.modules.get('@gluezero/microfrontends')
+    service.registerLoader(webComponentLoader)
+
+    const logEl = document.getElementById('log')
+    const log = (msg) => {
+      logEl.textContent += `\n${new Date().toISOString().slice(11, 19)} | ${msg}`
+      logEl.scrollTop = logEl.scrollHeight
+    }
+
+    // Capture console.warn per visualizzare reuse-on-collision warning
+    const origWarn = console.warn
+    console.warn = (...args) => {
+      log(`⚠️ console.warn: ${args.join(' ')}`)
+      origWarn.apply(console, args)
+    }
+
+    // Inline ESM module che definisce il Custom Element
+    function buildDataUrl(elementName) {
+      const src =
+        `class DemoCard extends HTMLElement {` +
+        `set glueZeroContext(v) { this._gz = v; this.innerHTML = '<strong>📦 MF Card</strong><br>locale: <code>' + ((v && v.locale) || '—') + '</code>'; }` +
+        `get glueZeroContext() { return this._gz; }` +
+        `attributeChangedCallback() { try { const v = JSON.parse(this.getAttribute('data-gluezero-context') || '{}'); this.glueZeroContext = v; } catch (_) {} }` +
+        `static get observedAttributes() { return ['data-gluezero-context']; }` +
+        `}` +
+        `customElements.define('${elementName}', DemoCard);` +
+        `export default DemoCard;`
+      return `data:text/javascript,${encodeURIComponent(src)}`
+    }
+
+    let counter = 0
+    document.getElementById('btn-mount').addEventListener('click', async () => {
+      counter += 1
+      const elementName = `demo-card-${counter}`
+      const mode = document.getElementById('context-mode').value
+      const locale = document.getElementById('locale-input').value
+      log(`▶️ Mount MF demo-card-${counter} (contextMode=${mode}, locale=${locale})`)
+      try {
+        const loaded = await webComponentLoader.load(
+          { type: 'web-component', url: buildDataUrl(elementName), elementName, contextMode: mode, timeoutMs: 5000 },
+          { broker, descriptor: { id: `mf-${counter}`, name: `mf-${counter}`, version: '1.0' } }
+        )
+        log(`✅ Loaded: ${elementName}, reused=${loaded.metadata.reused}`)
+        const el = document.createElement(elementName)
+        document.getElementById('mf-root').appendChild(el)
+        // Apply context post-mount via 3-mode dispatch
+        if (mode === 'property') el.glueZeroContext = { locale }
+        else if (mode === 'attribute') el.setAttribute('data-gluezero-context', JSON.stringify({ locale }))
+        else if (mode === 'event') el.dispatchEvent(new CustomEvent('gluezero:context', { detail: { context: { locale } } }))
+      } catch (err) {
+        log(`❌ Error: ${err.code || err.message}`)
+      }
+    })
+
+    document.getElementById('btn-unmount').addEventListener('click', () => {
+      document.getElementById('mf-root').innerHTML = ''
+      log('👋 Unmounted (DOM cleared)')
+    })
+
+    document.getElementById('btn-mount-reuse').addEventListener('click', async () => {
+      const sharedName = `shared-button-${Date.now()}`
+      try {
+        // Prima MF — define
+        await webComponentLoader.load(
+          { type: 'web-component', url: buildDataUrl(sharedName), elementName: sharedName, timeoutMs: 5000 },
+          { broker, descriptor: { id: 'mf-A', name: 'mf-A', version: '1.0' } }
+        )
+        log(`✅ MF-A: defined ${sharedName}`)
+        // Seconda MF stesso name — reuse warning
+        const second = await webComponentLoader.load(
+          { type: 'web-component', url: buildDataUrl(sharedName), elementName: sharedName, timeoutMs: 5000 },
+          { broker, descriptor: { id: 'mf-B', name: 'mf-B', version: '1.0' } }
+        )
+        log(`✅ MF-B: reused=${second.metadata.reused}`)
+      } catch (err) {
+        log(`❌ Error: ${err.code || err.message}`)
+      }
+    })
+  </script>
+</body>
+</html>

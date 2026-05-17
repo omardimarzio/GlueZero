@@ -21,6 +21,10 @@ export default defineConfig({
     // Source in NUOVA sub-folder `packages/devtools/src/theme-inspector/`; zero
     // modifiche a `packages/devtools/src/index.ts` (D-83 strict carryover esteso).
     'theme-inspector/index': 'src/theme-inspector/index.ts',
+    // F16 plan 16-01 W1 P01 — subpath additivo `@gluezero/devtools/mf-inspector` (D-V2-F16-19).
+    // Source in NUOVA sub-folder `packages/devtools/src/mf-inspector/`. W1 placeholder
+    // (`export {}`); W2 P02 contiene `mfInspectorModule` factory + aggregator reale.
+    'mf-inspector/index': 'src/mf-inspector/index.ts',
   },
   format: ['esm'],
   dts: true,

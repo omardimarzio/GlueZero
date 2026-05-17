@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="it" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>GlueZero — @gluezero/react adapter demo (PRD §40.4 file #4)</title>
+  <meta name="description" content="Working browser demo: 1 React MF mountato via @gluezero/react createReactMicroFrontendLifecycle + Provider + 6 hooks + ErrorBoundary." />
+  <meta name="theme-color" content="#6366F1" />
+  <link rel="canonical" href="https://gluezero.org/examples/microfrontends/mf-react-adapter.html" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><text y='14' font-size='14'>⚛️</text></svg>" />
+
+  <style>
+    body { font-family: system-ui, sans-serif; max-width: 800px; margin: 2rem auto; padding: 0 1rem; line-height: 1.5; color: #0F172A; }
+    h1 { color: #6366F1; margin-bottom: 0.5rem; }
+    h3 { color: #475569; margin-top: 1.25rem; }
+    p { color: #475569; }
+    code { background: #F1F5F9; padding: 0.15rem 0.35rem; border-radius: 4px; font-size: 0.9em; }
+    #mf-target { border: 1px solid #E2E8F0; padding: 1rem; margin-top: 1rem; min-height: 100px; border-radius: 8px; background: #FAFAFA; }
+    button { background: #6366F1; color: white; border: 0; padding: 0.5rem 1rem; border-radius: 6px; cursor: pointer; margin-right: 0.5rem; font-weight: 600; }
+    button:hover { background: #4F46E5; }
+    button:disabled { background: #94A3B8; cursor: not-allowed; }
+    .log { font-family: ui-monospace, "SF Mono", monospace; background: #1E293B; color: #F1F5F9; padding: 0.75rem; margin-top: 1rem; font-size: 0.8rem; border-radius: 6px; white-space: pre-wrap; max-height: 240px; overflow-y: auto; }
+    .controls { margin-top: 1rem; }
+  </style>
+</head>
+<body>
+  <h1>⚛️ @gluezero/react — adapter demo</h1>
+  <p>Esempio standalone PRD §40.4 file #4: monta un React MF tramite
+  <code>createReactMicroFrontendLifecycle</code> con <code>&lt;GlueZeroProvider&gt;</code> e gli hooks
+  <code>useGlueZero</code> + <code>useGlueZeroSubscribe</code>.</p>
+  <p>Sotto: bundle ESM caricati via <code>importmap</code> da CDN <code>esm.sh</code> (versione pinata
+  <code>@gluezero/react@2.0.0</code> per evitare drift post-merge — vedi T-17-06-01).</p>
+
+  <div class="controls">
+    <button id="mount-btn">Mount MF</button>
+    <button id="unmount-btn" disabled>Unmount MF</button>
+  </div>
+
+  <div id="mf-target">Click "Mount MF" per montare il Cart MF (React).</div>
+
+  <h3>Log eventi broker</h3>
+  <div id="log" class="log"></div>
+
+  <!-- Versione esatta esm.sh pinata (T-17-06-01 mitigation) — sostituire con relative path locale post-merge. -->
+  <script type="importmap">
+    {
+      "imports": {
+        "@gluezero/core": "https://esm.sh/@gluezero/core@2.0.0?bundle",
+        "@gluezero/microfrontends": "https://esm.sh/@gluezero/microfrontends@2.0.0?bundle",
+        "@gluezero/react": "https://esm.sh/@gluezero/react@2.0.0?bundle&deps=react@19.2.0,react-dom@19.2.0",
+        "react": "https://esm.sh/react@19.2.0",
+        "react-dom": "https://esm.sh/react-dom@19.2.0",
+        "react-dom/client": "https://esm.sh/react-dom@19.2.0/client",
+        "react/jsx-runtime": "https://esm.sh/react@19.2.0/jsx-runtime"
+      }
+    }
+  </script>
+
+  <script type="module">
+    import { createBroker } from '@gluezero/core'
+    import {
+      createReactMicroFrontendLifecycle,
+      useGlueZero,
+      useGlueZeroSubscribe,
+    } from '@gluezero/react'
+    import React from 'react'
+
+    const broker = createBroker({})
+    const logEl = document.getElementById('log')
+
+    broker.subscribe('*', (event) => {
+      const line = document.createElement('div')
+      const ts = new Date().toISOString().substring(11, 19)
+      const payload = event.payload === undefined ? '{}' : JSON.stringify(event.payload)
+      line.textContent = `[${ts}] ${event.topic} -- ${payload}`
+      logEl.appendChild(line)
+      logEl.scrollTop = logEl.scrollHeight
+    })
+
+    // Cart MF React component — usa hooks `useGlueZero` + `useGlueZeroSubscribe`.
+    function CartMf() {
+      const broker = useGlueZero()
+      const [count, setCount] = React.useState(0)
+      useGlueZeroSubscribe('cart.added', () => setCount((c) => c + 1))
+      return React.createElement(
+        'div',
+        null,
+        React.createElement('h2', { style: { marginTop: 0, color: '#6366F1' } }, 'Cart MF (React)'),
+        React.createElement('p', null, `Items added: ${count}`),
+        React.createElement(
+          'button',
+          {
+            onClick: () =>
+              broker.publish('cart.added', { sku: 'X' + count, ts: Date.now() }),
+          },
+          'Add item',
+        ),
+      )
+    }
+
+    const lifecycle = createReactMicroFrontendLifecycle(CartMf)
+    const target = document.getElementById('mf-target')
+
+    const mountBtn = document.getElementById('mount-btn')
+    const unmountBtn = document.getElementById('unmount-btn')
+
+    mountBtn.addEventListener('click', async () => {
+      target.textContent = ''
+      // bootstrap(broker, descriptor?) → mount(target)
+      await lifecycle.bootstrap(broker, { id: 'cart-mf', runtime: {} })
+      await lifecycle.mount(target)
+      mountBtn.disabled = true
+      unmountBtn.disabled = false
+    })
+
+    unmountBtn.addEventListener('click', async () => {
+      await lifecycle.unmount()
+      target.textContent = 'MF unmounted. Click "Mount MF" per rimontare.'
+      mountBtn.disabled = false
+      unmountBtn.disabled = true
+    })
+  </script>
+</body>
+</html>

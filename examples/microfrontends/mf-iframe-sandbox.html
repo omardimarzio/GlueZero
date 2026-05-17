@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="it" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>GlueZero — @gluezero/mf-iframe demo: Bridge + Valibot + LRU + Rate-Limit + Origin</title>
+  <meta name="description" content="Working demo: iframeLoader F15 + bridge handshake 9 messaggi + Valibot strict reject + LRU dedup replay + rate-limit drop+emit + expectedOrigin enforcement (D-V2-09 closure).">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><text y='14' font-size='14'>🔒</text></svg>">
+  <style>
+    body { font-family: system-ui, sans-serif; max-width: 1000px; margin: 2rem auto; padding: 0 1rem; line-height: 1.5; color: #0F172A; }
+    h1 { color: #DC2626; margin-bottom: 0.5rem; }
+    h2 { color: #6366F1; margin-top: 2rem; }
+    p, label { color: #475569; }
+    code { background: #F1F5F9; padding: 0.15rem 0.35rem; border-radius: 4px; font-size: 0.9em; }
+    .panel { border: 1px solid #E2E8F0; padding: 1rem; margin-top: 1rem; border-radius: 8px; background: #FAFAFA; }
+    button { background: #6366F1; color: white; border: 0; padding: 0.5rem 1rem; border-radius: 6px; cursor: pointer; margin-right: 0.5rem; font-weight: 600; }
+    button:hover { background: #4F46E5; }
+    .danger { background: #DC2626; }
+    .danger:hover { background: #B91C1C; }
+    .log { font-family: ui-monospace, "SF Mono", monospace; background: #1E293B; color: #F1F5F9; padding: 0.75rem; margin-top: 1rem; font-size: 0.8rem; border-radius: 6px; white-space: pre-wrap; max-height: 280px; overflow-y: auto; }
+    .badge { display: inline-block; padding: 0.1rem 0.5rem; border-radius: 999px; font-size: 0.75em; font-weight: 600; }
+    .ok { background: #10B981; color: white; }
+    .warn { background: #F59E0B; color: white; }
+    .err { background: #DC2626; color: white; }
+  </style>
+</head>
+<body>
+  <h1>🔒 @gluezero/mf-iframe — D-V2-09 closure security demo</h1>
+  <p>Demo dei 7 security gates F15: Valibot strict schemas + LRU dedup 500 + replay-guard 30s + rate-limit 100/s + expectedOrigin MANDATORY + targetOrigin '*' BANNED + sandbox baseline.</p>
+  <p>⚠️ <strong>Disclaimer P-13 governance-not-crypto</strong>: l'iframe sandbox è governance + browser native protection, NON sandbox crittografica completa. Vedi <a href="../../packages/mf-iframe/README.md">README mf-iframe</a>.</p>
+
+  <h2>1. Valibot strict schema <span class="badge ok">D-V2-F15-01</span></h2>
+  <p>Reject envelope con field mancanti / unknown / wrong type. Schema injection mitigation (T-15-01).</p>
+  <div class="panel">
+    <button id="btn-valid">Send valid gz:handshake</button>
+    <button id="btn-malformed" class="danger">Send malformed (no timestamp)</button>
+    <button id="btn-unknown" class="danger">Send + unknown field (xss attempt)</button>
+  </div>
+
+  <h2>2. LRU dedup replay <span class="badge ok">D-V2-F15-02/03</span></h2>
+  <p>Stesso messageId 2× → drop (replay protection). Timestamp fuori window 30s → reject (stale-resurrection).</p>
+  <div class="panel">
+    <button id="btn-replay" class="danger">Send duplicate messageId (replay)</button>
+    <button id="btn-stale" class="danger">Send stale timestamp (60s ago)</button>
+  </div>
+
+  <h2>3. Rate-limit 100 msg/s <span class="badge warn">D-V2-F15-04</span></h2>
+  <p>Blasta 200 msg in ≤100 ms → primi 100 acceptati, msg 101+ droppati + 1 emit topic <code>microfrontend.iframe.bridge.rate-limited</code>.</p>
+  <div class="panel">
+    <button id="btn-flood" class="danger">Blast 200 msg now</button>
+  </div>
+
+  <h2>4. Origin validation <span class="badge err">REQ MF-IFRAME-04</span></h2>
+  <p>expectedOrigin MANDATORY (no '*', no undefined). targetOrigin '*' BANNED runtime dual-defense.</p>
+  <div class="panel">
+    <button id="btn-origin-undefined" class="danger">expectedOrigin = undefined → throw</button>
+    <button id="btn-origin-star" class="danger">expectedOrigin = '*' → throw</button>
+    <button id="btn-target-star" class="danger">targetOrigin = '*' → throw</button>
+  </div>
+
+  <div class="log" id="log">Log security events:</div>
+
+  <script type="module">
+    import { createBroker } from '../../packages/core/dist/index.js'
+    import * as v from '../../node_modules/valibot/dist/index.js'
+    import { BridgeMessageSchema } from '../../packages/mf-iframe/dist/index.js'
+    import { DedupRegistry } from '../../packages/mf-iframe/dist/index.js'
+    import { RateLimiter } from '../../packages/mf-iframe/dist/index.js'
+    import { validateExpectedOrigin, validateTargetOrigin } from '../../packages/mf-iframe/dist/index.js'
+
+    const broker = createBroker({ modules: [] })
+    const dedup = new DedupRegistry()
+    const limiter = new RateLimiter()
+
+    const logEl = document.getElementById('log')
+    const log = (msg, level = 'info') => {
+      const icon = level === 'ok' ? '✅' : level === 'err' ? '❌' : level === 'warn' ? '⚠️' : 'ℹ️'
+      logEl.textContent += `\n${new Date().toISOString().slice(11, 19)} | ${icon} ${msg}`
+      logEl.scrollTop = logEl.scrollHeight
+    }
+
+    // Subscribe topic rate-limited
+    broker.subscribe('microfrontend.iframe.bridge.rate-limited', (evt) => {
+      log(`Topic rate-limited: mfId=${evt.payload.mfId} dropped=${evt.payload.droppedCount}`, 'warn')
+    })
+
+    // 1. Valibot schema
+    document.getElementById('btn-valid').addEventListener('click', () => {
+      const valid = { id: 'm-1', microFrontendId: 'mf-x', timestamp: Date.now(), type: 'gz:handshake', payload: { protocolVersion: 'gz:bridge/1.0', expectedHostOrigin: 'https://host.test' } }
+      const parsed = v.safeParse(BridgeMessageSchema, valid)
+      log(`Valibot parse: success=${parsed.success}`, parsed.success ? 'ok' : 'err')
+    })
+    document.getElementById('btn-malformed').addEventListener('click', () => {
+      const malformed = { id: 'm-2', microFrontendId: 'mf-x', type: 'gz:handshake', payload: { protocolVersion: 'gz:bridge/1.0', expectedHostOrigin: 'https://host.test' } } // no timestamp
+      const parsed = v.safeParse(BridgeMessageSchema, malformed)
+      log(`Valibot reject malformed: success=${parsed.success}`, parsed.success ? 'err' : 'ok')
+    })
+    document.getElementById('btn-unknown').addEventListener('click', () => {
+      const withUnknown = { id: 'm-3', microFrontendId: 'mf-x', timestamp: Date.now(), type: 'gz:handshake', payload: { protocolVersion: 'gz:bridge/1.0', expectedHostOrigin: 'https://host.test' }, injected: 'xss-payload' }
+      const parsed = v.safeParse(BridgeMessageSchema, withUnknown)
+      log(`Valibot reject unknown field: success=${parsed.success}`, parsed.success ? 'err' : 'ok')
+    })
+
+    // 2. LRU + replay
+    document.getElementById('btn-replay').addEventListener('click', () => {
+      const now = Date.now()
+      const first = dedup.isReplay('https://mf.test', 'mf-r', 'replay-id', now, now)
+      const second = dedup.isReplay('https://mf.test', 'mf-r', 'replay-id', now, now)
+      log(`Replay test: first=${first} (false=ok), second=${second} (true=detected ok)`, 'ok')
+    })
+    document.getElementById('btn-stale').addEventListener('click', () => {
+      const now = Date.now()
+      const stale = dedup.isReplay('https://mf.test', 'mf-s', 'stale-id', now - 60000, now)
+      log(`Stale timestamp test: replay=${stale} (true=rejected ok, fuori 30s window)`, 'ok')
+    })
+
+    // 3. Rate-limit
+    document.getElementById('btn-flood').addEventListener('click', () => {
+      const now = Date.now()
+      let accepted = 0, dropped = 0
+      for (let i = 0; i < 200; i += 1) {
+        if (limiter.shouldDrop('mf-flood', 'https://attacker.test', broker, now)) dropped += 1
+        else accepted += 1
+      }
+      log(`Rate-limit blast 200: accepted=${accepted}, dropped=${dropped} (101+ expected dropped)`, 'warn')
+    })
+
+    // 4. Origin validation
+    document.getElementById('btn-origin-undefined').addEventListener('click', () => {
+      try { validateExpectedOrigin(undefined, 'mf-test') } catch (err) { log(`expectedOrigin undefined → ${err.code} ✅`, 'ok') }
+    })
+    document.getElementById('btn-origin-star').addEventListener('click', () => {
+      try { validateExpectedOrigin('*', 'mf-test') } catch (err) { log(`expectedOrigin '*' → ${err.code} ✅`, 'ok') }
+    })
+    document.getElementById('btn-target-star').addEventListener('click', () => {
+      try { validateTargetOrigin('*', 'mf-test') } catch (err) { log(`targetOrigin '*' → ${err.code} ✅`, 'ok') }
+    })
+
+    log('Demo ready. Click i bottoni per testare i 7 security gates F15.', 'ok')
+  </script>
+</body>
+</html>

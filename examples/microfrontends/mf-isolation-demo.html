@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="it" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GlueZero — @gluezero/isolation demo: 7-key policy + 4 facade + warning matrix</title>
+  <meta name="description" content="Demo standalone @gluezero/isolation v2.0: 3 MF (customer-shadow shadow-dom + analytics-scoped scoped CSS + legacy-iframe-stub iframe error) + dropdown interattiva warning matrix MF-ISO-06 + P-13 disclaimer governance NOT crypto.">
+  <meta name="theme-color" content="#0066cc">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><text y='14' font-size='14'>🧬</text></svg>">
+  <style>
+    * { box-sizing: border-box; }
+    body { font-family: system-ui, -apple-system, sans-serif; max-width: 1000px; margin: 2rem auto; padding: 0 1rem; line-height: 1.5; color: #0F172A; }
+    h1 { color: #0066cc; margin-bottom: 0.5rem; }
+    h2 { color: #1e293b; margin-top: 0; }
+    h3 { margin-top: 0; color: #1e293b; font-size: 1rem; }
+    p { color: #475569; }
+    code { background: #F1F5F9; padding: 0.15rem 0.35rem; border-radius: 4px; font-size: 0.9em; }
+    section { border: 1px solid #e2e8f0; padding: 1rem; margin: 1rem 0; border-radius: 8px; background: #fafbfc; }
+    .mf-mount { min-height: 100px; border: 2px dashed #cbd5e1; padding: 0.5rem; margin-top: 0.5rem; background: white; }
+    .mf-shadow-host { background: #ecfdf5; border-color: #10b981; }
+    .mf-scoped { background: #eff6ff; border-color: #3b82f6; }
+    .mf-iframe-stub { background: #fef2f2; border-color: #ef4444; }
+    .warning-log { background: #fffbe6; border-left: 4px solid #faad14; padding: 0.75rem; font-family: ui-monospace, monospace; font-size: 0.85rem; max-height: 240px; overflow-y: auto; border-radius: 4px; margin-top: 0.5rem; }
+    .warning-entry { padding: 0.25rem 0; border-bottom: 1px solid #fde68a; }
+    .warning-entry:last-child { border-bottom: 0; }
+    .code-P-13 { color: #991b1b; font-weight: 700; }
+    .code-IFRAME_EVENTS { color: #9a3412; font-weight: 700; }
+    .code-STORAGE_BLOCKED_SHADOW { color: #1e40af; font-weight: 700; }
+    .code-JS_SANDBOXED_MOUNT { color: #581c87; font-weight: 700; }
+    .code-GLOBALS_ISOLATED_JS_SHARED { color: #166534; font-weight: 700; }
+    button { background: #0066cc; color: white; border: 0; padding: 0.5rem 1rem; border-radius: 6px; cursor: pointer; font-weight: 600; }
+    button:hover { background: #0052a3; }
+    select { padding: 0.5rem; border-radius: 4px; border: 1px solid #cbd5e1; margin-right: 0.5rem; min-width: 320px; }
+    .controls { display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 0.5rem; }
+    label { font-weight: 600; }
+    .status { display: inline-block; padding: 0.1rem 0.5rem; border-radius: 4px; font-size: 0.85rem; font-weight: 600; }
+    .status-pending { background: #fef3c7; color: #92400e; }
+    .status-failed { background: #fee2e2; color: #991b1b; }
+    .status-mounted { background: #d1fae5; color: #065f46; }
+    .security-warning { background: #fef2f2; border: 1px solid #fecaca; padding: 0.75rem; border-radius: 6px; margin: 1rem 0; font-size: 0.85rem; color: #991b1b; }
+    .demo-token { padding: 0.5rem; border-radius: 4px; margin-top: 0.25rem; }
+  </style>
+</head>
+<body>
+  <h1>🧬 GlueZero v2.0 — @gluezero/isolation Demo (F13)</h1>
+  <p><strong>3 MF dichiarati</strong> con policy isolation diverse + dropdown interattiva warning matrix MF-ISO-06.</p>
+  <p><em>Prerequisito: esegui <code>pnpm build:packages</code> dalla root del repo prima di aprire questa pagina (relative paths verso <code>dist/</code> locali — D-V2-F8-10 carryover, NO publish fino F17 GA).</em></p>
+
+  <div class="security-warning">
+    ⚠️ <strong>Modello di sicurezza (P-13):</strong> <code>@gluezero/isolation</code> è un layer di <strong>governance</strong>, NON una sandbox crittografica.
+    In modalità <code>js='shared-window'</code> (default) un MF malicious può chiamare <code>window.fetch</code>/<code>localStorage</code>
+    direttamente bypassando policy. Per enforcement reale usare <code>js='sandboxed-iframe'</code> + <code>dom='iframe'</code> + adapter F15.
+  </div>
+
+  <section>
+    <h2>A. customer-shadow <small style="font-weight: normal; color: #64748b;">(dom='shadow-dom' + theme.inherit=true)</small></h2>
+    <p>ShadowRoot creato via <code>attachShadow</code> + tokens applicati via <code>adoptedStyleSheets</code> (D-F7-22 v1.1 carryover).
+    Verificabile via DevTools elements panel (espandi #mount-customer-shadow → <code>#shadow-root</code>).</p>
+    <div id="mount-customer-shadow" class="mf-mount mf-shadow-host"></div>
+    <p>Status: <span id="status-customer-shadow" class="status status-pending">pending</span></p>
+  </section>
+
+  <section>
+    <h2>B. analytics-scoped <small style="font-weight: normal; color: #64748b;">(dom='mount-root' + css='scoped')</small></h2>
+    <p>Attributo <code>data-gz-mf="analytics-scoped"</code> applicato a mount.element + <code>scopeCss</code> helper rewrite
+    selettori CSS prefissi <code>[data-gz-mf="analytics-scoped"]</code>.</p>
+    <div id="mount-analytics-scoped" class="mf-mount mf-scoped"></div>
+    <p>Status: <span id="status-analytics-scoped" class="status status-pending">pending</span></p>
+  </section>
+
+  <section>
+    <h2>C. legacy-iframe-stub <small style="font-weight: normal; color: #64748b;">(dom='iframe')</small></h2>
+    <p>F15 <code>@gluezero/mf-iframe</code> required. Senza <code>resolvers.iframeLoader</code> →
+    throw <code>IFRAME_ADAPTER_REQUIRED</code> + MF FSM → <code>failed</code> (UI error boundary visibile sotto).</p>
+    <div id="mount-legacy-iframe-stub" class="mf-mount mf-iframe-stub">
+      <div id="iframe-error-boundary">Status: <span id="status-legacy-iframe-stub" class="status status-pending">pending</span></div>
+    </div>
+  </section>
+
+  <section>
+    <h2>⚠️ Warning matrix interattiva (MF-ISO-06)</h2>
+    <p>Seleziona combinazione policy → <code>detectInconsistentCombinations</code> emette warning su topic
+    <code>microfrontend.isolation.warning</code> + <code>console.warn</code> live.</p>
+    <div class="controls">
+      <label for="combo-select">Combinazione:</label>
+      <select id="combo-select">
+        <option value="default">Default (DEFAULT_ISOLATION_POLICY) — no warnings</option>
+        <option value="P-13">js='shared-window' + network='blocked' → P-13</option>
+        <option value="IFRAME_EVENTS">dom='iframe' + events='broker-plus-dom' → IFRAME_EVENTS</option>
+        <option value="STORAGE_BLOCKED_SHADOW">storage='blocked' + dom='shadow-dom' → STORAGE_BLOCKED_SHADOW</option>
+        <option value="JS_SANDBOXED_MOUNT">js='sandboxed-iframe' + dom='mount-root' → JS_SANDBOXED_MOUNT</option>
+        <option value="GLOBALS_ISOLATED_JS_SHARED">globals='isolated' + js='shared-window' → GLOBALS_ISOLATED_JS_SHARED</option>
+        <option value="multi">Multi-warning (P-13 + GLOBALS) composition</option>
+      </select>
+      <button id="trigger-warning">Trigger warning</button>
+      <button id="clear-warnings" style="background: #64748b;">Clear log</button>
+    </div>
+    <div id="warning-log" class="warning-log">No warnings yet. Seleziona una combinazione e premi Trigger.</div>
+  </section>
+
+  <script type="module">
+    // D-V2-F8-10 relative paths — NO CDN fino F17 GA.
+    // Prerequisito build: pnpm build:packages dalla root del repo.
+    import { createBroker } from '../../packages/core/dist/index.js'
+    import { microfrontendModule } from '../../packages/microfrontends/dist/index.js'
+    import {
+      isolationModule,
+      DEFAULT_ISOLATION_POLICY,
+      detectInconsistentCombinations,
+      resolvePolicy,
+      applyDomIsolation,
+      applyCssIsolation,
+      applyIframeStub,
+      scopeCss,
+    } from '../../packages/isolation/dist/index.js'
+    import '../../packages/isolation/dist/augment.js'
+
+    // Mock theme service per shadow-dom adoptedStyleSheets propagation
+    const themeServiceMock = {
+      getToken: (n) => ({ 'color-primary': '#0066cc', 'color-bg': '#f0f9ff' })[n],
+      getRole: () => undefined,
+      currentTokens: () => ({ 'color-primary': '#0066cc', 'color-bg': '#f0f9ff' }),
+      currentRoles: () => ({}),
+    }
+
+    const broker = createBroker({
+      modules: [
+        microfrontendModule(),
+        isolationModule({
+          resolvers: {
+            theme: () => themeServiceMock,
+          },
+        }),
+      ],
+    })
+
+    // Subscribe warning topic — log UI
+    const warningLog = document.getElementById('warning-log')
+    let warningCount = 0
+    broker.subscribe('microfrontend.isolation.warning', (warning) => {
+      warningCount++
+      if (warningCount === 1) warningLog.innerHTML = ''
+      const entry = document.createElement('div')
+      entry.className = 'warning-entry'
+      entry.innerHTML = `<span class="code-${warning.code}">[${warning.code}]</span> ${warning.message}`
+      warningLog.appendChild(entry)
+      warningLog.scrollTop = warningLog.scrollHeight
+    })
+
+    // Trigger warning matrix interactive
+    document.getElementById('trigger-warning').addEventListener('click', () => {
+      const combo = document.getElementById('combo-select').value
+      const presets = {
+        default: DEFAULT_ISOLATION_POLICY,
+        'P-13': { ...DEFAULT_ISOLATION_POLICY, js: 'shared-window', network: 'blocked' },
+        IFRAME_EVENTS: { ...DEFAULT_ISOLATION_POLICY, dom: 'iframe', events: 'broker-plus-dom' },
+        STORAGE_BLOCKED_SHADOW: { ...DEFAULT_ISOLATION_POLICY, storage: 'blocked', dom: 'shadow-dom' },
+        JS_SANDBOXED_MOUNT: { ...DEFAULT_ISOLATION_POLICY, js: 'sandboxed-iframe', dom: 'mount-root' },
+        GLOBALS_ISOLATED_JS_SHARED: { ...DEFAULT_ISOLATION_POLICY, globals: 'isolated', js: 'shared-window' },
+        multi: { ...DEFAULT_ISOLATION_POLICY, js: 'shared-window', network: 'blocked', globals: 'isolated' },
+      }
+      const policy = presets[combo]
+      const warnings = detectInconsistentCombinations(policy, `demo-${combo}`)
+      if (warnings.length === 0) {
+        const entry = document.createElement('div')
+        entry.className = 'warning-entry'
+        entry.innerHTML = `<em style="color: #16a34a;">[OK]</em> Policy "${combo}" è consistent (zero warnings).`
+        warningLog.appendChild(entry)
+      } else {
+        warnings.forEach((w) => {
+          broker.publish('microfrontend.isolation.warning', w)
+          console.warn(`[@gluezero/isolation] ${w.message}`)
+        })
+      }
+    })
+
+    document.getElementById('clear-warnings').addEventListener('click', () => {
+      warningLog.innerHTML = 'No warnings yet.'
+      warningCount = 0
+    })
+
+    // ===== Mount 3 MF demo =====
+
+    // (A) customer-shadow — dom='shadow-dom'
+    try {
+      const hostA = document.getElementById('mount-customer-shadow')
+      const mountA = { element: hostA, context: {} }
+      const policyA = resolvePolicy(
+        { dom: 'shadow-dom', css: 'shadow-dom' },
+        undefined,
+        'customer-shadow',
+      )
+      applyDomIsolation(mountA, 'customer-shadow', policyA)
+      applyCssIsolation(mountA, 'customer-shadow', policyA)
+      // Apply theme adoptedStyleSheet manually
+      const tokens = themeServiceMock.currentTokens()
+      const sheet = new CSSStyleSheet()
+      sheet.replaceSync(`:host { --color-primary: ${tokens['color-primary']}; --color-bg: ${tokens['color-bg']}; background: var(--color-bg); display: block; padding: 0.5rem; }`)
+      mountA.context.shadowContainer.adoptedStyleSheets = [sheet]
+      // Render content
+      const content = document.createElement('div')
+      content.innerHTML = `<h3 style="color: var(--color-primary); margin: 0;">Customer (shadow-dom)</h3>
+        <p class="demo-token" style="background: var(--color-bg);">Token --color-primary applicato via adoptedStyleSheets.</p>`
+      mountA.element.appendChild(content)
+      document.getElementById('status-customer-shadow').textContent = 'mounted (shadow + adoptedStyleSheets)'
+      document.getElementById('status-customer-shadow').className = 'status status-mounted'
+    } catch (e) {
+      console.error('[customer-shadow]', e)
+      document.getElementById('status-customer-shadow').textContent = `failed: ${e.message}`
+      document.getElementById('status-customer-shadow').className = 'status status-failed'
+    }
+
+    // (B) analytics-scoped — dom='mount-root' + css='scoped'
+    try {
+      const hostB = document.getElementById('mount-analytics-scoped')
+      const mountB = { element: hostB, context: {} }
+      const policyB = resolvePolicy(
+        { dom: 'mount-root', css: 'scoped' },
+        undefined,
+        'analytics-scoped',
+      )
+      applyDomIsolation(mountB, 'analytics-scoped', policyB)
+      applyCssIsolation(mountB, 'analytics-scoped', policyB)
+      // Inject scopeCss-generated stylesheet
+      const rawCss = '.metric { color: #1e40af; font-weight: 700; padding: 0.5rem; border-radius: 4px; background: #dbeafe; }'
+      const scoped = scopeCss(rawCss, 'analytics-scoped')
+      const styleEl = document.createElement('style')
+      styleEl.textContent = scoped
+      document.head.appendChild(styleEl)
+      const content = document.createElement('div')
+      content.innerHTML = `<h3 style="margin: 0;">Analytics (scoped CSS)</h3>
+        <div class="metric">Metric: 1.2k events/s</div>
+        <p style="font-size: 0.85rem; color: #64748b;">Selettore <code>.metric</code> applicato SOLO dentro questo scope (data-gz-mf="analytics-scoped"). Globale .metric NON applica.</p>`
+      mountB.element.appendChild(content)
+      document.getElementById('status-analytics-scoped').textContent = 'mounted (data-gz-mf attribute + scopeCss)'
+      document.getElementById('status-analytics-scoped').className = 'status status-mounted'
+    } catch (e) {
+      console.error('[analytics-scoped]', e)
+      document.getElementById('status-analytics-scoped').textContent = `failed: ${e.message}`
+      document.getElementById('status-analytics-scoped').className = 'status status-failed'
+    }
+
+    // (C) legacy-iframe-stub — dom='iframe' senza iframeLoader → throw
+    try {
+      const hostC = document.getElementById('mount-legacy-iframe-stub')
+      const mountC = { element: hostC, context: {} }
+      const policyC = resolvePolicy({ dom: 'iframe' }, undefined, 'legacy-iframe-stub')
+      applyIframeStub(mountC, 'legacy-iframe-stub', policyC, {})
+      // NEVER REACHED — applyIframeStub throws sopra
+      document.getElementById('status-legacy-iframe-stub').textContent = 'mounted (unexpected)'
+    } catch (e) {
+      console.error('[legacy-iframe-stub]', e.code, e.message)
+      document.getElementById('status-legacy-iframe-stub').textContent = `failed: ${e.code}`
+      document.getElementById('status-legacy-iframe-stub').className = 'status status-failed'
+      // Render error boundary
+      const errorMsg = document.createElement('div')
+      errorMsg.style.cssText = 'color: #991b1b; font-size: 0.85rem; margin-top: 0.5rem; padding: 0.5rem; background: #fee2e2; border-radius: 4px;'
+      errorMsg.textContent = `${e.code}: ${e.message}`
+      document.getElementById('iframe-error-boundary').appendChild(errorMsg)
+    }
+
+    // Register MF (lifecycle hooks subscribe to demonstrate warning chain)
+    broker.publish('microfrontend.registered', {
+      descriptor: {
+        id: 'customer-shadow',
+        name: 'customer-shadow',
+        version: '1.0.0',
+        isolation: { dom: 'shadow-dom', css: 'shadow-dom' },
+      },
+    })
+    broker.publish('microfrontend.registered', {
+      descriptor: {
+        id: 'analytics-scoped',
+        name: 'analytics-scoped',
+        version: '1.0.0',
+        isolation: { dom: 'mount-root', css: 'scoped' },
+      },
+    })
+    broker.publish('microfrontend.registered', {
+      descriptor: {
+        id: 'legacy-iframe-stub',
+        name: 'legacy-iframe-stub',
+        version: '1.0.0',
+        isolation: { dom: 'iframe', events: 'broker-plus-dom' }, // emit IFRAME_EVENTS warning
+      },
+    })
+
+    console.log('[demo] 3 MF dichiarati. Verifica DevTools elements per shadow-root su customer-shadow.')
+  </script>
+</body>
+</html>

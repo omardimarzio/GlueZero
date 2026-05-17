@@ -1,0 +1,132 @@
+{
+  "name": "@gluezero/isolation",
+  "version": "2.0.0",
+  "description": "GlueZero isolation + theme policy + storage/gateway/worker/theme facade per MicroFrontend \u2014 7-key isolation policy resolver + Pattern S1 augment stretto + zero hard deps + 6 peer optional + bundle cap 12 KB",
+  "license": "MIT",
+  "author": "Omar Di Marzio",
+  "type": "module",
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./augment": {
+      "types": "./dist/augment.d.ts",
+      "import": "./dist/augment.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "sideEffects": [
+    "./dist/augment.js",
+    "./src/augment.ts",
+    "**/augment.js",
+    "**/augment.ts"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "build": "tsup",
+    "test": "vitest run",
+    "test:integration": "vitest run -c vitest.integration.config.ts",
+    "test:browser": "vitest run -c vitest.browser.config.ts",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
+    "typecheck": "tsc --noEmit",
+    "clean": "rm -rf dist"
+  },
+  "peerDependencies": {
+    "@gluezero/cache": "workspace:^",
+    "@gluezero/context": "workspace:^",
+    "@gluezero/core": "workspace:^",
+    "@gluezero/gateway": "workspace:^",
+    "@gluezero/microfrontends": "workspace:^",
+    "@gluezero/permissions": "workspace:^",
+    "@gluezero/theme": "workspace:^",
+    "@gluezero/worker": "workspace:^"
+  },
+  "peerDependenciesMeta": {
+    "@gluezero/core": {
+      "optional": false
+    },
+    "@gluezero/microfrontends": {
+      "optional": false
+    },
+    "@gluezero/context": {
+      "optional": true
+    },
+    "@gluezero/permissions": {
+      "optional": true
+    },
+    "@gluezero/theme": {
+      "optional": true
+    },
+    "@gluezero/cache": {
+      "optional": true
+    },
+    "@gluezero/gateway": {
+      "optional": true
+    },
+    "@gluezero/worker": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "@gluezero/cache": "workspace:*",
+    "@gluezero/context": "workspace:*",
+    "@gluezero/core": "workspace:*",
+    "@gluezero/gateway": "workspace:*",
+    "@gluezero/microfrontends": "workspace:*",
+    "@gluezero/permissions": "workspace:*",
+    "@gluezero/theme": "workspace:*",
+    "@gluezero/worker": "workspace:*",
+    "@vitest/browser": "4.1.5",
+    "@vitest/browser-playwright": "4.1.5",
+    "jsdom": "29.1.0",
+    "playwright": "1.59.1",
+    "tsup": "8.5.1",
+    "typescript": "6.0.3",
+    "vitest": "4.1.5"
+  },
+  "size-limit": [
+    {
+      "name": "@gluezero/isolation (gzip)",
+      "path": "dist/index.js",
+      "limit": "12 KB",
+      "gzip": true
+    },
+    {
+      "name": "@gluezero/isolation/augment (gzip)",
+      "path": "dist/augment.js",
+      "limit": "1 KB",
+      "gzip": true
+    }
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/omardimarzio/GlueZero.git",
+    "directory": "packages/isolation"
+  },
+  "homepage": "https://github.com/omardimarzio/GlueZero/tree/main/packages/isolation#readme",
+  "bugs": "https://github.com/omardimarzio/GlueZero/issues",
+  "keywords": [
+    "gluezero",
+    "isolation",
+    "theme",
+    "shadow-dom",
+    "iframe",
+    "governance",
+    "microfrontend"
+  ]
+}

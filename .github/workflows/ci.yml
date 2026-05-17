@@ -1,0 +1,75 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  core-contamination-guard:
+    name: Core contamination guard (P-01)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # serve per git diff vs main
+
+      - name: Run check-no-mf-imports.sh
+        run: bash scripts/check-no-mf-imports.sh
+        env:
+          BASE_REF: main
+
+  bc-replay:
+    name: v1-bc-replay (cross-fase F8-F17 BC gate)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.33.2
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+
+      - run: pnpm install --frozen-lockfile
+
+      # Bundle-size test richiede dist generato (`dist/index.js`).
+      # Build esplicito di @gluezero/core prima di run test suite.
+      - name: Build @gluezero/core (per bundle-size cap test)
+        run: pnpm --filter @gluezero/core build
+
+      # Suite v1-bc-replay: 10 file in packages/core/src/__bc_replay__/.
+      # D-V2-F8-07: BC break detection gate cross-fase F8-F17.
+      - name: Run v1-bc-replay suite
+        run: pnpm --filter @gluezero/core test --run
+
+  test:
+    name: Full test suite (all workspaces)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.33.2
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm build
+      - run: pnpm test

@@ -15,6 +15,11 @@
 /**
  * Error category enum. Includes F2-F5 categories (`mapping`, `route`,
  * `network`, `worker`) so no breaking change is needed when those modules ship.
+ *
+ * Aggiunto `'microfrontend'` literal in F8 W1-P03 (fix B1 iter 2) per consentire
+ * la `MicroFrontendError` category in `@gluezero/microfrontends` F8-04+. Additive
+ * non-breaking: consumer v1.x non passano mai `'microfrontend'`. Bundle delta
+ * runtime: 0 byte (TypeScript erases tipi).
  */
 export type ErrorCategory =
   | 'validation'
@@ -26,6 +31,7 @@ export type ErrorCategory =
   | 'system'
   | 'config'
   | 'topic'
+  | 'microfrontend'
 
 /**
  * Structured broker error (PRD §22, REQ ERR-01).

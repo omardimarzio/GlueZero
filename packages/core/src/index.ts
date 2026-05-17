@@ -28,6 +28,15 @@ export { createBrokerError, isBrokerError } from './core/broker-error'
 export { createConsoleLogger, silentLogger } from './core/logger'
 // Runtime exports — il cuore della libreria.
 export { createBroker } from './public-factory'
+// NEW v2.0 D-V2-02: Service Locator naming constants
+export {
+  SERVICE_COMPAT,
+  SERVICE_CONTEXT,
+  SERVICE_FALLBACKS,
+  SERVICE_ISOLATION,
+  SERVICE_MICROFRONTENDS,
+  SERVICE_PERMISSIONS,
+} from './services'
 
 // Type exports — surface tipi pubblici.
 export type {
@@ -62,6 +71,12 @@ export type {
   /** Log level: `silent | error | warn | info | debug | trace`. */
   LogLevel,
 } from './types/logger'
+export type {
+  /** Module Extension Runtime opt-in (PRD §6.1, MF-MOD-01 v2.0). */
+  BrokerModule,
+  /** Context passato all'install hook del modulo (PRD §6.1). */
+  BrokerModuleContext,
+} from './types/module'
 export type {
   /** Context passed to plugin hooks: `id`, `logger`, `broker` (scoped), `signal` (cascade). */
   PluginContext,
