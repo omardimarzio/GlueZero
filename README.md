@@ -9,7 +9,21 @@
 [![Bundle size](https://img.shields.io/bundlephobia/minzip/@gluezero/gluezero?color=6366F1&label=bundle)](https://bundlephobia.com/package/@gluezero/gluezero)
 [![Types](https://img.shields.io/npm/types/@gluezero/gluezero?color=6366F1)](./packages/gluezero)
 [![ESM only](https://img.shields.io/badge/module-ESM-6366F1.svg)](./packages/gluezero/package.json)
-[![Decisions](https://img.shields.io/badge/decisions-170-6366F1.svg)](./DECISIONS.md)
+[![Decisions](https://img.shields.io/badge/decisions-300+-6366F1.svg)](./DECISIONS.md)
+
+> ## 🎉 v2.0.0 GA released (2026-05-17)
+>
+> **Microfrontend Governance Layer + Framework Adapters** — 16 packages `@gluezero/*@2.0.0` on npm `latest`.
+>
+> - 🆕 `@gluezero/microfrontends` — MicroFrontendRegistry + lifecycle FSM + 29 standard topics + `microFrontendModule()` opt-in
+> - 🆕 Governance stack: `@gluezero/permissions` + `@gluezero/compat` + `@gluezero/isolation` + `@gluezero/fallbacks` + `@gluezero/devtools/mf-inspector` (14 per-MF metrics)
+> - 🆕 4 Loaders: `@gluezero/mf-esm`, `@gluezero/mf-web-component`, `@gluezero/mf-iframe`, `@gluezero/mf-module-federation`, `@gluezero/mf-single-spa`
+> - 🆕 Framework adapters: **`@gluezero/react`** (`GlueZeroProvider` + 6 hooks + `GlueZeroErrorBoundary` + `createReactMicroFrontendLifecycle`) · **`@gluezero/web-components`** (`GlueZeroElement` base class + `AbortController` cleanup + `/lit` subpath two-tier `ReactiveController` + `GlueZeroLitMixin`)
+> - ✅ **Backward compatible** — `createBroker({})` remains v1.x bit-exact (BC §42 14 API preserved, 273/276 PASS)
+>
+> 10 fasi (F8-F17) · 132 REQ-IDs closed · 300+ architectural decisions tracked. Bundle delta: `@gluezero/core` ≤ +350 B for v1.x consumers (D-V2-21 verified).
+>
+> 📖 [`CHANGELOG-v2.md`](./CHANGELOG-v2.md) · 🛤️ [Migration guide (adoption levels A/B/C)](./docs/v2/17-migration-guide.md) · 🚀 [Release v2.0.0](https://github.com/omardimarzio/GlueZero/releases/tag/v2.0.0) · 📚 [Docs v2.0](./docs/v2/index.md)
 
 GlueZero is a **browser-side orchestration runtime** for modular frontend applications.
 
@@ -22,8 +36,17 @@ It connects components, plugins, backend APIs, realtime events, cache and Web Wo
 
 ### 🎮 Try it live
 
-- ⭐ [**examples/showcase/**](./examples/showcase/index.html) — **Live Showcase** — sidebar menu + 7 interactive demos: pub/sub, canonical mapping, routing+gateway (real fetch), worker runtime, cache, observability, theme. Each demo runs against the live `@gluezero/*@1.1.0` packages from esm.sh. **Best place to start.**
-- [**examples/pub-sub-demo.html**](./examples/pub-sub-demo.html) — pure pub/sub: 1 publisher, 4 subscribers reacting independently to the same topic. Zero network, zero mocks. Open in browser, no build step needed. Now ships with a live theme switcher (v1.1).
+**v2.0 Microfrontend Governance — golden showcase:**
+
+- ⭐ [**examples/customer-dashboard/**](./examples/customer-dashboard/index.html) — **v2.0 Golden Showcase** — 1 host shell + 3 MF mixed (React ESM + Web Component + iframe) + 5 governance modules (permissions + compat + isolation + fallbacks + mf-inspector) + walkthrough A→B→C adoption levels. Live demo of the v2.0 Microfrontend Governance Layer.
+- [**examples/microfrontends/mf-react-adapter.html**](./examples/microfrontends/mf-react-adapter.html) — **v2.0** — `@gluezero/react` adapter demo: `createReactMicroFrontendLifecycle` + `GlueZeroProvider` + hooks + StrictMode safe.
+- [**examples/microfrontends/mf-compat-matrix.html**](./examples/microfrontends/mf-compat-matrix.html) — **v2.0** — `@gluezero/compat` policy matrix (block-mount / warn / allow) with host v2.0 + 3 MF mixed v1.x/v2.0.
+- [**examples/microfrontends/mf-esm-basic.html**](./examples/microfrontends/mf-esm-basic.html) · [**mf-shadow-dom.html**](./examples/microfrontends/mf-shadow-dom.html) · [**mf-iframe-sandbox.html**](./examples/microfrontends/mf-iframe-sandbox.html) · [**mf-permissions-demo.html**](./examples/microfrontends/mf-permissions-demo.html) — **v2.0** — 4 carryover MF examples covering ESM loading + shadow-DOM isolation + iframe bridge + permissions ACL.
+
+**v1.x runtime + theme:**
+
+- [**examples/showcase/**](./examples/showcase/index.html) — **Live Showcase v1.1** — sidebar menu + 7 interactive demos: pub/sub, canonical mapping, routing+gateway (real fetch), worker runtime, cache, observability, theme. Runs against `@gluezero/*@1.1.0` from esm.sh.
+- [**examples/pub-sub-demo.html**](./examples/pub-sub-demo.html) — pure pub/sub: 1 publisher, 4 subscribers reacting independently to the same topic. Zero network, zero mocks. Live theme switcher (v1.1).
 - [**examples/theme-tokens-only/**](./examples/theme-tokens-only/index.html) — **v1.1** — runtime brand swap via design tokens (`--gz-*` CSS Custom Properties + `applyTokens()`). Zero adapter.
 - [**examples/theme-dark-mode-meteo/**](./examples/theme-dark-mode-meteo/index.html) — **v1.1** — anti-FOUC dark mode with `getInitialThemeScript()` IIFE pre-paint + `prefers-color-scheme` auto-mirror.
 - [**examples/theme-tailwind/**](./examples/theme-tailwind/index.html) — **v1.1** — adapter swap on the same `data-gz-role` markup (Tailwind ↔ stylesheet) at runtime.
@@ -392,6 +415,95 @@ GlueZero applies the same canonical-vs-local paradigm of the data Mapper to the 
 **Bundle:** 6.35 KB gzipped. **Opt-in:** the aggregate `createGlueZero({ theme? })` accepts `theme` as an optional additive parameter — consumers who do not need theming pay zero overhead. Plugins built independently — in any UI framework — can be rebranded, dark-mode-switched, density-adapted and RTL-switched at runtime, without prior agreement on class names.
 
 See [`packages/theme/README.md`](./packages/theme/README.md) (italiano, 489 LoC) for the full F1+F2+F3+F4+F5+F6+F7 meteo scenario, browser support degradation policy, and the `data-gz-role` is **NOT ARIA** rule.
+
+---
+
+### Microfrontend Governance Layer (v2.0, opt-in)
+
+Available since v2.0.0 as a coordinated stack of opt-in packages — 10 fasi v2.0 (F8-F17), 16 packages, 132 REQ-IDs closed.
+
+GlueZero extends the same canonical-vs-local paradigm of the data Mapper and Theme Layer to the **whole micro-frontend lifecycle**:
+
+- **MicroFrontendRegistry + Lifecycle FSM** (F8) — `@gluezero/microfrontends`: declarative `MicroFrontendDescriptor` (id, version, owner, loader, mount, permissions, capabilities, compatibility, isolation, fallback) + 11-state lifecycle FSM (registered → load → bootstrap → mount → unmount → destroy) + 29 standard topics (17 lifecycle + 7 error + 5 governance).
+- **4 Loaders** (F9 + F15) — ESM dynamic import (`@gluezero/mf-esm`) + Custom Elements (`@gluezero/mf-web-component`) + iframe sandbox bridge handshake (`@gluezero/mf-iframe`) + Module Federation + single-spa (`@gluezero/mf-{module-federation,single-spa}`) — modular and tree-shakable.
+- **Runtime Context + per-MF Mapping** (F10) — `@gluezero/context` + isolated mapping vocabularies per MF. Each MF lives in its own canonical/local vocabulary space.
+- **Permissions + Capabilities + Pipeline §28 extension** (F11) — `@gluezero/permissions`: topic-based ACL via the standard pipeline (no parallel security layer). Capability negotiation between host shell and MFs.
+- **Compatibility / Versioning (semver 9 dimensions)** (F12) — `@gluezero/compat`: declarative matrix host ↔ MF version + policy `block-mount` / `warn` / `allow`. Live demo: [`mf-compat-matrix.html`](./examples/microfrontends/mf-compat-matrix.html).
+- **Isolation + Theme/Cache/Gateway/Worker integration** (F13) — `@gluezero/isolation`: shadow-DOM scoping + theme bridge + storage namespacing + gateway delegation + worker attribution per MF.
+- **Fallback + Error Boundary** (F14) — `@gluezero/fallbacks`: declarative fallback policy per phase (`onLoadError`, `onMountError`, `onRuntimeError`, ...) + retry + circuit-breaker + Service Locator graceful degradation.
+- **Devtools MF Inspector + 14 metrics** (F16) — `@gluezero/devtools/mf-inspector`: 17-field snapshot per MF + per-MF ring buffer 500 + 11 lifecycle timings + pause/resume/flush + 14 metrics namespace `gluezero.mfs.*` (counter / gauge / histogram).
+- **Framework adapters** (F17) — `@gluezero/react` (`GlueZeroProvider` + 6 hooks + `GlueZeroErrorBoundary` class + `createReactMicroFrontendLifecycle` factory with `createRoot` + StrictMode opt-in) · `@gluezero/web-components` (`GlueZeroElement` base class + `AbortController + signal` cleanup delegated to `disconnectedCallback` + `/lit` subpath two-tier `GlueZeroController` + `GlueZeroLitMixin`).
+
+**Bundle:** `@gluezero/react` 1.53 KB gzipped · `@gluezero/web-components` 609 B + `/lit` 480 B · `@gluezero/microfrontends` 6.49 KB · `@gluezero/devtools/mf-inspector` 6.27 KB. Each governance module is **strictly opt-in** — consumers who do not adopt MF pay zero overhead.
+
+**Quick start:**
+
+```ts
+// Level A — Stay on v1.x (zero change, bit-exact v1.x semantics)
+import { createBroker } from '@gluezero/core'
+const broker = createBroker({})
+
+// Level B — Opt-in MF basic (microFrontendModule + 1 loader)
+import { createBroker } from '@gluezero/core'
+import { microFrontendModule } from '@gluezero/microfrontends'
+import { esmLoader } from '@gluezero/mf-esm'
+
+const broker = createBroker({
+  modules: [microFrontendModule({ loaders: [esmLoader()] })]
+})
+broker.registerMicroFrontend({
+  id: 'my-mf',
+  loader: { type: 'esm', url: '/mf/main.js' },
+  mount: { target: '#mf-slot' }
+})
+
+// Level C — Production governance full stack
+import { permissionsModule } from '@gluezero/permissions'
+import { compatModule } from '@gluezero/compat'
+import { isolationModule } from '@gluezero/isolation'
+import { fallbacksModule } from '@gluezero/fallbacks'
+import { mfInspectorModule } from '@gluezero/devtools/mf-inspector'
+
+const broker = createBroker({
+  modules: [
+    microFrontendModule({ loaders: [esmLoader(), wcLoader(), iframeLoader()] }),
+    permissionsModule(),
+    compatModule(),
+    isolationModule(),
+    fallbacksModule(),
+    mfInspectorModule()
+  ]
+})
+```
+
+**React adapter:**
+
+```tsx
+import { createReactMicroFrontendLifecycle } from '@gluezero/react'
+
+export default createReactMicroFrontendLifecycle(CustomerDashboard, {
+  strictMode: true
+})
+// → returns { bootstrap, mount, unmount, destroy } compatible with MicroFrontendRuntimeModule F8
+```
+
+**Web Component adapter:**
+
+```ts
+import { GlueZeroElement } from '@gluezero/web-components'
+
+class MyMf extends GlueZeroElement {
+  protected onContextReady() {
+    this.subscribe('topic.example', (event) => { /* ... */ })
+    // signal auto-injected — cleanup automatic on disconnectedCallback
+  }
+}
+customElements.define('my-mf', MyMf)
+```
+
+See [**examples/customer-dashboard/**](./examples/customer-dashboard/index.html) for the golden showcase end-to-end (1 host + 3 MF mixed React/WC/iframe + full governance stack + walkthrough A→B→C).
+
+See [`docs/v2/17-migration-guide.md`](./docs/v2/17-migration-guide.md) for the complete migration guide from v1.x with adoption levels A/B/C, and [`docs/v2/`](./docs/v2/) for the 18-document architecture reference (PRD §41).
 
 ---
 
