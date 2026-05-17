@@ -1,6 +1,6 @@
 {
   "name": "@gluezero/react",
-  "version": "2.0.0-alpha.0",
+  "version": "2.0.0-rc.0",
   "description": "GlueZero React adapter — GlueZeroProvider + 6 hooks + createReactMicroFrontendLifecycle factory + ErrorBoundary built-in + React 19 StrictMode safe",
   "license": "MIT",
   "author": "Omar Di Marzio",

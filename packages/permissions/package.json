@@ -1,6 +1,6 @@
 {
   "name": "@gluezero/permissions",
-  "version": "2.0.0-alpha.0",
+  "version": "2.0.0-rc.0",
   "description": "GlueZero permission engine sincrono + Capability Registry + Pipeline §28 extension via composition esterna — pattern matching 4 modes + LRU cache 500 + 10 enforcement points facade",
   "license": "MIT",
   "author": "Omar Di Marzio",

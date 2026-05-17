@@ -1,6 +1,6 @@
 {
   "name": "@gluezero/context",
-  "version": "2.0.0-alpha.0",
+  "version": "2.0.0-rc.0",
   "description": "GlueZero runtime context module + per-MF mapping integration — reactive state container with selector subscribe + writableKeys ACL + canonical mapper reuse",
   "license": "MIT",
   "author": "Omar Di Marzio",
