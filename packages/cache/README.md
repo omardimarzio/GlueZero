@@ -2,6 +2,8 @@
 
 > Cache layer per GlueZero — Phase 6 (in-memory LRU bounded + 3-strategy dispatch + scope hybrid D-156 + cache-then-network ordering microtask + cascade invalidate ext LIFE-02).
 
+> 🎉 **v2.0.0 GA (2026-05-17)** — Cache scope per-MF disponibile via `microFrontendModule()` + `@gluezero/isolation` (Phase F13). Vedi [root README](../../README.md#microfrontend-governance-layer-v20-opt-in) · [docs/v2/](../../docs/v2/index.md) · [migration guide A/B/C](../../docs/v2/17-migration-guide.md).
+
 ESM-only TypeScript library. Browser evergreen target (ES2022). Composition wrapper di [`@gluezero/routing`](../routing/README.md) `RouterBroker` (D-121, D-83 strict carryover): un singolo entry point `createCacheBroker(config)` orchestra route HTTP/local/composite F3 + nuovo route `cache` con 3 strategie (`cache-first`, `network-first`, `cache-then-network`) e adapter pluggable (default `MemoryCacheAdapter` LRU bounded `maxEntries=1000` D-158).
 
 Quattro dipendenze runtime: [`@gluezero/core`](../core/README.md) (BrokerError + BrokerEvent + EventTap, F1), [`@gluezero/mapper`](../mapper/README.md) (canonical mapping, F2 — implicit via routing), [`@gluezero/routing`](../routing/README.md) (RouterBroker base composta, F3), [`valibot`](https://valibot.dev) (config validation al boundary).

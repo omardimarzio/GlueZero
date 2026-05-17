@@ -2,6 +2,8 @@
 
 > Worker Runtime per GlueZero — Phase 5 (Comlink-based RPC + bounded pool + state machine atomico Pitfall 2C closure + WK-07 serializzazione documentata).
 
+> 🎉 **v2.0.0 GA (2026-05-17)** — Worker task attribution per-MF disponibile via `microFrontendModule()` opt-in (worker tasks per-MF tracked nel mfInspectorModule). Vedi [root README](../../README.md#microfrontend-governance-layer-v20-opt-in) · [docs/v2/](../../docs/v2/index.md) · [migration guide A/B/C](../../docs/v2/17-migration-guide.md).
+
 ESM-only TypeScript library. Browser evergreen target (ES2022). Composition wrapper di [`@gluezero/routing`](../routing/README.md) `RouterBroker` (D-121, D-83 strict carryover): un singolo entry point `createWorkerBroker(config)` orchestra route HTTP, route worker, mapping canonico, plugin lifecycle, pipeline §28 estesa con step 9 dispatch worker (D-152).
 
 Cinque dipendenze runtime: [`@gluezero/core`](../core/README.md) (BrokerError + BrokerEvent + tipi base, F1), [`@gluezero/mapper`](../mapper/README.md) (canonical mapping, F2), [`@gluezero/routing`](../routing/README.md) (RouterBroker base composta, F3), [`@gluezero/gateway`](../gateway/README.md) (BackpressureStrategy F3 riusata 1:1, F3), [`comlink`](https://github.com/GoogleChromeLabs/comlink) 4.4.2 (RPC postMessage), [`nanoid`](https://github.com/ai/nanoid) (correlationId end-to-end D-134), [`valibot`](https://valibot.dev) (config validation).

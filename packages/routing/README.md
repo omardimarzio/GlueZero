@@ -2,6 +2,8 @@
 
 > Routing engine dichiarativo per GlueZero — Phase 3.
 
+> 🎉 **v2.0.0 GA (2026-05-17)** — Routing attribution per-MF disponibile via `microFrontendModule()` opt-in. Vedi [root README](../../README.md#microfrontend-governance-layer-v20-opt-in) · [docs/v2/](../../docs/v2/index.md) · [migration guide A/B/C](../../docs/v2/17-migration-guide.md).
+
 ESM-only TypeScript library. Browser evergreen target (ES2022). Estende [`@gluezero/mapper`](../mapper/README.md) (F2) con `RouteDefinition` discriminata, `RouteResolver` pre-compilato, `RouteExecutor` dispatch by type e `RouterBroker` composition wrapper. Le route HTTP delegano a [`@gluezero/gateway/http`](../gateway/README.md) per le policy uniformi (auth/retry/timeout/dedupe/idempotency/circuit).
 
 Quattro dipendenze runtime: [`@gluezero/core`](../core/README.md) (broker base, F1), [`@gluezero/mapper`](../mapper/README.md) (canonical model + mapper bidirezionale, F2), [`@gluezero/gateway`](../gateway/README.md) (HTTP gateway, F3), [`nanoid`](https://github.com/ai/nanoid) (ID generation), [`valibot`](https://valibot.dev) (config validation).

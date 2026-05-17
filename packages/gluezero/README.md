@@ -2,6 +2,8 @@
 
 > Pacchetto aggregato pubblico GlueZero — milestone v1.0.0 closure (chain composition F1+F2+F3+F4+F5+F6 + features opt-out + scenario meteo end-to-end cross-feature).
 
+> 🎉 **v2.0.0 GA (2026-05-17)** — Questo aggregator rimane v1.x. Per v2.0 Microfrontend Governance Layer + Framework Adapters usa import diretto dei singoli `@gluezero/microfrontends`, `@gluezero/react`, `@gluezero/web-components`, `@gluezero/permissions`, `@gluezero/compat`, `@gluezero/isolation`, `@gluezero/fallbacks`. Vedi [root README](../../README.md#microfrontend-governance-layer-v20-opt-in) · [docs/v2/](../../docs/v2/index.md) · [migration guide A/B/C](../../docs/v2/17-migration-guide.md).
+
 ESM-only TypeScript library. Browser evergreen target (ES2022). Factory aggregato `createGlueZero(config)` (RESEARCH §11.3 Opzione B convenience) che orchestra l'intera chain GlueZero in un singolo entry-point. Ogni call ritorna un broker con il superset di API attive in funzione di `config.features` (default: tutte le feature enabled).
 
 Sette dipendenze runtime (i sub-pacchetti GlueZero): [`@gluezero/core`](../core/README.md) (F1), [`@gluezero/mapper`](../mapper/README.md) (F2), [`@gluezero/routing`](../routing/README.md) (F3), [`@gluezero/gateway`](../gateway/README.md) (F3 HTTP + F4 SSE/WS sub-modulo), [`@gluezero/worker`](../worker/README.md) (F5), [`@gluezero/cache`](../cache/README.md) (F6), [`@gluezero/devtools`](../devtools/README.md) (F6) + [`valibot`](https://valibot.dev) (config validation).

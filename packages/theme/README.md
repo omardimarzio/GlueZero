@@ -2,6 +2,8 @@
 
 > **UI Standardization Layer** per GlueZero v1.1 — design tokens canonici (`--gz-*`) + role registry (`data-gz-role="action.primary"`) + theme adapter intercambiabile + broker events `ui.*`. **Opt-in.** Bundle ≤ 6 KB gzipped.
 
+> 🎉 **v2.0.0 GA (2026-05-17)** — Theme integration per-MF via `@gluezero/isolation` (Phase F13 — theme bridge + shadow-DOM scoping). Vedi [root README](../../README.md#microfrontend-governance-layer-v20-opt-in) · [docs/v2/](../../docs/v2/index.md) · [migration guide A/B/C](../../docs/v2/17-migration-guide.md).
+
 [![npm](https://img.shields.io/npm/v/@gluezero/theme.svg)](https://npmjs.com/package/@gluezero/theme)
 
 ## Cos'è

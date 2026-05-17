@@ -2,6 +2,8 @@
 
 > Core event broker for GlueZero — pub/sub in-page, plugin registry with anti-leak lifecycle, structured `BrokerEvent` model, `EventTap` pre-instrumented for Phase 6 Inspector.
 
+> 🎉 **v2.0.0 GA (2026-05-17)** — `createBroker({})` rimane bit-exact v1.x (BC §42 14 API preservate). Per Microfrontend Governance Layer opt-in (Livelli B/C): `createBroker({ modules: [microFrontendModule(), ...] })`. Vedi [root README](../../README.md#microfrontend-governance-layer-v20-opt-in) · [docs/v2/](../../docs/v2/index.md) · [migration guide A/B/C](../../docs/v2/17-migration-guide.md).
+
 ESM-only TypeScript library. Browser evergreen target (ES2022). Due runtime dependencies: [`nanoid`](https://github.com/ai/nanoid) (event IDs) e [`valibot`](https://valibot.dev) (config + event shape validation).
 
 ## Installazione

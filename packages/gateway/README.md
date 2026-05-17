@@ -2,6 +2,8 @@
 
 > Gateway centralizzato per GlueZero — Phase 3 (HTTP) + Phase 4 (Realtime SSE/WS).
 
+> 🎉 **v2.0.0 GA (2026-05-17)** — Gateway attribution per-MF disponibile via `microFrontendModule()` opt-in (route calls per-MF tracked nel mfInspectorModule). Vedi [root README](../../README.md#microfrontend-governance-layer-v20-opt-in) · [docs/v2/](../../docs/v2/index.md) · [migration guide A/B/C](../../docs/v2/17-migration-guide.md).
+
 ESM-only TypeScript library. Browser evergreen target (ES2022). Implementa due sub-moduli:
 
 - **`/http`** (F3) — **Server Gateway HTTP** centralizzato (PRD §18) con policy uniformi: auth Bearer + token refresh single-flight, retry differenziato 4xx/5xx con full jitter, timeout via `AbortSignal.timeout()`, dedupe via Promise singleton, backpressure (queue/drop/throttle/debounce/latest-only/coalesce), idempotency token auto su POST/PATCH/PUT/DELETE, URL allowlist pre-fetch, circuit breaker per-route opt-in.

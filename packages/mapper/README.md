@@ -2,6 +2,8 @@
 
 > Canonical model + bidirectional mapper per GlueZero — Phase 2.
 
+> 🎉 **v2.0.0 GA (2026-05-17)** — Mapping per-MF disponibile via `@gluezero/context` (Phase F10). Vedi [root README](../../README.md#microfrontend-governance-layer-v20-opt-in) · [docs/v2/](../../docs/v2/index.md) · [migration guide A/B/C](../../docs/v2/17-migration-guide.md).
+
 ESM-only TypeScript library. Browser evergreen target (ES2022). Estende [`@gluezero/core`](../core/README.md) con vocabolario canonico tipizzato, mapper bidirezionale pre-compilato, transform pipeline, validation adapter pluggable e Mapping Inspector.
 
 Tre dipendenze runtime: [`@gluezero/core`](../core/README.md) (broker base, workspace), [`valibot`](https://valibot.dev) (validation), [`nanoid`](https://github.com/ai/nanoid) (transitivo via core).
