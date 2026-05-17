@@ -1,7 +1,7 @@
 {
   "name": "@gluezero/mf-module-federation",
   "version": "2.0.0",
-  "description": "GlueZero Module Federation loader (webpack 5 + @module-federation/runtime v0.x) — experimental @0.x.0 V2.0 GA — share scope warn + 5 error codes",
+  "description": "GlueZero Module Federation loader (webpack 5 + @module-federation/runtime v0.x) \u2014 experimental @0.x.0 V2.0 GA \u2014 share scope warn + 5 error codes",
   "license": "MIT",
   "author": "Omar Di Marzio",
   "type": "module",
@@ -34,8 +34,7 @@
     "node": ">=20"
   },
   "publishConfig": {
-    "access": "public",
-    "tag": "experimental"
+    "access": "public"
   },
   "scripts": {
     "build": "tsup",

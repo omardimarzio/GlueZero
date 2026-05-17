@@ -1,7 +1,7 @@
 {
   "name": "@gluezero/mf-web-component",
   "version": "2.0.0",
-  "description": "GlueZero Web Component (Custom Elements) ESM loader per micro-frontends — customElements.whenDefined + AbortSignal.timeout + contextMode property/attribute/event + reuse-on-collision",
+  "description": "GlueZero Web Component (Custom Elements) ESM loader per micro-frontends \u2014 customElements.whenDefined + AbortSignal.timeout + contextMode property/attribute/event + reuse-on-collision",
   "license": "MIT",
   "author": "Omar Di Marzio",
   "type": "module",
@@ -34,8 +34,7 @@
     "node": ">=20"
   },
   "publishConfig": {
-    "access": "public",
-    "tag": "experimental"
+    "access": "public"
   },
   "scripts": {
     "build": "tsup",

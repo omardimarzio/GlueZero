@@ -1,7 +1,7 @@
 {
   "name": "@gluezero/mf-iframe",
   "version": "2.0.0",
-  "description": "GlueZero iframe sandbox loader + bridge postMessage (9 message types Valibot strict + LRU dedup 500 + rate-limit 100/s + replay mitigation + expectedOrigin MANDATORY) — D-V2-09 closure",
+  "description": "GlueZero iframe sandbox loader + bridge postMessage (9 message types Valibot strict + LRU dedup 500 + rate-limit 100/s + replay mitigation + expectedOrigin MANDATORY) \u2014 D-V2-09 closure",
   "license": "MIT",
   "author": "Omar Di Marzio",
   "type": "module",
@@ -38,8 +38,7 @@
     "node": ">=20"
   },
   "publishConfig": {
-    "access": "public",
-    "tag": "experimental"
+    "access": "public"
   },
   "scripts": {
     "build": "tsup",

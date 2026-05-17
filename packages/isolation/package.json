@@ -1,7 +1,7 @@
 {
   "name": "@gluezero/isolation",
   "version": "2.0.0",
-  "description": "GlueZero isolation + theme policy + storage/gateway/worker/theme facade per MicroFrontend — 7-key isolation policy resolver + Pattern S1 augment stretto + zero hard deps + 6 peer optional + bundle cap 12 KB",
+  "description": "GlueZero isolation + theme policy + storage/gateway/worker/theme facade per MicroFrontend \u2014 7-key isolation policy resolver + Pattern S1 augment stretto + zero hard deps + 6 peer optional + bundle cap 12 KB",
   "license": "MIT",
   "author": "Omar Di Marzio",
   "type": "module",
@@ -34,8 +34,7 @@
     "node": ">=20"
   },
   "publishConfig": {
-    "access": "public",
-    "tag": "experimental"
+    "access": "public"
   },
   "scripts": {
     "build": "tsup",

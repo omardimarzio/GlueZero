@@ -1,7 +1,7 @@
 {
   "name": "@gluezero/mf-single-spa",
   "version": "2.0.0",
-  "description": "GlueZero single-spa lifecycle adapter (bootstrap/mount/unmount mapping) — experimental @0.x.0 V2.0 GA — peer single-spa ^5.9.0 || ^6.0.0",
+  "description": "GlueZero single-spa lifecycle adapter (bootstrap/mount/unmount mapping) \u2014 experimental @0.x.0 V2.0 GA \u2014 peer single-spa ^5.9.0 || ^6.0.0",
   "license": "MIT",
   "author": "Omar Di Marzio",
   "type": "module",
@@ -34,8 +34,7 @@
     "node": ">=20"
   },
   "publishConfig": {
-    "access": "public",
-    "tag": "experimental"
+    "access": "public"
   },
   "scripts": {
     "build": "tsup",

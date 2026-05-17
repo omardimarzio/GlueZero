@@ -1,7 +1,7 @@
 {
   "name": "@gluezero/mf-esm",
   "version": "2.0.0",
-  "description": "GlueZero ESM dynamic import loader for micro-frontends — import(url) + AbortSignal timeout + module normalization",
+  "description": "GlueZero ESM dynamic import loader for micro-frontends \u2014 import(url) + AbortSignal timeout + module normalization",
   "license": "MIT",
   "author": "Omar Di Marzio",
   "type": "module",
@@ -34,8 +34,7 @@
     "node": ">=20"
   },
   "publishConfig": {
-    "access": "public",
-    "tag": "experimental"
+    "access": "public"
   },
   "scripts": {
     "build": "tsup",
